@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Disc, Heart, Gamepad2, Settings, Trophy, Loader2 } from 'lucide-react';
+import { Disc, Heart, Settings, Trophy, Loader2, Palette, Video, Globe, Gamepad } from 'lucide-react';
 import axios from 'axios';
 import '../styles/Xbox360Dashboard.css';
 
@@ -24,8 +24,27 @@ const Xbox360Dashboard = () => {
   const [achievements, setAchievements] = useState([]);
   const [loadingAchievements, setLoadingAchievements] = useState(false);
   const [gameLibrary, setGameLibrary] = useState([]);
+  const [showStartupVideo, setShowStartupVideo] = useState(true);
+  const [showSystemSettings, setShowSystemSettings] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState('default');
+  const [selectedStartupVideo, setSelectedStartupVideo] = useState('default');
+  const [availableThemes, setAvailableThemes] = useState(['default', 'dark-green', 'blue-wave']);
+  const [availableStartupVideos, setAvailableStartupVideos] = useState(['default', 'classic-360', 'kinect-intro']);
+  const [isApplying, setIsApplying] = useState(false);
 
   useEffect(() => {
+    // Check startup video setting
+    const skipStartup = localStorage.getItem('skipStartup');
+    if (skipStartup === 'true') {
+      setShowStartupVideo(false);
+    } else {
+      // Play startup video
+      setTimeout(() => {
+        setShowStartupVideo(false);
+        localStorage.setItem('skipStartup', 'true');
+      }, 3000); // 3 second startup video
+    }
+
     // Load saved session
     const savedProfile = localStorage.getItem('xboxProfile');
     if (savedProfile) {
@@ -41,6 +60,12 @@ const Xbox360Dashboard = () => {
       }
     }
 
+    // Load theme and startup video settings
+    const savedTheme = localStorage.getItem('selectedTheme');
+    const savedStartup = localStorage.getItem('selectedStartupVideo');
+    if (savedTheme) setSelectedTheme(savedTheme);
+    if (savedStartup) setSelectedStartupVideo(savedStartup);
+
     // Listen for OAuth callback
     window.addEventListener('message', handleOAuthCallback);
     return () => window.removeEventListener('message', handleOAuthCallback);
@@ -54,7 +79,6 @@ const Xbox360Dashboard = () => {
   };
 
   const loadGameLibrary = () => {
-    // Mock game library - in Tauri, this would scan directories
     const mockLibrary = [
       { id: 1, title: 'Halo 3', titleId: '4D5307D1', path: '/games/halo3.iso' },
       { id: 2, title: 'Gears of War 2', titleId: '4D5308AB', path: '/games/gow2.iso' },
@@ -90,10 +114,8 @@ const Xbox360Dashboard = () => {
   };
 
   const launchGame = (game) => {
-    // In Tauri, this would execute: window.__TAURI__.invoke('launch_xenia', { gamePath: game.path })
     alert(`Launching ${game.title} with Xenia...\nGame Path: ${game.path}`);
     
-    // Add to recent games
     const updatedRecent = [
       { id: game.id, title: game.title, lastPlayed: 'Just now', canResume: true },
       ...recentGames.filter(g => g.id !== game.id)
@@ -103,38 +125,32 @@ const Xbox360Dashboard = () => {
   };
 
   const homeTiles = [
-    { 
-      id: 'open-tray', 
-      title: 'Open Tray', 
-      icon: Disc, 
-      action: () => alert('Insert disc or select ISO file') 
-    },
-    { 
-      id: 'my-favorites', 
-      title: 'My Favorites', 
-      icon: Heart, 
-      action: () => alert('Your favorite games') 
-    },
-    { 
-      id: 'my-games', 
-      title: 'My Games', 
-      icon: Gamepad2, 
-      action: () => setActiveTab('games') 
-    }
+    { id: 'open-tray', title: 'Open Tray', icon: Disc, action: () => alert('Insert disc or select ISO file') },
+    { id: 'my-favorites', title: 'My Favorites', icon: Heart, action: () => alert('Your favorite games') }
   ];
 
   const systemTiles = [
-    { 
-      id: 'system', 
-      title: 'System', 
-      icon: Settings, 
-      action: () => alert('System Settings:\n- Display & Audio\n- Network\n- Storage\n- About') 
-    }
+    { id: 'system-settings', title: 'System Settings', icon: Settings, action: () => setShowSystemSettings(true) }
   ];
 
+  const handleApplySettings = () => {
+    setIsApplying(true);
+    
+    // Save settings
+    localStorage.setItem('selectedTheme', selectedTheme);
+    localStorage.setItem('selectedStartupVideo', selectedStartupVideo);
+    localStorage.setItem('skipStartup', 'false');
+    
+    // Simulate restart
+    setTimeout(() => {
+      setIsApplying(false);
+      alert('Settings applied! App will restart to apply changes.\n\nIn Tauri app, this would actually restart the application.');
+      setShowSystemSettings(false);
+    }, 2000);
+  };
+
   const handleMicrosoftLogin = () => {
-    // Open real Microsoft OAuth in default browser
-    const clientId = '00000000402b5328'; // Xbox Live client ID
+    const clientId = '00000000402b5328';
     const redirectUri = encodeURIComponent('https://login.live.com/oauth20_desktop.srf');
     const scope = encodeURIComponent('service::user.auth.xboxlive.com::MBI_SSL');
     const authUrl = `https://login.live.com/oauth20_authorize.srf?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}`;
@@ -166,11 +182,96 @@ const Xbox360Dashboard = () => {
     }
   }, [activeTab]);
 
+  if (showStartupVideo) {
+    return (
+      <div className="startup-screen">
+        <div className="startup-video-container">
+          <div className="xbox-startup-logo">
+            <XboxIcon />
+          </div>
+          <div className="startup-text">Xbox 360</div>
+          <div className="loading-bar">
+            <div className="loading-progress"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="xbox360-dashboard">
       <div className="xbox-background">
         <div className="bg-gradient"></div>
       </div>
+
+      {/* System Settings Modal */}
+      {showSystemSettings && (
+        <div className="system-settings-modal-overlay" onClick={() => setShowSystemSettings(false)}>
+          <div className="system-settings-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="settings-modal-title">System Settings</h2>
+            
+            <div className="settings-section">
+              <div className="setting-item">
+                <div className="setting-label">
+                  <Palette size={20} />
+                  <span>Theme</span>
+                </div>
+                <select 
+                  className="setting-select"
+                  value={selectedTheme}
+                  onChange={(e) => setSelectedTheme(e.target.value)}
+                >
+                  {availableThemes.map(theme => (
+                    <option key={theme} value={theme}>{theme}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="setting-item">
+                <div className="setting-label">
+                  <Video size={20} />
+                  <span>Startup Video</span>
+                </div>
+                <select 
+                  className="setting-select"
+                  value={selectedStartupVideo}
+                  onChange={(e) => setSelectedStartupVideo(e.target.value)}
+                >
+                  {availableStartupVideos.map(video => (
+                    <option key={video} value={video}>{video}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button 
+                className="apply-settings-btn"
+                onClick={handleApplySettings}
+                disabled={isApplying}
+              >
+                {isApplying ? (
+                  <><Loader2 size={20} className="spinner" /> Applying & Restarting...</>
+                ) : (
+                  'Apply'
+                )}
+              </button>
+            </div>
+
+            <div className="settings-section">
+              <button className="settings-option-btn" onClick={() => alert('Global Settings')}>
+                <Globe size={24} />
+                <span>Global Settings</span>
+              </button>
+              
+              <button className="settings-option-btn" onClick={() => alert('Game Settings')}>
+                <Gamepad size={24} />
+                <span>Game Settings</span>
+              </button>
+            </div>
+
+            <button className="close-settings-btn" onClick={() => setShowSystemSettings(false)}>Close</button>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="xbox-header">
@@ -222,7 +323,6 @@ const Xbox360Dashboard = () => {
 
       {/* Content */}
       <div className="dashboard-content">
-        {/* HOME TAB */}
         {activeTab === 'home' && (
           <>
             {recentGames.length > 0 ? (
@@ -231,7 +331,7 @@ const Xbox360Dashboard = () => {
                 <div className="recent-games-list">
                   {recentGames.map((game) => (
                     <div key={game.id} className="recent-game-item" onClick={() => launchGame(game)}>
-                      <div className="game-thumbnail"><Gamepad2 size={32} /></div>
+                      <div className="game-thumbnail"><Gamepad size={32} /></div>
                       <div className="game-info">
                         <div className="game-name">{game.title}</div>
                         <div className="game-time">{game.lastPlayed}</div>
@@ -243,7 +343,7 @@ const Xbox360Dashboard = () => {
               </div>
             ) : (
               <div className="no-games-message">
-                <Gamepad2 size={64} opacity={0.3} />
+                <Gamepad size={64} opacity={0.3} />
                 <p>No games available</p>
                 <span className="hint-text">Play a game to see it here</span>
               </div>
@@ -265,14 +365,13 @@ const Xbox360Dashboard = () => {
           </>
         )}
 
-        {/* GAMES TAB */}
         {activeTab === 'games' && (
           <div className="games-library">
             <h3 className="section-title">Game Library</h3>
             <div className="games-grid">
               {gameLibrary.map((game) => (
                 <div key={game.id} className="game-card" onClick={() => launchGame(game)}>
-                  <div className="game-cover"><Gamepad2 size={64} /></div>
+                  <div className="game-cover"><Gamepad size={64} /></div>
                   <div className="game-title">{game.title}</div>
                 </div>
               ))}
@@ -280,7 +379,6 @@ const Xbox360Dashboard = () => {
           </div>
         )}
 
-        {/* ACHIEVEMENTS TAB */}
         {activeTab === 'achievements' && (
           <div className="achievements-view">
             <h3 className="section-title">Achievements</h3>
@@ -316,7 +414,6 @@ const Xbox360Dashboard = () => {
           </div>
         )}
 
-        {/* SETTINGS TAB */}
         {activeTab === 'settings' && (
           <div className="tiles-grid">
             {systemTiles.map((tile, index) => {
