@@ -5,7 +5,6 @@ import { Settings, Palette, Video, Globe, Gamepad2, Tv, Wifi, HardDrive, Info, C
 import './BladeSettings.css';
 
 const BladeSettings = ({ isOpen, onClose, onApply }) => {
-  const [activeBlade, setActiveBlade] = useState(0); // 0 = main menu, 1+ = sub-menus
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedTheme, setSelectedTheme] = useState('default');
   const [selectedStartupVideo, setSelectedStartupVideo] = useState('default');
@@ -54,25 +53,26 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
             onClose();
           }
           break;
+        default:
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, selectedIndex, showThemeBlade, showStartupBlade]);
+  }, [isOpen, selectedIndex, showThemeBlade, showStartupBlade, mainMenuItems, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <div className="blade-overlay">
-      {/* Main Settings Blade */}
       <div className="settings-blade blade-active">
-        <div className=\"blade-header\">
+        <div className="blade-header">
           <Settings size={32} />
           <h2>System Settings</h2>
         </div>
         
-        <div className=\"blade-content\">
+        <div className="blade-content">
           {mainMenuItems.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -84,36 +84,35 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
                   item.action();
                 }}
               >
-                <Icon size={24} className=\"blade-item-icon\" />
-                <span className=\"blade-item-label\">{item.label}</span>
-                <ChevronRight size={20} className=\"blade-item-arrow\" />
+                <Icon size={24} className="blade-item-icon" />
+                <span className="blade-item-label">{item.label}</span>
+                <ChevronRight size={20} className="blade-item-arrow" />
               </div>
             );
           })}
         </div>
 
-        <div className=\"blade-footer\">
-          <div className=\"button-hint\">
-            <span className=\"xbox-button green\">A</span>
+        <div className="blade-footer">
+          <div className="button-hint">
+            <span className="xbox-button green">A</span>
             <span>Select</span>
           </div>
-          <div className=\"button-hint\">
-            <span className=\"xbox-button red\">B</span>
+          <div className="button-hint">
+            <span className="xbox-button red">B</span>
             <span>Back</span>
           </div>
         </div>
       </div>
 
-      {/* Theme Settings Sub-Blade */}
       {showThemeBlade && (
-        <div className=\"settings-blade blade-sub\">
-          <div className=\"blade-header\">
+        <div className="settings-blade blade-sub">
+          <div className="blade-header">
             <Palette size={32} />
             <h2>Personalize</h2>
           </div>
           
-          <div className=\"blade-content\">
-            <div className=\"blade-section\">
+          <div className="blade-content">
+            <div className="blade-section">
               <h3>Theme</h3>
               {themes.map((theme, i) => (
                 <div
@@ -121,13 +120,13 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
                   className={`blade-option ${selectedTheme === theme ? 'active' : ''}`}
                   onClick={() => setSelectedTheme(theme)}
                 >
-                  <div className=\"theme-preview\"></div>
+                  <div className="theme-preview"></div>
                   <span>{theme}</span>
                 </div>
               ))}
             </div>
 
-            <button className=\"apply-blade-btn\" onClick={() => {
+            <button className="apply-blade-btn" onClick={() => {
               onApply({ theme: selectedTheme });
               setShowThemeBlade(false);
             }}>
@@ -137,16 +136,15 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
         </div>
       )}
 
-      {/* Startup Video Sub-Blade */}
       {showStartupBlade && (
-        <div className=\"settings-blade blade-sub\">
-          <div className=\"blade-header\">
+        <div className="settings-blade blade-sub">
+          <div className="blade-header">
             <Video size={32} />
             <h2>Startup</h2>
           </div>
           
-          <div className=\"blade-content\">
-            <div className=\"blade-section\">
+          <div className="blade-content">
+            <div className="blade-section">
               <h3>Startup Video</h3>
               {startupVideos.map((video, i) => (
                 <div
@@ -160,7 +158,7 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
               ))}
             </div>
 
-            <button className=\"apply-blade-btn\" onClick={() => {
+            <button className="apply-blade-btn" onClick={() => {
               onApply({ startupVideo: selectedStartupVideo });
               setShowStartupBlade(false);
             }}>
