@@ -64,9 +64,9 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
   if (!isOpen) return null;
 
   return (
-    <div className=\"blade-overlay\">
+    <div className="blade-overlay">
       {/* Main Settings Blade */}
-      <div className=\"settings-blade blade-active\">
+      <div className="settings-blade blade-active">
         <div className=\"blade-header\">
           <Settings size={32} />
           <h2>System Settings</h2>
