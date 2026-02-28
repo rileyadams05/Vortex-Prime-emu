@@ -83,6 +83,17 @@ async def get_achievements(gamertag: str):
     """Get achievements for a gamertag"""
     return get_xbox_achievements(gamertag)
 
+@api_router.get("/xbox/auth/url")
+async def get_auth_url():
+    """Get Microsoft OAuth URL"""
+    # For demo purposes, return a URL that goes to our callback with a demo flow
+    # In production, this would be the actual Microsoft OAuth URL
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://xbox360-dashboard.preview.emergentagent.com')
+    callback_url = f\"{frontend_url}/oauth/callback\"\n    \n    # This is a simplified demo URL - in production you'd use Microsoft's OAuth endpoint\n    # with proper client_id, redirect_uri, scope, etc.\n    auth_url = f\"https://login.live.com/oauth20_authorize.srf?client_id=demo&response_type=code&redirect_uri={callback_url}&scope=XboxLive.signin\"\n    \n    return {\"authUrl\": auth_url}
+
+@api_router.post(\"/xbox/auth/callback\")
+async def handle_auth_callback(request: dict):\n    \"\"\"Handle OAuth callback and return profile data\"\"\"\n    code = request.get('code')\n    \n    if not code:\n        raise HTTPException(status_code=400, detail=\"No authorization code provided\")\n    \n    # In production, you would:\n    # 1. Exchange code for access token with Microsoft\n    # 2. Use access token to fetch Xbox profile\n    # For demo, return mock data\n    return {\n        \"gamertag\": \"DemoGamer360\",\n        \"gamerscore\": 25000,\n        \"profilePicture\": None\n    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
