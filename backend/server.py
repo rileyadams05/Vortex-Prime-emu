@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 import uuid
 from datetime import datetime, timezone
+from xbox_service import get_xbox_profile, get_xbox_achievements
 
 
 ROOT_DIR = Path(__file__).parent
