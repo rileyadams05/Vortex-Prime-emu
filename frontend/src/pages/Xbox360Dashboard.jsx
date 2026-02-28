@@ -3,8 +3,8 @@ import { Disc, Pin, Clock, Gamepad2, Grid3x3, HelpCircle, Users, Settings } from
 import axios from 'axios';
 import '../styles/Xbox360Dashboard.css';
 
-const OPENXBL_API_KEY = process.env.REACT_APP_OPENXBL_API_KEY;
-const OPENXBL_API_BASE = 'https://xbl.io/api/v2';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Xbox360Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -20,12 +20,7 @@ const Xbox360Dashboard = () => {
   const fetchXboxProfile = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${OPENXBL_API_BASE}/account`, {
-        headers: {
-          'X-Authorization': OPENXBL_API_KEY,
-          'Accept': 'application/json'
-        }
-      });
+      const response = await axios.get(`${API}/xbox/profile`);
       setXboxProfile(response.data);
       setError(null);
     } catch (err) {
