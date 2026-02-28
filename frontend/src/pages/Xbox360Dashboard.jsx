@@ -202,74 +202,12 @@ const Xbox360Dashboard = () => {
         <div className="bg-gradient"></div>
       </div>
 
-      {/* System Settings Modal */}
-      {showSystemSettings && (
-        <div className="system-settings-modal-overlay" onClick={() => setShowSystemSettings(false)}>
-          <div className="system-settings-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="settings-modal-title">System Settings</h2>
-            
-            <div className="settings-section">
-              <div className="setting-item">
-                <div className="setting-label">
-                  <Palette size={20} />
-                  <span>Theme</span>
-                </div>
-                <select 
-                  className="setting-select"
-                  value={selectedTheme}
-                  onChange={(e) => setSelectedTheme(e.target.value)}
-                >
-                  {availableThemes.map(theme => (
-                    <option key={theme} value={theme}>{theme}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="setting-item">
-                <div className="setting-label">
-                  <Video size={20} />
-                  <span>Startup Video</span>
-                </div>
-                <select 
-                  className="setting-select"
-                  value={selectedStartupVideo}
-                  onChange={(e) => setSelectedStartupVideo(e.target.value)}
-                >
-                  {availableStartupVideos.map(video => (
-                    <option key={video} value={video}>{video}</option>
-                  ))}
-                </select>
-              </div>
-
-              <button 
-                className="apply-settings-btn"
-                onClick={handleApplySettings}
-                disabled={isApplying}
-              >
-                {isApplying ? (
-                  <><Loader2 size={20} className="spinner" /> Applying & Restarting...</>
-                ) : (
-                  'Apply'
-                )}
-              </button>
-            </div>
-
-            <div className="settings-section">
-              <button className="settings-option-btn" onClick={() => alert('Global Settings')}>
-                <Globe size={24} />
-                <span>Global Settings</span>
-              </button>
-              
-              <button className="settings-option-btn" onClick={() => alert('Game Settings')}>
-                <Gamepad size={24} />
-                <span>Game Settings</span>
-              </button>
-            </div>
-
-            <button className="close-settings-btn" onClick={() => setShowSystemSettings(false)}>Close</button>
-          </div>
-        </div>
-      )}
+      {/* Blade Settings */}
+      <BladeSettings 
+        isOpen={showBladeSettings} 
+        onClose={() => setShowBladeSettings(false)}
+        onApply={handleApplySettings}
+      />
 
       {/* Header */}
       <div className="xbox-header">
