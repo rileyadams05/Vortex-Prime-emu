@@ -1,112 +1,115 @@
 import React, { useState, useEffect } from 'react';
-import { Disc, Heart, Clock, Gamepad2, HelpCircle, Settings } from 'lucide-react';
+import { Disc, Heart, Gamepad2, Settings } from 'lucide-react';
 import axios from 'axios';
 import '../styles/Xbox360Dashboard.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Microsoft login icon SVG
+const MicrosoftIcon = () => (
+  <svg viewBox="0 0 23 23" className="microsoft-icon">
+    <rect x="1" y="1" width="10" height="10" fill="#f25022"/>
+    <rect x="12" y="1" width="10" height="10" fill="#7fba00"/>
+    <rect x="1" y="12" width="10" height="10" fill="#00a4ef"/>
+    <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+  </svg>
+);
+
 const Xbox360Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [xboxProfile, setXboxProfile] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedTile, setSelectedTile] = useState(0);
-  const [recentGames] = useState([
-    { id: 1, title: 'Halo 3', lastPlayed: '2 hours ago', canResume: true },
-    { id: 2, title: 'Gears of War 2', lastPlayed: 'Yesterday', canResume: true },
-    { id: 3, title: 'Red Dead Redemption', lastPlayed: '2 days ago', canResume: false },
-    { id: 4, title: 'Call of Duty: MW2', lastPlayed: '3 days ago', canResume: false }
-  ]);
+  const [recentGames, setRecentGames] = useState([]);
 
   useEffect(() => {
-    // Check for existing session on mount
+    // Check for existing session
     const savedProfile = localStorage.getItem('xboxProfile');
     if (savedProfile) {
       try {
         const profile = JSON.parse(savedProfile);
         setXboxProfile(profile);
         setIsLoggedIn(true);
+        loadRecentGames();
       } catch (e) {
         console.error('Failed to load saved profile', e);
         localStorage.removeItem('xboxProfile');
       }
     }
 
-    // Listen for OAuth callback messages
+    // Listen for OAuth callback
     window.addEventListener('message', handleOAuthCallback);
     return () => window.removeEventListener('message', handleOAuthCallback);
   }, []);
 
+  const loadRecentGames = () => {
+    // Load from localStorage or API
+    const saved = localStorage.getItem('recentGames');
+    if (saved) {
+      setRecentGames(JSON.parse(saved));
+    }
+  };
+
   const handleOAuthCallback = (event) => {
-    // Verify the message origin for security
     if (event.origin !== window.location.origin) return;
 
     if (event.data.type === 'XBOX_AUTH_SUCCESS') {
       const { profile } = event.data;
       setXboxProfile(profile);
       setIsLoggedIn(true);
-      
-      // Save to localStorage for persistence
       localStorage.setItem('xboxProfile', JSON.stringify(profile));
+      loadRecentGames();
     }
   };
 
   const homeTiles = [
-    { id: 'open-tray', title: 'Open Tray', icon: Disc, action: () => alert('Insert disc or mount ISO') },
-    { id: 'my-favorites', title: 'My Favorites', icon: Heart, action: () => alert('My Favorites') },
-    { id: 'recent', title: 'Recent Games', icon: Clock, action: () => showRecentGames() },
-    { id: 'my-games', title: 'My Games', icon: Gamepad2, action: () => alert('My Games library') },
-    { id: 'need-help', title: 'Need Help?', icon: HelpCircle, action: () => window.open('https://support.xbox.com', '_blank') }
+    { id: 'open-tray', title: 'Open Tray', icon: 'disc', action: () => alert('Insert disc or mount ISO') },
+    { id: 'my-favorites', title: 'My Favorites', icon: 'heart', action: () => alert('My Favorites') },
+    { id: 'my-games', title: 'My Games', icon: 'gamepad', action: () => alert('My Games library') }
   ];
 
-  const settingsTiles = [
-    { id: 'display', title: 'Display & Sound', icon: Settings, action: () => alert('Display settings') },
-    { id: 'network', title: 'Network', icon: Settings, action: () => alert('Network settings') },
-    { id: 'storage', title: 'Storage', icon: Settings, action: () => alert('Storage management') },
-    { id: 'system', title: 'System', icon: Settings, action: () => alert('System settings') }
+  const systemTiles = [
+    { id: 'system', title: 'System', icon: 'settings', action: () => alert('System settings') }
   ];
 
-  const showRecentGames = () => {
-    alert(`Recent Games:\n${recentGames.map(g => `${g.title} - ${g.lastPlayed}${g.canResume ? ' (Quick Resume Available)' : ''}`).join('\n')}`);
-  };
-
-  const handleMicrosoftLogin = async () => {
-    try {
-      // Get Microsoft OAuth URL from backend
-      const response = await axios.get(`${API}/xbox/auth/url`);
-      const { authUrl } = response.data;
-      
-      // Open Microsoft login in a popup window
-      const width = 500;
-      const height = 700;
-      const left = window.screen.width / 2 - width / 2;
-      const top = window.screen.height / 2 - height / 2;
-      
-      window.open(
-        authUrl,
-        'Microsoft Login',
-        `width=${width},height=${height},left=${left},top=${top},resizable=no,scrollbars=yes`
-      );
-    } catch (error) {
-      console.error('Failed to initiate Microsoft login', error);
-      alert('Failed to start Microsoft login. Please try again.');
-    }
+  const handleMicrosoftLogin = () => {
+    // Open Microsoft login in default browser
+    const authUrl = 'https://login.live.com/oauth20_authorize.srf?client_id=00000000402b5328&response_type=code&redirect_uri=https://login.live.com/oauth20_desktop.srf&scope=service::user.auth.xboxlive.com::MBI_SSL';
+    window.open(authUrl, '_blank');
   };
 
   const handleLogout = () => {
     setXboxProfile(null);
     setIsLoggedIn(false);
+    setRecentGames([]);
     localStorage.removeItem('xboxProfile');
+    localStorage.removeItem('recentGames');
   };
 
   const getCurrentTiles = () => {
-    return activeTab === 'settings' ? settingsTiles : homeTiles;
+    return activeTab === 'settings' ? systemTiles : homeTiles;
   };
 
   const handleTileClick = (index) => {
     setSelectedTile(index);
     const tiles = getCurrentTiles();
     tiles[index].action();
+  };
+
+  const renderIcon = (iconType) => {
+    switch(iconType) {
+      case 'disc':
+        return <Disc size={48} className="tile-icon" />;
+      case 'heart':
+        return <Heart size={48} className="tile-icon" />;
+      case 'gamepad':
+        return <Gamepad2 size={48} className="tile-icon" />;
+      case 'settings':
+        return <Settings size={48} className="tile-icon" />;
+      default:
+        return null;
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -169,13 +172,13 @@ const Xbox360Dashboard = () => {
                   {xboxProfile?.profilePicture ? (
                     <img src={xboxProfile.profilePicture} alt="Profile" />
                   ) : (
-                    <div className="avatar-placeholder">👤</div>
+                    <div className="avatar-placeholder"><MicrosoftIcon /></div>
                   )}
                 </div>
               </div>
             ) : (
               <div className="profile-avatar not-logged-in">
-                <div className="avatar-placeholder">👤</div>
+                <div className="avatar-microsoft"><MicrosoftIcon /></div>
               </div>
             )}
           </div>
@@ -198,9 +201,36 @@ const Xbox360Dashboard = () => {
       </div>
 
       <div className="dashboard-content">
+        {activeTab === 'home' && recentGames.length > 0 && (
+          <div className="recent-games-section">
+            <h3 className="section-title">Recent Games</h3>
+            <div className="recent-games-list">
+              {recentGames.map((game, index) => (
+                <div key={game.id} className="recent-game-item">
+                  <div className="game-thumbnail">
+                    <Gamepad2 size={32} />
+                  </div>
+                  <div className="game-info">
+                    <div className="game-name">{game.title}</div>
+                    <div className="game-time">{game.lastPlayed}</div>
+                    {game.canResume && <div className="quick-resume">Quick Resume</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'home' && recentGames.length === 0 && (
+          <div className="no-games-message">
+            <Gamepad2 size={64} opacity={0.3} />
+            <p>No games available</p>
+            <span className="hint-text">Play a game to see it here</span>
+          </div>
+        )}
+
         <div className="tiles-grid">
           {getCurrentTiles().map((tile, index) => {
-            const Icon = tile.icon;
             return (
               <div
                 key={tile.id}
@@ -208,7 +238,7 @@ const Xbox360Dashboard = () => {
                 onClick={() => handleTileClick(index)}
               >
                 <div className="tile-content">
-                  <Icon size={48} className="tile-icon" />
+                  {renderIcon(tile.icon)}
                   <div className="tile-title">{tile.title}</div>
                 </div>
               </div>

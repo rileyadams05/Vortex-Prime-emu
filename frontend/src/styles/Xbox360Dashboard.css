@@ -119,6 +119,7 @@
 .profile-avatar.not-logged-in {
   border-color: rgba(255, 255, 255, 0.2);
   opacity: 0.7;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .profile-avatar.not-logged-in:hover {
@@ -133,121 +134,19 @@
   object-fit: cover;
 }
 
-.avatar-placeholder {
-  font-size: 36px;
+.avatar-microsoft {
+  width: 40px;
+  height: 40px;
 }
 
-/* Login Modal */
-.login-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(8px);
-}
-
-.login-modal {
-  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-  border-radius: 16px;
-  padding: 48px;
-  width: 500px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(158, 206, 106, 0.2);
-  border: 2px solid rgba(158, 206, 106, 0.3);
-  position: relative;
-}
-
-.modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.modal-close:hover {
-  color: #ffffff;
-}
-
-.modal-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.modal-header svg {
-  color: #9ECE6A;
-  margin-bottom: 16px;
-}
-
-.modal-header h2 {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.modal-header p {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 16px;
-}
-
-.modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.gamertag-input {
+.microsoft-icon {
   width: 100%;
-  padding: 16px 20px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 18px;
-  font-family: 'Segoe UI', sans-serif;
-  transition: all 0.3s ease;
+  height: 100%;
 }
 
-.gamertag-input:focus {
-  outline: none;
-  border-color: #9ECE6A;
-  box-shadow: 0 0 20px rgba(158, 206, 106, 0.3);
-}
-
-.gamertag-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.login-button {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, #107c10 0%, #0e6a0e 100%);
-  border: none;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.login-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #129e13 0%, #0f7b0f 100%);
-  box-shadow: 0 8px 24px rgba(16, 124, 16, 0.4);
-  transform: translateY(-2px);
-}
-
-.login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.avatar-placeholder .microsoft-icon {
+  width: 40px;
+  height: 40px;
 }
 
 /* Navigation Tabs */
@@ -300,9 +199,103 @@
   z-index: 5;
   padding: 48px;
   display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-height: calc(100vh - 280px);
+}
+
+/* Recent Games Section */
+.recent-games-section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.recent-games-list {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.recent-game-item {
+  min-width: 280px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.recent-game-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-4px);
+}
+
+.game-thumbnail {
+  width: 60px;
+  height: 60px;
+  background: rgba(16, 124, 16, 0.3);
+  border-radius: 8px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 280px);
+  color: #9ECE6A;
+}
+
+.game-info {
+  flex: 1;
+}
+
+.game-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.game-time {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 4px;
+}
+
+.quick-resume {
+  font-size: 12px;
+  color: #9ECE6A;
+  font-weight: 600;
+}
+
+.no-games-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  gap: 16px;
+}
+
+.no-games-message p {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.no-games-message .hint-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .tiles-grid {
@@ -441,17 +434,7 @@
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-.error-message {
-  color: #ff6b6b;
-  font-size: 14px;
-  background: rgba(255, 107, 107, 0.1);
-  padding: 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  text-align: center;
-}
-
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 1200px) {
   .tiles-grid {
     grid-template-columns: repeat(3, 180px);
@@ -461,24 +444,5 @@
   .xbox-tile {
     width: 180px;
     height: 180px;
-  }
-}
-
-@media (max-width: 768px) {
-  .tiles-grid {
-    grid-template-columns: repeat(2, 160px);
-  }
-
-  .xbox-tile {
-    width: 160px;
-    height: 160px;
-  }
-
-  .navigation-tabs {
-    gap: 24px;
-  }
-
-  .nav-tab {
-    font-size: 20px;
   }
 }
