@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Disc, Pin, Clock, Gamepad2, Grid3x3, HelpCircle, Users, Settings } from 'lucide-react';
+import { Disc, Heart, Clock, Gamepad2, HelpCircle, Settings, X, LogIn } from 'lucide-react';
 import axios from 'axios';
 import '../styles/Xbox360Dashboard.css';
 
@@ -9,48 +9,25 @@ const API = `${BACKEND_URL}/api`;
 const Xbox360Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [xboxProfile, setXboxProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [gamertag, setGamertag] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedTile, setSelectedTile] = useState(0);
-
-  useEffect(() => {
-    fetchXboxProfile();
-  }, []);
-
-  const fetchXboxProfile = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/xbox/profile`);
-      setXboxProfile(response.data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching Xbox profile:', err);
-      setError('Failed to load Xbox profile. Using demo profile.');
-      // Fallback to demo profile
-      setXboxProfile({
-        gamertag: 'Xbox Gamer',
-        gamerscore: 0,
-        profilePicture: null
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [recentGames, setRecentGames] = useState([
+    { id: 1, title: 'Halo 3', lastPlayed: '2 hours ago', canResume: true },
+    { id: 2, title: 'Gears of War 2', lastPlayed: 'Yesterday', canResume: true },
+    { id: 3, title: 'Red Dead Redemption', lastPlayed: '2 days ago', canResume: false },
+    { id: 4, title: 'Call of Duty: MW2', lastPlayed: '3 days ago', canResume: false }
+  ]);
 
   const homeTiles = [
     { id: 'open-tray', title: 'Open Tray', icon: Disc, action: () => alert('Insert disc or mount ISO') },
-    { id: 'my-pins', title: 'My Pins', icon: Pin, action: () => alert('My Pins') },
-    { id: 'recent', title: 'Recent', icon: Clock, action: () => alert('Recent activities') },
+    { id: 'my-favorites', title: 'My Favorites', icon: Heart, action: () => alert('My Favorites') },
+    { id: 'recent', title: 'Recent Games', icon: Clock, action: () => showRecentGames() },
     { id: 'my-games', title: 'My Games', icon: Gamepad2, action: () => alert('My Games library') },
-    { id: 'my-apps', title: 'My Apps', icon: Grid3x3, action: () => alert('My Apps') },
     { id: 'need-help', title: 'Need Help?', icon: HelpCircle, action: () => window.open('https://support.xbox.com', '_blank') }
-  ];
-
-  const socialTiles = [
-    { id: 'friends', title: 'Friends', icon: Users, action: () => alert('Friends list') },
-    { id: 'activity', title: 'Activity Feed', icon: Clock, action: () => alert('Activity feed') },
-    { id: 'messages', title: 'Messages', icon: Grid3x3, action: () => alert('Messages') },
-    { id: 'parties', title: 'Parties', icon: Users, action: () => alert('Party chat') }
   ];
 
   const settingsTiles = [
@@ -60,10 +37,41 @@ const Xbox360Dashboard = () => {
     { id: 'system', title: 'System', icon: Settings, action: () => alert('System settings') }
   ];
 
+  const showRecentGames = () => {
+    alert(`Recent Games:\n${recentGames.map(g => `${g.title} - ${g.lastPlayed}${g.canResume ? ' (Quick Resume Available)' : ''}`).join('\n')}`);
+  };
+
+  const handleLogin = async () => {
+    if (!gamertag.trim()) {
+      setError('Please enter a gamertag');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch Xbox profile using the gamertag
+      const response = await axios.get(`${API}/xbox/profile/${gamertag}`);
+      setXboxProfile(response.data);
+      setIsLoggedIn(true);
+      setShowLoginModal(false);
+    } catch (err) {
+      console.error('Error fetching Xbox profile:', err);
+      setError('Failed to fetch Xbox profile. Please check the gamertag and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setXboxProfile(null);
+    setIsLoggedIn(false);
+    setGamertag('');
+  };
+
   const getCurrentTiles = () => {
     switch (activeTab) {
-      case 'social':
-        return socialTiles;
       case 'settings':
         return settingsTiles;
       default:
@@ -115,32 +123,73 @@ const Xbox360Dashboard = () => {
       </div>
 
       <div className="xbox-header">
-        <div className="header-left">
-          <div className="xbox-logo-text">Xbox</div>
-        </div>
+        <div className="header-spacer"></div>
         <div className="header-right">
-          {loading ? (
-            <div className="profile-loading">Loading profile...</div>
-          ) : (
-            <div className="xbox-profile">
-              <div className="profile-info">
-                <div className="gamertag">{xboxProfile?.gamertag || 'Xbox Gamer'}</div>
-                <div className="gamerscore">
-                  <span className="score-icon">G</span>
-                  <span className="score-value">{xboxProfile?.gamerscore || 0}</span>
+          <div 
+            className="xbox-profile-avatar" 
+            onClick={() => !isLoggedIn && setShowLoginModal(true)}
+            title={isLoggedIn ? 'View Profile' : 'Sign in to Xbox Live'}
+          >
+            {isLoggedIn ? (
+              <div className="profile-section">
+                <div className="profile-info-logged">
+                  <div className="gamertag">{xboxProfile?.gamertag || 'Xbox Gamer'}</div>
+                  <div className="gamerscore">
+                    <svg className="gamerscore-icon" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span className="score-value">{xboxProfile?.gamerscore || 0}</span>
+                  </div>
+                </div>
+                <div className="profile-avatar logged-in">
+                  {xboxProfile?.profilePicture ? (
+                    <img src={xboxProfile.profilePicture} alt="Profile" />
+                  ) : (
+                    <div className="avatar-placeholder">👤</div>
+                  )}
                 </div>
               </div>
-              <div className="profile-avatar">
-                {xboxProfile?.profilePicture ? (
-                  <img src={xboxProfile.profilePicture} alt="Profile" />
-                ) : (
-                  <div className="avatar-placeholder">👤</div>
-                )}
+            ) : (
+              <div className="profile-avatar not-logged-in">
+                <div className="avatar-placeholder">👤</div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
+
+      {showLoginModal && (
+        <div className="login-modal-overlay" onClick={() => setShowLoginModal(false)}>
+          <div className="login-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowLoginModal(false)}>
+              <X size={24} />
+            </button>
+            <div className="modal-header">
+              <LogIn size={48} />
+              <h2>Sign in to Xbox Live</h2>
+              <p>Enter your Xbox gamertag to view your profile</p>
+            </div>
+            <div className="modal-body">
+              <input
+                type="text"
+                placeholder="Enter your gamertag"
+                value={gamertag}
+                onChange={(e) => setGamertag(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                className="gamertag-input"
+              />
+              {error && <div className="error-message">{error}</div>}
+              <button 
+                onClick={handleLogin} 
+                disabled={loading}
+                className="login-button"
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="navigation-tabs">
         <button 
@@ -148,12 +197,6 @@ const Xbox360Dashboard = () => {
           onClick={() => { setActiveTab('home'); setSelectedTile(0); }}
         >
           home
-        </button>
-        <button 
-          className={`nav-tab ${activeTab === 'social' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('social'); setSelectedTile(0); }}
-        >
-          social
         </button>
         <button 
           className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
@@ -188,7 +231,11 @@ const Xbox360Dashboard = () => {
           <span className="hint-icon">A</span>
           <span className="hint-text">Select</span>
         </div>
-        {error && <div className="error-message">{error}</div>}
+        {isLoggedIn && (
+          <button className="logout-button" onClick={handleLogout}>
+            Sign Out
+          </button>
+        )}
       </div>
     </div>
   );
