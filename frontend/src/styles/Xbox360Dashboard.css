@@ -134,6 +134,34 @@
   object-fit: cover;
 }
 
+.avatar-icon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xbox-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.profile-login-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+  letter-spacing: 0.5px;
+}
+
 .avatar-microsoft {
   width: 40px;
   height: 40px;
