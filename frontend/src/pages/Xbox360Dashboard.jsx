@@ -134,20 +134,17 @@ const Xbox360Dashboard = () => {
     { id: 'system-settings', title: 'System Settings', icon: Settings, action: () => setShowSystemSettings(true) }
   ];
 
-  const handleApplySettings = () => {
-    setIsApplying(true);
+  const handleApplySettings = (settings) => {
+    if (settings.theme) {
+      localStorage.setItem('selectedTheme', settings.theme);
+    }
+    if (settings.startupVideo) {
+      localStorage.setItem('selectedStartupVideo', settings.startupVideo);
+      localStorage.setItem('skipStartup', 'false');
+    }
     
-    // Save settings
-    localStorage.setItem('selectedTheme', selectedTheme);
-    localStorage.setItem('selectedStartupVideo', selectedStartupVideo);
-    localStorage.setItem('skipStartup', 'false');
-    
-    // Simulate restart
-    setTimeout(() => {
-      setIsApplying(false);
-      alert('Settings applied! App will restart to apply changes.\n\nIn Tauri app, this would actually restart the application.');
-      setShowSystemSettings(false);
-    }, 2000);
+    alert('Settings applied! App will restart to apply changes.\n\nIn Tauri app, this would actually restart the application.');
+    setShowBladeSettings(false);
   };
 
   const handleMicrosoftLogin = () => {
