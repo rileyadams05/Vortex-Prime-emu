@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Disc, Heart, Settings, Trophy, Loader2, Gamepad2 } from 'lucide-react';
+import { Disc, Heart, Settings, Trophy, Loader2, Gamepad } from 'lucide-react';
 import axios from 'axios';
 import BladeSettings from '../components/BladeSettings';
 import '../styles/Xbox360Dashboard.css';

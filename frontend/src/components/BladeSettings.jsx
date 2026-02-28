@@ -1,7 +1,7 @@
 // Authentic Xbox 360 Blade System Settings
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Palette, Video, Globe, Gamepad2, Tv, Wifi, HardDrive, Info, ChevronRight } from 'lucide-react';
+import { Settings, Palette, Video, Globe, Gamepad, Tv, Wifi, HardDrive, Info, ChevronRight } from 'lucide-react';
 import './BladeSettings.css';
 
 const BladeSettings = ({ isOpen, onClose, onApply }) => {
@@ -19,7 +19,7 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
     { id: 'network', label: 'Network Settings', icon: Wifi, action: () => {} },
     { id: 'storage', label: 'Storage', icon: HardDrive, action: () => {} },
     { id: 'global', label: 'Global Settings', icon: Globe, action: () => {} },
-    { id: 'game', label: 'Game Settings', icon: Gamepad2, action: () => {} },
+    { id: 'game', label: 'Game Settings', icon: Gamepad, action: () => {} },
     { id: 'about', label: 'System Info', icon: Info, action: () => {} }
   ];
 
