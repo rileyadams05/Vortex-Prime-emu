@@ -5,8 +5,8 @@ export const mockGames = [
     title: 'Spider-Man: Web of Shadows',
     titleId: '41560829',
     publisher: 'Activision',
-    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co23s9.jpg',
-    banner: 'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc0kf6.jpg',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/6/63/Spider-Man-Web_of_Shadows_Coverart.png',
+    banner: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=800&q=80',
     description: 'An action-adventure game featuring Spider-Man as he faces a symbiote invasion in New York City.',
     achievementCount: 50
   },
@@ -15,8 +15,8 @@ export const mockGames = [
     title: 'Bionic Commando',
     titleId: '43430819',
     publisher: 'Capcom',
-    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1vbn.jpg',
-    banner: 'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc82yx.jpg',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/d/dc/Bionic_Commando_2009_Game_Cover.jpg',
+    banner: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80',
     description: 'A reimagining of the classic action game featuring a bionic arm and intense combat.',
     achievementCount: 40
   },
@@ -25,8 +25,8 @@ export const mockGames = [
     title: 'Halo 3',
     titleId: '4D5307D1',
     publisher: 'Microsoft',
-    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg',
-    banner: 'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc8e9g.jpg',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/b/b9/Halo_3_final_boxshot.JPG',
+    banner: 'https://images.unsplash.com/photo-1614294148960-9aa740632a87?w=800&q=80',
     description: 'Master Chief returns to finish the fight against the Covenant in this epic conclusion.',
     achievementCount: 79
   },
@@ -35,8 +35,8 @@ export const mockGames = [
     title: 'Gears of War 2',
     titleId: '4D5308AB',
     publisher: 'Microsoft',
-    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co24bt.jpg',
-    banner: 'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc7ylt.jpg',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/0/03/Gears_of_War_2_cover.png',
+    banner: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800&q=80',
     description: 'The sequel to the acclaimed third-person shooter featuring intense combat and epic battles.',
     achievementCount: 70
   },
@@ -45,8 +45,8 @@ export const mockGames = [
     title: 'Red Dead Redemption',
     titleId: '5454082B',
     publisher: 'Rockstar Games',
-    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2ley.jpg',
-    banner: 'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc8dk2.jpg',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/a/a7/Red_Dead_Redemption.jpg',
+    banner: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=800&q=80',
     description: 'An epic tale of life in America\'s unforgiving heartland in the dying days of the outlaw era.',
     achievementCount: 95
   },
@@ -55,8 +55,8 @@ export const mockGames = [
     title: 'Fallout 3',
     titleId: '4254083B',
     publisher: 'Bethesda',
-    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co23nz.jpg',
-    banner: 'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc8khu.jpg',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/3/3a/Fallout_3_cover_art.PNG',
+    banner: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80',
     description: 'Explore the Capital Wasteland in this post-apocalyptic RPG masterpiece.',
     achievementCount: 72
   },
@@ -65,8 +65,8 @@ export const mockGames = [
     title: 'Call of Duty: Modern Warfare 2',
     titleId: '41560855',
     publisher: 'Activision',
-    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wym.jpg',
-    banner: 'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc7zja.jpg',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/d/d5/Call_of_Duty_Modern_Warfare_2_%282009%29_cover.png',
+    banner: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&q=80',
     description: 'The world stands on the brink of oblivion in this intense first-person shooter.',
     achievementCount: 50
   },
@@ -75,10 +75,30 @@ export const mockGames = [
     title: 'Batman: Arkham Asylum',
     titleId: '4541080F',
     publisher: 'Eidos',
-    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1r7g.jpg',
-    banner: 'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc8fjx.jpg',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/d/d8/Batman_Arkham_Asylum_cover.jpg',
+    banner: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=800&q=80',
     description: 'Batman faces his greatest challenge as he investigates the Joker\'s takeover of Arkham Asylum.',
     achievementCount: 47
+  },
+  {
+    id: '9',
+    title: 'Assassin\'s Creed II',
+    titleId: '55530829',
+    publisher: 'Ubisoft',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/e/e4/Assassin%27s_Creed_II_cover.jpg',
+    banner: 'https://images.unsplash.com/photo-1583225214464-9296029427aa?w=800&q=80',
+    description: 'Experience the story of Ezio Auditore in Renaissance Italy.',
+    achievementCount: 50
+  },
+  {
+    id: '10',
+    title: 'The Elder Scrolls IV: Oblivion',
+    titleId: '42540802',
+    publisher: 'Bethesda',
+    cover: 'https://upload.wikimedia.org/wikipedia/en/b/be/The_Elder_Scrolls_IV_Oblivion_cover.png',
+    banner: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
+    description: 'A massive open-world RPG set in the fantasy province of Cyrodiil.',
+    achievementCount: 50
   }
 ];
 
