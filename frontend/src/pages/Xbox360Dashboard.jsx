@@ -56,11 +56,8 @@ const Xbox360Dashboard = () => {
       }
     }
 
-    // Load theme and startup video settings
-    const savedTheme = localStorage.getItem('selectedTheme');
-    const savedStartup = localStorage.getItem('selectedStartupVideo');
-    if (savedTheme) setSelectedTheme(savedTheme);
-    if (savedStartup) setSelectedStartupVideo(savedStartup);
+    // Load theme and startup video settings (removed unused state variables)
+    // Settings are now managed by the BladeSettings component
 
     // Listen for OAuth callback
     window.addEventListener('message', handleOAuthCallback);
@@ -126,7 +123,7 @@ const Xbox360Dashboard = () => {
   ];
 
   const systemTiles = [
-    { id: 'system-settings', title: 'System Settings', icon: Settings, action: () => setShowSystemSettings(true) }
+    { id: 'system-settings', title: 'System Settings', icon: Settings, action: () => setShowBladeSettings(true) }
   ];
 
   const handleApplySettings = (settings) => {
