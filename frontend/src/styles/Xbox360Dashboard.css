@@ -124,7 +124,8 @@
 
 .profile-avatar.not-logged-in:hover {
   opacity: 1;
-  box-shadow: 0 0 20px rgba(68, 171, 25, 0.5);\n  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(68, 171, 25, 0.5);
+  transform: scale(1.05);
 }
 
 .profile-avatar img {
