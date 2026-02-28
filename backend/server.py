@@ -67,6 +67,17 @@ async def get_status_checks():
     
     return status_checks
 
+# Xbox Live API endpoints
+@api_router.get("/xbox/profile")
+async def get_profile():
+    """Get Xbox Live profile"""
+    return get_xbox_profile()
+
+@api_router.get("/xbox/achievements/{gamertag}")
+async def get_achievements(gamertag: str):
+    """Get achievements for a gamertag"""
+    return get_xbox_achievements(gamertag)
+
 # Include the router in the main app
 app.include_router(api_router)
 
