@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Disc, Heart, Settings, Trophy, Loader2, Palette, Video, Globe, Gamepad } from 'lucide-react';
+import { Disc, Heart, Settings, Trophy, Loader2, Gamepad2 } from 'lucide-react';
 import axios from 'axios';
+import BladeSettings from '../components/BladeSettings';
 import '../styles/Xbox360Dashboard.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -25,7 +26,7 @@ const Xbox360Dashboard = () => {
   const [loadingAchievements, setLoadingAchievements] = useState(false);
   const [gameLibrary, setGameLibrary] = useState([]);
   const [showStartupVideo, setShowStartupVideo] = useState(true);
-  const [showSystemSettings, setShowSystemSettings] = useState(false);
+  const [showBladeSettings, setShowBladeSettings] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState('default');
   const [selectedStartupVideo, setSelectedStartupVideo] = useState('default');
   const [availableThemes, setAvailableThemes] = useState(['default', 'dark-green', 'blue-wave']);
