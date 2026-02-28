@@ -27,11 +27,6 @@ const Xbox360Dashboard = () => {
   const [gameLibrary, setGameLibrary] = useState([]);
   const [showStartupVideo, setShowStartupVideo] = useState(true);
   const [showBladeSettings, setShowBladeSettings] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState('default');
-  const [selectedStartupVideo, setSelectedStartupVideo] = useState('default');
-  const [availableThemes, setAvailableThemes] = useState(['default', 'dark-green', 'blue-wave']);
-  const [availableStartupVideos, setAvailableStartupVideos] = useState(['default', 'classic-360', 'kinect-intro']);
-  const [isApplying, setIsApplying] = useState(false);
 
   useEffect(() => {
     // Check startup video setting
