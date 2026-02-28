@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Disc, Heart, Clock, Gamepad2, HelpCircle, Settings, X, LogIn } from 'lucide-react';
+import { Disc, Heart, Clock, Gamepad2, HelpCircle, Settings } from 'lucide-react';
 import axios from 'axios';
 import '../styles/Xbox360Dashboard.css';
 
@@ -10,17 +10,46 @@ const Xbox360Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [xboxProfile, setXboxProfile] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [gamertag, setGamertag] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [selectedTile, setSelectedTile] = useState(0);
-  const [recentGames, setRecentGames] = useState([
+  const [recentGames] = useState([
     { id: 1, title: 'Halo 3', lastPlayed: '2 hours ago', canResume: true },
     { id: 2, title: 'Gears of War 2', lastPlayed: 'Yesterday', canResume: true },
     { id: 3, title: 'Red Dead Redemption', lastPlayed: '2 days ago', canResume: false },
     { id: 4, title: 'Call of Duty: MW2', lastPlayed: '3 days ago', canResume: false }
   ]);
+
+  useEffect(() => {
+    // Check for existing session on mount
+    const savedProfile = localStorage.getItem('xboxProfile');
+    if (savedProfile) {
+      try {
+        const profile = JSON.parse(savedProfile);
+        setXboxProfile(profile);
+        setIsLoggedIn(true);
+      } catch (e) {
+        console.error('Failed to load saved profile', e);
+        localStorage.removeItem('xboxProfile');
+      }
+    }
+
+    // Listen for OAuth callback messages
+    window.addEventListener('message', handleOAuthCallback);
+    return () => window.removeEventListener('message', handleOAuthCallback);
+  }, []);
+
+  const handleOAuthCallback = (event) => {
+    // Verify the message origin for security
+    if (event.origin !== window.location.origin) return;
+
+    if (event.data.type === 'XBOX_AUTH_SUCCESS') {
+      const { profile } = event.data;
+      setXboxProfile(profile);
+      setIsLoggedIn(true);
+      
+      // Save to localStorage for persistence
+      localStorage.setItem('xboxProfile', JSON.stringify(profile));
+    }
+  };
 
   const homeTiles = [
     { id: 'open-tray', title: 'Open Tray', icon: Disc, action: () => alert('Insert disc or mount ISO') },
@@ -41,42 +70,37 @@ const Xbox360Dashboard = () => {
     alert(`Recent Games:\n${recentGames.map(g => `${g.title} - ${g.lastPlayed}${g.canResume ? ' (Quick Resume Available)' : ''}`).join('\n')}`);
   };
 
-  const handleLogin = async () => {
-    if (!gamertag.trim()) {
-      setError('Please enter a gamertag');
-      return;
-    }
-
+  const handleMicrosoftLogin = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      // Get Microsoft OAuth URL from backend
+      const response = await axios.get(`${API}/xbox/auth/url`);
+      const { authUrl } = response.data;
       
-      // Fetch Xbox profile using the gamertag
-      const response = await axios.get(`${API}/xbox/profile/${gamertag}`);
-      setXboxProfile(response.data);
-      setIsLoggedIn(true);
-      setShowLoginModal(false);
-    } catch (err) {
-      console.error('Error fetching Xbox profile:', err);
-      setError('Failed to fetch Xbox profile. Please check the gamertag and try again.');
-    } finally {
-      setLoading(false);
+      // Open Microsoft login in a popup window
+      const width = 500;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+      
+      window.open(
+        authUrl,
+        'Microsoft Login',
+        `width=${width},height=${height},left=${left},top=${top},resizable=no,scrollbars=yes`
+      );
+    } catch (error) {
+      console.error('Failed to initiate Microsoft login', error);
+      alert('Failed to start Microsoft login. Please try again.');
     }
   };
 
   const handleLogout = () => {
     setXboxProfile(null);
     setIsLoggedIn(false);
-    setGamertag('');
+    localStorage.removeItem('xboxProfile');
   };
 
   const getCurrentTiles = () => {
-    switch (activeTab) {
-      case 'settings':
-        return settingsTiles;
-      default:
-        return homeTiles;
-    }
+    return activeTab === 'settings' ? settingsTiles : homeTiles;
   };
 
   const handleTileClick = (index) => {
@@ -127,8 +151,8 @@ const Xbox360Dashboard = () => {
         <div className="header-right">
           <div 
             className="xbox-profile-avatar" 
-            onClick={() => !isLoggedIn && setShowLoginModal(true)}
-            title={isLoggedIn ? 'View Profile' : 'Sign in to Xbox Live'}
+            onClick={() => !isLoggedIn && handleMicrosoftLogin()}
+            title={isLoggedIn ? 'View Profile' : 'Sign in with Microsoft'}
           >
             {isLoggedIn ? (
               <div className="profile-section">
@@ -157,39 +181,6 @@ const Xbox360Dashboard = () => {
           </div>
         </div>
       </div>
-
-      {showLoginModal && (
-        <div className="login-modal-overlay" onClick={() => setShowLoginModal(false)}>
-          <div className="login-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowLoginModal(false)}>
-              <X size={24} />
-            </button>
-            <div className="modal-header">
-              <LogIn size={48} />
-              <h2>Sign in to Xbox Live</h2>
-              <p>Enter your Xbox gamertag to view your profile</p>
-            </div>
-            <div className="modal-body">
-              <input
-                type="text"
-                placeholder="Enter your gamertag"
-                value={gamertag}
-                onChange={(e) => setGamertag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                className="gamertag-input"
-              />
-              {error && <div className="error-message">{error}</div>}
-              <button 
-                onClick={handleLogin} 
-                disabled={loading}
-                className="login-button"
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="navigation-tabs">
         <button 
