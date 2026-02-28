@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import XeniaDashboard from './pages/XeniaDashboard';
+import Xbox360Dashboard from './pages/Xbox360Dashboard';
 import './App.css';
 
 function App() {
@@ -8,7 +8,7 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<XeniaDashboard />} />
+          <Route path="/" element={<Xbox360Dashboard />} />
         </Routes>
       </BrowserRouter>
     </div>
