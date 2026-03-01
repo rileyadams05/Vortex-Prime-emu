@@ -1,12 +1,12 @@
 {
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "cd frontend && npm start",
+    "beforeBuildCommand": "cd frontend && npm run build",
     "devPath": "http://localhost:3000",
-    "distDir": "../build"
+    "distDir": "../frontend/build"
   },
   "package": {
-    "productName": "Xbox 360 Dashboard",
+    "productName": "Vortex Prime",
     "version": "1.0.0"
   },
   "tauri": {
@@ -14,20 +14,30 @@
       "all": false,
       "shell": {
         "all": false,
-        "open": true
+        "open": true,
+        "execute": true,
+        "sidecar": true
       },
       "fs": {
         "all": true,
         "scope": ["**"]
       },
       "dialog": {
+        "all": true,
+        "open": true,
+        "save": true
+      },
+      "path": {
+        "all": true
+      },
+      "process": {
         "all": true
       }
     },
     "bundle": {
       "active": true,
-      "targets": "all",
-      "identifier": "com.xbox360.dashboard",
+      "targets": ["msi", "nsis"],
+      "identifier": "com.vortex.prime",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -36,22 +46,43 @@
         "icons/icon.ico"
       ],
       "resources": [
-        "resources/xenia/*"
-      ]
+        "resources/**/*"
+      ],
+      "externalBin": [],
+      "copyright": "Copyright © 2025 Vortex Prime",
+      "category": "Game",
+      "shortDescription": "Xbox 360 Dashboard for Xenia",
+      "longDescription": "A professional Xbox 360-style dashboard interface for managing and launching Xbox 360 games via the Xenia emulator.",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://xbl.io https://login.live.com https://customer-assets.emergentagent.com"
     },
     "windows": [
       {
-        "fullscreen": false,
-        "resizable": true,
-        "title": "Xbox 360 Dashboard",
+        "title": "Vortex Prime",
         "width": 1280,
         "height": 720,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "center": true,
         "minWidth": 1024,
-        "minHeight": 600
+        "minHeight": 600,
+        "transparent": false,
+        "skipTaskbar": false
       }
-    ]
+    ],
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
+    }
   }
 }
+
