@@ -1,25 +1,33 @@
 [package]
-name = "xbox360-dashboard"
+name = "vortex-prime"
 version = "1.0.0"
-description = "Xbox 360 Dashboard with Xenia Integration"
-authors = ["you"]
+description = "Xbox 360-style dashboard for Xenia Emulator"
+authors = ["Vortex Prime Team"]
 license = "MIT"
-repository = ""
+repository = "https://github.com/vortexprime/vortex-prime"
 edition = "2021"
 
 [build-dependencies]
-tauri-build = { version = "2.0", features = [] }
+tauri-build = { version = "2.0.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.0", features = ["shell-open"] }
-tauri-plugin-fs = "2.0"
-tauri-plugin-dialog = "2.0"
+tauri = { version = "2.0.0", features = ["shell-execute", "shell-open", "shell-sidecar"] }
+tauri-plugin-fs = "2.0.0"
+tauri-plugin-dialog = "2.0.0"
+tauri-plugin-shell = "2.0.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.11", features = ["json"] }
-xinput = "0.2"
 
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "z"
+strip = true
+
