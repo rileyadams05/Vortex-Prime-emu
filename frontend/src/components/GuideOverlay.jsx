@@ -27,8 +27,8 @@ const sendQuickResumeCommand = async (gameId, savePath) => {
   return tauriInvoke('quick_resume_load', { gameId, savePath });
 };
 
-const TAB_NAMES = ['Home', 'Friends and Parties', 'Games', 'Messages'];
-const TAB_COUNT = 4;
+const TAB_NAMES = ['Friends and Parties', 'Messages', 'Home'];
+const TAB_COUNT = 3;
 
 const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xboxProfile, isLoggedIn, onLogin, recentGames, onQuickResume }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -54,7 +54,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
   useEffect(() => {
     if (isOpen) {
-      setActiveTab(0);
+      setActiveTab(0); // Friends and Parties first
       setSelectedItem(0);
       setFocusZone('menu');
       setSearchQuery('');
@@ -83,33 +83,24 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
   const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-  // HOME tab items
+  // HOME tab items: Home, Settings, Shutdown, then recently played + 2 extra
   const homeMenuItems = useMemo(() => [
     { id: 'home', label: 'Home', type: 'action' },
     { id: 'settings', label: 'Settings', type: 'action' },
-    ...((recentGames || []).slice(0, 5).map((game, i) => ({
+    { id: 'shutdown', label: 'Shutdown System', badge: '(Exit App)', type: 'action' },
+    ...((recentGames || []).slice(0, 7).map((game, i) => ({
       id: `home-game-${i}`,
       label: game.title,
       type: 'game',
       game,
       hasQuickResume: game.hasQuickResume || false,
     }))),
-    { id: 'shutdown', label: 'Shutdown System', badge: '(Exit App)', type: 'action' },
   ], [recentGames]);
 
   // FRIENDS tab items
   const friendsMenuItems = useMemo(() => [
     { id: 'friends', label: 'Friends', type: 'friends-section' },
   ], []);
-
-  // GAMES tab items
-  const gamesMenuItems = useMemo(() => (recentGames || []).slice(0, 5).map((game, i) => ({
-    id: `game-${i}`,
-    label: game.title,
-    type: 'game',
-    game,
-    hasQuickResume: game.hasQuickResume || false,
-  })), [recentGames]);
 
   // MESSAGES tab items
   const messagesMenuItems = useMemo(() => chatData.conversations.length > 0
@@ -124,9 +115,9 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
     : [], [chatData.conversations]);
 
   const currentMenuItems = useMemo(() => {
-    const all = [homeMenuItems, friendsMenuItems, gamesMenuItems, messagesMenuItems];
+    const all = [friendsMenuItems, messagesMenuItems, homeMenuItems];
     return all[activeTab] || [];
-  }, [activeTab, homeMenuItems, friendsMenuItems, gamesMenuItems, messagesMenuItems]);
+  }, [activeTab, homeMenuItems, friendsMenuItems, messagesMenuItems]);
   const itemCount = currentMenuItems.length;
 
   const filteredXboxFriends = friendsData.xbox_friends.filter(f =>
@@ -200,7 +191,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       return;
     }
 
-    const isFriendsTab = activeTab === 1;
+    const isFriendsTab = activeTab === 0;
 
     switch (e.key) {
       case 'ArrowUp':
@@ -261,7 +252,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       if (event.type !== 'press') return;
       const btn = event.button;
       const s = stateRef.current;
-      const isFriendsTab = s.activeTab === 1;
+      const isFriendsTab = s.activeTab === 0;
 
       if (btn === 'b') { playSound('back'); onClose(); return; }
       if (btn === 'lb' || btn === 'leftBumper') { switchTab('left'); return; }
@@ -303,7 +294,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
   const renderHomeTab = () => (
     <div className={`guide-tab-content ${tabTransition}`}>
-      {/* Home + Settings */}
+      {/* Home */}
       <div
         className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 0 ? 'selected' : ''}`}
         data-testid="guide-home-btn"
@@ -312,6 +303,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       >
         <span className="menu-label">Home</span>
       </div>
+      {/* Settings */}
       <div
         className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 1 ? 'selected' : ''}`}
         data-testid="guide-settings-btn"
@@ -320,13 +312,23 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       >
         <span className="menu-label">Settings</span>
       </div>
+      {/* Shutdown - right under Settings */}
+      <div
+        className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 2 ? 'selected' : ''}`}
+        data-testid="guide-shutdown-btn"
+        onClick={() => { setFocusZone('menu'); setSelectedItem(2); handleMenuAction(2); }}
+        onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(2); }}
+      >
+        <span className="menu-label">Shutdown System</span>
+        <span className="menu-badge exit-badge">(Exit App)</span>
+      </div>
 
       <div className="guide-section-divider" />
       <div className="guide-section-header">Recently Played</div>
 
-      {/* Recent games with Quick Resume */}
-      {homeMenuItems.slice(2, -1).map((item, idx) => {
-        const menuIdx = idx + 2;
+      {/* Games (5 recent + 2 extra slots) */}
+      {homeMenuItems.slice(3).map((item, idx) => {
+        const menuIdx = idx + 3;
         return (
           <div
             key={item.id}
@@ -347,19 +349,6 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       {(recentGames || []).length === 0 && (
         <div className="friends-empty">No recently played games</div>
       )}
-
-      <div className="guide-section-divider" />
-
-      {/* Shutdown */}
-      <div
-        className={`guide-menu-item ${focusZone === 'menu' && selectedItem === homeMenuItems.length - 1 ? 'selected' : ''}`}
-        data-testid="guide-shutdown-btn"
-        onClick={() => { setFocusZone('menu'); setSelectedItem(homeMenuItems.length - 1); handleMenuAction(homeMenuItems.length - 1); }}
-        onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(homeMenuItems.length - 1); }}
-      >
-        <span className="menu-label">Shutdown System</span>
-        <span className="menu-badge exit-badge">(Exit App)</span>
-      </div>
     </div>
   );
 
@@ -420,28 +409,6 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
     </div>
   );
 
-  const renderGamesTab = () => (
-    <div className={`guide-tab-content ${tabTransition}`}>
-      {gamesMenuItems.length === 0 ? (
-        <div className="friends-empty">No recently played games</div>
-      ) : (
-        gamesMenuItems.map((item, i) => (
-          <div key={item.id} className={`guide-menu-item game-item ${focusZone === 'menu' && selectedItem === i ? 'selected' : ''}`}
-            data-testid={`guide-game-${i}`}
-            onClick={() => { setFocusZone('menu'); setSelectedItem(i); handleMenuAction(i); }}
-            onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(i); }}
-          >
-            <div className="game-item-info">
-              {item.game?.cover && <img src={item.game.cover} alt="" className="game-thumb" />}
-              <span className="menu-label">{item.label}</span>
-            </div>
-            {item.hasQuickResume && <span className="menu-badge resume-badge">Quick Resume</span>}
-          </div>
-        ))
-      )}
-    </div>
-  );
-
   const renderMessagesTab = () => (
     <div className={`guide-tab-content ${tabTransition}`}>
       {chatLoading && <div className="friends-loading">Loading messages...</div>}
@@ -466,14 +433,14 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
     </div>
   );
 
-  const tabRenderers = [renderHomeTab, renderFriendsTab, renderGamesTab, renderMessagesTab];
+  const tabRenderers = [renderFriendsTab, renderMessagesTab, renderHomeTab];
 
   return (
     <>
       <div data-testid="guide-overlay-backdrop" className="guide-overlay-backdrop" onClick={onClose} />
       <div ref={containerRef} data-testid="guide-modal-container" className="guide-modal-container" tabIndex={-1} onClick={e => e.stopPropagation()}>
         <div data-testid="guide-center-panel" className="guide-center-panel">
-          <div className="guide-panel-header"><span className="guide-title-text">Xenia Guide</span></div>
+          <div className="guide-panel-header"><span className="guide-title-text">Guide</span></div>
 
           <div className="guide-profile-row" data-testid="guide-profile-row">
             <div className="profile-avatar-box" onClick={() => !isLoggedIn && onLogin && onLogin()} style={{ cursor: isLoggedIn ? 'default' : 'pointer' }}>

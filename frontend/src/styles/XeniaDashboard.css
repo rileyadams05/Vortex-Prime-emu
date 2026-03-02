@@ -832,10 +832,10 @@ body {
   margin-top: 10px;
 }
 
-/* ===== Top Games Section (Recently Played + Extra Slots) ===== */
+/* ===== Top Games Section (Recently Played + Extra Slots - all same row, same size) ===== */
 .top-games-section {
   padding: 0 20px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 /* ===== Recent Games Strip ===== */
@@ -857,6 +857,7 @@ body {
 }
 .recent-game-tile {
   flex-shrink: 0;
+  width: 90px;
   position: relative;
   border-radius: 4px;
   overflow: hidden;
@@ -869,7 +870,7 @@ body {
   border-color: var(--xenia-green);
   transform: scale(1.05);
 }
-.recent-game-tile.small { width: 80px; }
+.recent-game-tile.small { width: 90px; }
 .recent-game-art {
   width: 100%;
   height: 70px;
