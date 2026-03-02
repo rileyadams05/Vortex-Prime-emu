@@ -6,6 +6,7 @@ import { mockGames, mockAchievements } from '../data/xeniaData';
 import NXESettings from '../components/NXESettings';
 import BladesOverlay from '../components/BladesOverlay';
 import GuideOverlay from '../components/GuideOverlay';
+import ThemeManager from '../components/ThemeManager';
 import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
