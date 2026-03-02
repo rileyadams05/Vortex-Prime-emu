@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
 import '../styles/GuideOverlay.css';
@@ -9,12 +9,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
   const containerRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
 
-  // Build unified menu:
-  // 0: Friends & Parties (placeholder)
-  // 1: Home (navigate to dashboard)
-  // 2: Shutdown System
-  // 3+: Recently played games
-  const menuItems = [
+  const menuItems = useMemo(() => [
     { id: 'friends', label: 'Friends & Parties', badge: '', badgeClass: '', type: 'section', sectionStart: true, sectionLabel: '' },
     { id: 'home', label: 'Home', badge: '', badgeClass: '', type: 'action', sectionStart: true, sectionLabel: '' },
     { id: 'shutdown', label: 'Shutdown System', badge: '(Exit App)', badgeClass: 'exit-badge', type: 'action' },
@@ -28,7 +23,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
       sectionStart: i === 0,
       sectionLabel: 'Games',
     }))),
-  ];
+  ], [recentGames]);
 
   const itemCount = menuItems.length;
 
@@ -71,7 +66,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
       if (onQuickResume) onQuickResume(item.game);
       onClose();
     }
-  }, [menuItems, onClose, onNavigateHome, onQuickResume]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [menuItems, onClose, onNavigateHome, onQuickResume]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e) => {
