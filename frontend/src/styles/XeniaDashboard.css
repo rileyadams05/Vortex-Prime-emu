@@ -832,9 +832,16 @@ body {
   margin-top: 10px;
 }
 
+/* ===== Top Games Section (Recently Played + Extra Slots) ===== */
+.top-games-section {
+  padding: 0 20px;
+  margin-bottom: 12px;
+}
+
 /* ===== Recent Games Strip ===== */
 .recent-games-strip {
-  padding: 0 20px 8px;
+  padding: 0 0 6px;
+  margin-bottom: 8px;
 }
 .recent-title {
   font-size: 0.7rem;
@@ -927,11 +934,11 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* ===== Extra Game Slots (bottom) ===== */
+/* ===== Extra Game Slots ===== */
 .extra-game-slots {
   display: flex;
-  gap: 14px;
-  padding: 8px 20px 0;
+  gap: 12px;
+  padding: 0;
 }
 .extra-game-card {
   flex: 1;

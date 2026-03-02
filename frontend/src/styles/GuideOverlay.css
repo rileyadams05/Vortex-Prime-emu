@@ -47,7 +47,7 @@
 
 /* ====== CENTER PANEL ====== */
 .guide-center-panel {
-  width: 440px;
+  width: 480px;
   max-height: 85vh;
   background: linear-gradient(180deg, #505860 0%, #3a4048 30%, #353b42 70%, #303640 100%);
   border-radius: 12px;
@@ -163,18 +163,19 @@
 
 .guide-tab {
   flex: 1;
-  padding: 10px 12px;
+  padding: 8px 6px;
   background: rgba(0,0,0,0.15);
   border: none;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.4);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.15s;
   position: relative;
+  white-space: nowrap;
 }
 .guide-tab:first-child { border-radius: 0; }
 .guide-tab:last-child { border-radius: 0; }
@@ -520,6 +521,69 @@
   from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   to { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
 }
+
+/* ====== SECTION HEADER ====== */
+.guide-section-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.3);
+  padding: 8px 14px 4px;
+}
+
+/* ====== CHAT ITEMS ====== */
+.guide-menu-item.chat-item {
+  padding: 10px 14px;
+}
+.chat-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.chat-item-info .menu-label {
+  font-size: 14px;
+}
+.chat-preview {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.guide-menu-item.chat-item.selected .chat-preview {
+  color: rgba(0,0,0,0.5);
+}
+
+.chat-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.chat-unread {
+  background: #b0e040;
+  color: #1a1c1e;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-time {
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+}
+.guide-menu-item.chat-item.selected .chat-time {
+  color: rgba(0,0,0,0.4);
+}
+
 
 @media (max-height: 600px) {
   .guide-center-panel { width: 400px; }

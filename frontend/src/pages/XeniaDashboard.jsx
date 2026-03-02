@@ -503,24 +503,40 @@ const XeniaDashboard = () => {
           )}
         </div>
 
-        {/* Recently Played - directly under title */}
-        {recentGames.length > 0 && (
-          <div className="recent-games-strip" data-testid="recent-games-strip">
-            <h3 className="recent-title">Recently Played</h3>
-            <div className="recent-games-row">
-              {recentGames.slice(0, 5).map((game, i) => (
-                <div key={i} className="recent-game-tile small"
-                  data-testid={`recent-game-${i}`}
-                  onClick={() => { playSound('select'); launchGame(game); }}
-                >
-                  <img src={game.boxart || game.icon} alt={game.title} className="recent-game-art" />
-                  <span className="recent-game-name">{game.title}</span>
-                  {game.hasQuickResume && <span className="qr-badge">QR</span>}
-                </div>
-              ))}
+        {/* Recently Played + Extra game slots - grouped together under title */}
+        <div className="top-games-section" data-testid="top-games-section">
+          {recentGames.length > 0 && (
+            <div className="recent-games-strip" data-testid="recent-games-strip">
+              <h3 className="recent-title">Recently Played</h3>
+              <div className="recent-games-row">
+                {recentGames.slice(0, 5).map((game, i) => (
+                  <div key={i} className="recent-game-tile small"
+                    data-testid={`recent-game-${i}`}
+                    onClick={() => { playSound('select'); launchGame(game); }}
+                  >
+                    <img src={game.boxart || game.icon} alt={game.title} className="recent-game-art" />
+                    <span className="recent-game-name">{game.title}</span>
+                    {game.hasQuickResume && <span className="qr-badge">QR</span>}
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
+
+          <div className="extra-game-slots" data-testid="extra-game-slots">
+            {mockGames.slice(0, 2).map((game, i) => (
+              <div key={i} className="extra-game-card" data-testid={`extra-game-${i}`}
+                onClick={() => { playSound('select'); handleGameSelect(game); }}
+              >
+                <img src={game.cover} alt={game.title} className="extra-game-cover" />
+                <div className="extra-game-info">
+                  <span className="extra-game-title">{game.title}</span>
+                  <span className="extra-game-pub">{game.publisher}</span>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* Main dashboard cards */}
         <div className="main-cards-container">
@@ -546,21 +562,6 @@ const XeniaDashboard = () => {
               </div>
             );
           })}
-        </div>
-
-        {/* Extra game slots at bottom */}
-        <div className="extra-game-slots" data-testid="extra-game-slots">
-          {mockGames.slice(0, 2).map((game, i) => (
-            <div key={i} className="extra-game-card" data-testid={`extra-game-${i}`}
-              onClick={() => { playSound('select'); handleGameSelect(game); }}
-            >
-              <img src={game.cover} alt={game.title} className="extra-game-cover" />
-              <div className="extra-game-info">
-                <span className="extra-game-title">{game.title}</span>
-                <span className="extra-game-pub">{game.publisher}</span>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     );
@@ -882,6 +883,7 @@ const XeniaDashboard = () => {
         isOpen={isGuideOpen}  
         onClose={() => setIsGuideOpen(false)}
         onNavigateHome={() => setCurrentView('home')}
+        onNavigateSettings={() => setCurrentView('settings')}
         xboxProfile={xboxProfile}
         isLoggedIn={isLoggedIn}
         onLogin={handleMicrosoftLogin}
