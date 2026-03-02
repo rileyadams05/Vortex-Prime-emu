@@ -409,58 +409,6 @@ const XeniaDashboard = () => {
     }
   };
 
-  const handleCardSelect = useCallback((index) => {
-    playSound('select');
-    setSelectedCardIndex(index);
-    mainCards[index].action();
-  }, [mainCards]);
-
-  const launchGame = useCallback(async (game) => {
-    if (window.__TAURI__) {
-       try {
-           const { invoke } = window.__TAURI__.core || window.__TAURI__.tauri; 
-           const xuid = xboxProfile?.xuid || "0000000000000000";
-           const gamertag = xboxProfile?.gamertag || "Player";
-           
-           console.log(`Launching ${game.title} ...`);
-           
-           await invoke('launch_xenia', { 
-               gamePath: game.path,
-               xuid: xuid,
-               gamertag: gamertag
-           });
-           
-       } catch (e) {
-           console.error("Failed to launch Vortex Prime Emu AMF:", e);
-           alert("Failed to launch Vortex Prime Emu AMF: " + e);
-       }
-    } else {
-        alert(`Launching ${game.title} with Vortex Prime Emu...\nPath: ${game.path}\n(Not in Tauri environment)`);
-    }
-  }, [xboxProfile]);
-
-  const handleGameSelect = useCallback((game) => {
-    playSound('select');
-    addToRecentGames(game);
-    if (currentView === 'achievements') {
-      setSelectedGame(game);
-      setCurrentView('achievement');
-    } else {
-      launchGame(game);
-    }
-  }, [currentView, launchGame]);
-
-  // Gamepad Polling replaced by GamepadContext
-
-  const navigateCarousel = useCallback((direction) => {
-    playSound('focus');
-    if (direction === 'left') {
-      setGameCarouselIndex(prev => prev > 0 ? prev - 1 : prev);
-    } else if (direction === 'right') {
-      setGameCarouselIndex(prev => prev < mockGames.length - 1 ? prev + 1 : prev);
-    }
-  }, []);
-
   const handleMicrosoftLogin = async () => {
     try {
       const profileData = await loginAndFetchProfile();
