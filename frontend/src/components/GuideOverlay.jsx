@@ -38,6 +38,10 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   // Messages state
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messagesPlatform, setMessagesPlatform] = useState(null); // null | 'xbox' | 'discord'
+  const [chatMessages, setChatMessages] = useState({}); // { convId: [{text, sender, time}] }
+  const [messageInput, setMessageInput] = useState('');
+  const messageInputRef = useRef(null);
+  const chatEndRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -61,7 +65,30 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
     if (isOpen && containerRef.current) containerRef.current.focus();
   }, [isOpen]);
 
-  const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  const formatTime = useCallback((date) => date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }), []);
+
+  // Seed initial messages for a conversation if not yet loaded
+  const getMessages = useCallback((conv) => {
+    if (!conv) return [];
+    if (chatMessages[conv.id]) return chatMessages[conv.id];
+    // Seed from mock data
+    const initial = [{ text: conv.last_message, sender: 'them', time: conv.timestamp }];
+    setChatMessages(prev => ({ ...prev, [conv.id]: initial }));
+    return initial;
+  }, [chatMessages]);
+
+  const sendMessage = useCallback(() => {
+    if (!messageInput.trim() || !selectedConversation) return;
+    const newMsg = { text: messageInput.trim(), sender: 'you', time: formatTime(new Date()) };
+    setChatMessages(prev => ({
+      ...prev,
+      [selectedConversation.id]: [...(prev[selectedConversation.id] || []), newMsg],
+    }));
+    setMessageInput('');
+    playSound('select');
+    // Scroll to bottom
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+  }, [messageInput, selectedConversation, formatTime]);
 
   // HOME tab items
   const homeMenuItems = useMemo(() => [
@@ -452,19 +479,36 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
   // ========== MESSAGES TAB ==========
   const renderMessagesTab = () => {
-    // Conversation detail view
+    // Conversation detail view — full chat with message input
     if (selectedConversation) {
+      const messages = getMessages(selectedConversation);
       return (
         <div className={`guide-tab-content ${tabTransition}`}>
           <div className="guide-section-header-row">
-            <button className="guide-back-btn" data-testid="messages-back-btn" onClick={() => { playSound('back'); setSelectedConversation(null); setSelectedItem(0); }}>Back</button>
+            <button className="guide-back-btn" data-testid="messages-back-btn" onClick={() => { playSound('back'); setSelectedConversation(null); setMessageInput(''); setSelectedItem(0); }}>Back</button>
             <span className="guide-section-title">{selectedConversation.friend_name}</span>
           </div>
-          <div className="message-detail" data-testid="message-detail">
-            <div className="message-bubble received">
-              <span className="message-text">{selectedConversation.last_message}</span>
-              <span className="message-time">{selectedConversation.timestamp}</span>
-            </div>
+          <div className="chat-messages-area" data-testid="chat-messages-area">
+            {messages.map((msg, i) => (
+              <div key={i} className={`message-bubble ${msg.sender === 'you' ? 'sent' : 'received'}`}>
+                <span className="message-text">{msg.text}</span>
+                <span className="message-time">{msg.time}</span>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+          <div className="chat-input-row" data-testid="chat-input-row">
+            <input
+              ref={messageInputRef}
+              type="text"
+              className="chat-input"
+              data-testid="chat-message-input"
+              placeholder="Type a message..."
+              value={messageInput}
+              onChange={(e) => setMessageInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); sendMessage(); } }}
+            />
+            <button className="chat-send-btn" data-testid="chat-send-btn" onClick={sendMessage} disabled={!messageInput.trim()}>Send</button>
           </div>
           <div className="guide-section-divider" />
           <div className="message-actions">

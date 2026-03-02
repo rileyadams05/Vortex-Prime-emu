@@ -653,19 +653,36 @@
 }
 
 /* ====== MESSAGE DETAIL ====== */
-.message-detail {
-  padding: 8px 0;
+.chat-messages-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+  max-height: 140px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(144,195,29,0.3) transparent;
 }
 
 .message-bubble {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 8px;
-  margin-bottom: 6px;
-  max-width: 85%;
+  max-width: 80%;
+  animation: msgFadeIn 0.15s ease;
+}
+@keyframes msgFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .message-bubble.received {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.08);
+  align-self: flex-start;
+}
+.message-bubble.sent {
+  background: rgba(144,195,29,0.15);
+  border: 1px solid rgba(144,195,29,0.25);
+  align-self: flex-end;
 }
 .message-text {
   display: block;
@@ -673,11 +690,58 @@
   color: #ddd;
   line-height: 1.4;
 }
+.message-bubble.sent .message-text { color: #e0f0b0; }
 .message-time {
   display: block;
-  font-size: 10px;
-  color: rgba(255,255,255,0.25);
-  margin-top: 4px;
+  font-size: 9px;
+  color: rgba(255,255,255,0.2);
+  margin-top: 3px;
+}
+
+/* Chat input */
+.chat-input-row {
+  display: flex;
+  gap: 6px;
+  padding: 6px 0;
+}
+.chat-input {
+  flex: 1;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #eee;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.chat-input:focus {
+  border-color: rgba(144,195,29,0.5);
+}
+.chat-input::placeholder {
+  color: rgba(255,255,255,0.2);
+}
+.chat-send-btn {
+  background: rgba(144,195,29,0.2);
+  border: 1px solid rgba(144,195,29,0.3);
+  color: #b0e040;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.chat-send-btn:hover:not(:disabled) {
+  background: rgba(144,195,29,0.35);
+}
+.chat-send-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 .message-actions {
