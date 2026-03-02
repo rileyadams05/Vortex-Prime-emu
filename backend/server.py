@@ -11,6 +11,8 @@ import uuid
 from datetime import datetime, timezone
 import shutil
 from xbox_service import get_xbox_profile, get_xbox_achievements, exchange_msal_token_for_profile
+import theme_service
+import steamgriddb_service
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
