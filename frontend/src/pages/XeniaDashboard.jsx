@@ -255,7 +255,7 @@ const XeniaDashboard = () => {
   };
 
   const handleGameSelect = (game) => {
-    playSound(selectSound);
+    playSound('select');
     if (currentView === 'achievements') {
       setSelectedGame(game);
       setCurrentView('achievement');
