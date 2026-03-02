@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
 import '../styles/GuideOverlay.css';
 
@@ -6,6 +7,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedItem, setSelectedItem] = useState(0);
   const containerRef = useRef(null);
+  const { onPress: onGamepadPress } = useGamepad();
 
   // Build unified menu: Home, Shutdown, then recent games
   const menuItems = [
@@ -31,25 +33,15 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
 
   // Reset on open
   useEffect(() => {
-    if (isOpen) {
-      setSelectedItem(0);
-    }
+    if (isOpen) setSelectedItem(0);
   }, [isOpen]);
 
   // Focus
   useEffect(() => {
-    if (isOpen && containerRef.current) {
-      containerRef.current.focus();
-    }
+    if (isOpen && containerRef.current) containerRef.current.focus();
   }, [isOpen]);
 
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
+  const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
   const handleMenuAction = useCallback((index) => {
     const item = menuItems[index];
@@ -69,45 +61,37 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
       if (onQuickResume) onQuickResume(item.game);
       onClose();
     }
-  }, [menuItems, onClose, onNavigateHome, onQuickResume]);
+  }, [menuItems, onClose, onNavigateHome, onQuickResume]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard navigation
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (!isOpen) return;
-      if (e.key === 'Tab' || e.key === 'Home') return;
+  const handleKeyDown = useCallback((e) => {
+    if (!isOpen) return;
+    if (e.key === 'Tab' || e.key === 'Home') return;
 
-      switch (e.key) {
-        case 'ArrowUp':
-          e.preventDefault();
-          e.stopPropagation();
-          playSound('focus');
-          setSelectedItem((prev) => (prev > 0 ? prev - 1 : itemCount - 1));
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          e.stopPropagation();
-          playSound('focus');
-          setSelectedItem((prev) => (prev < itemCount - 1 ? prev + 1 : 0));
-          break;
-        case 'Enter':
-          e.preventDefault();
-          e.stopPropagation();
-          handleMenuAction(selectedItem);
-          break;
-        case 'Escape':
-        case 'Backspace':
-          e.preventDefault();
-          e.stopPropagation();
-          playSound('back');
-          onClose();
-          break;
-        default:
-          break;
-      }
-    },
-    [isOpen, selectedItem, itemCount, onClose, handleMenuAction]
-  );
+    switch (e.key) {
+      case 'ArrowUp':
+        e.preventDefault(); e.stopPropagation();
+        playSound('focus');
+        setSelectedItem(prev => (prev > 0 ? prev - 1 : itemCount - 1));
+        break;
+      case 'ArrowDown':
+        e.preventDefault(); e.stopPropagation();
+        playSound('focus');
+        setSelectedItem(prev => (prev < itemCount - 1 ? prev + 1 : 0));
+        break;
+      case 'Enter':
+        e.preventDefault(); e.stopPropagation();
+        handleMenuAction(selectedItem);
+        break;
+      case 'Escape':
+      case 'Backspace':
+        e.preventDefault(); e.stopPropagation();
+        playSound('back');
+        onClose();
+        break;
+      default: break;
+    }
+  }, [isOpen, selectedItem, itemCount, onClose, handleMenuAction]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -115,64 +99,43 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, handleKeyDown]);
 
-  // Direct gamepad polling for Guide
-  const lastBtnRef = useRef({ a: false, b: false, up: false, down: false });
+  // ==== GAMEPAD: Direct controller input via GamepadContext ====
+  const selectedRef = useRef(selectedItem);
+  const itemCountRef = useRef(itemCount);
+  useEffect(() => { selectedRef.current = selectedItem; }, [selectedItem]);
+  useEffect(() => { itemCountRef.current = itemCount; }, [itemCount]);
 
   useEffect(() => {
     if (!isOpen) return;
-    let rafId;
 
-    const pollGamepad = () => {
-      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-      let gp = null;
-      for (let i = 0; i < 4; i++) {
-        if (gamepads[i] && gamepads[i].connected) { gp = gamepads[i]; break; }
+    const unsub = onGamepadPress((event) => {
+      if (event.type !== 'press') return;
+      const btn = event.button;
+      const count = itemCountRef.current;
+      const sel = selectedRef.current;
+
+      if (btn === 'dpadUp' || btn === 'stickUp') {
+        playSound('focus');
+        setSelectedItem(sel > 0 ? sel - 1 : count - 1);
       }
-
-      if (gp) {
-        const a = gp.buttons[0]?.pressed;
-        const b = gp.buttons[1]?.pressed;
-        const dpadUp = gp.buttons[12]?.pressed;
-        const dpadDown = gp.buttons[13]?.pressed;
-        // Also check left stick
-        const stickUp = gp.axes[1] < -0.5;
-        const stickDown = gp.axes[1] > 0.5;
-        const last = lastBtnRef.current;
-
-        const up = dpadUp || stickUp;
-        const down = dpadDown || stickDown;
-
-        if (up && !last.up) {
-          playSound('focus');
-          setSelectedItem((prev) => (prev > 0 ? prev - 1 : itemCount - 1));
-        }
-        if (down && !last.down) {
-          playSound('focus');
-          setSelectedItem((prev) => (prev < itemCount - 1 ? prev + 1 : 0));
-        }
-        if (a && !last.a) {
-          handleMenuAction(selectedItem);
-        }
-        if (b && !last.b) {
-          playSound('back');
-          onClose();
-        }
-
-        lastBtnRef.current = { a, b, up, down };
+      if (btn === 'dpadDown' || btn === 'stickDown') {
+        playSound('focus');
+        setSelectedItem(sel < count - 1 ? sel + 1 : 0);
       }
+      if (btn === 'a') {
+        handleMenuAction(sel);
+      }
+      if (btn === 'b') {
+        playSound('back');
+        onClose();
+      }
+    });
 
-      rafId = requestAnimationFrame(pollGamepad);
-    };
-
-    rafId = requestAnimationFrame(pollGamepad);
-    return () => cancelAnimationFrame(rafId);
-  }, [isOpen, selectedItem, itemCount, onClose, handleMenuAction]);
+    return unsub;
+  }, [isOpen, onGamepadPress, onClose, handleMenuAction]);
 
   const handleSignInClick = () => {
-    if (!isLoggedIn && onLogin) {
-      playSound('select');
-      onLogin();
-    }
+    if (!isLoggedIn && onLogin) { playSound('select'); onLogin(); }
   };
 
   if (!isOpen) return null;
@@ -181,34 +144,18 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
 
   return (
     <>
-      <div
-        data-testid="guide-overlay-backdrop"
-        className="guide-overlay-backdrop"
-        onClick={onClose}
-      />
+      <div data-testid="guide-overlay-backdrop" className="guide-overlay-backdrop" onClick={onClose} />
 
-      <div
-        ref={containerRef}
-        data-testid="guide-modal-container"
-        className="guide-modal-container"
-        tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Single Clean Panel */}
+      <div ref={containerRef} data-testid="guide-modal-container" className="guide-modal-container" tabIndex={-1} onClick={e => e.stopPropagation()}>
         <div data-testid="guide-center-panel" className="guide-center-panel">
-          {/* Panel Header: Xenia Guide title */}
+          {/* Panel Header */}
           <div className="guide-panel-header" data-testid="guide-panel-header">
             <span className="guide-title-text">Xenia Guide</span>
           </div>
 
-          {/* Profile Row: Avatar + Sign In/Gamertag + Clock */}
+          {/* Profile Row */}
           <div className="guide-profile-row" data-testid="guide-profile-row">
-            <div 
-              className="profile-avatar-box" 
-              data-testid="guide-avatar-box"
-              onClick={handleSignInClick}
-              style={{ cursor: isLoggedIn ? 'default' : 'pointer' }}
-            >
+            <div className="profile-avatar-box" data-testid="guide-avatar-box" onClick={handleSignInClick} style={{ cursor: isLoggedIn ? 'default' : 'pointer' }}>
               {isLoggedIn && xboxProfile?.profilePicture ? (
                 <img src={xboxProfile.profilePicture} alt="Avatar" className="guide-avatar-img" />
               ) : (
@@ -216,24 +163,16 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
               )}
             </div>
             <div className="profile-info">
-              {!isLoggedIn && (
-                <span className="profile-signin-text" data-testid="guide-signin-text" onClick={handleSignInClick}>
-                  Sign In
-                </span>
-              )}
-              {isLoggedIn && xboxProfile?.gamertag && (
-                <span className="profile-gamertag" data-testid="guide-gamertag">{xboxProfile.gamertag}</span>
-              )}
+              {!isLoggedIn && <span className="profile-signin-text" data-testid="guide-signin-text" onClick={handleSignInClick}>Sign In</span>}
+              {isLoggedIn && xboxProfile?.gamertag && <span className="profile-gamertag" data-testid="guide-gamertag">{xboxProfile.gamertag}</span>}
             </div>
             <span data-testid="guide-clock" className="profile-clock">{formatTime(currentTime)}</span>
           </div>
 
-          {/* Divider */}
           <div className="guide-divider" />
 
           {/* Menu Items */}
           <div className="guide-menu-list" data-testid="guide-menu-list">
-            {/* Home + Shutdown */}
             {menuItems.slice(0, 2).map((item, index) => (
               <div
                 key={item.id}
@@ -247,7 +186,6 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
               </div>
             ))}
 
-            {/* Games Section */}
             {hasGames && (
               <>
                 <div className="guide-section-divider" />
@@ -274,7 +212,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
             )}
           </div>
 
-          {/* Footer Hints */}
+          {/* Footer */}
           <div data-testid="guide-footer-hints" className="guide-footer-hints">
             <div className="hint-group">
               <div className="hint-btn green">A</div>
