@@ -1,8 +1,9 @@
 :root {
-  --xenia-green: #107C10;
-  --xenia-green-light: #2da12d;
-  --xenia-bg-dark: #121212;
-  --xenia-card-bg: rgba(30, 30, 30, 0.9);
+  --xenia-green: #90c31d;
+  --xenia-green-dark: #61920c;
+  --xenia-green-light: #a6e22e;
+  --xenia-bg-dark: #0a0c08;
+  --xenia-card-bg: rgba(30, 34, 28, 0.92);
   --xenia-text-primary: #ffffff;
   --xenia-text-secondary: #aaaaaa;
   --blade-height: 40px;
