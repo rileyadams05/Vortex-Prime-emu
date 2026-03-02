@@ -9,9 +9,14 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
   const containerRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
 
-  // Build unified menu: Home, Shutdown, then recent games
+  // Build unified menu:
+  // 0: Friends & Parties (placeholder)
+  // 1: Home (navigate to dashboard)
+  // 2: Shutdown System
+  // 3+: Recently played games
   const menuItems = [
-    { id: 'home', label: 'Home', badge: '', badgeClass: '', type: 'action' },
+    { id: 'friends', label: 'Friends & Parties', badge: '', badgeClass: '', type: 'section', sectionStart: true, sectionLabel: '' },
+    { id: 'home', label: 'Home', badge: '', badgeClass: '', type: 'action', sectionStart: true, sectionLabel: '' },
     { id: 'shutdown', label: 'Shutdown System', badge: '(Exit App)', badgeClass: 'exit-badge', type: 'action' },
     ...((recentGames || []).slice(0, 5).map((game, i) => ({
       id: `game-${i}`,
@@ -20,6 +25,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
       badgeClass: game.hasQuickResume ? 'resume-badge' : '',
       type: 'game',
       game,
+      sectionStart: i === 0,
+      sectionLabel: 'Games',
     }))),
   ];
 
@@ -47,7 +54,10 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
     const item = menuItems[index];
     if (!item) return;
 
-    if (item.id === 'home') {
+    if (item.id === 'friends') {
+      playSound('select');
+      // Friends & Parties - placeholder for now
+    } else if (item.id === 'home') {
       playSound('select');
       onClose();
       if (onNavigateHome) onNavigateHome();
@@ -99,7 +109,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, handleKeyDown]);
 
-  // ==== GAMEPAD: Direct controller input via GamepadContext ====
+  // ==== GAMEPAD: Direct controller input ====
   const selectedRef = useRef(selectedItem);
   const itemCountRef = useRef(itemCount);
   useEffect(() => { selectedRef.current = selectedItem; }, [selectedItem]);
@@ -142,6 +152,37 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
 
   const hasGames = recentGames && recentGames.length > 0;
 
+  // Group items for rendering with section headers
+  const renderMenuItem = (item, index) => {
+    const isSelected = index === selectedItem;
+    const isGameItem = item.type === 'game';
+
+    return (
+      <div
+        key={item.id}
+        data-testid={isGameItem ? `guide-game-item-${index - 3}` : `guide-menu-item-${index}`}
+        className={`guide-menu-item ${isGameItem ? 'game-item' : ''} ${isSelected ? 'selected' : ''}`}
+        onClick={() => { setSelectedItem(index); handleMenuAction(index); }}
+        onMouseEnter={() => { if (index !== selectedItem) { playSound('focus'); setSelectedItem(index); } }}
+      >
+        {isGameItem ? (
+          <>
+            <div className="game-item-info">
+              {item.game?.cover && <img src={item.game.cover} alt="" className="game-thumb" />}
+              <span className="menu-label">{item.label}</span>
+            </div>
+            {item.badge && <span className={`menu-badge ${item.badgeClass}`}>{item.badge}</span>}
+          </>
+        ) : (
+          <>
+            <span className="menu-label">{item.label}</span>
+            {item.badge && <span className={`menu-badge ${item.badgeClass}`}>{item.badge}</span>}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
       <div data-testid="guide-overlay-backdrop" className="guide-overlay-backdrop" onClick={onClose} />
@@ -173,41 +214,22 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, xboxProfile, isLoggedIn
 
           {/* Menu Items */}
           <div className="guide-menu-list" data-testid="guide-menu-list">
-            {menuItems.slice(0, 2).map((item, index) => (
-              <div
-                key={item.id}
-                data-testid={`guide-menu-item-${index}`}
-                className={`guide-menu-item ${index === selectedItem ? 'selected' : ''}`}
-                onClick={() => { setSelectedItem(index); handleMenuAction(index); }}
-                onMouseEnter={() => { if (index !== selectedItem) { playSound('focus'); setSelectedItem(index); } }}
-              >
-                <span className="menu-label">{item.label}</span>
-                {item.badge && <span className={`menu-badge ${item.badgeClass}`}>{item.badge}</span>}
-              </div>
-            ))}
+            {/* Friends & Parties */}
+            {renderMenuItem(menuItems[0], 0)}
 
+            {/* Divider before Home/Shutdown */}
+            <div className="guide-section-divider" />
+
+            {/* Home + Shutdown */}
+            {renderMenuItem(menuItems[1], 1)}
+            {renderMenuItem(menuItems[2], 2)}
+
+            {/* Games Section */}
             {hasGames && (
               <>
                 <div className="guide-section-divider" />
                 <div className="guide-section-header" data-testid="guide-games-header">Games</div>
-                {menuItems.slice(2).map((item, index) => {
-                  const globalIndex = index + 2;
-                  return (
-                    <div
-                      key={item.id}
-                      data-testid={`guide-game-item-${index}`}
-                      className={`guide-menu-item game-item ${globalIndex === selectedItem ? 'selected' : ''}`}
-                      onClick={() => { setSelectedItem(globalIndex); handleMenuAction(globalIndex); }}
-                      onMouseEnter={() => { if (globalIndex !== selectedItem) { playSound('focus'); setSelectedItem(globalIndex); } }}
-                    >
-                      <div className="game-item-info">
-                        {item.game?.cover && <img src={item.game.cover} alt="" className="game-thumb" />}
-                        <span className="menu-label">{item.label}</span>
-                      </div>
-                      {item.badge && <span className={`menu-badge ${item.badgeClass}`}>{item.badge}</span>}
-                    </div>
-                  );
-                })}
+                {menuItems.slice(3).map((item, i) => renderMenuItem(item, i + 3))}
               </>
             )}
           </div>
