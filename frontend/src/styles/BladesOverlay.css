@@ -7,7 +7,7 @@
   pointer-events: none; /* Let clicks pass through to content */
   z-index: 50;
   overflow: hidden;
-  font-family: 'Convection', sans-serif;
+  font-family: 'MC360', 'Convection', sans-serif;
 }
 
 .blade-tabs-wrapper {
