@@ -207,7 +207,7 @@ const XeniaDashboard = () => {
       }
     });
     return unsub;
-  }, [onGamepadPress, filteredGames]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onGamepadPress, filteredGames]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
@@ -402,11 +402,7 @@ const XeniaDashboard = () => {
     }
   }, [currentView]);
 
-  // Gamepad Polling Logic Removed - Replaced by GlobalControllerListener + handleGlobalKeyDown
-  /* 
-  const lastButtonState = useRef({...});
-  useEffect(() => { ...pollGamepad... }, [...]);
-  */
+  // Gamepad Polling replaced by GamepadContext
 
   const navigateCarousel = useCallback((direction) => {
     playSound('focus');
