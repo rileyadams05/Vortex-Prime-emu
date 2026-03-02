@@ -874,6 +874,42 @@ body {
   padding: 3px 5px;
   font-size: 0.55rem;
   color: #ccc;
+
+/* ===== Folder Sections (Play/Disabled) ===== */
+.folder-sections {
+  padding: 16px 20px;
+}
+.folder-section {
+  margin-bottom: 24px;
+}
+.folder-label {
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.folder-label.play-label {
+  color: var(--xenia-green, #90c31d);
+  background: rgba(144,195,29,0.1);
+}
+.folder-label.disabled-label {
+  color: #888;
+  background: rgba(255,255,255,0.05);
+}
+.empty-folder {
+  padding: 20px;
+  text-align: center;
+  color: #555;
+  font-size: 0.8rem;
+  font-style: italic;
+  background: rgba(0,0,0,0.2);
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: 6px;
+}
+
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
