@@ -359,7 +359,7 @@ const XeniaDashboard = () => {
   const renderHome = () => (
     <div className="xenia-home">
       <div className="home-header">
-        <h1 className="my-xenia">VORTEX PRIME EMU</h1>
+        <h1 className="my-xenia" data-testid="dashboard-title">MY XENIA</h1>
       </div>
       <div className="main-cards-container">
         {mainCards.map((card, index) => {
