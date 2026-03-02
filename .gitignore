@@ -87,3 +87,5 @@ android-sdk/ -e
 *.env.*
 
 # Last Updated: March 2, 2026
+
+src-tauri/src-tauri/
