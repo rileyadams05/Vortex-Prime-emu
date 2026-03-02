@@ -1,26 +1,26 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
 import { Settings, Monitor, Wifi, HardDrive, Globe, Gamepad2, Info } from 'lucide-react';
 import GamepadDiagnostic from './GamepadDiagnostic';
 import '../styles/NXESettings.css';
 
+const settingsItems = [
+  { id: 'console', label: 'Console Settings', icon: Settings, description: 'Configure console settings, including audio, language, and locale.' },
+  { id: 'display', label: 'Display', icon: Monitor, description: 'Adjust screen resolution, color space, and other display options.' },
+  { id: 'network', label: 'Network Settings', icon: Wifi, description: 'Connect to Xbox Live, test your connection, and configure network settings.' },
+  { id: 'storage', label: 'Storage', icon: HardDrive, description: 'Manage game saves, profiles, and other data on your storage devices.' },
+  { id: 'global', label: 'Global Settings', icon: Globe, description: 'Set system-wide preferences for all users.' },
+  { id: 'game', label: 'Game Settings', icon: Gamepad2, description: 'Manage game-specific settings and defaults.' },
+  { id: 'controller', label: 'Controller Diagnostic', icon: Gamepad2, description: 'Test and diagnose your controller connection. Supports Gamepad API and WebHID fallback.' },
+  { id: 'about', label: 'System Info', icon: Info, description: 'View console serial number, ID, and other system information.' },
+];
+
 const NXESettings = ({ isActive, onBack }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [activePanel, setActivePanel] = useState(null); // null = list, 'controller' = diagnostic
+  const [activePanel, setActivePanel] = useState(null);
   const listRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
-
-  const settingsItems = [
-    { id: 'console', label: 'Console Settings', icon: Settings, description: 'Configure console settings, including audio, language, and locale.' },
-    { id: 'display', label: 'Display', icon: Monitor, description: 'Adjust screen resolution, color space, and other display options.' },
-    { id: 'network', label: 'Network Settings', icon: Wifi, description: 'Connect to Xbox Live, test your connection, and configure network settings.' },
-    { id: 'storage', label: 'Storage', icon: HardDrive, description: 'Manage game saves, profiles, and other data on your storage devices.' },
-    { id: 'global', label: 'Global Settings', icon: Globe, description: 'Set system-wide preferences for all users.' },
-    { id: 'game', label: 'Game Settings', icon: Gamepad2, description: 'Manage game-specific settings and defaults.' },
-    { id: 'controller', label: 'Controller Diagnostic', icon: Gamepad2, description: 'Test and diagnose your controller connection. Supports Gamepad API and WebHID fallback.' },
-    { id: 'about', label: 'System Info', icon: Info, description: 'View console serial number, ID, and other system information.' }
-  ];
 
   useEffect(() => {
     if (!isActive) return;
