@@ -5,7 +5,7 @@
 
 @font-face {
   font-family: 'MC360';
-  src: url('/fonts/MC360.ttf') format('truetype');
+  src: url('../fonts/MC360.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
