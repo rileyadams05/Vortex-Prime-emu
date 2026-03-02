@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'MC360';
+  src: url('/fonts/MC360.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --xenia-green: #90c31d;
   --xenia-green-dark: #61920c;
@@ -15,7 +23,7 @@ body {
   padding: 0;
   overflow: hidden;
   background-color: var(--xenia-bg-dark);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'MC360', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   user-select: none;
 }
 
