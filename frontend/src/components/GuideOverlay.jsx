@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import playSound from '../utils/soundManager';
 import '../styles/GuideOverlay.css';
 
-const GuideOverlay = ({ isOpen, onClose, gamerscore, gamertag }) => {
+const GuideOverlay = ({ isOpen, onClose, xboxProfile, isLoggedIn, onLogin }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedItem, setSelectedItem] = useState(0);
   const [activeTab, setActiveTab] = useState(0); // 0 = HOME, 1 = Games
@@ -46,37 +47,45 @@ const GuideOverlay = ({ isOpen, onClose, gamerscore, gamertag }) => {
   const handleKeyDown = useCallback(
     (e) => {
       if (!isOpen) return;
+      // Don't handle Tab/Home - let the parent dashboard handle toggle
+      if (e.key === 'Tab' || e.key === 'Home') return;
 
       switch (e.key) {
         case 'ArrowUp':
           e.preventDefault();
           e.stopPropagation();
+          playSound('focus');
           setSelectedItem((prev) => (prev > 0 ? prev - 1 : menuItems.length - 1));
           break;
         case 'ArrowDown':
           e.preventDefault();
           e.stopPropagation();
+          playSound('focus');
           setSelectedItem((prev) => (prev < menuItems.length - 1 ? prev + 1 : 0));
           break;
         case 'ArrowLeft':
           e.preventDefault();
           e.stopPropagation();
+          playSound('panelLeft');
           setActiveTab((prev) => Math.max(0, prev - 1));
           break;
         case 'ArrowRight':
           e.preventDefault();
           e.stopPropagation();
+          playSound('panelRight');
           setActiveTab((prev) => Math.min(1, prev + 1));
           break;
         case 'Enter':
           e.preventDefault();
           e.stopPropagation();
+          playSound('select');
           handleMenuSelect(selectedItem);
           break;
         case 'Escape':
         case 'Backspace':
           e.preventDefault();
           e.stopPropagation();
+          playSound('back');
           onClose();
           break;
         default:
@@ -113,21 +122,27 @@ const GuideOverlay = ({ isOpen, onClose, gamerscore, gamertag }) => {
         const last = lastBtnRef.current;
 
         if (dpadUp && !last.up) {
+          playSound('focus');
           setSelectedItem((prev) => (prev > 0 ? prev - 1 : menuItems.length - 1));
         }
         if (dpadDown && !last.down) {
+          playSound('focus');
           setSelectedItem((prev) => (prev < menuItems.length - 1 ? prev + 1 : 0));
         }
         if (dpadLeft && !last.left) {
+          playSound('panelLeft');
           setActiveTab((prev) => Math.max(0, prev - 1));
         }
         if (dpadRight && !last.right) {
+          playSound('panelRight');
           setActiveTab((prev) => Math.min(1, prev + 1));
         }
         if (a && !last.a) {
+          playSound('select');
           handleMenuSelect(selectedItem);
         }
         if (b && !last.b) {
+          playSound('back');
           onClose();
         }
 
@@ -143,16 +158,19 @@ const GuideOverlay = ({ isOpen, onClose, gamerscore, gamertag }) => {
 
   const handleMenuSelect = (index) => {
     if (index === 2) {
-      // Shutdown System
       if (window.__TAURI__) {
         import('@tauri-apps/plugin-process').then(({ exit }) => {
           exit(0);
         });
-      } else {
-        console.log('[Guide] Shutdown System triggered (not in Tauri)');
       }
     }
-    // Items 0 and 1 are "coming soon"
+  };
+
+  const handleSignInClick = () => {
+    if (!isLoggedIn && onLogin) {
+      playSound('select');
+      onLogin();
+    }
   };
 
   if (!isOpen) return null;
@@ -174,14 +192,35 @@ const GuideOverlay = ({ isOpen, onClose, gamerscore, gamertag }) => {
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header: Gamerscore | Avatar | Clock */}
+        {/* Header: Sign-in / Profile Picture + Clock */}
         <div data-testid="guide-header-bar" className="guide-header-bar">
-          <span data-testid="guide-gamerscore" className="header-gamerscore">
-            {gamerscore || '1337'} G
-          </span>
-          <div className="header-avatar-box">
-            <div className="avatar-inner-fallback" />
+          <div className="header-spacer-left" />
+          <div 
+            className="header-avatar-box" 
+            data-testid="guide-avatar-box"
+            onClick={handleSignInClick}
+            style={{ cursor: isLoggedIn ? 'default' : 'pointer' }}
+          >
+            {isLoggedIn && xboxProfile?.profilePicture ? (
+              <img src={xboxProfile.profilePicture} alt="Avatar" className="guide-avatar-img" />
+            ) : (
+              <div className="avatar-inner-fallback" />
+            )}
           </div>
+          {!isLoggedIn && (
+            <span 
+              className="header-signin-text" 
+              data-testid="guide-signin-text"
+              onClick={handleSignInClick}
+            >
+              Sign In
+            </span>
+          )}
+          {isLoggedIn && xboxProfile?.gamertag && (
+            <span className="header-gamertag" data-testid="guide-gamertag">
+              {xboxProfile.gamertag}
+            </span>
+          )}
           <span data-testid="guide-clock" className="header-clock">
             {formatTime(currentTime)}
           </span>
@@ -194,14 +233,14 @@ const GuideOverlay = ({ isOpen, onClose, gamerscore, gamertag }) => {
             <div
               data-testid="guide-tab-xenia"
               className="tab-vertical secondary"
-              onClick={() => setActiveTab(0)}
+              onClick={() => { playSound('panelLeft'); setActiveTab(0); }}
             >
               <span>Xenia Guide</span>
             </div>
             <div
               data-testid="guide-tab-home"
-              className={`tab-vertical primary ${activeTab === 0 ? '' : ''}`}
-              onClick={() => setActiveTab(0)}
+              className={`tab-vertical primary`}
+              onClick={() => { playSound('panelLeft'); setActiveTab(0); }}
             >
               <span>HOME</span>
             </div>
@@ -216,10 +255,16 @@ const GuideOverlay = ({ isOpen, onClose, gamerscore, gamertag }) => {
                   data-testid={`guide-menu-item-${index}`}
                   className={`guide-menu-item ${index === selectedItem ? 'selected' : ''}`}
                   onClick={() => {
+                    playSound('select');
                     setSelectedItem(index);
                     handleMenuSelect(index);
                   }}
-                  onMouseEnter={() => setSelectedItem(index)}
+                  onMouseEnter={() => {
+                    if (index !== selectedItem) {
+                      playSound('focus');
+                      setSelectedItem(index);
+                    }
+                  }}
                 >
                   <span className="menu-label">{item.label}</span>
                   <span className={`menu-badge ${item.badgeClass}`}>{item.badge}</span>
@@ -245,7 +290,7 @@ const GuideOverlay = ({ isOpen, onClose, gamerscore, gamertag }) => {
             <div
               data-testid="guide-tab-games"
               className={`tab-vertical right`}
-              onClick={() => setActiveTab(1)}
+              onClick={() => { playSound('panelRight'); setActiveTab(1); }}
             >
               <span>Games</span>
             </div>
