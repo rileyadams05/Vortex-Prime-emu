@@ -28,20 +28,17 @@ const XeniaDashboard = () => {
   const [gameCarouselIndex, setGameCarouselIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Active Layout Theme State
-  const [activeLayout, setActiveLayout] = useState(null);
-  const [vibePrompt, setVibePrompt] = useState('');
-  const [vibeLoading, setVibeLoading] = useState(false);
-  const [vibeSource, setVibeSource] = useState('');
+  // AI Panel state
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
+
+  // Xbox 360 Keyboard state
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [keyboardCallback, setKeyboardCallback] = useState(null);
 
   const loadActiveTheme = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/themes/active`);
-      const data = await r.json();
-      if (data.theme?.layout) {
-        setActiveLayout(data.theme.layout);
-      }
-    } catch (e) { /* fallback to default */ }
+      await fetch(`${API}/themes/active`);
+    } catch (e) { /* fallback */ }
   }, []);
 
   useEffect(() => { loadActiveTheme(); }, [loadActiveTheme]);
