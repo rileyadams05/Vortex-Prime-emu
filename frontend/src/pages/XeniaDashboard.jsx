@@ -76,6 +76,7 @@ const XeniaDashboard = () => {
       if (e.key === 'Tab' || e.key === 'Home') {
         e.preventDefault();
         e.stopPropagation();
+        playSound('panelUnfold');
         setIsGuidePressed(true);
         setTimeout(() => setIsGuidePressed(false), 200);
         setIsGuideOpen(prev => !prev);
@@ -91,7 +92,7 @@ const XeniaDashboard = () => {
       
       // "A" Button (Enter) Logic
       if (e.key === 'Enter') {
-          playSound(selectSound);
+          playSound('select');
           if (currentView === 'home') {
               handleCardSelect(selectedCardIndex);
           } else if (currentView === 'gameLibrary' || currentView === 'achievements') {
@@ -105,7 +106,7 @@ const XeniaDashboard = () => {
       // "B" Button (Backspace) Logic
       if (e.key === 'Backspace') {
           if (currentView !== 'home') {
-              playSound(backSound);
+              playSound('back');
               if (currentView === 'achievement') setCurrentView('achievements');
               else setCurrentView('home');
           }
@@ -116,7 +117,7 @@ const XeniaDashboard = () => {
            if (currentView === 'home') {
                const newIndex = Math.max(0, selectedCardIndex - 1);
                if (newIndex !== selectedCardIndex) {
-                   playSound(navClickSound);
+                   playSound('focus');
                    setSelectedCardIndex(newIndex);
                }
            } else if (currentView === 'gameLibrary' || currentView === 'achievements') {
@@ -129,7 +130,7 @@ const XeniaDashboard = () => {
            if (currentView === 'home') {
                const newIndex = Math.min(mainCards.length - 1, selectedCardIndex + 1);
                if (newIndex !== selectedCardIndex) {
-                   playSound(navClickSound);
+                   playSound('focus');
                    setSelectedCardIndex(newIndex);
                }
            } else if (currentView === 'gameLibrary' || currentView === 'achievements') {
@@ -138,23 +139,17 @@ const XeniaDashboard = () => {
       }
 
       // Blade Switching (LB/RB -> q/e)
-      // Note: XeniaDashboard doesn't have multiple blades in this view, 
-      // but if we wanted to switch views or tabs, we'd do it here.
       if (e.key === 'q') {
-          // LB Action
-          playSound(bladeShiftSound);
+          playSound('channelDown');
           if (currentView === 'home') {
-            // Stop at 0 if holding/pressing (no wrap)
             setSelectedCardIndex((prev) => Math.max(0, prev - 1));
           } else if (currentView === 'gameLibrary' || currentView === 'achievements') {
             navigateCarousel('left');
           }
       }
       if (e.key === 'e') {
-          // RB Action
-          playSound(bladeShiftSound);
+          playSound('channelUp');
           if (currentView === 'home') {
-            // Stop at end if holding/pressing (no wrap)
             setSelectedCardIndex((prev) => Math.min(mainCards.length - 1, prev + 1));
           } else if (currentView === 'gameLibrary' || currentView === 'achievements') {
             navigateCarousel('right');
