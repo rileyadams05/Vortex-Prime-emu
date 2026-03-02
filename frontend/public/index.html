@@ -5,6 +5,7 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
+    <meta http-equiv="Permissions-Policy" content="gamepad=(*)" />
     <meta
       name="description"
       content="Vortex Prime - Xbox 360 Emulator Frontend"
@@ -12,8 +13,14 @@
     <title>Vortex Prime</title>
     <style>
       @font-face {
+        font-family: 'MC360';
+        src: url('%PUBLIC_URL%/fonts/MC360.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
+      @font-face {
         font-family: 'Convection';
-        src: url('/assets/blades/fonts/MC360.ttf') format('truetype');
+        src: url('%PUBLIC_URL%/fonts/MC360.ttf') format('truetype');
         font-weight: normal;
         font-style: normal;
       }
