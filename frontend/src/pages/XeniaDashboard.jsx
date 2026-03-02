@@ -343,6 +343,12 @@ const XeniaDashboard = () => {
     <div className="xenia-home">
       <div className="home-header">
         <h1 className="my-xenia" data-testid="dashboard-title">VORTEX PRIME EMU</h1>
+        {isLoggedIn && xboxProfile?.gamerscore != null && (
+          <div className="home-gamerscore" data-testid="home-gamerscore">
+            <span className="gs-value">{xboxProfile.gamerscore}</span>
+            <span className="gs-label">G</span>
+          </div>
+        )}
       </div>
       <div className="main-cards-container">
         {mainCards.map((card, index) => {
