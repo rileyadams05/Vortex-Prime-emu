@@ -1,11 +1,3 @@
-@font-face {
-  font-family: 'MC360';
-  src: url('../fonts/MC360.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
   --xenia-green: #90c31d;
   --xenia-green-dark: #61920c;
@@ -560,7 +552,7 @@ body {
 }
 
 .achievement-body h2 { margin: 0 0 5px 0; font-size: 2rem; }
-.title-id { color: #666; font-family: monospace; margin-bottom: 20px; }
+.title-id { color: #666; font-family: 'MC360', monospace; margin-bottom: 20px; }
 
 .achievement-score {
   display: flex;
@@ -738,7 +730,7 @@ body {
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 4px;
   color: rgba(255,255,255,0.8);
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'MC360', 'Segoe UI', sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -948,7 +940,7 @@ body {
   margin-top: 10px;
   font-size: 0.7rem;
   color: rgba(255,255,255,0.2);
-  font-family: monospace;
+  font-family: 'MC360', monospace;
 }
 
 /* ===== Folder Sections (Play/Disabled) ===== */

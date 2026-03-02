@@ -1,16 +1,6 @@
 /* === XENIA GUIDE OVERLAY === */
 /* Two-tab Xbox 360 Guide: Friends & Parties | Games */
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap');
-
-@font-face {
-  font-family: 'MC360';
-  src: url('../fonts/MC360.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* ====== BACKDROP ====== */
 .guide-overlay-backdrop {
   position: fixed;
@@ -35,7 +25,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-family: 'MC360', 'Noto Sans', 'Segoe UI', 'Tahoma', sans-serif;
+  font-family: 'MC360', 'Segoe UI', 'Tahoma', sans-serif;
   animation: guideSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   outline: none;
 }
