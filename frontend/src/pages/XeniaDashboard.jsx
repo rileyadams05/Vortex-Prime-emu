@@ -374,7 +374,7 @@ const XeniaDashboard = () => {
     <div className="game-library-view">
       <div className="library-header">
         <button className="back-btn" onClick={() => {
-            playSound(backSound);
+            playSound('back');
             setCurrentView('home');
         }}>
           <ChevronLeft size={24} /> Back
@@ -454,7 +454,7 @@ const XeniaDashboard = () => {
 
   const renderAchievementView = () => (
     <div className="achievement-modal-overlay" onClick={() => {
-        playSound(backSound);
+        playSound('back');
         setCurrentView('achievements');
     }}>
       <div className="achievement-modal" onClick={(e) => e.stopPropagation()}>
@@ -485,7 +485,7 @@ const XeniaDashboard = () => {
     <div className="game-library-view">
         <div className="library-header">
             <button className="back-btn" onClick={() => {
-                playSound(backSound);
+                playSound('back');
                 setCurrentView('home');
             }}>
                 <ChevronLeft size={24} /> Back
@@ -510,7 +510,7 @@ const XeniaDashboard = () => {
     <div className="game-library-view">
         <div className="library-header">
             <button className="back-btn" onClick={() => {
-                playSound(backSound);
+                playSound('back');
                 setCurrentView('home');
             }}>
                 <ChevronLeft size={24} /> Back
