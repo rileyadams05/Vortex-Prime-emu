@@ -136,14 +136,38 @@ body {
 
 .home-header {
   margin-bottom: 40px;
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
 }
 
 .my-xenia {
+  font-family: 'MC360', 'Segoe UI', sans-serif;
   font-size: 3rem;
   font-weight: 300;
   letter-spacing: 2px;
   text-transform: uppercase;
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.home-gamerscore {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: 'MC360', 'Segoe UI', sans-serif;
+  color: var(--xenia-green);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+.home-gamerscore .gs-value {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.home-gamerscore .gs-label {
+  font-size: 1.2rem;
+  font-weight: 400;
+  opacity: 0.8;
 }
 
 .main-cards-container {
