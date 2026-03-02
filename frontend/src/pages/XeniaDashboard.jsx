@@ -804,6 +804,9 @@ const XeniaDashboard = () => {
         {currentView === 'home' && renderHome()}
         {currentView === 'gameLibrary' && renderGameLibrary()}
         {currentView === 'achievements' && renderGameLibrary()} 
+        {currentView === 'marketplace' && (
+          <Marketplace onBack={() => { playSound('back'); setCurrentView('home'); }} />
+        )}
         {currentView === 'themes' && renderThemesView()}
         {currentView === 'startup' && renderStartupView()}
         {currentView === 'achievement' && renderAchievementView()}
