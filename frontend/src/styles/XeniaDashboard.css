@@ -889,6 +889,67 @@ body {
   padding: 4px 6px;
   font-size: 0.6rem;
   color: #ccc;
+}
+
+/* Recently Played empty state */
+.recent-empty-state {
+  padding: 16px 0;
+  color: rgba(255,255,255,0.25);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Games Library empty state */
+.games-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  text-align: center;
+  flex: 1;
+}
+.games-empty-icon {
+  color: rgba(255,255,255,0.12);
+  margin-bottom: 16px;
+}
+.games-empty-title {
+  font-family: 'MC360', 'Segoe UI', sans-serif;
+  font-size: 1.3rem;
+  color: rgba(255,255,255,0.5);
+  margin: 0 0 10px;
+}
+.games-empty-desc {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.25);
+  max-width: 400px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+  white-space: pre-line;
+}
+.games-folder-btn {
+  background: rgba(144,195,29,0.15);
+  border: 1px solid rgba(144,195,29,0.3);
+  color: #b0e040;
+  font-family: 'MC360', 'Segoe UI', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.games-folder-btn:hover {
+  background: rgba(144,195,29,0.3);
+}
+.games-folder-path {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.2);
+  font-family: monospace;
+}
 
 /* ===== Folder Sections (Play/Disabled) ===== */
 .folder-sections {
@@ -925,10 +986,6 @@ body {
   border-radius: 6px;
 }
 
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
 .qr-badge {
   position: absolute;
   top: 3px;

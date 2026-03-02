@@ -103,18 +103,50 @@ const XeniaDashboard = () => {
     });
   };
 
-  // Seed recently played on first visit so Games tab has content (5 unique games)
+  // Games folder state
+  const [gamesFolder, setGamesFolder] = useState(() => {
+    return localStorage.getItem('gamesFolder') || '';
+  });
+  const [userGames, setUserGames] = useState(() => {
+    try {
+      const saved = localStorage.getItem('userGames');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
   useEffect(() => {
-    if (recentGames.length === 0 && mockGames.length >= 5) {
-      const seeded = mockGames.slice(0, 5).map((g, i) => ({
-        ...g,
-        lastPlayed: Date.now() - (i * 3600000),
-        hasQuickResume: i < 3,
-      }));
-      setRecentGames(seeded);
-      localStorage.setItem('recentGames', JSON.stringify(seeded));
+    if (gamesFolder) localStorage.setItem('gamesFolder', gamesFolder);
+  }, [gamesFolder]);
+
+  useEffect(() => {
+    localStorage.setItem('userGames', JSON.stringify(userGames));
+  }, [userGames]);
+
+  const createGamesFolder = useCallback(async () => {
+    if (window.__TAURI__) {
+      try {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const selected = await open({ directory: true, title: 'Select Games Folder' });
+        if (selected) {
+          setGamesFolder(selected);
+          // Scan folder for games would happen here via Tauri
+        }
+      } catch (e) { /* fallback */ }
+    } else {
+      // Web preview: prompt for folder path
+      playSound('select');
+      setIsKeyboardOpen(true);
+      setKeyboardCallback(() => (path) => {
+        if (path && path.trim()) {
+          setGamesFolder(path.trim());
+          playSound('select');
+        }
+      });
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Combined games: user-imported + any from folder scanning
+  const allGames = useMemo(() => [...userGames, ...mockGames], [userGames]);
 
   // Guide Button Listener (Rust Backend via Tauri events)
   useEffect(() => {
@@ -143,7 +175,7 @@ const XeniaDashboard = () => {
   }, []);
 
   // Robustly define filteredGames to avoid ReferenceError
-  const filteredGames = (mockGames || []).filter(game => 
+  const filteredGames = (allGames || []).filter(game => 
     game.title.toLowerCase().includes((searchQuery || '').toLowerCase())
   );
   
@@ -544,21 +576,27 @@ const XeniaDashboard = () => {
           )}
         </div>
 
-        {/* Recently Played - single row of 5 unique game tiles */}
+        {/* Recently Played - shows your real games once added */}
         <div className="top-games-section" data-testid="top-games-section">
           <h3 className="recent-title">Recently Played</h3>
-          <div className="recent-games-row">
-            {recentGames.slice(0, 5).map((game, i) => (
-              <div key={`recent-${i}`} className="recent-game-tile"
-                data-testid={`recent-game-${i}`}
-                onClick={() => { playSound('select'); launchGame(game); }}
-              >
-                <img src={game.cover || game.boxart || game.icon} alt={game.title} className="recent-game-art" />
-                <span className="recent-game-name">{game.title}</span>
-                {game.hasQuickResume && <span className="qr-badge">QR</span>}
-              </div>
-            ))}
-          </div>
+          {recentGames.length > 0 ? (
+            <div className="recent-games-row">
+              {recentGames.slice(0, 5).map((game, i) => (
+                <div key={`recent-${i}`} className="recent-game-tile"
+                  data-testid={`recent-game-${i}`}
+                  onClick={() => { playSound('select'); launchGame(game); }}
+                >
+                  <img src={game.cover || game.boxart || game.icon} alt={game.title} className="recent-game-art" />
+                  <span className="recent-game-name">{game.title}</span>
+                  {game.hasQuickResume && <span className="qr-badge">QR</span>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="recent-empty-state" data-testid="recent-empty-state">
+              <span>No recently played games. Import your games to get started.</span>
+            </div>
+          )}
         </div>
 
         {/* Main dashboard cards */}
@@ -707,19 +745,42 @@ const XeniaDashboard = () => {
         }}>
           <ChevronLeft size={24} /> Back
         </button>
-        <div className="search-box">
-          <Search size={20} />
-          <input
-            type="text"
-            placeholder="SEARCH LIBRARY"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <span className="search-hint">R3</span>
-        </div>
+        {allGames.length > 0 && (
+          <div className="search-box">
+            <Search size={20} />
+            <input
+              type="text"
+              placeholder="SEARCH LIBRARY"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <span className="search-hint">R3</span>
+          </div>
+        )}
       </div>
 
-      <div className="game-carousel">
+      {allGames.length === 0 ? (
+        <div className="games-empty-state" data-testid="games-empty-state">
+          <div className="games-empty-icon">
+            <Disc size={48} />
+          </div>
+          <h3 className="games-empty-title">No Games Found</h3>
+          <p className="games-empty-desc">
+            {gamesFolder
+              ? `Games folder set to: ${gamesFolder}\nNo compatible games detected. Add ROMs or game files to your folder.`
+              : 'Import your games folder to get started. Your games can be in subfolders or all in one folder.'
+            }
+          </p>
+          <button className="games-folder-btn" data-testid="create-games-folder-btn" onClick={createGamesFolder}>
+            {gamesFolder ? 'Change Games Folder' : 'Create Games Folder'}
+          </button>
+          {gamesFolder && (
+            <span className="games-folder-path" data-testid="games-folder-path">{gamesFolder}</span>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="game-carousel">
         <button 
           className="carousel-nav left"
           onClick={() => navigateCarousel('left')}
@@ -777,6 +838,8 @@ const XeniaDashboard = () => {
           </>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 
