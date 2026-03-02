@@ -292,7 +292,7 @@ const XeniaDashboard = () => {
   };
 
   const handleToggleWallpaper = async (filename, currentStatus) => {
-    playSound(selectSound);
+    playSound('select');
     try {
         const action = currentStatus === 'active' ? 'disable' : 'enable';
         await axios.post(`${API}/wallpapers/toggle`, { filename, action });
@@ -316,7 +316,7 @@ const XeniaDashboard = () => {
   };
 
   const handleToggleStartupVideo = async (filename, currentStatus) => {
-    playSound(selectSound);
+    playSound('select');
     try {
       const action = currentStatus === 'active' ? 'disable' : 'enable';
       await axios.post(`${API}/startup/toggle`, { filename, action });
