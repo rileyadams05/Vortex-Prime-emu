@@ -615,9 +615,9 @@ const XeniaDashboard = () => {
               className={`btn-icon home ${isGuidePressed ? 'pressed' : ''}`} 
               data-testid="guide-home-button"
               onClick={(e) => {
-                console.log("Home UI Button Clicked");
                 e.preventDefault();
                 e.stopPropagation();
+                playSound('panelUnfold');
                 setIsGuidePressed(true);
                 setTimeout(() => setIsGuidePressed(false), 200);
                 setIsGuideOpen(prev => !prev);
