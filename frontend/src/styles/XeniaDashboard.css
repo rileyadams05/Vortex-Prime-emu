@@ -90,12 +90,14 @@ body {
 }
 
 .gamertag {
+  font-family: 'MC360', 'Segoe UI', sans-serif;
   font-weight: 600;
   font-size: 1.1rem;
   margin-right: 12px;
 }
 
 .gamerscore {
+  font-family: 'MC360', 'Segoe UI', sans-serif;
   font-weight: 400;
   font-size: 0.9rem;
   color: var(--xenia-text-secondary);
