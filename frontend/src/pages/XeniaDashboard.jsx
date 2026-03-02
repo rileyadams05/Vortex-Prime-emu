@@ -84,32 +84,20 @@ const XeniaDashboard = () => {
 
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
-      // If Guide is Open, stop processing other dashboard inputs
-      if (isGuideOpen) {
-        if (e.key === 'Escape' || e.key === 'Backspace') {
-          // Guide handles its own close logic usually, but here we can toggle it
-          // Wait, GuideOverlay has its own keydown listener.
-          // We should probably let GuideOverlay handle the close logic to avoid conflict.
-          // But if GuideOverlay is a portal/overlay, events bubble.
-          // Let's just ignore dashboard nav if guide is open.
-          return; 
-        }
-      }
-
-      // Toggle Guide on Home - DISABLED
-      /*
-      if (e.key === 'Home') {
-        console.log("Home key detected, toggling Guide");
+      // Toggle Guide on Tab / Home key
+      if (e.key === 'Tab' || e.key === 'Home') {
+        console.log("Guide toggle key detected:", e.key);
         e.preventDefault();
         setIsGuidePressed(true);
         setTimeout(() => setIsGuidePressed(false), 200);
-        setIsGuideOpen(prev => {
-            console.log("Setting isGuideOpen to:", !prev);
-            return !prev;
-        });
+        setIsGuideOpen(prev => !prev);
         return;
       }
-      */
+
+      // If Guide is open, block all dashboard input
+      if (isGuideOpen) {
+        return;
+      }
 
       // --- Dashboard Navigation Logic ---
       
