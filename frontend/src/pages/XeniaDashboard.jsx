@@ -620,25 +620,22 @@ const XeniaDashboard = () => {
             <span className="btn-icon bumper">RB</span>
             <span className="btn-label">Tabs</span>
           </div>
-          {/* Guide Home Button - DISABLED
+          {/* Guide Home Button */}
           <div className="control-item">
             <span 
               className={`btn-icon home ${isGuidePressed ? 'pressed' : ''}`} 
+              data-testid="guide-home-button"
               onClick={(e) => {
                 console.log("Home UI Button Clicked");
                 e.preventDefault();
                 e.stopPropagation();
                 setIsGuidePressed(true);
                 setTimeout(() => setIsGuidePressed(false), 200);
-                setIsGuideOpen(prev => {
-                    console.log("UI Toggle: Setting isGuideOpen to:", !prev);
-                    return !prev;
-                });
+                setIsGuideOpen(prev => !prev);
               }}
             ></span>
             <span className="btn-label">Home</span>
           </div>
-          */}
           <div className="control-item">
             <span className="btn-icon green">A</span>
             <span className="btn-label">Select</span>
