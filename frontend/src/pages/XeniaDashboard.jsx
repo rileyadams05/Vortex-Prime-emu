@@ -689,7 +689,10 @@ const XeniaDashboard = () => {
     }}>
       <BladesOverlay currentView={currentView} setCurrentView={setCurrentView} />
       
-      <div className="xenia-background" style={{ backgroundImage: "url(/wallpapers/Play/default.png)" }}>
+      <div className="xenia-background" style={{
+        backgroundImage: activeTheme?.hero_url ? `url(${activeTheme.hero_url})` : "url(/wallpapers/Play/default.png)",
+        backgroundColor: activeTheme?.background?.value || '#0a0c08'
+      }}>
         <div className="bg-overlay"></div>
       </div>
 
