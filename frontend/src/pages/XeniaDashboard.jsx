@@ -354,7 +354,7 @@ const XeniaDashboard = () => {
               onClick={() => handleCardSelect(index)}
               onMouseEnter={() => {
                 if (index !== selectedCardIndex) {
-                   playSound(navClickSound);
+                   playSound('focus');
                    setSelectedCardIndex(index);
                 }
               }}
