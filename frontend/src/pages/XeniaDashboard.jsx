@@ -174,8 +174,8 @@ const XeniaDashboard = () => {
       }
     };
 
-    window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('keydown', handleGlobalKeyDown, true);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown, true);
   }, [currentView, gameCarouselIndex, filteredGames, selectedCardIndex, isGuideOpen]);
 
   useEffect(() => {
