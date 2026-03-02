@@ -1,9 +1,9 @@
 {
   "version": "1.0",
-  "name": "Classic NXE",
+  "name": "Games First",
   "author": "Local User",
-  "description": "The original Xbox 360 NXE dashboard layout \u2014 5 equal cards in a row",
-  "created_at": "2026-03-02T12:52:44.069488+00:00",
+  "description": "Big center tile for Games, small tiles for the rest on the right",
+  "created_at": "2026-03-02T12:54:02.846514+00:00",
   "source": "local",
   "tiles": {
     "main_cards": [
@@ -12,14 +12,14 @@
         "title": "GAMES",
         "row": 0,
         "col": 0,
-        "width": 1,
-        "height": 1
+        "width": 3,
+        "height": 2
       },
       {
         "id": "settings",
         "title": "SYSTEM SETTINGS",
         "row": 0,
-        "col": 1,
+        "col": 3,
         "width": 1,
         "height": 1
       },
@@ -27,14 +27,14 @@
         "id": "achievements",
         "title": "ACHIEVEMENTS",
         "row": 0,
-        "col": 2,
+        "col": 4,
         "width": 1,
         "height": 1
       },
       {
         "id": "themes",
         "title": "THEMES",
-        "row": 0,
+        "row": 1,
         "col": 3,
         "width": 1,
         "height": 1
@@ -42,7 +42,7 @@
       {
         "id": "startup",
         "title": "STARTUP",
-        "row": 0,
+        "row": 1,
         "col": 4,
         "width": 1,
         "height": 1
@@ -51,11 +51,11 @@
     "recent_games": {
       "visible": true,
       "position": "bottom",
-      "max_items": 5,
-      "tile_size": "small"
+      "max_items": 3,
+      "tile_size": "medium"
     },
     "grid_columns": 5,
     "grid_rows": 2,
-    "layout_mode": "default"
+    "layout_mode": "custom"
   }
 }
