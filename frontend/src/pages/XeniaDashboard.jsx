@@ -491,11 +491,6 @@ const XeniaDashboard = () => {
   };
 
   const renderHome = () => {
-    const layout = activeLayout;
-    const hasCustomLayout = layout && layout.layout_mode === 'custom' && layout.main_cards;
-    const gridCols = layout?.grid_columns || 5;
-    const gridRows = layout?.grid_rows || 2;
-
     return (
       <div className="xenia-home">
         <div className="home-header">
@@ -508,101 +503,13 @@ const XeniaDashboard = () => {
           )}
         </div>
 
-        {/* Vibe-Design Input */}
-        <div className="vibe-design-bar" data-testid="vibe-design-bar">
-          <input
-            type="text"
-            className="vibe-input"
-            data-testid="vibe-input"
-            value={vibePrompt}
-            onChange={(e) => setVibePrompt(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleVibeGenerate()}
-            placeholder="Describe your layout... (e.g. 'Big Games center, small tiles on the right')"
-          />
-          <button
-            className="vibe-generate-btn"
-            data-testid="vibe-generate-btn"
-            onClick={handleVibeGenerate}
-            disabled={vibeLoading || !vibePrompt.trim()}
-          >
-            {vibeLoading ? 'Generating...' : 'Generate'}
-          </button>
-          {vibeSource && (
-            <span className="vibe-source" data-testid="vibe-source">
-              {vibeSource === 'open_webui' ? 'AI' : vibeSource === 'mock_preset' ? 'Preset' : 'Default'}
-            </span>
-          )}
-        </div>
-
-        {/* Layout-driven tile grid */}
-        {hasCustomLayout ? (
-          <div className="main-cards-container custom-layout" data-testid="custom-layout-grid" style={{
-            gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
-            gridTemplateRows: `repeat(${gridRows}, 1fr)`,
-          }}>
-            {layout.main_cards.map((tile) => {
-              const card = mainCards.find(c => c.id === tile.id);
-              if (!card) return null;
-              const Icon = card.icon;
-              const index = mainCards.indexOf(card);
-              return (
-                <div
-                  key={tile.id}
-                  className={`main-card layout-tile ${index === selectedCardIndex ? 'selected' : ''}`}
-                  data-testid={`tile-${tile.id}`}
-                  style={{
-                    gridColumn: `${tile.col + 1} / span ${tile.width}`,
-                    gridRow: `${tile.row + 1} / span ${tile.height}`,
-                  }}
-                  onClick={() => handleCardSelect(index)}
-                  onMouseEnter={() => {
-                    if (index !== selectedCardIndex) {
-                      playSound('focus');
-                      setSelectedCardIndex(index);
-                    }
-                  }}
-                >
-                  <div className="card-content">
-                    <Icon size={tile.width > 1 || tile.height > 1 ? 80 : 48} className="card-icon" />
-                    <h2 className="card-title">{tile.title}</h2>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="main-cards-container">
-            {mainCards.map((card, index) => {
-              const Icon = card.icon;
-              return (
-                <div
-                  key={card.id}
-                  className={`main-card ${index === selectedCardIndex ? 'selected' : ''}`}
-                  onClick={() => handleCardSelect(index)}
-                  onMouseEnter={() => {
-                    if (index !== selectedCardIndex) {
-                      playSound('focus');
-                      setSelectedCardIndex(index);
-                    }
-                  }}
-                >
-                  <div className="card-content">
-                    <Icon size={64} className="card-icon" />
-                    <h2 className="card-title">{card.title}</h2>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Recent Games Section */}
-        {layout?.recent_games?.visible !== false && recentGames.length > 0 && (
+        {/* Recently Played - directly under title */}
+        {recentGames.length > 0 && (
           <div className="recent-games-strip" data-testid="recent-games-strip">
             <h3 className="recent-title">Recently Played</h3>
             <div className="recent-games-row">
-              {recentGames.slice(0, layout?.recent_games?.max_items || 5).map((game, i) => (
-                <div key={i} className={`recent-game-tile ${layout?.recent_games?.tile_size || 'small'}`}
+              {recentGames.slice(0, 5).map((game, i) => (
+                <div key={i} className="recent-game-tile small"
                   data-testid={`recent-game-${i}`}
                   onClick={() => { playSound('select'); launchGame(game); }}
                 >
@@ -614,6 +521,47 @@ const XeniaDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Main dashboard cards */}
+        <div className="main-cards-container">
+          {mainCards.map((card, index) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={card.id}
+                className={`main-card ${index === selectedCardIndex ? 'selected' : ''}`}
+                data-testid={`card-${card.id}`}
+                onClick={() => handleCardSelect(index)}
+                onMouseEnter={() => {
+                  if (index !== selectedCardIndex) {
+                    playSound('focus');
+                    setSelectedCardIndex(index);
+                  }
+                }}
+              >
+                <div className="card-content">
+                  <Icon size={48} className="card-icon" />
+                  <h2 className="card-title">{card.title}</h2>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Extra game slots at bottom */}
+        <div className="extra-game-slots" data-testid="extra-game-slots">
+          {mockGames.slice(0, 2).map((game, i) => (
+            <div key={i} className="extra-game-card" data-testid={`extra-game-${i}`}
+              onClick={() => { playSound('select'); handleGameSelect(game); }}
+            >
+              <img src={game.cover} alt={game.title} className="extra-game-cover" />
+              <div className="extra-game-info">
+                <span className="extra-game-title">{game.title}</span>
+                <span className="extra-game-pub">{game.publisher}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
