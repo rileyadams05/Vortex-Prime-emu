@@ -35,7 +35,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-family: 'Noto Sans', 'Segoe UI', 'Tahoma', sans-serif;
+  font-family: 'MC360', 'Noto Sans', 'Segoe UI', 'Tahoma', sans-serif;
   animation: guideSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   outline: none;
 }
