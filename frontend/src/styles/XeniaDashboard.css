@@ -48,7 +48,10 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);
+  background: 
+    radial-gradient(ellipse at 30% 70%, rgba(100, 160, 20, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 40%, rgba(80, 140, 10, 0.2) 0%, transparent 45%),
+    radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.75) 100%);
 }
 
 /* --- Header --- */
