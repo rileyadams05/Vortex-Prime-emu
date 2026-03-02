@@ -156,7 +156,7 @@ const GlobalControllerListener = () => {
           checkPress('dpadLeft', buttons.dpadLeft, 'ArrowLeft');
           checkPress('dpadRight', buttons.dpadRight, 'ArrowRight');
           checkPress('start', buttons.start, 'Escape');
-          // checkPress('guide', buttons.guide, 'Home'); // Guide Button - DISABLED
+          checkPress('guide', buttons.guide, 'Home'); // Guide Button
           checkPress('lb', buttons.lb, 'q');
           checkPress('rb', buttons.rb, 'e');
 
