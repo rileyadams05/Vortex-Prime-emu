@@ -272,6 +272,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add Permissions-Policy header to allow gamepad in iframes
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+
+class PermissionsPolicyMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: StarletteRequest, call_next):
+        response = await call_next(request)
+        response.headers["Permissions-Policy"] = "gamepad=(*)"
+        return response
+
+app.add_middleware(PermissionsPolicyMiddleware)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
