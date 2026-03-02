@@ -19,7 +19,7 @@ const sendQuickResumeCommand = async (gameId, savePath) => {
 const TAB_NAMES = ['Friends and Parties', 'Messages', 'Home'];
 const TAB_COUNT = 3;
 
-const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xboxProfile, isLoggedIn, onLogin, recentGames, onQuickResume }) => {
+const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xboxProfile, isLoggedIn, onLogin, recentGames, onQuickResume, gameGroups, onCreateGroup, onOpenGroups, onOpenKeyboard }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState(0);
   const [selectedItem, setSelectedItem] = useState(0);
@@ -27,6 +27,9 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   const [tabTransition, setTabTransition] = useState('');
   const containerRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
+
+  // Home tab sub-views
+  const [homeSection, setHomeSection] = useState('main'); // main | groups
 
   // Friends & Parties state
   const [friendsSection, setFriendsSection] = useState('main'); // main | friends | parties
@@ -58,6 +61,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       setShowInviteList(false);
       setSelectedConversation(null);
       setMessagesPlatform(null);
+      setHomeSection('main');
     }
   }, [isOpen]);
 
@@ -120,6 +124,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       setShowInviteList(false);
       setSelectedConversation(null);
       setMessagesPlatform(null);
+      setHomeSection('main');
       setTabTransition('');
     }, 150);
   }, [activeTab]);
@@ -183,13 +188,15 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           setSelectedConversation(null); setSelectedItem(0);
         } else if (activeTab === 1 && messagesPlatform) {
           setMessagesPlatform(null); setSelectedItem(0);
+        } else if (activeTab === 2 && homeSection !== 'main') {
+          setHomeSection('main'); setSelectedItem(0);
         } else {
           onClose();
         }
         break;
       default: break;
     }
-  }, [isOpen, selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform, onClose, switchTab]);
+  }, [isOpen, selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform, homeSection, onClose, switchTab]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -200,8 +207,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   // Gamepad
   const stateRef = useRef({});
   useEffect(() => {
-    stateRef.current = { selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform };
-  }, [selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform]);
+    stateRef.current = { selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform, homeSection };
+  }, [selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform, homeSection]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -220,6 +227,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           setSelectedConversation(null); setSelectedItem(0);
         } else if (s.activeTab === 1 && s.messagesPlatform) {
           setMessagesPlatform(null); setSelectedItem(0);
+        } else if (s.activeTab === 2 && s.homeSection !== 'main') {
+          setHomeSection('main'); setSelectedItem(0);
         } else { onClose(); }
         return;
       }
@@ -630,61 +639,111 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   };
 
   // ========== HOME TAB ==========
-  const renderHomeTab = () => (
-    <div className={`guide-tab-content ${tabTransition}`}>
-      <div
-        className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 0 ? 'selected' : ''}`}
-        data-testid="guide-home-btn"
-        onClick={() => { setFocusZone('menu'); setSelectedItem(0); handleHomeAction(0); }}
-        onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(0); }}
-      >
-        <span className="menu-label">Home</span>
-      </div>
-      <div
-        className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 1 ? 'selected' : ''}`}
-        data-testid="guide-settings-btn"
-        onClick={() => { setFocusZone('menu'); setSelectedItem(1); handleHomeAction(1); }}
-        onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(1); }}
-      >
-        <span className="menu-label">Settings</span>
-      </div>
-      <div
-        className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 2 ? 'selected' : ''}`}
-        data-testid="guide-shutdown-btn"
-        onClick={() => { setFocusZone('menu'); setSelectedItem(2); handleHomeAction(2); }}
-        onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(2); }}
-      >
-        <span className="menu-label">Shutdown System</span>
-        <span className="menu-badge exit-badge">(Exit App)</span>
-      </div>
-
-      <div className="guide-section-divider" />
-      <div className="guide-section-header">Recently Played</div>
-
-      {homeMenuItems.slice(3).map((item, idx) => {
-        const menuIdx = idx + 3;
-        return (
-          <div
-            key={item.id}
-            className={`guide-menu-item game-item ${focusZone === 'menu' && selectedItem === menuIdx ? 'selected' : ''}`}
-            data-testid={`guide-home-game-${idx}`}
-            onClick={() => { setFocusZone('menu'); setSelectedItem(menuIdx); handleHomeAction(menuIdx); }}
-            onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(menuIdx); }}
-          >
-            <div className="game-item-info">
-              {item.game?.cover && <img src={item.game.cover} alt="" className="game-thumb" />}
-              <span className="menu-label">{item.label}</span>
-            </div>
-            {item.hasQuickResume && <span className="menu-badge resume-badge">Quick Resume</span>}
+  const renderHomeTab = () => {
+    // Sub-view: My Groups
+    if (homeSection === 'groups') {
+      const groups = gameGroups || [];
+      return (
+        <div className={`guide-tab-content ${tabTransition}`}>
+          <div className="guide-section-header-row">
+            <button className="guide-back-btn" data-testid="groups-back-btn" onClick={() => { playSound('back'); setHomeSection('main'); setSelectedItem(0); }}>Back</button>
+            <span className="guide-section-title">My Groups</span>
           </div>
-        );
-      })}
+          <div
+            className={`guide-menu-item party-action create ${focusZone === 'menu' && selectedItem === 0 ? 'selected' : ''}`}
+            data-testid="guide-create-group-btn"
+            onClick={() => {
+              playSound('select');
+              if (onOpenKeyboard) {
+                onOpenKeyboard((name) => { if (onCreateGroup) onCreateGroup(name); });
+              }
+            }}
+            onMouseEnter={() => { setFocusZone('menu'); setSelectedItem(0); }}
+          >
+            <span className="menu-label">+ Create New Group</span>
+          </div>
+          {groups.length === 0 && <div className="friends-empty">No groups yet</div>}
+          {groups.map((group, i) => (
+            <div key={group.id}
+              className={`guide-menu-item ${focusZone === 'menu' && selectedItem === i + 1 ? 'selected' : ''}`}
+              data-testid={`guide-group-${i}`}
+              onClick={() => { playSound('select'); onClose(); if (onOpenGroups) onOpenGroups(); }}
+              onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(i + 1); }}
+            >
+              <span className="menu-label">{group.name}</span>
+              <span className="menu-badge">{group.games.length} game{group.games.length !== 1 ? 's' : ''}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
 
-      {(recentGames || []).length === 0 && (
-        <div className="friends-empty">No recently played games</div>
-      )}
-    </div>
-  );
+    // Main Home view
+    return (
+      <div className={`guide-tab-content ${tabTransition}`}>
+        <div
+          className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 0 ? 'selected' : ''}`}
+          data-testid="guide-home-btn"
+          onClick={() => { setFocusZone('menu'); setSelectedItem(0); handleHomeAction(0); }}
+          onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(0); }}
+        >
+          <span className="menu-label">Home</span>
+        </div>
+        <div
+          className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 1 ? 'selected' : ''}`}
+          data-testid="guide-my-groups-btn"
+          onClick={() => { playSound('select'); setHomeSection('groups'); setSelectedItem(0); }}
+          onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(1); }}
+        >
+          <span className="menu-label">My Groups</span>
+          <span className="menu-badge">{(gameGroups || []).length} group{(gameGroups || []).length !== 1 ? 's' : ''}</span>
+        </div>
+        <div
+          className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 2 ? 'selected' : ''}`}
+          data-testid="guide-settings-btn"
+          onClick={() => { setFocusZone('menu'); setSelectedItem(2); handleHomeAction(1); }}
+          onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(2); }}
+        >
+          <span className="menu-label">Settings</span>
+        </div>
+        <div
+          className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 3 ? 'selected' : ''}`}
+          data-testid="guide-shutdown-btn"
+          onClick={() => { setFocusZone('menu'); setSelectedItem(3); handleHomeAction(2); }}
+          onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(3); }}
+        >
+          <span className="menu-label">Shutdown System</span>
+          <span className="menu-badge exit-badge">(Exit App)</span>
+        </div>
+
+        <div className="guide-section-divider" />
+        <div className="guide-section-header">Recently Played</div>
+
+        {homeMenuItems.slice(3).map((item, idx) => {
+          const menuIdx = idx + 4;
+          return (
+            <div
+              key={item.id}
+              className={`guide-menu-item game-item ${focusZone === 'menu' && selectedItem === menuIdx ? 'selected' : ''}`}
+              data-testid={`guide-home-game-${idx}`}
+              onClick={() => { setFocusZone('menu'); setSelectedItem(menuIdx); handleHomeAction(menuIdx - 1); }}
+              onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(menuIdx); }}
+            >
+              <div className="game-item-info">
+                {item.game?.cover && <img src={item.game.cover} alt="" className="game-thumb" />}
+                <span className="menu-label">{item.label}</span>
+              </div>
+              {item.hasQuickResume && <span className="menu-badge resume-badge">Quick Resume</span>}
+            </div>
+          );
+        })}
+
+        {(recentGames || []).length === 0 && (
+          <div className="friends-empty">No recently played games</div>
+        )}
+      </div>
+    );
+  };
 
   const tabRenderers = [renderFriendsPartiesTab, renderMessagesTab, renderHomeTab];
 
@@ -696,11 +755,10 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           <div className="guide-panel-header"><span className="guide-title-text">Guide</span></div>
 
           <div className="guide-profile-row" data-testid="guide-profile-row">
-            <div className="profile-avatar-box" onClick={() => !isLoggedIn && onLogin && onLogin()} style={{ cursor: isLoggedIn ? 'default' : 'pointer' }}>
+            <div className="profile-avatar-box">
               {isLoggedIn && xboxProfile?.profilePicture ? <img src={xboxProfile.profilePicture} alt="Avatar" className="guide-avatar-img" /> : <div className="avatar-inner-fallback" />}
             </div>
             <div className="profile-info">
-              {!isLoggedIn && <span className="profile-signin-text" data-testid="guide-signin-text" onClick={() => onLogin && onLogin()}>Sign In</span>}
               {isLoggedIn && xboxProfile?.gamertag && <span className="profile-gamertag" data-testid="guide-gamertag">{xboxProfile.gamertag}</span>}
             </div>
             <span data-testid="guide-clock" className="profile-clock">{formatTime(currentTime)}</span>
@@ -724,7 +782,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           <div data-testid="guide-footer-hints" className="guide-footer-hints">
             <div className="hint-group"><div className="hint-btn green">A</div><span>Select</span></div>
             <div className="hint-group"><div className="hint-btn red">B</div><span>{
-              (activeTab === 0 && friendsSection !== 'main') || (activeTab === 1 && (selectedConversation || messagesPlatform)) ? 'Back' : 'Close'
+              (activeTab === 0 && friendsSection !== 'main') || (activeTab === 1 && (selectedConversation || messagesPlatform)) || (activeTab === 2 && homeSection !== 'main') ? 'Back' : 'Close'
             }</span></div>
             <div className="hint-group"><span className="hint-bumper">LB</span><span className="hint-bumper">RB</span><span>Switch Tab</span></div>
           </div>

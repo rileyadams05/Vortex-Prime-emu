@@ -986,3 +986,194 @@ body {
   font-size: 0.65rem;
   color: #666;
 }
+
+
+/* ===== FAVORITES / GROUPS VIEW ===== */
+.favorites-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 60px;
+}
+
+.section-title {
+  font-family: 'MC360', 'Segoe UI', sans-serif;
+  font-size: 1.2rem;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  flex: 1;
+}
+
+.favorites-groups-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.fav-group-card {
+  width: 180px;
+  background: rgba(40,40,40,0.9);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fav-group-card:hover {
+  border-color: var(--xenia-green);
+  transform: scale(1.03);
+}
+.fav-group-card.create {
+  border: 2px dashed rgba(144,195,29,0.3);
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+}
+.fav-create-plus {
+  font-size: 2.5rem;
+  color: rgba(144,195,29,0.5);
+  line-height: 1;
+}
+.fav-create-label {
+  font-size: 0.8rem;
+  color: rgba(144,195,29,0.7);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.fav-group-art {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  border-radius: 4px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  background: rgba(0,0,0,0.4);
+}
+.fav-group-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fav-group-empty-art {
+  grid-column: 1/-1;
+  background: rgba(255,255,255,0.04);
+}
+
+.fav-group-name {
+  font-size: 0.85rem;
+  color: #eee;
+  font-weight: 700;
+}
+.fav-group-count {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.35);
+}
+
+/* Group detail */
+.fav-action-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #ddd;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.fav-action-btn.add {
+  background: rgba(144,195,29,0.15);
+  border-color: rgba(144,195,29,0.3);
+  color: #b0e040;
+}
+.fav-action-btn.add:hover { background: rgba(144,195,29,0.3); }
+.fav-action-btn.delete {
+  color: #ff8866;
+  border-color: rgba(255,100,80,0.3);
+}
+.fav-action-btn.delete:hover { background: rgba(255,100,80,0.15); }
+
+.favorites-game-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.fav-game-tile {
+  width: 130px;
+  background: rgba(0,0,0,0.4);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s;
+}
+.fav-game-tile:hover { border-color: var(--xenia-green); transform: scale(1.03); }
+.fav-game-tile.in-group { opacity: 0.4; cursor: default; }
+
+.fav-game-art {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+}
+.fav-game-name {
+  display: block;
+  padding: 4px 6px;
+  font-size: 0.6rem;
+  color: #ccc;
+}
+.fav-added-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(144,195,29,0.8);
+  color: #1a1a1a;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.fav-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255,50,50,0.7);
+  border: none;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.fav-game-tile:hover .fav-remove-btn { opacity: 1; }
+
+.fav-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: rgba(255,255,255,0.25);
+  font-size: 0.9rem;
+}
+.fav-empty .fav-action-btn { margin-top: 12px; margin-left: 0; }

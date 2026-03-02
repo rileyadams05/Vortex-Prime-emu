@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store } from 'lucide-react';
+import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart } from 'lucide-react';
 import axios from 'axios';
 import { mockGames, mockAchievements } from '../data/xeniaData';
 import openWebuiIcon from '../assets/open-webui.svg';
@@ -35,6 +35,48 @@ const XeniaDashboard = () => {
   // Xbox 360 Keyboard state
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [keyboardCallback, setKeyboardCallback] = useState(null);
+
+  // Game Groups / Favorites state
+  const [gameGroups, setGameGroups] = useState(() => {
+    const saved = localStorage.getItem('gameGroups');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [isAddingToGroup, setIsAddingToGroup] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('gameGroups', JSON.stringify(gameGroups));
+  }, [gameGroups]);
+
+  const createGroup = useCallback((name) => {
+    if (!name.trim()) return;
+    const newGroup = { id: `grp-${Date.now()}`, name: name.trim(), games: [] };
+    setGameGroups(prev => [...prev, newGroup]);
+    playSound('select');
+  }, []);
+
+  const addGameToGroup = useCallback((groupId, game) => {
+    setGameGroups(prev => prev.map(g => {
+      if (g.id !== groupId) return g;
+      if (g.games.some(gm => gm.id === game.id)) return g;
+      return { ...g, games: [...g.games, { id: game.id, title: game.title, cover: game.cover }] };
+    }));
+    playSound('select');
+  }, []);
+
+  const removeGameFromGroup = useCallback((groupId, gameId) => {
+    setGameGroups(prev => prev.map(g => {
+      if (g.id !== groupId) return g;
+      return { ...g, games: g.games.filter(gm => gm.id !== gameId) };
+    }));
+    playSound('back');
+  }, []);
+
+  const deleteGroup = useCallback((groupId) => {
+    setGameGroups(prev => prev.filter(g => g.id !== groupId));
+    setSelectedGroup(null);
+    playSound('back');
+  }, []);
 
   const loadActiveTheme = useCallback(async () => {
     try {
@@ -116,11 +158,11 @@ const XeniaDashboard = () => {
 
   const mainCards = useMemo(() => [
     { id: 'library', title: 'GAMES', icon: Disc, action: () => setCurrentView('gameLibrary') },
+    { id: 'favorites', title: 'FAVORITES', icon: Heart, action: () => setCurrentView('favorites') },
     { id: 'settings', title: 'SYSTEM SETTINGS', icon: Settings, action: () => setCurrentView('settings') },
     { id: 'achievements', title: 'ACHIEVEMENTS', icon: Trophy, action: () => setCurrentView('achievements') },
     { id: 'marketplace', title: 'MARKETPLACE', icon: Store, action: () => setCurrentView('marketplace') },
     { id: 'themes', title: 'THEMES', icon: ImageIcon, action: () => setCurrentView('themes') },
-    { id: 'startup', title: 'STARTUP', icon: Video, action: () => setCurrentView('startup') }
   ], []);
 
   // Core action callbacks (defined before useEffects that reference them)
@@ -550,6 +592,114 @@ const XeniaDashboard = () => {
     );
   };
 
+  const renderFavoritesView = () => {
+    // If a group is selected, show its games
+    if (selectedGroup) {
+      const group = gameGroups.find(g => g.id === selectedGroup);
+      if (!group) { setSelectedGroup(null); return null; }
+
+      // Adding games to the group
+      if (isAddingToGroup) {
+        return (
+          <div className="favorites-view" data-testid="favorites-add-games">
+            <div className="library-header">
+              <button className="back-btn" onClick={() => { playSound('back'); setIsAddingToGroup(false); }}>
+                <ChevronLeft size={24} /> Back
+              </button>
+              <h2 className="section-title">Add Games to "{group.name}"</h2>
+            </div>
+            <div className="favorites-game-grid">
+              {mockGames.map(game => {
+                const inGroup = group.games.some(g => g.id === game.id);
+                return (
+                  <div key={game.id} className={`fav-game-tile ${inGroup ? 'in-group' : ''}`}
+                    data-testid={`add-game-${game.id}`}
+                    onClick={() => !inGroup && addGameToGroup(group.id, game)}
+                  >
+                    <img src={game.cover} alt={game.title} className="fav-game-art" />
+                    <span className="fav-game-name">{game.title}</span>
+                    {inGroup && <span className="fav-added-badge">Added</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="favorites-view" data-testid="favorites-group-detail">
+          <div className="library-header">
+            <button className="back-btn" onClick={() => { playSound('back'); setSelectedGroup(null); }}>
+              <ChevronLeft size={24} /> Back
+            </button>
+            <h2 className="section-title">{group.name}</h2>
+            <button className="fav-action-btn add" data-testid="group-add-games-btn" onClick={() => { playSound('select'); setIsAddingToGroup(true); }}>
+              Add Games
+            </button>
+            <button className="fav-action-btn delete" data-testid="group-delete-btn" onClick={() => deleteGroup(group.id)}>
+              Delete Group
+            </button>
+          </div>
+          {group.games.length === 0 ? (
+            <div className="fav-empty">
+              <p>No games in this group yet</p>
+              <button className="fav-action-btn add" onClick={() => { playSound('select'); setIsAddingToGroup(true); }}>Add Games</button>
+            </div>
+          ) : (
+            <div className="favorites-game-grid">
+              {group.games.map(game => (
+                <div key={game.id} className="fav-game-tile" data-testid={`group-game-${game.id}`}>
+                  <img src={game.cover} alt={game.title} className="fav-game-art" />
+                  <span className="fav-game-name">{game.title}</span>
+                  <button className="fav-remove-btn" onClick={(e) => { e.stopPropagation(); removeGameFromGroup(group.id, game.id); }}>X</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Groups list view
+    return (
+      <div className="favorites-view" data-testid="favorites-view">
+        <div className="library-header">
+          <button className="back-btn" onClick={() => { playSound('back'); setCurrentView('home'); }}>
+            <ChevronLeft size={24} /> Back
+          </button>
+          <h2 className="section-title">Favorites</h2>
+        </div>
+        <div className="favorites-groups-list">
+          <div className="fav-group-card create" data-testid="create-group-card"
+            onClick={() => {
+              playSound('select');
+              setIsKeyboardOpen(true);
+              setKeyboardCallback(() => (name) => createGroup(name));
+            }}
+          >
+            <span className="fav-create-plus">+</span>
+            <span className="fav-create-label">Create Group</span>
+          </div>
+          {gameGroups.map(group => (
+            <div key={group.id} className="fav-group-card" data-testid={`group-card-${group.id}`}
+              onClick={() => { playSound('select'); setSelectedGroup(group.id); }}
+            >
+              <div className="fav-group-art">
+                {group.games.slice(0, 4).map((g, i) => (
+                  <img key={i} src={g.cover} alt="" className="fav-group-thumb" />
+                ))}
+                {group.games.length === 0 && <div className="fav-group-empty-art" />}
+              </div>
+              <span className="fav-group-name">{group.name}</span>
+              <span className="fav-group-count">{group.games.length} game{group.games.length !== 1 ? 's' : ''}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderGameLibrary = () => (
     <div className="game-library-view">
       <div className="library-header">
@@ -757,26 +907,19 @@ const XeniaDashboard = () => {
             <img src={openWebuiIcon} alt="Open WebUI" className="open-webui-icon" />
             <span>Open WebUI</span>
           </button>
-          <div className="user-profile" onClick={() => !isLoggedIn && handleMicrosoftLogin()} style={{cursor: 'pointer'}}>
-            {isLoggedIn ? (
+          <div className="user-profile" data-testid="user-profile">
+            {isLoggedIn && (
               <>
                 <span className="gamertag">{xboxProfile?.gamertag}</span>
                 <span className="gamerscore">{xboxProfile?.gamerscore || 0} G</span>
-                <div className="user-avatar-circle">
-                  {xboxProfile?.profilePicture ?
-                    <img src={xboxProfile.profilePicture} alt="Avatar" className="avatar-img"/> :
-                    <div className="avatar-placeholder"></div>
-                  }
-                </div>
-              </>
-            ) : (
-              <>
-                <span className="gamertag">Sign In</span>
-                <div className="user-avatar-circle">
-                  <div className="avatar-placeholder"></div>
-                </div>
               </>
             )}
+            <div className="user-avatar-circle">
+              {isLoggedIn && xboxProfile?.profilePicture ?
+                <img src={xboxProfile.profilePicture} alt="Avatar" className="avatar-img"/> :
+                <div className="avatar-placeholder"></div>
+              }
+            </div>
           </div>
         </div>
       </div>
@@ -812,6 +955,7 @@ const XeniaDashboard = () => {
 
       <div className="xenia-content">
         {currentView === 'home' && renderHome()}
+        {currentView === 'favorites' && renderFavoritesView()}
         {currentView === 'gameLibrary' && renderGameLibrary()}
         {currentView === 'achievements' && renderGameLibrary()} 
         {currentView === 'marketplace' && (
@@ -875,6 +1019,10 @@ const XeniaDashboard = () => {
           addToRecentGames(game);
           launchGame(game);
         }}
+        gameGroups={gameGroups}
+        onCreateGroup={createGroup}
+        onOpenGroups={() => { setIsGuideOpen(false); setCurrentView('favorites'); }}
+        onOpenKeyboard={(callback) => { setIsKeyboardOpen(true); setKeyboardCallback(() => callback); }}
       />
 
       {/* Xbox 360 On-Screen Keyboard */}
