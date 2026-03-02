@@ -361,11 +361,11 @@ const XeniaDashboard = () => {
     }
   };
 
-  const handleCardSelect = (index) => {
+  const handleCardSelect = useCallback((index) => {
     playSound('select');
     setSelectedCardIndex(index);
     mainCards[index].action();
-  };
+  }, [mainCards]);
 
   const launchGame = async (game) => {
     if (window.__TAURI__) {
@@ -391,7 +391,7 @@ const XeniaDashboard = () => {
     }
   };
 
-  const handleGameSelect = (game) => {
+  const handleGameSelect = useCallback((game) => {
     playSound('select');
     addToRecentGames(game);
     if (currentView === 'achievements') {
@@ -400,7 +400,7 @@ const XeniaDashboard = () => {
     } else {
       launchGame(game);
     }
-  };
+  }, [currentView]);
 
   // Gamepad Polling Logic Removed - Replaced by GlobalControllerListener + handleGlobalKeyDown
   /* 
@@ -408,14 +408,14 @@ const XeniaDashboard = () => {
   useEffect(() => { ...pollGamepad... }, [...]);
   */
 
-  const navigateCarousel = (direction) => {
+  const navigateCarousel = useCallback((direction) => {
     playSound('focus');
-    if (direction === 'left' && gameCarouselIndex > 0) {
-      setGameCarouselIndex(gameCarouselIndex - 1);
-    } else if (direction === 'right' && gameCarouselIndex < mockGames.length - 1) {
-      setGameCarouselIndex(gameCarouselIndex + 1);
+    if (direction === 'left') {
+      setGameCarouselIndex(prev => prev > 0 ? prev - 1 : prev);
+    } else if (direction === 'right') {
+      setGameCarouselIndex(prev => prev < mockGames.length - 1 ? prev + 1 : prev);
     }
-  };
+  }, []);
 
   const handleMicrosoftLogin = async () => {
     try {
