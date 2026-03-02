@@ -39,6 +39,19 @@ const XeniaDashboard = () => {
     });
   };
 
+  // Seed recently played on first visit so Games tab has content
+  useEffect(() => {
+    if (recentGames.length === 0 && mockGames.length > 0) {
+      const seeded = mockGames.slice(0, 3).map((g, i) => ({
+        ...g,
+        lastPlayed: Date.now() - (i * 3600000),
+        hasQuickResume: i < 2,
+      }));
+      setRecentGames(seeded);
+      localStorage.setItem('recentGames', JSON.stringify(seeded));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Guide Button Listener (Rust Backend via Tauri events)
   useEffect(() => {
     let unlisten = null;
