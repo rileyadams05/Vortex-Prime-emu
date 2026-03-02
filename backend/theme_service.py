@@ -7,45 +7,79 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Theme directories
 THEMES_DIR = Path(__file__).parent.parent / "assets" / "Themes"
 THEMES_PLAY_DIR = THEMES_DIR / "Play"
 THEMES_DISABLED_DIR = THEMES_DIR / "Disabled"
 
-# Ensure directories exist
 THEMES_PLAY_DIR.mkdir(parents=True, exist_ok=True)
 THEMES_DISABLED_DIR.mkdir(parents=True, exist_ok=True)
 
-DEFAULT_THEME = {
-    "id": "",
+# Default layout blueprint schema
+DEFAULT_LAYOUT = {
+    "version": "1.0",
     "name": "",
     "author": "Local User",
-    "version": "1.0.0",
     "description": "",
     "created_at": "",
-    "background": {
-        "type": "color",
-        "value": "#0a0c08"
-    },
-    "accent_color": "#90c31d",
-    "hero_url": "",
-    "grid_url": "",
-    "logo_url": "",
-    "steamgriddb_game_id": None,
-    "published": False
+    "source": "local",
+    "tiles": {
+        "main_cards": [
+            {"id": "library", "title": "GAMES", "row": 0, "col": 0, "width": 1, "height": 1},
+            {"id": "settings", "title": "SYSTEM SETTINGS", "row": 0, "col": 1, "width": 1, "height": 1},
+            {"id": "achievements", "title": "ACHIEVEMENTS", "row": 0, "col": 2, "width": 1, "height": 1},
+            {"id": "themes", "title": "THEMES", "row": 0, "col": 3, "width": 1, "height": 1},
+            {"id": "startup", "title": "STARTUP", "row": 0, "col": 4, "width": 1, "height": 1},
+        ],
+        "recent_games": {
+            "visible": True,
+            "position": "bottom",
+            "max_items": 5,
+            "tile_size": "small"
+        },
+        "grid_columns": 5,
+        "grid_rows": 2,
+        "layout_mode": "default"
+    }
 }
 
 
-def _read_theme(path: Path) -> dict:
-    """Read a theme JSON file."""
-    with open(path, "r") as f:
-        return json.load(f)
+def _read_layout(folder: Path) -> dict:
+    """Read a layout.json from a theme folder."""
+    layout_path = folder / "layout.json"
+    if layout_path.exists():
+        with open(layout_path, "r") as f:
+            return json.load(f)
+    return None
 
 
-def _write_theme(path: Path, data: dict):
-    """Write a theme JSON file."""
-    with open(path, "w") as f:
+def _write_layout(folder: Path, data: dict):
+    """Write layout.json to a theme folder."""
+    folder.mkdir(parents=True, exist_ok=True)
+    with open(folder / "layout.json", "w") as f:
         json.dump(data, f, indent=2)
+
+
+def _get_theme_info(folder: Path, status: str) -> dict:
+    """Get theme info from a folder."""
+    layout = _read_layout(folder)
+    if not layout:
+        return None
+    assets = []
+    assets_dir = folder / "assets"
+    if assets_dir.exists():
+        assets = [f.name for f in assets_dir.iterdir() if f.is_file()]
+    return {
+        "folder_name": folder.name,
+        "name": layout.get("name", folder.name),
+        "author": layout.get("author", "Unknown"),
+        "description": layout.get("description", ""),
+        "version": layout.get("version", "1.0"),
+        "source": layout.get("source", "local"),
+        "created_at": layout.get("created_at", ""),
+        "layout": layout.get("tiles", {}),
+        "assets": assets,
+        "_status": status,
+    }
 
 
 def list_themes() -> dict:
@@ -53,156 +87,171 @@ def list_themes() -> dict:
     active = []
     disabled = []
 
-    for f in THEMES_PLAY_DIR.glob("*.json"):
-        theme = _read_theme(f)
-        theme["_status"] = "active"
-        theme["_filename"] = f.name
-        active.append(theme)
+    for d in THEMES_PLAY_DIR.iterdir():
+        if d.is_dir() and (d / "layout.json").exists():
+            info = _get_theme_info(d, "active")
+            if info:
+                active.append(info)
 
-    for f in THEMES_DISABLED_DIR.glob("*.json"):
-        theme = _read_theme(f)
-        theme["_status"] = "disabled"
-        theme["_filename"] = f.name
-        disabled.append(theme)
+    for d in THEMES_DISABLED_DIR.iterdir():
+        if d.is_dir() and (d / "layout.json").exists():
+            info = _get_theme_info(d, "disabled")
+            if info:
+                disabled.append(info)
 
     return {"active": active, "disabled": disabled}
 
 
-def activate_theme(filename: str) -> dict:
-    """Move a theme from Disabled to Play, deactivating the current active theme."""
-    src = THEMES_DISABLED_DIR / filename
+def activate_theme(folder_name: str) -> dict:
+    """Move a theme from Disabled to Play, deactivating current active."""
+    src = THEMES_DISABLED_DIR / folder_name
     if not src.exists():
-        raise FileNotFoundError(f"Theme '{filename}' not found in Disabled")
+        raise FileNotFoundError(f"Theme '{folder_name}' not found in Disabled")
 
-    # Move any currently active themes to Disabled first
-    for active_file in THEMES_PLAY_DIR.glob("*.json"):
-        shutil.move(str(active_file), str(THEMES_DISABLED_DIR / active_file.name))
-        logger.info(f"Deactivated theme: {active_file.name}")
+    # Move all currently active themes to Disabled
+    for active_dir in THEMES_PLAY_DIR.iterdir():
+        if active_dir.is_dir():
+            dest = THEMES_DISABLED_DIR / active_dir.name
+            if dest.exists():
+                shutil.rmtree(dest)
+            shutil.move(str(active_dir), str(dest))
+            logger.info(f"Deactivated theme: {active_dir.name}")
 
     # Move target theme to Play
-    shutil.move(str(src), str(THEMES_PLAY_DIR / filename))
-    logger.info(f"Activated theme: {filename}")
+    dest = THEMES_PLAY_DIR / folder_name
+    shutil.move(str(src), str(dest))
+    logger.info(f"Activated theme: {folder_name}")
 
-    theme = _read_theme(THEMES_PLAY_DIR / filename)
-    theme["_status"] = "active"
-    theme["_filename"] = filename
-    return theme
+    return _get_theme_info(dest, "active")
 
 
-def deactivate_theme(filename: str) -> dict:
+def deactivate_theme(folder_name: str) -> dict:
     """Move a theme from Play to Disabled."""
-    src = THEMES_PLAY_DIR / filename
+    src = THEMES_PLAY_DIR / folder_name
     if not src.exists():
-        raise FileNotFoundError(f"Theme '{filename}' not found in Play")
+        raise FileNotFoundError(f"Theme '{folder_name}' not found in Play")
 
-    shutil.move(str(src), str(THEMES_DISABLED_DIR / filename))
-    logger.info(f"Deactivated theme: {filename}")
+    dest = THEMES_DISABLED_DIR / folder_name
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.move(str(src), str(dest))
+    logger.info(f"Deactivated theme: {folder_name}")
 
-    theme = _read_theme(THEMES_DISABLED_DIR / filename)
-    theme["_status"] = "disabled"
-    theme["_filename"] = filename
-    return theme
+    return _get_theme_info(dest, "disabled")
 
 
-def create_theme(name: str, description: str = "", accent_color: str = "#90c31d",
-                 background_value: str = "#0a0c08", background_type: str = "color",
-                 hero_url: str = "", grid_url: str = "", logo_url: str = "",
-                 steamgriddb_game_id: int = None) -> dict:
-    """Create a new theme and save it to Disabled folder."""
+def create_theme(name: str, description: str = "", tiles: dict = None,
+                 source: str = "local", author: str = "Local User") -> dict:
+    """Create a new layout theme and save it to Disabled folder."""
     theme_id = str(uuid.uuid4())[:8]
     safe_name = "".join(c if c.isalnum() or c in " _-" else "" for c in name).strip()
-    filename = f"{safe_name}_{theme_id}.json"
+    folder_name = f"{safe_name}_{theme_id}"
 
-    theme = {
-        **DEFAULT_THEME,
-        "id": theme_id,
+    layout = {
+        **DEFAULT_LAYOUT,
         "name": name,
         "description": description,
-        "accent_color": accent_color,
-        "background": {"type": background_type, "value": background_value},
-        "hero_url": hero_url,
-        "grid_url": grid_url,
-        "logo_url": logo_url,
-        "steamgriddb_game_id": steamgriddb_game_id,
+        "author": author,
+        "source": source,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    if tiles:
+        layout["tiles"] = tiles
 
-    _write_theme(THEMES_DISABLED_DIR / filename, theme)
-    theme["_status"] = "disabled"
-    theme["_filename"] = filename
-    return theme
+    folder = THEMES_DISABLED_DIR / folder_name
+    _write_layout(folder, layout)
+    (folder / "assets").mkdir(exist_ok=True)
+
+    return _get_theme_info(folder, "disabled")
 
 
-def delete_theme(filename: str) -> bool:
-    """Delete a theme file."""
-    for folder in [THEMES_PLAY_DIR, THEMES_DISABLED_DIR]:
-        path = folder / filename
-        if path.exists():
-            path.unlink()
+def delete_theme(folder_name: str) -> bool:
+    """Delete a theme folder."""
+    for parent in [THEMES_PLAY_DIR, THEMES_DISABLED_DIR]:
+        path = parent / folder_name
+        if path.exists() and path.is_dir():
+            shutil.rmtree(path)
             return True
     return False
 
 
 def get_active_theme() -> dict:
-    """Get the currently active theme, or None."""
-    for f in THEMES_PLAY_DIR.glob("*.json"):
-        theme = _read_theme(f)
-        theme["_status"] = "active"
-        theme["_filename"] = f.name
-        return theme
+    """Get the currently active theme layout, or None."""
+    for d in THEMES_PLAY_DIR.iterdir():
+        if d.is_dir() and (d / "layout.json").exists():
+            return _get_theme_info(d, "active")
+    return None
+
+
+def get_layout(folder_name: str) -> dict:
+    """Get the raw layout.json for a specific theme."""
+    for parent in [THEMES_PLAY_DIR, THEMES_DISABLED_DIR]:
+        folder = parent / folder_name
+        layout = _read_layout(folder)
+        if layout:
+            return layout
     return None
 
 
 def _seed_default_themes():
-    """Create default themes if none exist."""
-    all_themes = list(THEMES_PLAY_DIR.glob("*.json")) + list(THEMES_DISABLED_DIR.glob("*.json"))
-    if all_themes:
+    """Create default layout themes if none exist."""
+    all_dirs = [d for d in THEMES_PLAY_DIR.iterdir() if d.is_dir()] + \
+               [d for d in THEMES_DISABLED_DIR.iterdir() if d.is_dir()]
+    if all_dirs:
         return
 
     defaults = [
         {
-            "name": "Classic Xbox 360",
-            "description": "The original Xbox 360 NXE green theme",
-            "accent_color": "#90c31d",
-            "bg_value": "#0a0c08",
+            "name": "Classic NXE",
+            "description": "The original Xbox 360 NXE dashboard layout — 5 equal cards in a row",
+            "tiles": {
+                "main_cards": [
+                    {"id": "library", "title": "GAMES", "row": 0, "col": 0, "width": 1, "height": 1},
+                    {"id": "settings", "title": "SYSTEM SETTINGS", "row": 0, "col": 1, "width": 1, "height": 1},
+                    {"id": "achievements", "title": "ACHIEVEMENTS", "row": 0, "col": 2, "width": 1, "height": 1},
+                    {"id": "themes", "title": "THEMES", "row": 0, "col": 3, "width": 1, "height": 1},
+                    {"id": "startup", "title": "STARTUP", "row": 0, "col": 4, "width": 1, "height": 1},
+                ],
+                "recent_games": {"visible": True, "position": "bottom", "max_items": 5, "tile_size": "small"},
+                "grid_columns": 5, "grid_rows": 2, "layout_mode": "default"
+            },
         },
         {
-            "name": "Midnight Blue",
-            "description": "A deep blue theme inspired by the Xbox 360 media player",
-            "accent_color": "#2196f3",
-            "bg_value": "#0a0a1a",
+            "name": "Games First",
+            "description": "Big center tile for Games, small tiles for the rest on the right",
+            "tiles": {
+                "main_cards": [
+                    {"id": "library", "title": "GAMES", "row": 0, "col": 0, "width": 3, "height": 2},
+                    {"id": "settings", "title": "SYSTEM SETTINGS", "row": 0, "col": 3, "width": 1, "height": 1},
+                    {"id": "achievements", "title": "ACHIEVEMENTS", "row": 0, "col": 4, "width": 1, "height": 1},
+                    {"id": "themes", "title": "THEMES", "row": 1, "col": 3, "width": 1, "height": 1},
+                    {"id": "startup", "title": "STARTUP", "row": 1, "col": 4, "width": 1, "height": 1},
+                ],
+                "recent_games": {"visible": True, "position": "bottom", "max_items": 3, "tile_size": "medium"},
+                "grid_columns": 5, "grid_rows": 2, "layout_mode": "custom"
+            },
         },
         {
-            "name": "Crimson Red",
-            "description": "A bold red theme for the ultimate gamer",
-            "accent_color": "#e53935",
-            "bg_value": "#1a0808",
-        },
-        {
-            "name": "Halo Green",
-            "description": "Master Chief approved, Spartan green and black",
-            "accent_color": "#4caf50",
-            "bg_value": "#081a08",
-        },
-        {
-            "name": "Gears Gray",
-            "description": "War-torn grays inspired by Gears of War",
-            "accent_color": "#9e9e9e",
-            "bg_value": "#1a1a1a",
+            "name": "Minimal",
+            "description": "Clean 3-column layout with only the essentials",
+            "tiles": {
+                "main_cards": [
+                    {"id": "library", "title": "GAMES", "row": 0, "col": 0, "width": 2, "height": 1},
+                    {"id": "settings", "title": "SYSTEM SETTINGS", "row": 0, "col": 2, "width": 1, "height": 1},
+                    {"id": "achievements", "title": "ACHIEVEMENTS", "row": 1, "col": 0, "width": 1, "height": 1},
+                    {"id": "themes", "title": "THEMES", "row": 1, "col": 1, "width": 1, "height": 1},
+                    {"id": "startup", "title": "STARTUP", "row": 1, "col": 2, "width": 1, "height": 1},
+                ],
+                "recent_games": {"visible": False, "position": "bottom", "max_items": 0, "tile_size": "small"},
+                "grid_columns": 3, "grid_rows": 2, "layout_mode": "custom"
+            },
         },
     ]
 
     for i, d in enumerate(defaults):
-        theme = create_theme(
-            name=d["name"],
-            description=d["description"],
-            accent_color=d["accent_color"],
-            background_value=d["bg_value"],
-        )
-        # Make the first one active
+        theme = create_theme(name=d["name"], description=d["description"], tiles=d["tiles"])
         if i == 0:
-            activate_theme(theme["_filename"])
+            activate_theme(theme["folder_name"])
 
 
-# Seed on import
 _seed_default_themes()
