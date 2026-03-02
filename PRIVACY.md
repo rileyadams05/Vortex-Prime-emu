@@ -24,3 +24,5 @@ Encryption: All interactions with Microsoft services are conducted over industry
 Withdrawal of Consent: You may withdraw your consent and de-link your Xbox account at any time through your Microsoft Account security settings.
 
 Data Deletion: If you remove the Application or de-link your account, all locally cached identifiers and profile data will be immediately deleted.
+
+Last Updated: March 2, 2026

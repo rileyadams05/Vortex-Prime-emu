@@ -70,3 +70,5 @@ REM Launch Tauri dev
 call npm run dev
 
 pause
+
+REM Last Updated: March 2, 2026

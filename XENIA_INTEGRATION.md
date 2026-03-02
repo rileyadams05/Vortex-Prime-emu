@@ -1,4 +1,5 @@
 # Xbox 360 Dashboard - Tauri 2.0 + Xenia Integration Architecture
+> **Last Updated:** March 2, 2026
 
 ## Overview
 This document outlines the architecture for embedding Xenia emulation into the Xbox 360 Dashboard Tauri application.

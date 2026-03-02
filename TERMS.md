@@ -28,3 +28,5 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE DEVELOPERS OF VORTEX PRIME SHALL NOT
 
 Changes to Terms
 We reserve the right to modify these terms at any time. Your continued use of the Application after such changes constitutes your acceptance of the new Terms of Service.
+
+Last Updated: March 2, 2026

@@ -44,3 +44,5 @@ echo ""
 
 # Launch Tauri dev
 npm run dev
+
+# Last Updated: March 2, 2026
