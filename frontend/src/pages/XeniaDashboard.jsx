@@ -207,7 +207,7 @@ const XeniaDashboard = () => {
       }
     });
     return unsub;
-  }, [onGamepadPress, filteredGames]);
+  }, [onGamepadPress, filteredGames, handleCardSelect, handleGameSelect, navigateCarousel, mainCards.length]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
