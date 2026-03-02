@@ -137,7 +137,7 @@ const GamepadDiagnostic = ({ embedded = false }) => {
     }
   }, []);
 
-  if (!visible) {
+  if (!visible && !embedded) {
     return (
       <div onClick={() => setVisible(true)} data-testid="gamepad-diag-toggle"
         style={{
@@ -160,6 +160,21 @@ const GamepadDiagnostic = ({ embedded = false }) => {
   const yellow = { color: '#ff0' };
   const cyan = { color: '#60d0ff' };
   const dim = { color: '#888' };
+
+  const panelStyle = embedded ? {
+    width: '100%', padding: 16,
+    background: 'transparent', color: '#ddd',
+    fontFamily: "'MC360', 'Segoe UI', monospace", fontSize: 12,
+    lineHeight: 1.7, maxHeight: '100%', overflowY: 'auto',
+  } : {
+    position: 'fixed', top: 10, right: 10, zIndex: 99999,
+    width: 390, padding: 16,
+    background: 'rgba(10,12,8,0.96)', color: '#ddd',
+    fontFamily: "'MC360', 'Segoe UI', monospace", fontSize: 12,
+    borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
+    border: '1px solid rgba(144,195,29,0.2)',
+    lineHeight: 1.7, maxHeight: '92vh', overflowY: 'auto',
+  };
 
   return (
     <div data-testid="gamepad-diagnostic" style={{
