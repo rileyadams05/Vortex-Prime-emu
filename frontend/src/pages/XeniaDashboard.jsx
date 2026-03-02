@@ -60,13 +60,13 @@ const XeniaDashboard = () => {
     });
   };
 
-  // Seed recently played on first visit so Games tab has content
+  // Seed recently played on first visit so Games tab has content (5 unique games)
   useEffect(() => {
-    if (recentGames.length === 0 && mockGames.length > 0) {
-      const seeded = mockGames.slice(0, 3).map((g, i) => ({
+    if (recentGames.length === 0 && mockGames.length >= 5) {
+      const seeded = mockGames.slice(0, 5).map((g, i) => ({
         ...g,
         lastPlayed: Date.now() - (i * 3600000),
-        hasQuickResume: i < 2,
+        hasQuickResume: i < 3,
       }));
       setRecentGames(seeded);
       localStorage.setItem('recentGames', JSON.stringify(seeded));
@@ -503,7 +503,7 @@ const XeniaDashboard = () => {
           )}
         </div>
 
-        {/* Recently Played + Extra game slots - all same size in one row */}
+        {/* Recently Played - single row of 5 unique game tiles */}
         <div className="top-games-section" data-testid="top-games-section">
           <h3 className="recent-title">Recently Played</h3>
           <div className="recent-games-row">
@@ -512,18 +512,9 @@ const XeniaDashboard = () => {
                 data-testid={`recent-game-${i}`}
                 onClick={() => { playSound('select'); launchGame(game); }}
               >
-                <img src={game.boxart || game.icon} alt={game.title} className="recent-game-art" />
+                <img src={game.cover || game.boxart || game.icon} alt={game.title} className="recent-game-art" />
                 <span className="recent-game-name">{game.title}</span>
                 {game.hasQuickResume && <span className="qr-badge">QR</span>}
-              </div>
-            ))}
-            {mockGames.slice(0, 2).map((game, i) => (
-              <div key={`extra-${i}`} className="recent-game-tile"
-                data-testid={`extra-game-${i}`}
-                onClick={() => { playSound('select'); handleGameSelect(game); }}
-              >
-                <img src={game.cover} alt={game.title} className="recent-game-art" />
-                <span className="recent-game-name">{game.title}</span>
               </div>
             ))}
           </div>

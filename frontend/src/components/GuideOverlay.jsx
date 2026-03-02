@@ -83,12 +83,12 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
   const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-  // HOME tab items: Home, Settings, Shutdown, then recently played + 2 extra
+  // HOME tab items: Home, Settings, Shutdown, then 5 recently played games (matching dashboard)
   const homeMenuItems = useMemo(() => [
     { id: 'home', label: 'Home', type: 'action' },
     { id: 'settings', label: 'Settings', type: 'action' },
     { id: 'shutdown', label: 'Shutdown System', badge: '(Exit App)', type: 'action' },
-    ...((recentGames || []).slice(0, 7).map((game, i) => ({
+    ...((recentGames || []).slice(0, 5).map((game, i) => ({
       id: `home-game-${i}`,
       label: game.title,
       type: 'game',
@@ -326,7 +326,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       <div className="guide-section-divider" />
       <div className="guide-section-header">Recently Played</div>
 
-      {/* Games (5 recent + 2 extra slots) */}
+      {/* Games (5 recently played - matching dashboard) */}
       {homeMenuItems.slice(3).map((item, idx) => {
         const menuIdx = idx + 3;
         return (
