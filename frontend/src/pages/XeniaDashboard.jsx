@@ -161,8 +161,6 @@ const XeniaDashboard = () => {
     { id: 'favorites', title: 'FAVORITES', icon: Heart, action: () => setCurrentView('favorites') },
     { id: 'settings', title: 'SYSTEM SETTINGS', icon: Settings, action: () => setCurrentView('settings') },
     { id: 'achievements', title: 'ACHIEVEMENTS', icon: Trophy, action: () => setCurrentView('achievements') },
-    { id: 'marketplace', title: 'MARKETPLACE', icon: Store, action: () => setCurrentView('marketplace') },
-    { id: 'themes', title: 'THEMES', icon: ImageIcon, action: () => setCurrentView('themes') },
   ], []);
 
   // Core action callbacks (defined before useEffects that reference them)

@@ -37,6 +37,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   const [partyActive, setPartyActive] = useState(false);
   const [partyMembers, setPartyMembers] = useState([]);
   const [showInviteList, setShowInviteList] = useState(false);
+  const [invitePlatform, setInvitePlatform] = useState(null); // null | 'xbox' | 'discord' for invite flow
+  const [viewingProfile, setViewingProfile] = useState(null); // { name, platform, status, activity }
 
   // Messages state
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -59,6 +61,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       setFriendsSection('main');
       setFriendsPlatform(null);
       setShowInviteList(false);
+      setInvitePlatform(null);
+      setViewingProfile(null);
       setSelectedConversation(null);
       setMessagesPlatform(null);
       setHomeSection('main');
@@ -122,6 +126,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       setFriendsSection('main');
       setFriendsPlatform(null);
       setShowInviteList(false);
+      setInvitePlatform(null);
+      setViewingProfile(null);
       setSelectedConversation(null);
       setMessagesPlatform(null);
       setHomeSection('main');
@@ -180,12 +186,15 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
         e.preventDefault(); e.stopPropagation();
         playSound('back');
         // Check if we're in a sub-section first
-        if (activeTab === 0 && friendsSection !== 'main') {
-          if (showInviteList) setShowInviteList(false);
+        if (activeTab === 0 && viewingProfile) {
+          setViewingProfile(null); setSelectedItem(0);
+        } else if (activeTab === 0 && friendsSection !== 'main') {
+          if (invitePlatform) setInvitePlatform(null);
+          else if (showInviteList) setShowInviteList(false);
           else if (friendsPlatform) setFriendsPlatform(null);
           else { setFriendsSection('main'); setSelectedItem(0); }
         } else if (activeTab === 1 && selectedConversation) {
-          setSelectedConversation(null); setSelectedItem(0);
+          setSelectedConversation(null); setMessageInput(''); setSelectedItem(0);
         } else if (activeTab === 1 && messagesPlatform) {
           setMessagesPlatform(null); setSelectedItem(0);
         } else if (activeTab === 2 && homeSection !== 'main') {
@@ -196,7 +205,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
         break;
       default: break;
     }
-  }, [isOpen, selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform, homeSection, onClose, switchTab]);
+  }, [isOpen, selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, invitePlatform, viewingProfile, selectedConversation, messagesPlatform, homeSection, onClose, switchTab]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -207,8 +216,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   // Gamepad
   const stateRef = useRef({});
   useEffect(() => {
-    stateRef.current = { selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform, homeSection };
-  }, [selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform, homeSection]);
+    stateRef.current = { selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, invitePlatform, viewingProfile, selectedConversation, messagesPlatform, homeSection };
+  }, [selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, invitePlatform, viewingProfile, selectedConversation, messagesPlatform, homeSection]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -219,12 +228,15 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
       if (btn === 'b') {
         playSound('back');
-        if (s.activeTab === 0 && s.friendsSection !== 'main') {
-          if (s.showInviteList) setShowInviteList(false);
+        if (s.activeTab === 0 && s.viewingProfile) {
+          setViewingProfile(null); setSelectedItem(0);
+        } else if (s.activeTab === 0 && s.friendsSection !== 'main') {
+          if (s.invitePlatform) setInvitePlatform(null);
+          else if (s.showInviteList) setShowInviteList(false);
           else if (s.friendsPlatform) setFriendsPlatform(null);
           else { setFriendsSection('main'); setSelectedItem(0); }
         } else if (s.activeTab === 1 && s.selectedConversation) {
-          setSelectedConversation(null); setSelectedItem(0);
+          setSelectedConversation(null); setMessageInput(''); setSelectedItem(0);
         } else if (s.activeTab === 1 && s.messagesPlatform) {
           setMessagesPlatform(null); setSelectedItem(0);
         } else if (s.activeTab === 2 && s.homeSection !== 'main') {
@@ -261,6 +273,56 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
   // ========== FRIENDS & PARTIES TAB ==========
   const renderFriendsPartiesTab = () => {
+    // Friend profile popup (Xbox 360 style)
+    if (viewingProfile) {
+      const isXbox = viewingProfile.platform === 'xbox';
+      return (
+        <div className={`guide-tab-content ${tabTransition}`}>
+          <div className="guide-section-header-row">
+            <button className="guide-back-btn" data-testid="profile-back-btn" onClick={() => { playSound('back'); setViewingProfile(null); setSelectedItem(0); }}>Back</button>
+            <span className="guide-section-title">Player Profile</span>
+          </div>
+          <div className="friend-profile-card" data-testid="friend-profile-card">
+            <div className="profile-card-top">
+              <div className={`profile-card-avatar ${isXbox ? '' : 'discord'}`}><div className="friend-avatar-placeholder large" /></div>
+              <div className="profile-card-info">
+                <span className="profile-card-name">{viewingProfile.name}</span>
+                <span className="profile-card-platform">{isXbox ? 'Xbox Live' : 'Discord'}</span>
+                <span className={`profile-card-status ${viewingProfile.status}`}>{viewingProfile.status}</span>
+                {viewingProfile.activity && <span className="profile-card-activity">{viewingProfile.activity}</span>}
+              </div>
+            </div>
+          </div>
+          <div className="profile-actions">
+            <div
+              className={`guide-menu-item party-action ${focusZone === 'menu' && selectedItem === 0 ? 'selected' : ''}`}
+              data-testid="profile-invite-party-btn"
+              onClick={() => {
+                playSound('select');
+                if (!partyActive) { setPartyActive(true); setPartyMembers([]); }
+                setPartyMembers(prev => prev.some(m => m.name === viewingProfile.name) ? prev : [...prev, viewingProfile]);
+                setViewingProfile(null); setSelectedItem(0);
+              }}
+              onMouseEnter={() => { setFocusZone('menu'); setSelectedItem(0); }}
+            >
+              <span className="menu-label">Invite to Party</span>
+              <span className="menu-badge controller-hint">X</span>
+            </div>
+            <div
+              className={`guide-menu-item party-action coming-soon ${focusZone === 'menu' && selectedItem === 1 ? 'selected' : ''}`}
+              data-testid="profile-invite-game-btn"
+              onMouseEnter={() => { setFocusZone('menu'); setSelectedItem(1); }}
+            >
+              <span className="menu-label">Invite to Game</span>
+              <span className="coming-soon-badge">Coming Soon</span>
+              <span className="menu-badge controller-hint">Y</span>
+            </div>
+            <div className="coming-soon-info">PC games (Steam, emulator) — Coming Soon</div>
+          </div>
+        </div>
+      );
+    }
+
     // Sub-view: Xbox friends list
     if (friendsSection === 'friends' && friendsPlatform === 'xbox') {
       return (
@@ -273,7 +335,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
             {mockXboxFriends.map((f, i) => (
               <div key={f.xuid} className={`friend-item ${focusZone === 'menu' && selectedItem === i ? 'selected' : ''}`}
                 data-testid={`xbox-friend-${f.xuid}`}
-                onClick={() => { setSelectedItem(i); playSound('focus'); }}
+                onClick={() => { playSound('select'); setViewingProfile({ name: f.gamertag, platform: 'xbox', status: f.status, activity: f.activity }); setSelectedItem(0); }}
                 onMouseEnter={() => { setSelectedItem(i); setFocusZone('menu'); }}
               >
                 <div className="friend-avatar"><div className="friend-avatar-placeholder" /></div>
@@ -300,7 +362,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
             {mockDiscordFriends.map((f, i) => (
               <div key={f.discord_id} className={`friend-item discord ${focusZone === 'menu' && selectedItem === i ? 'selected' : ''}`}
                 data-testid={`discord-friend-${f.discord_id}`}
-                onClick={() => { setSelectedItem(i); playSound('focus'); }}
+                onClick={() => { playSound('select'); setViewingProfile({ name: f.username, platform: 'discord', status: f.status, activity: f.activity }); setSelectedItem(0); }}
                 onMouseEnter={() => { setSelectedItem(i); setFocusZone('menu'); }}
               >
                 <div className="friend-avatar"><div className="friend-avatar-placeholder discord" /></div>
@@ -345,44 +407,64 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       );
     }
 
-    // Sub-view: Parties (active party or create)
+    // Sub-view: Parties
     if (friendsSection === 'parties') {
-      // Show invite list overlay
-      if (showInviteList) {
-        const allFriends = [
-          ...mockXboxFriends.map(f => ({ ...f, name: f.gamertag, platform: 'xbox' })),
-          ...mockDiscordFriends.map(f => ({ ...f, name: f.username, platform: 'discord' })),
-        ];
+      // Invite flow: platform picker
+      if (showInviteList && !invitePlatform) {
         return (
           <div className={`guide-tab-content ${tabTransition}`}>
             <div className="guide-section-header-row">
               <button className="guide-back-btn" data-testid="invite-back-btn" onClick={() => { playSound('back'); setShowInviteList(false); setSelectedItem(0); }}>Back</button>
               <span className="guide-section-title">Invite to Party</span>
             </div>
+            <div
+              className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 0 ? 'selected' : ''}`}
+              data-testid="invite-xbox-btn"
+              onClick={() => { playSound('select'); setInvitePlatform('xbox'); setSelectedItem(0); }}
+              onMouseEnter={() => { setFocusZone('menu'); setSelectedItem(0); }}
+            >
+              <span className="menu-label">Xbox Live</span>
+              <span className="menu-badge">{mockXboxFriends.filter(f => f.status === 'online').length} online</span>
+            </div>
+            <div
+              className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 1 ? 'selected' : ''}`}
+              data-testid="invite-discord-btn"
+              onClick={() => { playSound('select'); setInvitePlatform('discord'); setSelectedItem(0); }}
+              onMouseEnter={() => { setFocusZone('menu'); setSelectedItem(1); }}
+            >
+              <span className="menu-label">Discord</span>
+              <span className="menu-badge">{mockDiscordFriends.filter(f => f.status === 'online').length} online</span>
+            </div>
+          </div>
+        );
+      }
+
+      // Invite flow: friends list for selected platform
+      if (showInviteList && invitePlatform) {
+        const friends = invitePlatform === 'xbox'
+          ? mockXboxFriends.map(f => ({ ...f, name: f.gamertag, platform: 'xbox' }))
+          : mockDiscordFriends.map(f => ({ ...f, name: f.username, platform: 'discord' }));
+        return (
+          <div className={`guide-tab-content ${tabTransition}`}>
+            <div className="guide-section-header-row">
+              <button className="guide-back-btn" data-testid="invite-platform-back-btn" onClick={() => { playSound('back'); setInvitePlatform(null); setSelectedItem(0); }}>Back</button>
+              <span className="guide-section-title">{invitePlatform === 'xbox' ? 'Xbox Live' : 'Discord'} Friends</span>
+            </div>
             <div className="friends-list" data-testid="invite-friends-list">
-              {allFriends.filter(f => f.status === 'online' || f.status === 'away').map((f, i) => {
+              {friends.filter(f => f.status === 'online' || f.status === 'away').map((f, i) => {
                 const isInParty = partyMembers.some(m => m.name === f.name);
                 return (
                   <div key={f.name} className={`friend-item invite-item ${isInParty ? 'in-party' : ''} ${focusZone === 'menu' && selectedItem === i ? 'selected' : ''}`}
                     data-testid={`invite-friend-${i}`}
-                    onClick={() => {
-                      if (!isInParty) {
-                        playSound('select');
-                        setPartyMembers(prev => [...prev, f]);
-                      }
-                    }}
+                    onClick={() => { if (!isInParty) { playSound('select'); setPartyMembers(prev => [...prev, f]); } }}
                     onMouseEnter={() => { setFocusZone('menu'); setSelectedItem(i); }}
                   >
                     <div className="friend-avatar"><div className={`friend-avatar-placeholder ${f.platform === 'discord' ? 'discord' : ''}`} /></div>
                     <div className="friend-info">
                       <span className="friend-name">{f.name}</span>
-                      <span className="friend-status">{f.platform === 'xbox' ? 'Xbox Live' : 'Discord'}</span>
+                      <span className={`friend-status ${f.status}`}>{f.status}</span>
                     </div>
-                    {isInParty ? (
-                      <span className="invite-status invited">Invited</span>
-                    ) : (
-                      <span className="invite-status available">Invite</span>
-                    )}
+                    {isInParty ? <span className="invite-status invited">Invited</span> : <span className="invite-status available">Invite</span>}
                   </div>
                 );
               })}
@@ -421,7 +503,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
               <div
                 className={`guide-menu-item party-action ${focusZone === 'menu' && selectedItem === 0 ? 'selected' : ''}`}
                 data-testid="invite-more-btn"
-                onClick={() => { playSound('select'); setShowInviteList(true); setSelectedItem(0); }}
+                onClick={() => { playSound('select'); setShowInviteList(true); setInvitePlatform(null); setSelectedItem(0); }}
                 onMouseEnter={() => { setFocusZone('menu'); setSelectedItem(0); }}
               >
                 <span className="menu-label">Invite More</span>
@@ -507,17 +589,28 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
             <div ref={chatEndRef} />
           </div>
           <div className="chat-input-row" data-testid="chat-input-row">
-            <input
-              ref={messageInputRef}
-              type="text"
-              className="chat-input"
+            <div
+              className="chat-input-trigger"
               data-testid="chat-message-input"
-              placeholder="Type a message..."
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); sendMessage(); } }}
-            />
-            <button className="chat-send-btn" data-testid="chat-send-btn" onClick={sendMessage} disabled={!messageInput.trim()}>Send</button>
+              onClick={() => {
+                if (onOpenKeyboard) {
+                  onOpenKeyboard((text) => {
+                    if (text && text.trim()) {
+                      const newMsg = { text: text.trim(), sender: 'you', time: formatTime(new Date()) };
+                      setChatMessages(prev => ({
+                        ...prev,
+                        [selectedConversation.id]: [...(prev[selectedConversation.id] || []), newMsg],
+                      }));
+                      playSound('select');
+                      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+                    }
+                  });
+                }
+              }}
+            >
+              <span className="chat-input-placeholder">Type a message...</span>
+              <span className="chat-input-hint">A</span>
+            </div>
           </div>
           <div className="guide-section-divider" />
           <div className="message-actions">
@@ -782,9 +875,12 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           <div data-testid="guide-footer-hints" className="guide-footer-hints">
             <div className="hint-group"><div className="hint-btn green">A</div><span>Select</span></div>
             <div className="hint-group"><div className="hint-btn red">B</div><span>{
-              (activeTab === 0 && friendsSection !== 'main') || (activeTab === 1 && (selectedConversation || messagesPlatform)) || (activeTab === 2 && homeSection !== 'main') ? 'Back' : 'Close'
+              (activeTab === 0 && (viewingProfile || friendsSection !== 'main')) || (activeTab === 1 && (selectedConversation || messagesPlatform)) || (activeTab === 2 && homeSection !== 'main') ? 'Back' : 'Close'
             }</span></div>
             <div className="hint-group"><span className="hint-bumper">LB</span><span className="hint-bumper">RB</span><span>Switch Tab</span></div>
+            {viewingProfile && (
+              <div className="hint-group"><div className="hint-btn blue">X</div><span>Party</span><div className="hint-btn yellow">Y</div><span>Game</span></div>
+            )}
           </div>
         </div>
       </div>
