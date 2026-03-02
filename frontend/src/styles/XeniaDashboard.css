@@ -213,6 +213,7 @@ body {
 }
 
 .card-title {
+  font-family: 'MC360', 'Segoe UI', sans-serif;
   font-size: 1.2rem;
   font-weight: 600;
   text-transform: uppercase;
