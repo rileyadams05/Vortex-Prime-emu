@@ -360,7 +360,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           <div className={`guide-tab-bar ${focusZone === 'tabs' ? 'focused' : ''}`} data-testid="guide-tab-bar">
             {TAB_NAMES.map((name, i) => (
               <button key={i} className={`guide-tab ${activeTab === i ? 'active' : ''}`} data-testid={`tab-${name.toLowerCase().replace(/ /g, '-')}`}
-                onClick={() => { if (activeTab !== i) { playSound('focus'); setTabTransition(i > activeTab ? 'slide-left' : 'slide-right'); setTimeout(() => { setActiveTab(i); setSelectedItem(0); setFocusZone('menu'); setFriendsSection('main'); setFriendsPlatform(null); setShowInviteList(false); setSelectedConversation(null); setTabTransition(''); }, 150); } }}>
+                onClick={() => { if (activeTab !== i) { playSound('focus'); setTabTransition(i > activeTab ? 'slide-left' : 'slide-right'); setTimeout(() => { setActiveTab(i); setSelectedItem(0); setFocusZone('menu'); setHomeSection('main'); setTabTransition(''); }, 150); } }}>
                 {name}
               </button>
             ))}
