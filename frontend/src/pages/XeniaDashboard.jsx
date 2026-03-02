@@ -117,6 +117,7 @@ const XeniaDashboard = () => {
     { id: 'library', title: 'GAMES', icon: Disc, action: () => setCurrentView('gameLibrary') },
     { id: 'settings', title: 'SYSTEM SETTINGS', icon: Settings, action: () => setCurrentView('settings') },
     { id: 'achievements', title: 'ACHIEVEMENTS', icon: Trophy, action: () => setCurrentView('achievements') },
+    { id: 'marketplace', title: 'MARKETPLACE', icon: Store, action: () => setCurrentView('marketplace') },
     { id: 'themes', title: 'THEMES', icon: ImageIcon, action: () => setCurrentView('themes') },
     { id: 'startup', title: 'STARTUP', icon: Video, action: () => setCurrentView('startup') }
   ], []);
