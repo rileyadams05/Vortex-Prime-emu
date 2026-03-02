@@ -1,58 +1,47 @@
 # Vortex Prime EMU - PRD
 
 ## Original Problem Statement
-Build a Professional Xenia Guide Implementation for the Vortex-Prime-emu project. Replicate Xbox 360 Guide overlay with full tab switching, recently played games with Quick Resume, controller support, custom Blade font, and Xbox NXE sounds.
+Build Xbox 360 Guide overlay for Vortex-Prime-emu. Iterative refinements: single clean panel layout, Games/Recently Played inside panel, Xenia Guide header inside, controller support, MC360 Blade font, Xbox NXE sounds.
 
 ## Architecture
-- **Frontend**: React (CRA with Craco) + Tailwind CSS + custom CSS
-- **Backend**: FastAPI + MongoDB (Motor)
-- **Tauri**: Code structured for Tauri webview compatibility
-- **Input**: Web Gamepad API + keyboard listeners + Tauri Rust backend events
-- **Audio**: 8 sounds from ALHROOBIX/Xenia-Dashboard
-- **Font**: MC360.ttf (Blade font)
-- **Storage**: localStorage for recently played games tracking
+- **Frontend**: React (CRA) + Tailwind CSS + custom CSS
+- **Backend**: FastAPI + MongoDB
+- **Tauri**: Compatible (conditional imports)
+- **Input**: Web Gamepad API (4 slots, left stick, gamepadconnected events) + keyboard + Tauri events
+- **Audio**: 8 Xenia-Dashboard sounds
+- **Font**: MC360.ttf (Blade)
+- **Storage**: localStorage (recently played games)
 
-## What's Been Implemented
+## Current Layout (Session 4)
+### Guide Overlay (single clean panel):
+- XENIA GUIDE header (top)
+- Sign In / Profile + Clock
+- Divider
+- Home (navigate to dashboard)
+- Shutdown System (Exit App)
+- GAMES section divider
+- Recently Played (up to 5 games with Quick Resume badges)
+- Footer: A Select / B Close
 
-### Session 1 (2026-03-02)
-- GuideOverlay.jsx - Pixel-perfect Xbox 360 NXE Guide overlay
-- Tab/Home toggle, ArrowUp/Down navigation, Escape close
-- Real-time Gaussian blur on dashboard
+### Dashboard:
+- VORTEX PRIME EMU title + gamerscore (when signed in)
+- 5 main cards: Games, System Settings, Achievements, Themes, Startup
+- Footer: LB/RB Tabs, Home, A Select, B Back
 
-### Session 2 (2026-03-02)
-- Renamed "MY XENIA" → "VORTEX PRIME EMU"
-- MC360.ttf (Blade font) applied to all text
-- Sound system: 8 sounds from Xenia-Dashboard repo
-- Guide header: Sign-in button + avatar
-- Home dashboard: Real gamerscore when signed in
+## Implemented Features
+- Session 1: Guide overlay, blur, keyboard nav
+- Session 2: Rename, MC360 font, sounds, sign-in, gamerscore
+- Session 3: Tab system (Friends & Parties / Games)
+- **Session 4**: Single panel redesign, Games inside panel, Xenia Guide header inside, controller rewrite with gamepadconnected events + 4 slots + left stick + status indicator
 
-### Session 3 (2026-03-02) - Current
-- HOME tab renamed to **"Friends & Parties"**
-- Removed all "coming soon" badges
-- **Full tab switching**: LB/RB (q/e), ArrowLeft/Right switch between Friends & Games tabs
-- **Friends & Parties tab**: "Home" (navigate to dashboard) + "Shutdown System (Exit App)"
-- **Games tab**: "Recently Played" with last 5 games, thumbnails, Quick Resume badges
-- **Quick Resume UI**: Visual badges on recently played games
-- **Recently played tracking**: Persisted to localStorage, auto-seeds 3 games on first load
-- **Snappy tab animations**: Horizontal slide (slideFromLeft/slideFromRight)
-- **Footer updated**: LB/RB Tabs + A Select + B Close hints
-- Controller support: LB/RB map to q/e via GlobalControllerListener
-- Tab switching resets selection to first item
+## Testing: 100% pass (iterations 3 & 4)
 
-## Testing Results
-- Session 1: 95% pass
-- Session 2: 95% pass
-- Session 3: **100% pass** (21/21 features verified)
-
-## Prioritized Backlog
-### P1 (Next)
-- Wire Quick Resume to Tauri save-state commands
-- Wire Shutdown System to Tauri exit(0)
-- Full Xbox MSAL auth testing with real credentials
-- Friends list integration in Friends & Parties tab
-
-### P2 (Future)
-- Microsoft.GameInput via NuGet for native Guide button
-- Party chat/voice integration
-- Per-game Quick Resume state management
-- Notification system for friend activity
+## Backlog
+### P1
+- Wire Quick Resume to Tauri save-state
+- Wire Shutdown to Tauri exit
+- Xbox MSAL auth with real credentials
+### P2
+- Microsoft.GameInput (NuGet) for native Guide button
+- Party/friends integration
+- Save-state management
