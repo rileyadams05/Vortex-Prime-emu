@@ -24,21 +24,56 @@ const XeniaDashboard = () => {
   const [gameCarouselIndex, setGameCarouselIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Active Theme State
-  const [activeTheme, setActiveTheme] = useState(null);
+  // Active Layout Theme State
+  const [activeLayout, setActiveLayout] = useState(null);
+  const [vibePrompt, setVibePrompt] = useState('');
+  const [vibeLoading, setVibeLoading] = useState(false);
+  const [vibeSource, setVibeSource] = useState('');
 
   const loadActiveTheme = useCallback(async () => {
     try {
       const r = await fetch(`${API}/themes/active`);
       const data = await r.json();
-      if (data.theme) {
-        setActiveTheme(data.theme);
-        document.documentElement.style.setProperty('--xenia-green', data.theme.accent_color || '#90c31d');
+      if (data.theme?.layout) {
+        setActiveLayout(data.theme.layout);
       }
     } catch (e) { /* fallback to default */ }
   }, []);
 
   useEffect(() => { loadActiveTheme(); }, [loadActiveTheme]);
+
+  const handleVibeGenerate = useCallback(async () => {
+    if (!vibePrompt.trim() || vibeLoading) return;
+    playSound('select');
+    setVibeLoading(true);
+    try {
+      const r = await fetch(`${API}/vibe-design/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: vibePrompt }),
+      });
+      const data = await r.json();
+      if (data.layout) {
+        setActiveLayout(data.layout);
+        setVibeSource(data.source);
+        // Auto-save as a new theme
+        await fetch(`${API}/themes/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: vibePrompt.slice(0, 40),
+            description: `AI-generated: "${vibePrompt}"`,
+            tiles: data.layout,
+            source: data.source === 'open_webui' ? 'ai' : 'ai_preset',
+            author: 'Vibe-Design AI',
+          }),
+        });
+      }
+    } catch (e) {
+      console.error('Vibe-Design error:', e);
+    }
+    setVibeLoading(false);
+  }, [vibePrompt, vibeLoading]);
 
   // Recently Played Games (persisted to localStorage)
   const [recentGames, setRecentGames] = useState(() => {
