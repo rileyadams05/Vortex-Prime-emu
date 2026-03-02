@@ -367,7 +367,7 @@ const XeniaDashboard = () => {
     mainCards[index].action();
   }, [mainCards]);
 
-  const launchGame = async (game) => {
+  const launchGame = useCallback(async (game) => {
     if (window.__TAURI__) {
        try {
            const { invoke } = window.__TAURI__.core || window.__TAURI__.tauri; 
@@ -389,7 +389,7 @@ const XeniaDashboard = () => {
     } else {
         alert(`Launching ${game.title} with Vortex Prime Emu...\nPath: ${game.path}\n(Not in Tauri environment)`);
     }
-  };
+  }, [xboxProfile]);
 
   const handleGameSelect = useCallback((game) => {
     playSound('select');
@@ -400,7 +400,7 @@ const XeniaDashboard = () => {
     } else {
       launchGame(game);
     }
-  }, [currentView]);
+  }, [currentView, launchGame]);
 
   // Gamepad Polling replaced by GamepadContext
 

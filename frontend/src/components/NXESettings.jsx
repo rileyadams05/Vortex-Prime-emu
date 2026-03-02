@@ -65,7 +65,7 @@ const NXESettings = ({ isActive, onBack }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, selectedIndex, onBack, activePanel, settingsItems]);
+  }, [isActive, selectedIndex, onBack, activePanel]);
 
   // Gamepad input for settings
   const selectedRef = useRef(selectedIndex);
@@ -107,7 +107,7 @@ const NXESettings = ({ isActive, onBack }) => {
       }
     });
     return unsub;
-  }, [isActive, onGamepadPress, onBack, settingsItems]);
+  }, [isActive, onGamepadPress, onBack]);
 
   // Scroll active item into view
   useEffect(() => {
