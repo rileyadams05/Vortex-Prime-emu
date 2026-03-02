@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-const GamepadDiagnostic = () => {
+const GamepadDiagnostic = ({ embedded = false }) => {
   const [visible, setVisible] = useState(true);
   const [apiAvailable, setApiAvailable] = useState(false);
   const [hidAvailable, setHidAvailable] = useState(false);
