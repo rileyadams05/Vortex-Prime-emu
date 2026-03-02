@@ -109,3 +109,28 @@ export const mockAchievements = [
   { id: 3, title: 'Explorer', description: 'Discover all locations', gamerscore: 30, unlocked: false },
   { id: 4, title: 'Master', description: 'Complete the game on hardest difficulty', gamerscore: 50, unlocked: false },
 ];
+
+export const mockXboxFriends = [
+  { xuid: 'xb001', gamertag: 'MasterChief117', status: 'online', activity: 'Playing Halo 3' },
+  { xuid: 'xb002', gamertag: 'VaultDweller99', status: 'online', activity: 'Playing Fallout 3' },
+  { xuid: 'xb003', gamertag: 'xXDarkSoulXx', status: 'away', activity: 'Idle' },
+  { xuid: 'xb004', gamertag: 'NightRider2K', status: 'online', activity: 'In Party Chat' },
+  { xuid: 'xb005', gamertag: 'SpartanElite', status: 'offline', activity: '' },
+  { xuid: 'xb006', gamertag: 'ReconSniper', status: 'offline', activity: '' },
+];
+
+export const mockDiscordFriends = [
+  { discord_id: 'dc001', username: 'pixel_wizard', status: 'online', activity: 'Playing Minecraft' },
+  { discord_id: 'dc002', username: 'retro_gamer42', status: 'online', activity: 'In Voice Channel' },
+  { discord_id: 'dc003', username: 'night_owl_dev', status: 'dnd', activity: 'Streaming' },
+  { discord_id: 'dc004', username: 'chill_vibes', status: 'away', activity: '' },
+  { discord_id: 'dc005', username: 'speedrunner_x', status: 'offline', activity: '' },
+];
+
+export const mockConversations = [
+  { id: 'conv1', friend_name: 'MasterChief117', platform: 'xbox', last_message: 'GG! That was a sick match', timestamp: '2:30 PM', unread: 2 },
+  { id: 'conv2', friend_name: 'pixel_wizard', platform: 'discord', last_message: 'wanna hop on later?', timestamp: '1:15 PM', unread: 1 },
+  { id: 'conv3', friend_name: 'VaultDweller99', platform: 'xbox', last_message: 'Found a legendary weapon!', timestamp: '12:00 PM', unread: 0 },
+  { id: 'conv4', friend_name: 'retro_gamer42', platform: 'discord', last_message: 'check out this clip', timestamp: 'Yesterday', unread: 0 },
+  { id: 'conv5', friend_name: 'NightRider2K', platform: 'xbox', last_message: 'Lets run it back tomorrow', timestamp: 'Yesterday', unread: 0 },
+];

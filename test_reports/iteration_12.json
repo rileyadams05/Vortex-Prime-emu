@@ -1,0 +1,86 @@
+{
+  "summary": "Complete frontend testing of Xbox 360 Dashboard replica (Vortex-Prime-EMU) iteration 12. All 20 new features verified successfully. Open WebUI button with SVG icon replaces old AI button and opens AI panel. Guide overlay correctly opens to Friends and Parties tab by default. Friends section shows Xbox Live (6 friends) and Discord (5 friends) platforms. Parties section allows creating solo party with 'You' as Party Leader, Invite More shows 7 available friends with Invite/Invited states. Messages tab shows 5 conversations with unread badges and platform tags (XBL/DC), clicking opens detail with functional Invite to Party button and Coming Soon Invite to Game button. Home tab shows 5 recently played games with Quick Resume badges on first 3. Footer hint correctly switches between 'Close' and 'Back' based on navigation depth.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Dashboard Recently Played",
+        "issues": ["Some game cover images fail to load (Wikipedia URLs returning broken images) - affects Spider-Man, Bionic Commando, Halo 3, Gears of War 2 covers. Red Dead Redemption cover loads correctly."]
+      }
+    ]
+  },
+
+  "passed_tests": [
+    "Open WebUI button shows in header with custom SVG icon",
+    "Clicking Open WebUI button opens AI panel",
+    "AI panel can be closed via X button",
+    "Guide opens with Friends and Parties tab as default",
+    "Friends and Parties main view shows Friends and Parties menu items",
+    "Friends item shows online count badge (5 online)",
+    "Clicking Friends shows Xbox Live and Discord sub-options",
+    "Xbox Live shows 3 online badge and Discord shows 2 online badge",
+    "Clicking Xbox Live shows list of 6 Xbox friends with gamertags and statuses",
+    "Clicking Discord shows list of 5 Discord friends with usernames and statuses",
+    "Back button works in Friends sub-views to return to previous level",
+    "Clicking Parties shows empty state with Create Party button",
+    "Create Party creates a solo party showing 'You' as Party Leader",
+    "Active party shows Invite More and Leave Party buttons",
+    "Invite More shows online/away friends with Invite button for each",
+    "Clicking Invite changes button to 'Invited' state",
+    "Messages tab shows 5 mock conversations with unread badges and platform tags (XBL/DC)",
+    "Clicking conversation shows message detail with Invite to Party button",
+    "Message detail shows Invite to Game with Coming Soon badge",
+    "Coming Soon info text mentions PC games (Steam, emulator)",
+    "Home tab shows 5 recently played games with Quick Resume badges on first 3",
+    "Footer hint changes from 'Close' to 'Back' when in sub-views"
+  ],
+
+  "test_report_links": [
+    "/app/frontend/src/pages/XeniaDashboard.jsx",
+    "/app/frontend/src/components/GuideOverlay.jsx",
+    "/app/frontend/src/data/xeniaData.js",
+    "/app/frontend/src/styles/GuideOverlay.css",
+    "/app/frontend/src/assets/open-webui.svg"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "All data-testid attributes properly implemented for testing",
+    "Mock data structure correctly defined in xeniaData.js for Xbox friends, Discord friends, and conversations",
+    "GuideOverlay.jsx properly manages state for nested navigation with friendsSection, friendsPlatform, partyActive, showInviteList, selectedConversation",
+    "Open WebUI button uses imported SVG icon with proper styling",
+    "Party system correctly handles invite state management",
+    "Footer hint dynamically changes based on navigation depth"
+  ],
+
+  "updated_files": [],
+
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (22/22 features passed)"
+  },
+
+  "test_credentials": "No auth required",
+
+  "seed_data_creation": "Fresh localStorage seeding creates 5 unique games from mockGames with hasQuickResume=true for first 3",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Guide Overlay has 3 tabs (Friends and Parties, Messages, Home). Open WebUI button in header opens AI panel. Friends section has hierarchical navigation: main -> Friends/Parties -> Xbox Live/Discord -> friend list. Parties supports Create Party -> active party with Invite More. Messages shows 5 conversations with detail view containing Invite to Party (functional) and Invite to Game (Coming Soon). Mock data includes 6 Xbox friends, 5 Discord friends, and 5 conversations in xeniaData.js. All features use mock data - no backend APIs required.",
+
+  "mocked_apis": {
+    "has_mocked_apis": true,
+    "mocked_apis_list": ["themes", "steamgriddb", "xbox auth", "friends list", "chat history", "party system"],
+    "note": "All backend APIs are mocked. Friends, Discord friends, and conversations use mock data from xeniaData.js."
+  }
+}

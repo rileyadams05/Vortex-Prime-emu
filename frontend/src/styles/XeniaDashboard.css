@@ -750,6 +750,12 @@ body {
   box-shadow: 0 0 8px rgba(144,195,29,0.2);
 }
 
+.open-webui-icon {
+  width: 20px;
+  height: 20px;
+  filter: invert(72%) sepia(60%) saturate(500%) hue-rotate(35deg) brightness(1.1);
+}
+
 /* AI Panel (Open WebUI container) */
 .ai-panel {
   position: fixed;

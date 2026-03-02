@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Bot } from 'lucide-react';
+import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store } from 'lucide-react';
 import axios from 'axios';
 import { mockGames, mockAchievements } from '../data/xeniaData';
+import openWebuiIcon from '../assets/open-webui.svg';
 import NXESettings from '../components/NXESettings';
 import BladesOverlay from '../components/BladesOverlay';
 import GuideOverlay from '../components/GuideOverlay';
@@ -750,11 +751,11 @@ const XeniaDashboard = () => {
         <div className="ai-box" data-testid="ai-box">
           <button
             className="ai-toggle-btn"
-            data-testid="ai-toggle-btn"
+            data-testid="open-webui-btn"
             onClick={() => { playSound('select'); setIsAiPanelOpen(prev => !prev); }}
           >
-            <Bot size={18} />
-            <span>AI</span>
+            <img src={openWebuiIcon} alt="Open WebUI" className="open-webui-icon" />
+            <span>Open WebUI</span>
           </button>
           <div className="user-profile" onClick={() => !isLoggedIn && handleMicrosoftLogin()} style={{cursor: 'pointer'}}>
             {isLoggedIn ? (
@@ -784,7 +785,7 @@ const XeniaDashboard = () => {
       {isAiPanelOpen && (
         <div className="ai-panel" data-testid="ai-panel">
           <div className="ai-panel-header">
-            <Bot size={20} />
+            <img src={openWebuiIcon} alt="" className="open-webui-icon" />
             <h3>Open WebUI</h3>
             <button className="ai-panel-close" onClick={() => setIsAiPanelOpen(false)} data-testid="ai-panel-close">X</button>
           </div>
