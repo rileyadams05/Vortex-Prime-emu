@@ -21,8 +21,7 @@ const XeniaDashboard = () => {
   const [gameCarouselIndex, setGameCarouselIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Guide Button Listener (Rust Backend) - DISABLED
-  /*
+  // Guide Button Listener (Rust Backend via Tauri events)
   useEffect(() => {
     let unlisten = null;
 
@@ -47,7 +46,6 @@ const XeniaDashboard = () => {
       if (unlisten) unlisten();
     };
   }, []);
-  */
 
   // Robustly define filteredGames to avoid ReferenceError
   const filteredGames = (mockGames || []).filter(game => 
