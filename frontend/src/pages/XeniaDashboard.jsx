@@ -7,6 +7,7 @@ import NXESettings from '../components/NXESettings';
 import BladesOverlay from '../components/BladesOverlay';
 import GuideOverlay from '../components/GuideOverlay';
 import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
+import playSound from '../utils/soundManager';
 import '../styles/XeniaDashboard.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
