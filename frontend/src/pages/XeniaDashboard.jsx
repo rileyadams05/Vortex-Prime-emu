@@ -271,7 +271,7 @@ const XeniaDashboard = () => {
   */
 
   const navigateCarousel = (direction) => {
-    playSound(navClickSound);
+    playSound('focus');
     if (direction === 'left' && gameCarouselIndex > 0) {
       setGameCarouselIndex(gameCarouselIndex - 1);
     } else if (direction === 'right' && gameCarouselIndex < mockGames.length - 1) {
