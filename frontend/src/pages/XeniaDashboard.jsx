@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video } from 'lucide-react';
 import axios from 'axios';
@@ -93,13 +93,13 @@ const XeniaDashboard = () => {
   const [wallpapers, setWallpapers] = useState([]);
   const [showStartupVideo, setShowStartupVideo] = useState(true);
 
-  const mainCards = [
+  const mainCards = useMemo(() => [
     { id: 'library', title: 'GAMES', icon: Disc, action: () => setCurrentView('gameLibrary') },
     { id: 'settings', title: 'SYSTEM SETTINGS', icon: Settings, action: () => setCurrentView('settings') },
     { id: 'achievements', title: 'ACHIEVEMENTS', icon: Trophy, action: () => setCurrentView('achievements') },
     { id: 'themes', title: 'THEMES', icon: ImageIcon, action: () => setCurrentView('themes') },
     { id: 'startup', title: 'STARTUP', icon: Video, action: () => setCurrentView('startup') }
-  ];
+  ], []);
 
   // ==== GAMEPAD: Direct controller input via GamepadContext ====
   const { onPress: onGamepadPress } = useGamepad();
