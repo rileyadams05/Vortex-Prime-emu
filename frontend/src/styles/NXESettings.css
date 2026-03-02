@@ -56,6 +56,23 @@
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
 }
 
+/* Diagnostic embed in preview pane */
+.nxe-diagnostic-embed {
+  width: 100%;
+  max-width: 420px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  background: rgba(10, 12, 8, 0.6);
+  border-radius: 10px;
+  border: 1px solid rgba(144, 195, 29, 0.15);
+  padding: 4px;
+}
+
+.nxe-diagnostic-embed::-webkit-scrollbar { width: 4px; }
+.nxe-diagnostic-embed::-webkit-scrollbar-track { background: transparent; }
+.nxe-diagnostic-embed::-webkit-scrollbar-thumb { background: rgba(144,195,29,0.3); border-radius: 2px; }
+
+
 .nxe-preview-text {
   text-align: center;
 }
