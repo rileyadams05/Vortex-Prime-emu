@@ -619,28 +619,12 @@ const XeniaDashboard = () => {
   );
 
   const renderThemesView = () => (
-    <div className="game-library-view">
-        <div className="library-header">
-            <button className="back-btn" onClick={() => {
-                playSound('back');
-                setCurrentView('home');
-            }}>
-                <ChevronLeft size={24} /> Back
-            </button>
-            <h2 style={{marginLeft: 20}}>Themes Manager</h2>
-        </div>
-        <div className="assets-grid">
-            {wallpapers.map((wp, i) => (
-                <div key={i} className={`asset-card ${wp.status}`} onClick={() => handleToggleWallpaper(wp.name, wp.status)}>
-                    <div className="asset-icon"><ImageIcon size={48}/></div>
-                    <div className="asset-info">
-                        <h3>{wp.name}</h3>
-                        <span className={`status-badge ${wp.status}`}>{wp.status}</span>
-                    </div>
-                </div>
-            ))}
-        </div>
-    </div>
+    <ThemeManager
+      onBack={() => { playSound('back'); setCurrentView('home'); }}
+      onThemeChange={() => {
+        // Refresh theme data if needed
+      }}
+    />
   );
 
   const renderStartupView = () => (
