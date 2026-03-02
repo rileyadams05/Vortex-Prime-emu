@@ -17,24 +17,25 @@ Replicate and surpass the Xbox 360 Dashboard experience (NXE/Blades) as a Tauri 
 ## Dashboard Layout (6 cards)
 Games -> System Settings -> Achievements -> Marketplace -> Themes -> Startup
 
-## Guide Overlay (4 tabs)
-### Home (default):
-- Home button, Settings button
-- Recently Played (last 5 games with Quick Resume)
-- Shutdown System (Exit App)
+## Top Row: Recently Played (5 unique game tiles)
+- Shows 5 unique games seeded from mockGames[0-4]
+- First 3 have Quick Resume badges
+- No duplicates between tiles
 
-### Friends and Parties:
+## Guide Overlay (3 tabs)
+### Friends and Parties (default):
 - Friends item with Xbox Live / Discord platform toggle
 - Dynamic search (Search Gamertag... / Search Discord Username...)
 - Unified friends list via Tauri `fetch_unified_friends_list`
 
-### Games:
-- Last 5 recently played with Quick Resume badges
-- Wired to Tauri `quick_resume_load`
-
 ### Messages:
 - Previous chats with friends via Tauri `fetch_chat_history`
 - Shows conversation list with unread badges
+
+### Home:
+- Home button, Settings button
+- Shutdown System (Exit App)
+- Recently Played (5 games matching dashboard, with Quick Resume badges on first 3)
 
 ### Navigation:
 - LB/RB: Switch tabs (horizontal transition)
@@ -51,14 +52,17 @@ Games -> System Settings -> Achievements -> Marketplace -> Themes -> Startup
 - Marketplace (community layouts)
 - AI box (plug-and-play Open WebUI panel)
 - Xbox 360 on-screen keyboard
-- Dashboard: Recently Played + extra game slots at top
-- 4-tab Guide: Home, Friends & Parties, Games, Messages
+- Dashboard: 5 unique Recently Played game tiles at top (no overlap)
+- 3-tab Guide: Friends & Parties, Messages, Home (with 5 games)
 
-## Testing: 100% (20/20, iteration_10.json)
+## Testing: 100% (16/16, iteration_11.json)
 
 ## Backlog
-### P1: x360db Game Database (6000+ real games)
+### P0: Wire Controller to On-Screen Keyboard
+### P1: Functional Marketplace (GitHub repo integration)
+### P1: Tauri Backend Port
+### P1: Real Xbox Live MSAL Auth, Discord linked accounts
+### P2: x360db Game Database (6000+ real games)
 ### P2: Game Patches (TOML from xenia-canary/game-patches)
 ### P3: Volvo Pack Auto-Update System
-### P4: Native Tauri (Microsoft.GameInput, tauri-plugin-fs)
-### P5: Real Xbox Live MSAL Auth, Discord linked accounts
+### P4: Quick Resume Emulator Hooks
