@@ -11,20 +11,25 @@ export const themeApi = {
     return r.json();
   },
 
-  async activateTheme(filename) {
+  async getLayout(folderName) {
+    const r = await fetch(`${API}/api/themes/layout/${folderName}`);
+    return r.json();
+  },
+
+  async activateTheme(folderName) {
     const r = await fetch(`${API}/api/themes/activate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename }),
+      body: JSON.stringify({ folder_name: folderName }),
     });
     return r.json();
   },
 
-  async deactivateTheme(filename) {
+  async deactivateTheme(folderName) {
     const r = await fetch(`${API}/api/themes/deactivate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename }),
+      body: JSON.stringify({ folder_name: folderName }),
     });
     return r.json();
   },
@@ -38,8 +43,8 @@ export const themeApi = {
     return r.json();
   },
 
-  async deleteTheme(filename) {
-    const r = await fetch(`${API}/api/themes/${filename}`, { method: "DELETE" });
+  async deleteTheme(folderName) {
+    const r = await fetch(`${API}/api/themes/${folderName}`, { method: "DELETE" });
     return r.json();
   },
 };
@@ -54,19 +59,15 @@ export const steamGridApi = {
     const r = await fetch(`${API}/api/steamgriddb/assets/${gameId}`);
     return r.json();
   },
+};
 
-  async getGrids(gameId, limit = 10) {
-    const r = await fetch(`${API}/api/steamgriddb/grids/${gameId}?limit=${limit}`);
-    return r.json();
-  },
-
-  async getHeroes(gameId, limit = 10) {
-    const r = await fetch(`${API}/api/steamgriddb/heroes/${gameId}?limit=${limit}`);
-    return r.json();
-  },
-
-  async getLogos(gameId, limit = 10) {
-    const r = await fetch(`${API}/api/steamgriddb/logos/${gameId}?limit=${limit}`);
+export const vibeDesignApi = {
+  async generate(prompt) {
+    const r = await fetch(`${API}/api/vibe-design/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
     return r.json();
   },
 };
