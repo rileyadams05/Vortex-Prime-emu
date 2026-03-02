@@ -225,7 +225,7 @@ const XeniaDashboard = () => {
   };
 
   const handleCardSelect = (index) => {
-    playSound(selectSound);
+    playSound('select');
     setSelectedCardIndex(index);
     mainCards[index].action();
   };
