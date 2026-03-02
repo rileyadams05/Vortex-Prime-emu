@@ -170,7 +170,7 @@ npm run dev
 **Already Configured:**
 ```env
 # backend/.env
-OPENXBL_API_KEY=3f50c132-04ef-4a98-8462-431603ba41fc
+OPENXBL_API_KEY=xenia-dashboard-port
 ```
 
 ### Frontend Environment

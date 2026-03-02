@@ -80,7 +80,7 @@ REACT_APP_BACKEND_URL=http://localhost:8001
 #### Backend (.env)
 ```bash
 # /app/backend/.env
-OPENXBL_API_KEY=3f50c132-04ef-4a98-8462-431603ba41fc
+OPENXBL_API_KEY=xenia-dashboard-port
 MONGO_URL="mongodb://localhost:27017"
 DB_NAME="vortex_prime"
 ```

@@ -118,7 +118,7 @@ async def get_auth_url():
     """Get Microsoft OAuth URL"""
     # For demo purposes, return a URL that goes to our callback with a demo flow
     # In production, this would be the actual Microsoft OAuth URL
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://xbox360-dashboard.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://xenia-dashboard-port.preview.emergentagent.com')
     callback_url = f"{frontend_url}/oauth/callback"
     
     # This is a simplified demo URL - in production you'd use Microsoft's OAuth endpoint
