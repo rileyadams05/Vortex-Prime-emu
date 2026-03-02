@@ -865,6 +865,17 @@ const XeniaDashboard = () => {
           launchGame(game);
         }}
       />
+
+      {/* Xbox 360 On-Screen Keyboard */}
+      <Xbox360Keyboard
+        isOpen={isKeyboardOpen}
+        onClose={() => setIsKeyboardOpen(false)}
+        onSubmit={(value) => {
+          if (keyboardCallback) keyboardCallback(value);
+          setIsKeyboardOpen(false);
+        }}
+        placeholder="Type with your controller..."
+      />
     </>
   );
 };
