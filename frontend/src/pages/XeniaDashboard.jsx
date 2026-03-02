@@ -43,39 +43,6 @@ const XeniaDashboard = () => {
 
   useEffect(() => { loadActiveTheme(); }, [loadActiveTheme]);
 
-  const handleVibeGenerate = useCallback(async () => {
-    if (!vibePrompt.trim() || vibeLoading) return;
-    playSound('select');
-    setVibeLoading(true);
-    try {
-      const r = await fetch(`${API}/vibe-design/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: vibePrompt }),
-      });
-      const data = await r.json();
-      if (data.layout) {
-        setActiveLayout(data.layout);
-        setVibeSource(data.source);
-        // Auto-save as a new theme
-        await fetch(`${API}/themes/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: vibePrompt.slice(0, 40),
-            description: `AI-generated: "${vibePrompt}"`,
-            tiles: data.layout,
-            source: data.source === 'open_webui' ? 'ai' : 'ai_preset',
-            author: 'Vibe-Design AI',
-          }),
-        });
-      }
-    } catch (e) {
-      console.error('Vibe-Design error:', e);
-    }
-    setVibeLoading(false);
-  }, [vibePrompt, vibeLoading]);
-
   // Recently Played Games (persisted to localStorage)
   const [recentGames, setRecentGames] = useState(() => {
     try {
