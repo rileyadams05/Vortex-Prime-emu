@@ -565,9 +565,9 @@ const XeniaDashboard = () => {
 
   return (
     <>
-    <div className={`xenia-dashboard ${isGuideOpen ? 'blurred' : ''}`} style={{ 
-        transition: 'filter 0.3s ease', 
-        filter: isGuideOpen ? 'blur(8px)' : 'none' 
+    <div className={`xenia-dashboard ${isGuideOpen ? 'blurred' : ''}`} data-testid="xenia-dashboard" style={{ 
+        transition: 'filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+        filter: isGuideOpen ? 'blur(12px) brightness(0.7)' : 'none' 
     }}>
       <BladesOverlay currentView={currentView} setCurrentView={setCurrentView} />
       
