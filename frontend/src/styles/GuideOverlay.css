@@ -1,5 +1,5 @@
 /* === XENIA GUIDE OVERLAY === */
-/* Clean single-panel Xbox 360 Guide - No side tabs */
+/* Two-tab Xbox 360 Guide: Friends & Parties | Games */
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap');
 
@@ -41,20 +41,14 @@
 }
 
 @keyframes guideSlideIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -48%) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
-/* ====== CENTER PANEL (Single clean card) ====== */
+/* ====== CENTER PANEL ====== */
 .guide-center-panel {
-  width: 420px;
-  max-height: 80vh;
+  width: 440px;
+  max-height: 85vh;
   background: linear-gradient(180deg, #505860 0%, #3a4048 30%, #353b42 70%, #303640 100%);
   border-radius: 12px;
   box-shadow:
@@ -71,9 +65,7 @@
 .guide-center-panel::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   height: 40%;
   background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
   pointer-events: none;
@@ -81,9 +73,9 @@
   border-radius: 12px 12px 0 0;
 }
 
-/* ====== PANEL HEADER (Xenia Guide title) ====== */
+/* ====== PANEL HEADER ====== */
 .guide-panel-header {
-  padding: 16px 20px 8px;
+  padding: 14px 20px 6px;
   position: relative;
   z-index: 2;
 }
@@ -101,7 +93,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 20px 14px;
+  padding: 4px 20px 12px;
   position: relative;
   z-index: 2;
 }
@@ -120,22 +112,9 @@
   flex-shrink: 0;
 }
 
-.guide-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-inner-fallback {
-  width: 22px;
-  height: 22px;
-  background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
-  border-radius: 2px;
-}
-
-.profile-info {
-  flex: 1;
-}
+.guide-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-inner-fallback { width: 22px; height: 22px; background: linear-gradient(135deg, #4a4a4a, #2a2a2a); border-radius: 2px; }
+.profile-info { flex: 1; }
 
 .profile-signin-text {
   color: #b0e040;
@@ -144,21 +123,15 @@
   cursor: pointer;
   letter-spacing: 0.5px;
 }
-
 .profile-signin-text:hover { color: #d0ff60; }
 
-.profile-gamertag {
-  color: #e8e8e8;
-  font-size: 14px;
-  font-weight: 600;
-}
+.profile-gamertag { color: #e8e8e8; font-size: 14px; font-weight: 600; }
 
 .profile-clock {
   color: rgba(255, 255, 255, 0.7);
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* ====== DIVIDERS ====== */
@@ -175,35 +148,92 @@
   margin: 6px 0;
 }
 
-/* ====== SECTION HEADER (Games) ====== */
-.guide-section-header {
-  font-size: 11px;
+/* ====== TAB BAR ====== */
+.guide-tab-bar {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  position: relative;
+  z-index: 2;
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+}
+.guide-tab-bar.focused {
+  box-shadow: 0 0 0 1px rgba(144,195,29,0.4);
+}
+
+.guide-tab {
+  flex: 1;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.15);
+  border: none;
+  color: rgba(255,255,255,0.45);
+  font-family: inherit;
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: rgba(255, 255, 255, 0.35);
-  padding: 8px 14px 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.guide-tab:first-child { border-radius: 0; }
+.guide-tab:last-child { border-radius: 0; }
+
+.guide-tab.active {
+  background: rgba(144,195,29,0.12);
+  color: #b0e040;
+}
+.guide-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #b0e040;
+  border-radius: 1px;
+}
+.guide-tab:hover:not(.active) {
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.6);
 }
 
 /* ====== MENU LIST ====== */
 .guide-menu-list {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 14px;
+  padding: 8px 14px;
   position: relative;
   z-index: 2;
+  min-height: 200px;
 }
 
-/* Scrollbar styling */
-.guide-menu-list::-webkit-scrollbar {
-  width: 4px;
+.guide-menu-list::-webkit-scrollbar { width: 4px; }
+.guide-menu-list::-webkit-scrollbar-track { background: transparent; }
+.guide-menu-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 2px; }
+
+/* Tab content transitions */
+.guide-tab-content {
+  animation: tabFadeIn 0.2s ease;
 }
-.guide-menu-list::-webkit-scrollbar-track {
-  background: transparent;
+.guide-tab-content.slide-left {
+  animation: tabSlideLeft 0.15s ease;
 }
-.guide-menu-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
+.guide-tab-content.slide-right {
+  animation: tabSlideRight 0.15s ease;
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes tabSlideLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-20px); }
+}
+@keyframes tabSlideRight {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px); }
 }
 
 /* ====== MENU ITEMS ====== */
@@ -211,7 +241,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 13px 14px;
+  padding: 12px 14px;
   border-radius: 4px;
   color: #d8dce0;
   cursor: pointer;
@@ -219,10 +249,8 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
   position: relative;
 }
-
 .guide-menu-item:last-child { border-bottom: none; }
 
-/* Selected (Xbox Green) */
 .guide-menu-item.selected {
   background: linear-gradient(180deg, #b8e040 0%, #9cd400 20%, #8ac000 80%, #7ab400 100%);
   color: #1a1c1e;
@@ -230,7 +258,6 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   border-bottom-color: transparent;
 }
-
 .guide-menu-item.selected::before {
   content: '';
   position: absolute;
@@ -241,35 +268,14 @@
   border-radius: 4px 4px 0 0;
 }
 
-.menu-label {
-  font-size: 16px;
-  font-weight: 600;
-}
-
+.menu-label { font-size: 15px; font-weight: 600; }
 .guide-menu-item.selected .menu-label { font-weight: 700; }
 
-.menu-badge {
-  font-size: 11px;
-  font-weight: 600;
-  opacity: 0.6;
-}
+.menu-badge { font-size: 11px; font-weight: 600; opacity: 0.6; }
+.guide-menu-item.selected .menu-badge { color: #2a3020; opacity: 0.75; }
+.menu-badge.exit-badge { color: #ff8866; opacity: 0.85; }
+.guide-menu-item.selected .menu-badge.exit-badge { color: #5a3020; opacity: 0.8; }
 
-.guide-menu-item.selected .menu-badge {
-  color: #2a3020;
-  opacity: 0.75;
-}
-
-.menu-badge.exit-badge {
-  color: #ff8866;
-  opacity: 0.85;
-}
-
-.guide-menu-item.selected .menu-badge.exit-badge {
-  color: #5a3020;
-  opacity: 0.8;
-}
-
-/* Quick Resume badge */
 .menu-badge.resume-badge {
   color: #60d0ff;
   opacity: 0.9;
@@ -281,39 +287,143 @@
   padding: 2px 8px;
   border-radius: 3px;
 }
-
 .guide-menu-item.selected .menu-badge.resume-badge {
   color: #1a3040;
   background: rgba(0, 0, 0, 0.12);
 }
 
 /* Game items */
-.guide-menu-item.game-item {
-  padding: 10px 14px;
+.guide-menu-item.game-item { padding: 10px 14px; }
+.game-item-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.game-thumb { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; border: 1px solid rgba(255,255,255,0.12); flex-shrink: 0; }
+.game-item-info .menu-label { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ====== PLATFORM TOGGLE ====== */
+.platform-toggle {
+  display: flex;
+  gap: 0;
+  margin: 8px 0;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.platform-toggle.focused {
+  border-color: rgba(144,195,29,0.5);
+  box-shadow: 0 0 8px rgba(144,195,29,0.15);
 }
 
-.game-item-info {
+.toggle-btn {
+  flex: 1;
+  padding: 7px 12px;
+  background: rgba(0,0,0,0.2);
+  border: none;
+  color: rgba(255,255,255,0.4);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.toggle-btn.active {
+  background: rgba(144,195,29,0.15);
+  color: #b0e040;
+}
+.toggle-btn:hover:not(.active) {
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.6);
+}
+
+/* ====== SEARCH ====== */
+.guide-search {
+  margin: 6px 0;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: border-color 0.15s;
+}
+.guide-search.focused {
+  border-color: rgba(144,195,29,0.5);
+}
+
+.guide-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.3);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+.guide-search-input:focus { outline: none; }
+.guide-search-input::placeholder { color: rgba(255,255,255,0.25); font-size: 12px; }
+
+/* ====== FRIENDS LIST ====== */
+.friends-list {
+  margin: 6px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.friends-list::-webkit-scrollbar { width: 3px; }
+.friends-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.friends-category { margin-bottom: 8px; }
+
+.category-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.3);
+  padding: 6px 8px 4px;
+}
+
+.friend-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1;
-  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.1s;
 }
+.friend-item:hover { background: rgba(255,255,255,0.05); }
 
-.game-thumb {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
-  object-fit: cover;
-  border: 1px solid rgba(255,255,255,0.12);
-  flex-shrink: 0;
-}
-
-.game-item-info .menu-label {
-  font-size: 14px;
-  white-space: nowrap;
+.friend-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
+  background: #222;
+}
+.friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.friend-avatar-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #3a3a3a, #222); }
+.friend-avatar-placeholder.discord { background: linear-gradient(135deg, #5865F2, #3a3aaa); }
+
+.friend-info { flex: 1; min-width: 0; }
+.friend-name { display: block; font-size: 13px; color: #ddd; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.friend-status { font-size: 10px; text-transform: capitalize; }
+.friend-status.online { color: #7cfc00; }
+.friend-status.offline { color: #666; }
+.friend-status.away { color: #ffa500; }
+.friend-status.dnd { color: #ff4444; }
+
+.friends-empty {
+  padding: 16px 8px;
+  text-align: center;
+  color: rgba(255,255,255,0.25);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.friends-loading {
+  padding: 20px;
+  text-align: center;
+  color: rgba(255,255,255,0.3);
+  font-size: 12px;
 }
 
 /* ====== FOOTER ====== */
@@ -322,14 +432,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.3);
   background: linear-gradient(180deg, rgba(40,44,48,0.5) 0%, rgba(30,34,38,0.8) 100%);
   position: relative;
   z-index: 2;
   flex-shrink: 0;
 }
-
 .guide-footer-hints::before {
   content: '';
   position: absolute;
@@ -341,9 +450,9 @@
 .hint-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   color: #c4c8cc;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
@@ -361,15 +470,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   position: relative;
 }
-
-.hint-btn.green {
-  background: linear-gradient(180deg, #5ec853 0%, #3da030 100%);
-}
-
-.hint-btn.red {
-  background: linear-gradient(180deg, #e55040 0%, #c03020 100%);
-}
-
+.hint-btn.green { background: linear-gradient(180deg, #5ec853 0%, #3da030 100%); }
+.hint-btn.red { background: linear-gradient(180deg, #e55040 0%, #c03020 100%); }
 .hint-btn::after {
   content: '';
   position: absolute;
@@ -378,6 +480,16 @@
   background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0));
   border-radius: 50%;
   pointer-events: none;
+}
+
+.hint-bumper {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 /* ====== CONTROLLER STATUS ====== */
@@ -397,31 +509,11 @@
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
-
-.controller-status.connected {
-  background: rgba(60, 160, 40, 0.85);
-  color: white;
-}
-
-.controller-status.disconnected {
-  background: rgba(80, 80, 90, 0.85);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.controller-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.controller-status.connected .controller-dot {
-  background: #90ff60;
-  box-shadow: 0 0 6px #90ff60;
-}
-
-.controller-status.disconnected .controller-dot {
-  background: #666;
-}
+.controller-status.connected { background: rgba(60, 160, 40, 0.85); color: white; }
+.controller-status.disconnected { background: rgba(80, 80, 90, 0.85); color: rgba(255, 255, 255, 0.7); }
+.controller-dot { width: 8px; height: 8px; border-radius: 50%; }
+.controller-status.connected .controller-dot { background: #90ff60; box-shadow: 0 0 6px #90ff60; }
+.controller-status.disconnected .controller-dot { background: #666; }
 
 /* ====== ANIMATIONS ====== */
 @keyframes guideSlideOut {
@@ -430,7 +522,7 @@
 }
 
 @media (max-height: 600px) {
-  .guide-center-panel { width: 380px; }
+  .guide-center-panel { width: 400px; }
   .guide-menu-item { padding: 10px 12px; }
   .menu-label { font-size: 14px; }
 }
