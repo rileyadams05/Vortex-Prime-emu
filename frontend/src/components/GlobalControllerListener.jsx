@@ -25,7 +25,7 @@ const GlobalControllerListener = () => {
           case 'DPadLeft': return 'ArrowLeft';
           case 'DPadRight': return 'ArrowRight';
           case 'Start': return 'Escape';
-          case 'Mode': return null; // Guide Button - DISABLED
+          case 'Mode': return 'Home'; // Guide Button
           case 'LeftTrigger': return 'q'; // LB
           case 'RightTrigger': return 'e'; // RB
           default: return null;
