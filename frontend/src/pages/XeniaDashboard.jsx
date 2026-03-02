@@ -637,9 +637,7 @@ const XeniaDashboard = () => {
   const renderThemesView = () => (
     <ThemeManager
       onBack={() => { playSound('back'); setCurrentView('home'); }}
-      onThemeChange={() => {
-        // Refresh theme data if needed
-      }}
+      onThemeChange={loadActiveTheme}
     />
   );
 
