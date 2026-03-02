@@ -738,28 +738,67 @@ const XeniaDashboard = () => {
 
       <div className="xenia-header">
         <div className="header-spacer"></div>
-        <div className="user-profile" onClick={() => !isLoggedIn && handleMicrosoftLogin()} style={{cursor: 'pointer'}}>
-          {isLoggedIn ? (
+        <div className="ai-box" data-testid="ai-box">
+          <button
+            className="ai-toggle-btn"
+            data-testid="ai-toggle-btn"
+            onClick={() => { playSound('select'); setIsAiPanelOpen(prev => !prev); }}
+          >
+            <Bot size={18} />
+            <span>AI</span>
+          </button>
+          <div className="user-profile" onClick={() => !isLoggedIn && handleMicrosoftLogin()} style={{cursor: 'pointer'}}>
+            {isLoggedIn ? (
               <>
                 <span className="gamertag">{xboxProfile?.gamertag}</span>
                 <span className="gamerscore">{xboxProfile?.gamerscore || 0} G</span>
                 <div className="user-avatar-circle">
-                    {xboxProfile?.profilePicture ? 
-                        <img src={xboxProfile.profilePicture} alt="Avatar" className="avatar-img"/> : 
-                        <div className="avatar-placeholder"></div>
-                    }
+                  {xboxProfile?.profilePicture ?
+                    <img src={xboxProfile.profilePicture} alt="Avatar" className="avatar-img"/> :
+                    <div className="avatar-placeholder"></div>
+                  }
                 </div>
               </>
-          ) : (
+            ) : (
               <>
                 <span className="gamertag">Sign In</span>
                 <div className="user-avatar-circle">
-                    <div className="avatar-placeholder"></div>
+                  <div className="avatar-placeholder"></div>
                 </div>
               </>
-          )}
+            )}
+          </div>
         </div>
       </div>
+
+      {/* AI Panel - Open WebUI container (plug-and-play) */}
+      {isAiPanelOpen && (
+        <div className="ai-panel" data-testid="ai-panel">
+          <div className="ai-panel-header">
+            <Bot size={20} />
+            <h3>Open WebUI</h3>
+            <button className="ai-panel-close" onClick={() => setIsAiPanelOpen(false)} data-testid="ai-panel-close">X</button>
+          </div>
+          <div className="ai-panel-body">
+            <div className="ai-panel-status">
+              <div className="ai-status-dot"></div>
+              <span>Waiting for local connection</span>
+            </div>
+            <p className="ai-panel-info">
+              Connect to your local Open WebUI at <code>localhost:8080</code>
+            </p>
+            <p className="ai-panel-info">
+              This panel will automatically connect when running as a Tauri desktop app.
+            </p>
+            <iframe
+              src="http://localhost:8080"
+              title="Open WebUI"
+              className="ai-iframe"
+              sandbox="allow-scripts allow-same-origin allow-forms"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="xenia-content">
         {currentView === 'home' && renderHome()}
