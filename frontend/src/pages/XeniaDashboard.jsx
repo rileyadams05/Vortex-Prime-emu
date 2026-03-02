@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video } from 'lucide-react';
+import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Bot } from 'lucide-react';
 import axios from 'axios';
 import { mockGames, mockAchievements } from '../data/xeniaData';
 import NXESettings from '../components/NXESettings';
 import BladesOverlay from '../components/BladesOverlay';
 import GuideOverlay from '../components/GuideOverlay';
 import ThemeManager from '../components/ThemeManager';
+import Marketplace from '../components/Marketplace';
+import Xbox360Keyboard from '../components/Xbox360Keyboard';
 import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
 import '../styles/XeniaDashboard.css';
+import '../styles/Marketplace.css';
+import '../styles/Xbox360Keyboard.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 const API = `${BACKEND_URL}/api`;
