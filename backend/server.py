@@ -267,70 +267,84 @@ async def toggle_wallpaper(action: WallpaperAction):
 class ThemeCreate(BaseModel):
     name: str
     description: str = ""
-    accent_color: str = "#90c31d"
-    background_value: str = "#0a0c08"
-    background_type: str = "color"
-    hero_url: str = ""
-    grid_url: str = ""
-    logo_url: str = ""
-    steamgriddb_game_id: int = None
+    tiles: dict = None
+    source: str = "local"
+    author: str = "Local User"
 
 class ThemeAction(BaseModel):
-    filename: str
+    folder_name: str
 
-# Theme Management API
+class VibeDesignRequest(BaseModel):
+    prompt: str
+
+# Theme Management API (Layout-based, NO color pickers)
 @api_router.get("/themes")
 async def get_themes():
-    """List all themes (active + disabled)."""
+    """List all layout themes (active + disabled)."""
     return theme_service.list_themes()
 
 @api_router.get("/themes/active")
 async def get_active_theme():
-    """Get the currently active theme."""
+    """Get the currently active layout theme."""
     theme = theme_service.get_active_theme()
     if not theme:
         return {"theme": None}
     return {"theme": theme}
 
+@api_router.get("/themes/layout/{folder_name}")
+async def get_theme_layout(folder_name: str):
+    """Get the raw layout.json for a specific theme."""
+    layout = theme_service.get_layout(folder_name)
+    if not layout:
+        raise HTTPException(status_code=404, detail="Layout not found")
+    return layout
+
 @api_router.post("/themes/create")
 async def create_theme(data: ThemeCreate):
-    """Create a new theme."""
+    """Create a new layout theme."""
     theme = theme_service.create_theme(
         name=data.name,
         description=data.description,
-        accent_color=data.accent_color,
-        background_value=data.background_value,
-        background_type=data.background_type,
-        hero_url=data.hero_url,
-        grid_url=data.grid_url,
-        logo_url=data.logo_url,
-        steamgriddb_game_id=data.steamgriddb_game_id,
+        tiles=data.tiles,
+        source=data.source,
+        author=data.author,
     )
     return theme
 
 @api_router.post("/themes/activate")
 async def activate_theme(action: ThemeAction):
-    """Activate a theme (swap: current active -> Disabled, target -> Play)."""
+    """Activate a layout theme (swap: current active -> Disabled, target -> Play)."""
     try:
-        return theme_service.activate_theme(action.filename)
+        return theme_service.activate_theme(action.folder_name)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 @api_router.post("/themes/deactivate")
 async def deactivate_theme(action: ThemeAction):
-    """Deactivate a theme (move from Play to Disabled)."""
+    """Deactivate a layout theme (move from Play to Disabled)."""
     try:
-        return theme_service.deactivate_theme(action.filename)
+        return theme_service.deactivate_theme(action.folder_name)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-@api_router.delete("/themes/{filename}")
-async def delete_theme(filename: str):
-    """Delete a theme."""
-    ok = theme_service.delete_theme(filename)
+@api_router.delete("/themes/{folder_name}")
+async def delete_theme(folder_name: str):
+    """Delete a layout theme folder."""
+    ok = theme_service.delete_theme(folder_name)
     if not ok:
         raise HTTPException(status_code=404, detail="Theme not found")
     return {"status": "deleted"}
+
+# AI Vibe-Design API
+@api_router.post("/vibe-design/generate")
+async def vibe_design_generate(req: VibeDesignRequest):
+    """Generate a layout blueprint from a natural language prompt."""
+    try:
+        layout = await vibe_design_service.generate_layout(req.prompt)
+        return {"layout": layout, "source": layout.pop("_source", "unknown")}
+    except Exception as e:
+        logger.error(f"Vibe-Design error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # SteamGridDB Asset Engine API
 @api_router.get("/steamgriddb/search/{term}")
