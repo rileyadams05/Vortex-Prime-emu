@@ -86,8 +86,8 @@ const XeniaDashboard = () => {
     const handleGlobalKeyDown = (e) => {
       // Toggle Guide on Tab / Home key
       if (e.key === 'Tab' || e.key === 'Home') {
-        console.log("Guide toggle key detected:", e.key);
         e.preventDefault();
+        e.stopPropagation();
         setIsGuidePressed(true);
         setTimeout(() => setIsGuidePressed(false), 200);
         setIsGuideOpen(prev => !prev);
