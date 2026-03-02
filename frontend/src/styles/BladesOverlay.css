@@ -78,10 +78,10 @@
 }
 
 /* Colors */
-.blade-tab[data-color="xboxlive"] { color: #107c10; }
-.blade-tab[data-color="games"] { color: #4B2C84; }
-.blade-tab[data-color="media"] { color: #0078D7; }
-.blade-tab[data-color="system"] { color: #404040; }
+.blade-tab[data-color="xboxlive"] { color: #ffffff; }
+.blade-tab[data-color="games"] { color: #ffffff; }
+.blade-tab[data-color="media"] { color: #ffffff; }
+.blade-tab[data-color="system"] { color: #ffffff; }
 
 /* Selection Glow */
 .blade-tab.active[data-color="xboxlive"] { filter: drop-shadow(0 0 15px #96FE04); }

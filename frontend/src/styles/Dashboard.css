@@ -123,13 +123,12 @@
 }
 
 .score-label {
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
 }
 
 .score-value {
   font-weight: 600;
-  color: #ffcc00;
-  text-shadow: 0 0 8px rgba(255, 204, 0, 0.6);
+  color: #ffffff;
 }
 
 .header-right {
@@ -378,7 +377,7 @@
 .game-details,
 .media-details {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
 }
 
 .game-achievements,
@@ -448,7 +447,7 @@
 
 .friend-activity {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Navigation Buttons */

@@ -908,7 +908,7 @@ const XeniaDashboard = () => {
                 <ChevronLeft size={24} /> Back
             </button>
             <h2 style={{marginLeft: 20}}>Startup Video Manager</h2>
-            <span style={{marginLeft: 'auto', fontSize: '0.7rem', color: '#666'}}>Play / Disabled folder structure</span>
+            <span style={{marginLeft: 'auto', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)'}}>Play / Disabled folder structure</span>
         </div>
         <div className="folder-sections">
           <div className="folder-section">

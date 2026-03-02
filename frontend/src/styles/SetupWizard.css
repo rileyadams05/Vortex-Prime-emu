@@ -46,7 +46,7 @@
 }
 
 .setup-header p {
-  color: #aaa;
+  color: rgba(255,255,255,0.7);
   margin: 0;
   font-size: 16px;
 }
@@ -83,7 +83,7 @@
 
 .setup-option svg {
   margin-right: 20px;
-  color: #107c10;
+  color: #ffffff;
 }
 
 .option-text h3 {
@@ -93,7 +93,7 @@
 }
 
 .option-text span {
-  color: #888;
+  color: rgba(255,255,255,0.7);
   font-size: 14px;
 }
 
@@ -102,16 +102,16 @@
 }
 
 .setup-option.primary:hover {
-  border-color: #107c10;
+  border-color: #ffffff;
   background: rgba(16, 124, 16, 0.1);
 }
 
 .setup-option.ghost svg {
-  color: #666;
+  color: rgba(255,255,255,0.7);
 }
 
 .setup-option.ghost:hover svg {
-  color: #ccc;
+  color: #ffffff;
 }
 
 @keyframes fadeIn {
