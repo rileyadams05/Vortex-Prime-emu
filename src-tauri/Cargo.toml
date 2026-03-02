@@ -11,7 +11,7 @@ edition = "2021"
 tauri-build = { version = "2.0.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0", features = ["shell-execute", "shell-open", "shell-sidecar"] }
+tauri = { version = "2.0.0", features = ["tray-icon"] }
 tauri-plugin-fs = "2.0.0"
 tauri-plugin-dialog = "2.0.0"
 tauri-plugin-shell = "2.0.0"
@@ -19,6 +19,10 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.11", features = ["json"] }
+tauri-plugin-process = "2.3.1"
+gilrs = "0.11.1"
+sysinfo = "0.30"
+velopack = "0.0.1298"
 
 [features]
 default = ["custom-protocol"]

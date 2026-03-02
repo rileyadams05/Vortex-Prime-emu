@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Disc, Heart, Settings, Trophy, Loader2, Gamepad } from 'lucide-react';
-import axios from 'axios';
+import { Disc, Heart, Settings, Trophy, Loader2, Gamepad, Image as ImageIcon } from 'lucide-react';
+import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
 import BladeSettings from '../components/BladeSettings';
+import SetupWizard from '../components/SetupWizard';
 import '../styles/Xbox360Dashboard.css';
+import '../styles/NXESettings.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+import XBLogo from '../assets/XB-logo.svg';
+
 // Official Xbox Icon
 const XboxIcon = () => (
   <img 
-    src="https://customer-assets.emergentagent.com/job_xbox360-dashboard/artifacts/4yo0cne7_Xb-windows.ico" 
+    src={XBLogo}
     alt="Xbox" 
     className="xbox-icon"
   />
 );
 
 const Xbox360Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState('games');
   const [xboxProfile, setXboxProfile] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedTile, setSelectedTile] = useState(0);
@@ -27,8 +31,22 @@ const Xbox360Dashboard = () => {
   const [gameLibrary, setGameLibrary] = useState([]);
   const [showStartupVideo, setShowStartupVideo] = useState(true);
   const [showBladeSettings, setShowBladeSettings] = useState(false);
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
 
   useEffect(() => {
+    // Initialize MSAL
+    const initAuth = async () => {
+      try {
+        await initializeMsal();
+        // Handle redirect promise if we used redirect flow instead of popup
+        // const response = await msalInstance.handleRedirectPromise();
+        // if (response) { ... }
+      } catch (e) {
+        console.error("MSAL Init Error:", e);
+      }
+    };
+    initAuth();
+
     // Check startup video setting
     const skipStartup = localStorage.getItem('skipStartup');
     if (skipStartup === 'true') {
@@ -61,6 +79,15 @@ const Xbox360Dashboard = () => {
 
     // Listen for OAuth callback
     window.addEventListener('message', handleOAuthCallback);
+    
+    // Check for first run / setup
+    const libraryPath = localStorage.getItem('gameLibraryPath');
+    if (!libraryPath) {
+      // Delay slightly to let startup animation finish if it's running, 
+      // or show immediately if skipped.
+      setTimeout(() => setShowSetupWizard(true), skipStartup === 'true' ? 500 : 3500);
+    }
+    
     return () => window.removeEventListener('message', handleOAuthCallback);
   }, []);
 
@@ -72,12 +99,17 @@ const Xbox360Dashboard = () => {
   };
 
   const loadGameLibrary = () => {
-    const mockLibrary = [
-      { id: 1, title: 'Halo 3', titleId: '4D5307D1', path: '/games/halo3.iso' },
-      { id: 2, title: 'Gears of War 2', titleId: '4D5308AB', path: '/games/gow2.iso' },
-      { id: 3, title: 'Red Dead Redemption', titleId: '5454082B', path: '/games/rdr.iso' }
-    ];
-    setGameLibrary(mockLibrary);
+    const libraryPath = localStorage.getItem('gameLibraryPath');
+    if (libraryPath) {
+      const mockLibrary = [
+        { id: 1, title: 'Halo 3', titleId: '4D5307D1', path: '/games/halo3.iso' },
+        { id: 2, title: 'Gears of War 2', titleId: '4D5308AB', path: '/games/gow2.iso' },
+        { id: 3, title: 'Red Dead Redemption', titleId: '5454082B', path: '/games/rdr.iso' }
+      ];
+      setGameLibrary(mockLibrary);
+    } else {
+      setGameLibrary([]);
+    }
   };
 
   const handleOAuthCallback = (event) => {
@@ -106,9 +138,34 @@ const Xbox360Dashboard = () => {
     }
   };
 
-  const launchGame = (game) => {
-    alert(`Launching ${game.title} with Xenia...\nGame Path: ${game.path}`);
-    
+  const launchGame = async (game) => {
+    // Launch logic
+    if (window.__TAURI__) {
+       try {
+           // Dynamic import to avoid build errors if @tauri-apps/api is not fully set up in build
+           const { invoke } = window.__TAURI__.core || window.__TAURI__.tauri; 
+           
+           const xuid = xboxProfile?.xuid || "0000000000000000";
+           const gamertag = xboxProfile?.gamertag || "Player";
+           
+           console.log(`Launching ${game.title} (${game.path}) as ${gamertag} [${xuid}]`);
+           
+           const result = await invoke('launch_xenia', { 
+               gamePath: game.path,
+               xuid: xuid,
+               gamertag: gamertag
+           });
+           
+           console.log(result);
+           
+       } catch (e) {
+           console.error("Failed to launch Vortex Prime Emu:", e);
+           alert("Failed to launch Vortex Prime Emu: " + e);
+       }
+    } else {
+        alert(`Launching ${game.title} with Vortex Prime Emu AMF...\nGame Path: ${game.path}\n(Not in Tauri environment)`);
+    }
+
     const updatedRecent = [
       { id: game.id, title: game.title, lastPlayed: 'Just now', canResume: true },
       ...recentGames.filter(g => g.id !== game.id)
@@ -117,13 +174,116 @@ const Xbox360Dashboard = () => {
     localStorage.setItem('recentGames', JSON.stringify(updatedRecent));
   };
 
-  const homeTiles = [
-    { id: 'open-tray', title: 'Open Tray', icon: Disc, action: () => alert('Insert disc or select ISO file') },
-    { id: 'my-favorites', title: 'My Favorites', icon: Heart, action: () => alert('Your favorite games') }
-  ];
+  const [startupVideos, setStartupVideos] = useState([]);
+  const [wallpapers, setWallpapers] = useState([]);
+  const [currentWallpaper, setCurrentWallpaper] = useState(null);
+
+  useEffect(() => {
+    if (activeTab === 'startup') {
+      loadStartupVideos();
+    } else if (activeTab === 'themes') {
+      loadWallpapers();
+    }
+  }, [activeTab]);
+
+  const loadStartupVideos = async () => {
+    try {
+      const response = await axios.get(`${API}/startup/videos`);
+      setStartupVideos(response.data.videos);
+    } catch (error) {
+      console.error('Failed to load startup videos', error);
+    }
+  };
+
+  const loadWallpapers = async () => {
+    try {
+      const response = await axios.get(`${API}/wallpapers`);
+      setWallpapers(response.data.wallpapers);
+      
+      // Check if we have a saved active wallpaper in local storage
+      const savedWallpaper = localStorage.getItem('selectedWallpaper');
+      if (savedWallpaper) {
+          setCurrentWallpaper(savedWallpaper);
+      } else {
+          // If no saved preference, try to find an active one from backend
+          const active = response.data.wallpapers.find(w => w.status === 'active');
+          if (active) {
+              setCurrentWallpaper(active.name);
+          }
+      }
+    } catch (error) {
+      console.error('Failed to load wallpapers', error);
+    }
+  };
+
+  const handleToggleStartupVideo = async (filename, currentStatus) => {
+    try {
+      const action = currentStatus === 'active' ? 'disable' : 'enable';
+      await axios.post(`${API}/startup/toggle`, {
+         filename,
+         action
+      });
+      
+      // Refresh list
+      loadStartupVideos();
+      
+      // If enabled, offer to restart
+      if (action === 'enable') {
+        if (window.confirm(`Enabled ${filename}. Restart app to see changes?`)) {
+           // Use Tauri process API to relaunch
+           if (window.__TAURI__) {
+             import('@tauri-apps/plugin-process').then(({ relaunch }) => {
+                relaunch();
+             });
+           } else {
+             window.location.reload(); 
+           }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle video', error);
+      alert('Error toggling video: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleToggleWallpaper = async (filename, currentStatus) => {
+    try {
+        const action = currentStatus === 'active' ? 'disable' : 'enable';
+        await axios.post(`${API}/wallpapers/toggle`, {
+           filename,
+           action
+        });
+        
+        // Refresh list
+        loadWallpapers();
+        
+        if (action === 'enable') {
+            localStorage.setItem('selectedWallpaper', filename);
+            setCurrentWallpaper(filename);
+            alert(`Wallpaper ${filename} enabled.`);
+        } else {
+             if (currentWallpaper === filename) {
+                 localStorage.removeItem('selectedWallpaper');
+                 setCurrentWallpaper(null);
+             }
+        }
+        
+    } catch (error) {
+        console.error('Failed to toggle wallpaper', error);
+        alert('Error toggling wallpaper: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const tabs = ['games', 'achievements', 'themes', 'startup', 'settings'];
 
   const systemTiles = [
-    { id: 'system-settings', title: 'System Settings', icon: Settings, action: () => setShowBladeSettings(true) }
+    { id: 'console', title: 'Console Settings', icon: Settings, action: () => setShowBladeSettings(true) },
+    { id: 'display', title: 'Display', icon: Settings, action: () => setShowBladeSettings(true) },
+    { id: 'network', title: 'Network Settings', icon: Settings, action: () => setShowBladeSettings(true) },
+    { id: 'storage', title: 'Storage', icon: Settings, action: () => setShowBladeSettings(true) },
+    { id: 'global', title: 'Global Settings', icon: Settings, action: () => setShowBladeSettings(true) },
+    { id: 'game', title: 'Game Settings', icon: Settings, action: () => setShowBladeSettings(true) },
+    { id: 'about', title: 'System Info', icon: Settings, action: () => setShowBladeSettings(true) }
   ];
 
   const handleApplySettings = (settings) => {
@@ -139,16 +299,35 @@ const Xbox360Dashboard = () => {
     setShowBladeSettings(false);
   };
 
-  const handleMicrosoftLogin = () => {
-    const clientId = '00000000402b5328';
-    const redirectUri = encodeURIComponent('https://login.live.com/oauth20_desktop.srf');
-    const scope = encodeURIComponent('service::user.auth.xboxlive.com::MBI_SSL');
-    const authUrl = `https://login.live.com/oauth20_authorize.srf?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}`;
-    
-    window.open(authUrl, '_blank');
+  const handleMicrosoftLogin = async () => {
+    try {
+      const profileData = await loginAndFetchProfile();
+      setXboxProfile(profileData);
+      setIsLoggedIn(true);
+      localStorage.setItem('xboxProfile', JSON.stringify(profileData));
+      loadRecentGames();
+      loadGameLibrary();
+    } catch (error) {
+      console.error("Login failed:", error);
+      
+      // Fallback: Use Tauri Shell to open browser if popup is blocked
+      if (window.__TAURI__) {
+         if (window.confirm("Login popup may be blocked. Open in default browser?")) {
+            import('@tauri-apps/plugin-shell').then(({ open }) => {
+                // We can't do the full flow this way easily without a deep link callback
+                // But we can at least open the auth URL if we had one.
+                // For now, let's just alert the user.
+                alert("Please check your taskbar for a hidden login window, or try Alt+Tab.");
+            });
+         }
+      } else {
+         alert("Login failed. Please disable popup blockers and try again.");
+      }
+    }
   };
 
   const handleLogout = () => {
+    logout();
     setXboxProfile(null);
     setIsLoggedIn(false);
     setRecentGames([]);
@@ -157,7 +336,7 @@ const Xbox360Dashboard = () => {
   };
 
   const getCurrentTiles = () => {
-    return activeTab === 'settings' ? systemTiles : homeTiles;
+    return activeTab === 'settings' ? systemTiles : [];
   };
 
   const handleTileClick = (index) => {
@@ -199,6 +378,16 @@ const Xbox360Dashboard = () => {
         isOpen={showBladeSettings} 
         onClose={() => setShowBladeSettings(false)}
         onApply={handleApplySettings}
+      />
+      
+      {/* Setup Wizard */}
+      <SetupWizard
+        isOpen={showSetupWizard}
+        onClose={() => setShowSetupWizard(false)}
+        onComplete={(path) => {
+          setShowSetupWizard(false);
+          loadGameLibrary(); // Refresh library with new path
+        }}
       />
 
       {/* Header */}
@@ -243,31 +432,26 @@ const Xbox360Dashboard = () => {
 
       {/* Navigation Tabs */}
       <div className="navigation-tabs">
-        <button className={`nav-tab ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>home</button>
         <button className={`nav-tab ${activeTab === 'games' ? 'active' : ''}`} onClick={() => setActiveTab('games')}>games</button>
         <button className={`nav-tab ${activeTab === 'achievements' ? 'active' : ''}`} onClick={() => setActiveTab('achievements')}>achievements</button>
+        <button className={`nav-tab ${activeTab === 'themes' ? 'active' : ''}`} onClick={() => setActiveTab('themes')}>themes</button>
+        <button className={`nav-tab ${activeTab === 'startup' ? 'active' : ''}`} onClick={() => setActiveTab('startup')}>startup</button>
         <button className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>settings</button>
       </div>
 
       {/* Content */}
       <div className="dashboard-content">
-        {activeTab === 'home' && (
-          <>
-            {recentGames.length > 0 ? (
-              <div className="recent-games-section">
-                <h3 className="section-title">Recent Games</h3>
-                <div className="recent-games-list">
-                  {recentGames.map((game) => (
-                    <div key={game.id} className="recent-game-item" onClick={() => launchGame(game)}>
-                      <div className="game-thumbnail"><Gamepad size={32} /></div>
-                      <div className="game-info">
-                        <div className="game-name">{game.title}</div>
-                        <div className="game-time">{game.lastPlayed}</div>
-                        {game.canResume && <div className="quick-resume-badge">Quick Resume</div>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+        {activeTab === 'games' && (
+          <div className="games-library">
+            <h3 className="section-title">Game Library</h3>
+            {gameLibrary.length > 0 ? (
+              <div className="games-grid">
+                {gameLibrary.map((game) => (
+                  <div key={game.id} className="game-card" onClick={() => launchGame(game)}>
+                    <div className="game-cover"><Gamepad size={64} /></div>
+                    <div className="game-title">{game.title}</div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="no-games-message">
@@ -276,34 +460,6 @@ const Xbox360Dashboard = () => {
                 <span className="hint-text">Play a game to see it here</span>
               </div>
             )}
-
-            <div className="tiles-grid">
-              {homeTiles.map((tile, index) => {
-                const Icon = tile.icon;
-                return (
-                  <div key={tile.id} className={`xbox-tile ${index === selectedTile ? 'selected' : ''}`} onClick={() => handleTileClick(index)}>
-                    <div className="tile-content">
-                      <Icon size={48} className="tile-icon" />
-                      <div className="tile-title">{tile.title}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        {activeTab === 'games' && (
-          <div className="games-library">
-            <h3 className="section-title">Game Library</h3>
-            <div className="games-grid">
-              {gameLibrary.map((game) => (
-                <div key={game.id} className="game-card" onClick={() => launchGame(game)}>
-                  <div className="game-cover"><Gamepad size={64} /></div>
-                  <div className="game-title">{game.title}</div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
@@ -342,19 +498,76 @@ const Xbox360Dashboard = () => {
           </div>
         )}
 
+        {activeTab === 'themes' && (
+          <div className="themes-view">
+             <h3 className="section-title">Themes & Wallpapers</h3>
+             <div className="startup-options">
+               {wallpapers.length > 0 ? (
+                 wallpapers.map((wallpaper, i) => (
+                   <div 
+                     key={i} 
+                     className={`startup-card ${wallpaper.status === 'disabled' ? 'disabled' : ''}`}
+                     onClick={() => handleToggleWallpaper(wallpaper.name, wallpaper.status)}
+                   >
+                     <div className="startup-icon"><ImageIcon size={32}/></div>
+                     <div className="startup-name">{wallpaper.name}</div>
+                     <div className="startup-status">{wallpaper.status}</div>
+                   </div>
+                 ))
+               ) : (
+                 <div className="no-games-message">
+                   <ImageIcon size={64} opacity={0.3} />
+                   <p>No wallpapers found.</p>
+                   <span className="hint-text">Add images to assets/wallpapers/play or disabled</span>
+                 </div>
+               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'startup' && (
+          <div className="startup-view">
+            <h3 className="section-title">Startup Animation</h3>
+            <div className="startup-options">
+               {startupVideos.length > 0 ? (
+                 startupVideos.map((video, i) => (
+                   <div 
+                     key={i} 
+                     className={`startup-card ${video.status === 'disabled' ? 'disabled' : ''}`}
+                     onClick={() => handleToggleStartupVideo(video.name, video.status)}
+                   >
+                     <div className="startup-icon"><Disc size={32}/></div>
+                     <div className="startup-name">{video.name}</div>
+                     <div className="startup-status">{video.status}</div>
+                   </div>
+                 ))
+               ) : (
+                 <div className="no-games-message">
+                   <Disc size={64} opacity={0.3} />
+                   <p>No startup videos found.</p>
+                   <span className="hint-text">Add videos to assets/startup/play or disabled</span>
+                 </div>
+               )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'settings' && (
-          <div className="tiles-grid">
-            {systemTiles.map((tile, index) => {
-              const Icon = tile.icon;
-              return (
-                <div key={tile.id} className={`xbox-tile ${index === selectedTile ? 'selected' : ''}`} onClick={() => handleTileClick(index)}>
-                  <div className="tile-content">
-                    <Icon size={48} className="tile-icon" />
-                    <div className="tile-title">{tile.title}</div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="settings-view">
+             <h3 className="section-title">System Settings</h3>
+             <div className="games-grid">
+               {systemTiles.map((tile) => {
+                 const Icon = tile.icon;
+                 return (
+                   <div key={tile.id} className="game-card" onClick={tile.action}>
+                     <div className="game-cover" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)'}}>
+                        <Icon size={64} color="#9ECE6A" />
+                     </div>
+                     <div className="game-title">{tile.title}</div>
+                   </div>
+                 );
+               })}
+             </div>
           </div>
         )}
       </div>

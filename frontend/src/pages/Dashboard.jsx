@@ -4,7 +4,7 @@ import { mockUserData, mockGames, mockMedia, mockFriends } from '../data/mockDat
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
-  const [activeBladeIndex, setActiveBladeIndex] = useState(2);
+  const [activeBladeIndex, setActiveBladeIndex] = useState(0); // Start at "Games" (Index 0 now)
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
@@ -15,12 +15,6 @@ const Dashboard = () => {
   }, []);
 
   const blades = [
-    {
-      id: 'xbox-live',
-      title: 'Xbox Live',
-      icon: Wifi,
-      content: 'xbox-live'
-    },
     {
       id: 'games',
       title: 'Games',
@@ -73,16 +67,6 @@ const Dashboard = () => {
 
   const renderBladeContent = (blade) => {
     switch (blade.content) {
-      case 'xbox-live':
-        return (
-          <div className="blade-content">
-            <div className="blade-menu-item" onClick={() => alert('Marketplace')}>Marketplace</div>
-            <div className="blade-menu-item" onClick={() => alert('Game Store')}>Game Store</div>
-            <div className="blade-menu-item" onClick={() => alert('Video Store')}>Video Store</div>
-            <div className="blade-menu-item" onClick={() => alert('Download History')}>Download History</div>
-            <div className="blade-menu-item" onClick={() => alert('Redeem Code')}>Redeem Code</div>
-          </div>
-        );
       case 'games':
         return (
           <div className="blade-content games-blade">

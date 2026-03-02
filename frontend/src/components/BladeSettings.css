@@ -1,330 +1,189 @@
-/* Xbox 360 Authentic Blade Settings */
-
 .blade-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(12px);
-  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
-  justify-content: flex-end;
-  animation: bladeOverlayIn 0.3s ease-out;
-}
-
-@keyframes bladeOverlayIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  justify-content: flex-end; /* Align to right like NXE/Kinect era sidebar */
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .settings-blade {
-  width: 480px;
-  height: 100vh;
-  background: linear-gradient(135deg, 
-    rgba(16, 124, 16, 0.95) 0%, 
-    rgba(14, 106, 14, 0.92) 50%,
-    rgba(12, 88, 12, 0.95) 100%
-  );
-  border-left: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.8);
+  width: 400px;
+  height: 100%;
+  /* NXE/Kinect Era: Smoked Glass Effect (Charcoal/Black @ ~80% opacity) */
+  background: rgba(20, 20, 20, 0.85); 
+  color: #fff;
   display: flex;
   flex-direction: column;
-  animation: bladeSlideIn 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
-  position: relative;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.8);
+  
+  /* Glass Edge: 1px white inner border on the left */
+  border-left: 1px solid rgba(255, 255, 255, 0.3); 
+  
+  /* Shape: Top/Bottom corners radius */
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  
+  transform: translateX(100%);
+  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  
+  /* Perspective tilt */
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
 
-@keyframes bladeSlideIn {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.blade-sub {
-  background: linear-gradient(135deg, 
-    rgba(20, 140, 20, 0.95) 0%, 
-    rgba(16, 120, 16, 0.92) 50%,
-    rgba(14, 100, 14, 0.95) 100%
-  );
-  margin-left: -480px;
-  animation: bladeSubSlideIn 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-@keyframes bladeSubSlideIn {
-  from {
-    transform: translateX(480px);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
+/* Header */
 .blade-header {
-  padding: 48px 32px 32px;
+  padding: 50px 40px 30px 40px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.2);
+  /* Removed border-bottom for cleaner look, or keep subtle */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.blade-header svg {
-  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.6));
+.blade-header h2.header-title {
+  font-family: 'Segoe UI', 'Ubuntu', sans-serif;
+  font-weight: 300; /* Light weight */
+  font-size: 32px;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 0.5px;
 }
 
-.blade-header h2 {
-  font-size: 28px;
-  font-weight: 300;
-  letter-spacing: 1px;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
-  color: #ffffff;
-}
-
+/* Content List */
 .blade-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 0;
+  padding: 20px 0; /* Padding handled by items for full-width pills */
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Slight gap, but pills often stack closely */
 }
 
-.blade-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.blade-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.blade-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
-
+/* Menu Items */
 .blade-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px 32px;
+  padding: 15px 40px; /* Indented content */
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-left: 4px solid transparent;
-  background: transparent;
+  position: relative;
+  transition: all 0.15s ease-out;
+  height: 50px;
 }
 
-.blade-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-left-color: rgba(255, 255, 255, 0.3);
-}
-
-.blade-item.selected {
-  background: rgba(255, 255, 255, 0.2);
-  border-left-color: #ffffff;
-  box-shadow: 
-    inset 0 0 40px rgba(255, 255, 255, 0.1),
-    0 0 20px rgba(255, 255, 255, 0.2);
-}
-
-.blade-item-icon {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
-}
-
-.blade-item.selected .blade-item-icon {
-  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.8));
-  animation: iconPulse 2s ease-in-out infinite;
-}
-
-@keyframes iconPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
+/* Unselected State */
 .blade-item-label {
-  flex: 1;
+  font-family: 'Segoe UI', 'Ubuntu', sans-serif;
+  font-weight: 300; /* Light weight */
   font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 0.5px;
-  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+  color: #a0a0a0; /* Soft light-grey */
+  transition: color 0.2s;
+  z-index: 2; /* Above the pill background */
 }
 
-.blade-item-arrow {
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+/* Selected State (The "Pill") */
+.blade-item.selected {
+  /* No transform/scale to keep list stable, just background change */
 }
 
-.blade-item:hover .blade-item-arrow,
-.blade-item.selected .blade-item-arrow {
-  opacity: 1;
-  transform: translateX(4px);
+/* The Green Pill Background */
+.blade-item.selected::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 0; /* Spans width */
+  top: 2px;
+  bottom: 2px;
+  
+  /* Pill Shape */
+  border-top-left-radius: 25px;
+  border-bottom-left-radius: 25px;
+  
+  /* Vibrant Xbox Green Gradient */
+  background: linear-gradient(to bottom, #2ecc2e 0%, #107c10 50%, #0a520a 100%);
+  
+  /* Soft Outer Glow (Xbox Green) */
+  box-shadow: 0 0 15px rgba(16, 124, 16, 0.8);
+  
+  z-index: 1;
 }
 
-.blade-section {
-  padding: 0 32px 24px;
+/* Glossy Overlay on Pill */
+.blade-item.selected::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 0;
+  top: 2px;
+  height: 23px; /* Top 50% */
+  
+  /* White-to-transparent gradient */
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 100%);
+  
+  border-top-left-radius: 25px;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.blade-section h3 {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-  color: rgba(255, 255, 255, 0.7);
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+.blade-item.selected .blade-item-label {
+  color: #fff; /* Pure white */
+  font-weight: 600; /* Slightly bolded */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  padding-left: 10px; /* Slight shift to right */
 }
 
-.blade-option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  margin-bottom: 8px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.blade-option:hover {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateX(4px);
-}
-
-.blade-option.active {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 
-    0 0 20px rgba(255, 255, 255, 0.3),
-    inset 0 0 20px rgba(255, 255, 255, 0.1);
-}
-
-.blade-option span {
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.theme-preview {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, #107c10 0%, #0e6a0e 100%);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.apply-blade-btn {
-  width: calc(100% - 64px);
-  margin: 24px 32px;
-  padding: 18px;
-  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
-  border: none;
-  border-radius: 8px;
-  color: #0e6a0e;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  text-shadow: none;
-}
-
-.apply-blade-btn:hover {
-  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-.apply-blade-btn:active {
-  transform: translateY(0);
-}
-
+/* Footer */
 .blade-footer {
-  padding: 24px 32px;
+  padding: 30px 40px;
+  /* border-top: 1px solid rgba(255, 255, 255, 0.1); */
   display: flex;
-  gap: 32px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.2);
+  gap: 30px;
+  /* background: rgba(0,0,0,0.2); */
 }
 
 .button-hint {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 16px;
+  font-family: 'Segoe UI', sans-serif;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+  font-size: 16px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
 .xbox-button {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: #000000;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.6),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
 }
 
 .xbox-button.green {
-  background: radial-gradient(circle at 30% 30%, #00ff00 0%, #00cc00 100%);
+  background: linear-gradient(180deg, #5dc21e 0%, #368505 100%);
 }
 
 .xbox-button.red {
-  background: radial-gradient(circle at 30% 30%, #ff0000 0%, #cc0000 100%);
+  background: linear-gradient(180deg, #ff4d4d 0%, #cc0000 100%);
 }
 
-.xbox-button.blue {
-  background: radial-gradient(circle at 30% 30%, #0080ff 0%, #0066cc 100%);
+@keyframes slideIn {
+  to { transform: translateX(0); }
 }
 
-.xbox-button.yellow {
-  background: radial-gradient(circle at 30% 30%, #ffff00 0%, #cccc00 100%);
-}
-
-/* Glassmorphism Enhancement */
-.settings-blade::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(ellipse at 20% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.settings-blade > * {
-  position: relative;
-  z-index: 2;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .settings-blade {
-    width: 100vw;
-  }
-  
-  .blade-sub {
-    margin-left: 0;
-  }
+@keyframes fadeIn {
+  to { opacity: 1; }
 }

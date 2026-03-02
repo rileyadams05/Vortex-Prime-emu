@@ -1,0 +1,187 @@
+/* NXE System Settings - Strict Replica */
+
+/* 1. Structure & Perspective */
+.nxe-settings-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /* background: black; Removed to allow aura to handle it */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Segoe UI', sans-serif;
+  color: white;
+  z-index: 2000; /* Highest priority */
+}
+
+/* Aura Background - ensuring visibility */
+.nxe-aura-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 0% 50%, rgba(57, 181, 74, 0.2) 0%, transparent 60%),
+    radial-gradient(circle at 100% 50%, rgba(16, 124, 16, 0.1) 0%, transparent 60%),
+    linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 50%, #0d0d0d 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.nxe-content-wrapper {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  padding-top: 80px; /* Space for top header/tabs */
+}
+
+/* 3. Dynamic Preview (Left Side - 60%) */
+.nxe-preview-pane {
+  width: 60%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.nxe-preview-icon-container {
+  margin-bottom: 30px;
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+}
+
+.nxe-preview-text {
+  text-align: center;
+}
+
+.nxe-setting-title {
+  font-family: 'Segoe UI Light', 'Segoe UI', sans-serif;
+  font-weight: 300;
+  font-size: 42px;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.nxe-setting-desc {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 18px;
+  color: #ccc;
+  max-width: 500px;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Right Side: Settings List (40%) */
+.nxe-list-pane {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  justify-content: center; /* Center the list vertically */
+  align-items: center;
+  perspective: 1200px; /* Set perspective on parent */
+}
+
+/* The List Slot - Smoked Glass */
+.nxe-list-container {
+  width: 80%; /* Occupy most of the pane width */
+  max-height: 70%;
+  display: flex;
+  flex-direction: column;
+  
+  /* 3D Depth Transformation */
+  transform: perspective(1200px) rotateY(-18deg) rotateX(1deg);
+  transform-origin: left center;
+  
+  /* Glass Effect */
+  background: rgba(20, 20, 20, 0.75);
+  backdrop-filter: blur(20px);
+  border-radius: 8px; /* Slight rounding for container */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 0;
+  overflow-y: auto;
+  box-shadow: -10px 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Hide scrollbar for cleaner look */
+.nxe-list-container::-webkit-scrollbar {
+  display: none;
+}
+
+.nxe-list-item {
+  padding: 15px 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nxe-item-label {
+  font-size: 20px;
+  font-weight: 400;
+  z-index: 2; /* Above the pill background */
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.2s ease;
+}
+
+/* 2. The Selection "Pill" & Glow */
+.nxe-list-item.active {
+  /* The Shape: Full width pill is handled by container width + padding, 
+     but we can make it look like a pill with border-radius */
+  background: linear-gradient(to bottom, #39b54a 0%, #107c10 50%, #064a06 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 15px rgba(57, 181, 74, 0.4); /* Green glow */
+}
+
+/* Adjust text for active state */
+.nxe-list-item.active .nxe-item-label {
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6); /* Subtle white outer glow */
+}
+
+/* Footer Guides */
+.nxe-footer {
+  position: absolute;
+  bottom: 40px;
+  left: 60px;
+  display: flex;
+  gap: 30px;
+}
+
+.nxe-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.xbox-btn-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.xbox-btn-circle.green {
+  background-color: #107c10;
+}
+
+.xbox-btn-circle.red {
+  background-color: #d93025;
+}

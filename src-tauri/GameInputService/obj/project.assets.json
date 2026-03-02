@@ -1,0 +1,412 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {
+      "GameInputSharp.Core/0.1.0-alpha": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
+          "Microsoft.GameInput": "3.2.138",
+          "System.Memory": "4.5.5"
+        },
+        "compile": {
+          "lib/net9.0/GameInputSharp.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/GameInputSharp.Core.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/8.0.2": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2"
+        },
+        "compile": {
+          "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/Microsoft.Extensions.Logging.Abstractions.targets": {}
+        }
+      },
+      "Microsoft.GameInput/3.2.138": {
+        "type": "package"
+      },
+      "System.Memory/4.5.5": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.1/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/_._": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "GameInputSharp.Core/0.1.0-alpha": {
+      "sha512": "+2la9qWpYwF9GyaWCEG+lf3Q+Qlv40jtcqjkFHV+U0SHuB7bLLgJBZqvx4srVGXp7R3Cx7uDAi7XiSibb9p9OQ==",
+      "type": "package",
+      "path": "gameinputsharp.core/0.1.0-alpha",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "docs-site/404.html",
+        "docs-site/API_ALIGNMENT/index.html",
+        "docs-site/API_REFERENCE/index.html",
+        "docs-site/AUDIT/index.html",
+        "docs-site/BUILD_DOCS_SITE/index.html",
+        "docs-site/CHANGELOG/index.html",
+        "docs-site/COMPATIBILITY/index.html",
+        "docs-site/DISTRIBUTION/index.html",
+        "docs-site/MAPPING_REFERENCE/index.html",
+        "docs-site/SECURITY/index.html",
+        "docs-site/TEST_RESULTS/index.html",
+        "docs-site/USAGE/index.html",
+        "docs-site/assets/images/favicon.png",
+        "docs-site/assets/javascripts/bundle.79ae519e.min.js",
+        "docs-site/assets/javascripts/bundle.79ae519e.min.js.map",
+        "docs-site/assets/javascripts/lunr/min/lunr.ar.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.da.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.de.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.du.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.el.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.es.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.fi.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.fr.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.he.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.hi.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.hu.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.hy.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.it.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.ja.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.jp.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.kn.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.ko.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.multi.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.nl.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.no.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.pt.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.ro.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.ru.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.sa.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.stemmer.support.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.sv.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.ta.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.te.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.th.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.tr.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.vi.min.js",
+        "docs-site/assets/javascripts/lunr/min/lunr.zh.min.js",
+        "docs-site/assets/javascripts/lunr/tinyseg.js",
+        "docs-site/assets/javascripts/lunr/wordcut.js",
+        "docs-site/assets/javascripts/workers/search.2c215733.min.js",
+        "docs-site/assets/javascripts/workers/search.2c215733.min.js.map",
+        "docs-site/assets/stylesheets/main.484c7ddc.min.css",
+        "docs-site/assets/stylesheets/main.484c7ddc.min.css.map",
+        "docs-site/assets/stylesheets/palette.ab4e12ef.min.css",
+        "docs-site/assets/stylesheets/palette.ab4e12ef.min.css.map",
+        "docs-site/code-examples/index.html",
+        "docs-site/glossary/index.html",
+        "docs-site/index.html",
+        "docs-site/quickstart/index.html",
+        "docs-site/samples/godot/index.html",
+        "docs-site/samples/index.html",
+        "docs-site/samples/monogame/index.html",
+        "docs-site/samples/stride/index.html",
+        "docs-site/samples/unity/index.html",
+        "docs-site/samples/wpf-winui/index.html",
+        "docs-site/search/search_index.json",
+        "docs-site/sitemap.xml",
+        "docs-site/sitemap.xml.gz",
+        "docs-site/troubleshooting/index.html",
+        "docs/COMPATIBILITY.md",
+        "docs/USAGE.md",
+        "gameinputsharp.core.0.1.0-alpha.nupkg.sha512",
+        "gameinputsharp.core.nuspec",
+        "lib/net8.0-windows7.0/GameInputSharp.Core.dll",
+        "lib/net8.0-windows7.0/GameInputSharp.Core.xml",
+        "lib/net8.0/GameInputSharp.Core.dll",
+        "lib/net8.0/GameInputSharp.Core.xml",
+        "lib/net9.0/GameInputSharp.Core.dll",
+        "lib/net9.0/GameInputSharp.Core.xml"
+      ]
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2": {
+      "sha512": "3iE7UF7MQkCv1cxzCahz+Y/guQbTqieyxyaWKhrRO91itI9cOKO76OHeQDahqG4MmW5umr3CcCvGmK92lWNlbg==",
+      "type": "package",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/8.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.DependencyInjection.Abstractions.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.DependencyInjection.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net6.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net6.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net7.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net7.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+        "microsoft.extensions.dependencyinjection.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Logging.Abstractions/8.0.2": {
+      "sha512": "nroMDjS7hNBPtkZqVBbSiQaQjWRDxITI8Y7XnDs97rqG3EbzVTNLZQf7bIeUJcaHOV8bca47s1Uxq94+2oGdxA==",
+      "type": "package",
+      "path": "microsoft.extensions.logging.abstractions/8.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "analyzers/dotnet/roslyn3.11/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn3.11/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn4.0/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn4.4/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "buildTransitive/net461/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/net462/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/net6.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/net6.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net6.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/net7.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net7.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512",
+        "microsoft.extensions.logging.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.GameInput/3.2.138": {
+      "sha512": "UANm9JsRwv5voR8L6pn5s/GAtuRdCepp8jSVwbQxzpZuynn2E5TD/9We7azdTbHluJXL6P/1ameDRAdPRkhwbA==",
+      "type": "package",
+      "path": "microsoft.gameinput/3.2.138",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "NOTICE.txt",
+        "README.md",
+        "build/native/targets/Microsoft.GameInput.targets",
+        "microsoft.gameinput.3.2.138.nupkg.sha512",
+        "microsoft.gameinput.nuspec",
+        "native/include/GameInput.h",
+        "native/include/v0/GameInput.h",
+        "native/include/v1/GameInput.h",
+        "native/include/v2/GameInput.h",
+        "native/lib/x64/GameInput.cpp",
+        "native/lib/x64/GameInput.lib",
+        "redist/GameInputRedist.msi"
+      ]
+    },
+    "System.Memory/4.5.5": {
+      "sha512": "XIWiDvKPXaTveaB7HVganDlOCRoj03l+jrwNvcge/t8vhGYKvqV+dMv6G4SAX2NoNmN0wZfVPTAlFwZcZvVOUw==",
+      "type": "package",
+      "path": "system.memory/4.5.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net461/System.Memory.dll",
+        "lib/net461/System.Memory.xml",
+        "lib/netcoreapp2.1/_._",
+        "lib/netstandard1.1/System.Memory.dll",
+        "lib/netstandard1.1/System.Memory.xml",
+        "lib/netstandard2.0/System.Memory.dll",
+        "lib/netstandard2.0/System.Memory.xml",
+        "ref/netcoreapp2.1/_._",
+        "system.memory.4.5.5.nupkg.sha512",
+        "system.memory.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "GameInputSharp.Core >= 0.1.0-alpha"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Riley\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
+      "projectName": "GameInputService",
+      "projectPath": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
+      "packagesPath": "C:\\Users\\Riley\\.nuget\\packages\\",
+      "outputPath": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\Riley\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.100"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "dependencies": {
+          "GameInputSharp.Core": {
+            "target": "Package",
+            "version": "[0.1.0-alpha, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[9.0.13, 9.0.13]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.win-x64",
+            "version": "[9.0.13, 9.0.13]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[9.0.13, 9.0.13]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[9.0.13, 9.0.13]"
+          }
+        ],
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

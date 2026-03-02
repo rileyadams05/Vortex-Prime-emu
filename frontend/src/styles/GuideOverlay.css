@@ -1,0 +1,239 @@
+/* @font-face is already defined in index.html */
+
+.guide-overlay-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  /* Use z-index: 10000 to be absolutely sure it's on top of everything */
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Convection', 'Segoe UI', sans-serif;
+}
+
+.guide-modal-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: scale(1.1);
+  position: relative;
+  z-index: 10001; /* Ensure content is above backdrop */
+}
+
+/* Header Bar */
+.guide-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 300px; /* Approximate width based on visual */
+  margin-bottom: 10px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  position: relative;
+  z-index: 100;
+}
+
+.header-gamerscore {
+  flex: 1;
+  text-align: left;
+}
+
+.header-avatar-box {
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.avatar-inner-box {
+  width: 100%;
+  height: 100%;
+  /* Background image for avatar would go here */
+}
+
+.header-clock {
+  flex: 1;
+  text-align: right;
+}
+
+/* Content Wrapper */
+.guide-content-wrapper {
+  display: flex;
+  align-items: center;
+  /* Perspective for 3D effect on tabs if needed, but 2D is safer for now */
+}
+
+/* Tabs */
+.guide-left-tabs, .guide-right-tabs {
+  display: flex;
+  flex-direction: row; /* Changed from column to row for side-by-side tabs */
+  align-items: center;
+  height: 240px; /* Match panel height */
+  z-index: 5;
+}
+
+.guide-left-tabs {
+  justify-content: flex-end;
+  margin-right: -2px; /* Connect to panel */
+}
+
+.guide-right-tabs {
+  justify-content: flex-start;
+  margin-left: -2px; /* Connect to panel */
+}
+
+.tab-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  text-transform: uppercase;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+  cursor: pointer;
+}
+
+.tab-vertical.secondary {
+  height: 180px;
+  width: 30px;
+  background: linear-gradient(to right, #666, #888);
+  margin-right: -10px; /* Overlap behind */
+  z-index: 1;
+  transform: translateY(-10px) scale(0.9);
+  opacity: 0.8;
+  border-radius: 10px 0 0 10px;
+  color: #ddd;
+}
+
+.tab-vertical.primary {
+  height: 220px;
+  width: 35px;
+  background: linear-gradient(to right, #888, #aaa);
+  z-index: 2;
+  border-radius: 10px 0 0 10px;
+  color: #fff;
+  margin-right: 0;
+}
+
+.tab-vertical.right {
+  height: 220px;
+  width: 35px;
+  background: linear-gradient(to left, #888, #aaa);
+  border-radius: 0 10px 10px 0;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+  writing-mode: vertical-lr; /* Rotate other way */
+  transform: rotate(180deg); /* Or just use vertical-lr and handle orientation */
+}
+
+/* Center Panel */
+.guide-center-panel {
+  width: 420px;
+  height: 260px;
+  background: #2A2F35; /* Dark charcoal */
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.8);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  position: relative;
+}
+
+.menu-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 20px;
+  gap: 5px;
+}
+
+.guide-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  border-radius: 4px;
+  color: white;
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(0,0,0,0.2);
+}
+
+.guide-menu-item.selected {
+  background: linear-gradient(90deg, #9CD400, #A6E22E); /* Xbox Green */
+  color: #111;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(156, 212, 0, 0.4);
+  transform: scale(1.02);
+}
+
+.menu-label {
+  font-size: 18px;
+}
+
+.menu-badge {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.guide-menu-item.selected .menu-badge {
+  color: #333;
+  opacity: 0.8;
+}
+
+/* Footer Hints */
+.guide-footer-hints {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin-top: 10px;
+}
+
+.hint-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hint-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.hint-btn.green {
+  background: linear-gradient(135deg, #2ecc71, #107c10);
+}
+
+.hint-btn.red {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}

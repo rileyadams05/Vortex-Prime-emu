@@ -6,25 +6,16 @@ import './BladeSettings.css';
 
 const BladeSettings = ({ isOpen, onClose, onApply }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [selectedTheme, setSelectedTheme] = useState('default');
-  const [selectedStartupVideo, setSelectedStartupVideo] = useState('default');
-  const [showThemeBlade, setShowThemeBlade] = useState(false);
-  const [showStartupBlade, setShowStartupBlade] = useState(false);
 
   const mainMenuItems = [
     { id: 'console', label: 'Console Settings', icon: Settings, action: () => {} },
     { id: 'display', label: 'Display', icon: Tv, action: () => {} },
-    { id: 'theme', label: 'Personalize', icon: Palette, action: () => setShowThemeBlade(true) },
-    { id: 'startup', label: 'Startup', icon: Video, action: () => setShowStartupBlade(true) },
     { id: 'network', label: 'Network Settings', icon: Wifi, action: () => {} },
     { id: 'storage', label: 'Storage', icon: HardDrive, action: () => {} },
     { id: 'global', label: 'Global Settings', icon: Globe, action: () => {} },
     { id: 'game', label: 'Game Settings', icon: Gamepad, action: () => {} },
     { id: 'about', label: 'System Info', icon: Info, action: () => {} }
   ];
-
-  const themes = ['Default Green', 'Dark Carbon', 'Blue Wave', 'Purple Haze', 'Red Ember'];
-  const startupVideos = ['Original Xbox 360', 'Kinect Intro', 'Classic Blades', 'Custom'];
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -46,12 +37,7 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
         case 'Escape':
         case 'Backspace':
           e.preventDefault();
-          if (showThemeBlade || showStartupBlade) {
-            setShowThemeBlade(false);
-            setShowStartupBlade(false);
-          } else {
-            onClose();
-          }
+          onClose();
           break;
         default:
           break;
@@ -60,7 +46,7 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, selectedIndex, showThemeBlade, showStartupBlade, mainMenuItems, onClose]);
+  }, [isOpen, selectedIndex, mainMenuItems, onClose]);
 
   if (!isOpen) return null;
 
@@ -68,8 +54,7 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
     <div className="blade-overlay">
       <div className="settings-blade blade-active">
         <div className="blade-header">
-          <Settings size={32} />
-          <h2>System Settings</h2>
+          <h2 className="header-title">System Settings</h2>
         </div>
         
         <div className="blade-content">
@@ -84,9 +69,7 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
                   item.action();
                 }}
               >
-                <Icon size={24} className="blade-item-icon" />
                 <span className="blade-item-label">{item.label}</span>
-                <ChevronRight size={20} className="blade-item-arrow" />
               </div>
             );
           })}
@@ -103,70 +86,6 @@ const BladeSettings = ({ isOpen, onClose, onApply }) => {
           </div>
         </div>
       </div>
-
-      {showThemeBlade && (
-        <div className="settings-blade blade-sub">
-          <div className="blade-header">
-            <Palette size={32} />
-            <h2>Personalize</h2>
-          </div>
-          
-          <div className="blade-content">
-            <div className="blade-section">
-              <h3>Theme</h3>
-              {themes.map((theme, i) => (
-                <div
-                  key={i}
-                  className={`blade-option ${selectedTheme === theme ? 'active' : ''}`}
-                  onClick={() => setSelectedTheme(theme)}
-                >
-                  <div className="theme-preview"></div>
-                  <span>{theme}</span>
-                </div>
-              ))}
-            </div>
-
-            <button className="apply-blade-btn" onClick={() => {
-              onApply({ theme: selectedTheme });
-              setShowThemeBlade(false);
-            }}>
-              Apply Changes
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showStartupBlade && (
-        <div className="settings-blade blade-sub">
-          <div className="blade-header">
-            <Video size={32} />
-            <h2>Startup</h2>
-          </div>
-          
-          <div className="blade-content">
-            <div className="blade-section">
-              <h3>Startup Video</h3>
-              {startupVideos.map((video, i) => (
-                <div
-                  key={i}
-                  className={`blade-option ${selectedStartupVideo === video ? 'active' : ''}`}
-                  onClick={() => setSelectedStartupVideo(video)}
-                >
-                  <Video size={20} />
-                  <span>{video}</span>
-                </div>
-              ))}
-            </div>
-
-            <button className="apply-blade-btn" onClick={() => {
-              onApply({ startupVideo: selectedStartupVideo });
-              setShowStartupBlade(false);
-            }}>
-              Apply Changes
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -4,6 +4,7 @@ export const mockGames = [
     id: '1',
     title: 'Spider-Man: Web of Shadows',
     titleId: '41560829',
+    path: 'C:/Games/Xbox360/Spider-Man_Web_of_Shadows.iso',
     publisher: 'Activision',
     cover: 'https://upload.wikimedia.org/wikipedia/en/6/63/Spider-Man-Web_of_Shadows_Coverart.png',
     banner: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=800&q=80',
