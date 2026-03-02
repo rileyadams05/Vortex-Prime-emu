@@ -17,36 +17,37 @@ Replicate and surpass the Xbox 360 Dashboard experience (NXE/Blades) as a Tauri 
 Games -> Favorites -> System Settings -> Achievements
 
 ## Header
-- **Open WebUI** button (custom SVG icon)
-- Static avatar circle (no "Sign In" text) — shows real profile pic when logged into Xbox
+- **Open WebUI** button (user's exact SVG: black circle, white OI letters), clean transparent style
+- Static avatar circle (no "Sign In" text)
+
+## Settings (Xbox 360 Two-Pane Layout)
+- Sidebar: Core Configuration, **Moonlight**, Sound Settings, Language (EN)
+- Green gradient highlight (#91C300 → #5F8200) on active selection
+- Semi-transparent black content pane on right
+- **Moonlight sub-menu**: Sunshine (PC streaming host) + Moonlight (console client)
+- Keyboard/controller nav: D-pad up/down, A select, B back
 
 ## Guide Overlay (3 tabs)
 
 ### Friends and Parties:
-- **Friends**: Xbox Live / Discord → click friend → **Xbox 360 profile card popup**
-  - Shows name, platform, status, activity
-  - **Invite to Party** (X button on controller)
-  - **Invite to Game** — **Coming Soon** (Y button, PC/Steam/emulator)
-- **Parties**: Create Party → solo → **Invite More** (Xbox Live / Discord split) → invite friends
+- Friends → Xbox Live / Discord → click friend → Xbox 360 profile card
+  - Invite to Party (X), Invite to Game Coming Soon (Y)
+- Parties: Create → solo → Invite More (Xbox/Discord split)
 
 ### Messages:
-- Xbox Live / Discord split → conversations list → chat detail
-- **Chat input opens Xbox 360 on-screen keyboard** (press A / click)
-- Sent messages appear in chat bubbles
-- **Invite to Party** + **Invite to Game (Coming Soon)**
+- Xbox Live / Discord split → conversations → chat with keyboard trigger
+- Invite to Party + Invite to Game (Coming Soon)
 
 ### Home:
-- Home, **My Groups** (count), Settings, Shutdown
-- My Groups sub-view: Create (keyboard) + list groups
+- Home, My Groups (count), Settings, Shutdown
 - Recently Played (5 games, Quick Resume badges)
 
-## Favorites / Groups
-- Dashboard "FAVORITES" card → groups management
-- Create unlimited groups via Xbox 360 keyboard
-- Add/remove games, delete groups
-- Persist in localStorage
+## Controller Mapping
+- B button: lowercase 'b' from gamepad API (fixed for keyboard + Guide)
+- Z-index: Keyboard (20001) > Guide (10001) > Dashboard (base)
+- Focus trap: keyboard events stop propagation to Guide
 
-## Testing: 100% (20/20, iteration_14.json)
+## Testing: Visual verification passed on all 4 fix areas
 
 ## Backlog
 ### P1: Tauri Backend Port
