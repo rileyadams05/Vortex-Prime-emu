@@ -101,6 +101,114 @@ const XeniaDashboard = () => {
     { id: 'startup', title: 'STARTUP', icon: Video, action: () => setCurrentView('startup') }
   ];
 
+  // ==== GAMEPAD: Direct controller input via GamepadContext ====
+  const { onPress: onGamepadPress } = useGamepad();
+  
+  // Use refs so the gamepad callback always has current state
+  const viewRef = useRef(currentView);
+  const cardRef = useRef(selectedCardIndex);
+  const carouselRef = useRef(gameCarouselIndex);
+  const guideRef = useRef(isGuideOpen);
+  
+  useEffect(() => { viewRef.current = currentView; }, [currentView]);
+  useEffect(() => { cardRef.current = selectedCardIndex; }, [selectedCardIndex]);
+  useEffect(() => { carouselRef.current = gameCarouselIndex; }, [gameCarouselIndex]);
+  useEffect(() => { guideRef.current = isGuideOpen; }, [isGuideOpen]);
+
+  useEffect(() => {
+    const unsub = onGamepadPress((event) => {
+      if (event.type !== 'press') return;
+      const btn = event.button;
+
+      // Guide/Home button toggles guide
+      if (btn === 'guide' || btn === 'back') {
+        if (btn === 'guide') {
+          playSound('panelUnfold');
+          setIsGuidePressed(true);
+          setTimeout(() => setIsGuidePressed(false), 200);
+          setIsGuideOpen(prev => !prev);
+          return;
+        }
+      }
+
+      // If Guide is open, let GuideOverlay handle it
+      if (guideRef.current) return;
+
+      const view = viewRef.current;
+
+      if (btn === 'a') {
+        playSound('select');
+        if (view === 'home') {
+          handleCardSelect(cardRef.current);
+        } else if (view === 'gameLibrary' || view === 'achievements') {
+          const game = filteredGames[carouselRef.current];
+          if (game) handleGameSelect(game);
+        }
+      }
+
+      if (btn === 'b') {
+        if (view !== 'home') {
+          playSound('back');
+          if (view === 'achievement') setCurrentView('achievements');
+          else setCurrentView('home');
+        }
+      }
+
+      if (btn === 'start') {
+        playSound('panelUnfold');
+        setIsGuidePressed(true);
+        setTimeout(() => setIsGuidePressed(false), 200);
+        setIsGuideOpen(prev => !prev);
+      }
+
+      // D-pad + Stick navigation
+      if (btn === 'dpadLeft' || btn === 'stickLeft') {
+        if (view === 'home') {
+          const newIdx = Math.max(0, cardRef.current - 1);
+          if (newIdx !== cardRef.current) { playSound('focus'); setSelectedCardIndex(newIdx); }
+        } else if (view === 'gameLibrary' || view === 'achievements') {
+          navigateCarousel('left');
+        }
+      }
+
+      if (btn === 'dpadRight' || btn === 'stickRight') {
+        if (view === 'home') {
+          const newIdx = Math.min(mainCards.length - 1, cardRef.current + 1);
+          if (newIdx !== cardRef.current) { playSound('focus'); setSelectedCardIndex(newIdx); }
+        } else if (view === 'gameLibrary' || view === 'achievements') {
+          navigateCarousel('right');
+        }
+      }
+
+      if (btn === 'dpadUp' || btn === 'stickUp') {
+        playSound('focus');
+        if (view === 'gameLibrary' || view === 'achievements') {
+          navigateCarousel('left');
+        }
+      }
+
+      if (btn === 'dpadDown' || btn === 'stickDown') {
+        playSound('focus');
+        if (view === 'gameLibrary' || view === 'achievements') {
+          navigateCarousel('right');
+        }
+      }
+
+      // LB / RB
+      if (btn === 'lb') {
+        playSound('channelDown');
+        if (view === 'home') setSelectedCardIndex(prev => Math.max(0, prev - 1));
+        else navigateCarousel('left');
+      }
+      if (btn === 'rb') {
+        playSound('channelUp');
+        if (view === 'home') setSelectedCardIndex(prev => Math.min(mainCards.length - 1, prev + 1));
+        else navigateCarousel('right');
+      }
+    });
+    return unsub;
+  }, [onGamepadPress, filteredGames]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
       // Toggle Guide on Tab / Home key
