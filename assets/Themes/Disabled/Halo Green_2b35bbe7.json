@@ -1,0 +1,18 @@
+{
+  "id": "2b35bbe7",
+  "name": "Halo Green",
+  "author": "Local User",
+  "version": "1.0.0",
+  "description": "Master Chief approved, Spartan green and black",
+  "created_at": "2026-03-02T12:21:07.346013+00:00",
+  "background": {
+    "type": "color",
+    "value": "#081a08"
+  },
+  "accent_color": "#4caf50",
+  "hero_url": "",
+  "grid_url": "",
+  "logo_url": "",
+  "steamgriddb_game_id": null,
+  "published": false
+}
