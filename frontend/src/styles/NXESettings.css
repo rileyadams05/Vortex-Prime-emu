@@ -6,6 +6,16 @@
   flex-direction: column;
   padding: 30px 50px 20px;
   font-family: 'MC360', 'Segoe UI', sans-serif;
+  color: #ffffff;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0   -1px 0 #000,
+     0    1px 0 #000,
+    -1px  0   0 #000,
+     1px  0   0 #000;
   z-index: 5;
 }
 
@@ -43,7 +53,7 @@
   background: rgba(30, 30, 30, 0.7);
   border: 1px solid transparent;
   border-radius: 4px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   transition: all 0.15s ease;
   position: relative;
@@ -51,7 +61,7 @@
 
 .nxe-sidebar-item:hover {
   background: rgba(50, 50, 50, 0.8);
-  color: rgba(255, 255, 255, 0.75);
+  color: #ffffff;
 }
 
 /* Active: Xbox 360 green gradient highlight */
@@ -117,14 +127,14 @@
 .nxe-content-desc {
   font-size: 0.85rem;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.8);
   margin: 0;
   max-width: 480px;
 }
 
 .nxe-enter-hint {
   font-size: 0.75rem;
-  color: rgba(145, 195, 0, 0.6);
+  color: rgba(255, 255, 255, 0.7);
   font-style: italic;
   margin-top: 4px;
 }
@@ -166,13 +176,13 @@
 
 .moonlight-option-desc {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.7);
   margin: 6px 0 0;
   line-height: 1.5;
 }
 
 .moonlight-option.active .moonlight-option-desc {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Entered sidebar state */
@@ -197,7 +207,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.75rem;
   letter-spacing: 0.5px;
 }

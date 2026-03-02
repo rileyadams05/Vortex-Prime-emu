@@ -14,10 +14,20 @@
   width: 700px;
   max-width: 95vw;
   background: linear-gradient(180deg, #2a2d24 0%, #1a1d14 100%);
-  border: 2px solid rgba(144,195,29,0.3);
+  border: 2px solid rgba(255,255,255,0.2);
   border-radius: 8px;
   padding: 16px;
   font-family: 'MC360', 'Segoe UI', sans-serif;
+  color: #ffffff;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0   -1px 0 #000,
+     0    1px 0 #000,
+    -1px  0   0 #000,
+     1px  0   0 #000;
 }
 
 .kb-text-display {
@@ -31,7 +41,7 @@
   align-items: center;
 }
 .kb-placeholder {
-  color: #555;
+  color: rgba(255,255,255,0.5);
   font-size: 0.85rem;
 }
 .kb-value {
@@ -40,7 +50,7 @@
   letter-spacing: 0.5px;
 }
 .kb-cursor {
-  color: var(--xenia-green, #90c31d);
+  color: #ffffff;
   animation: blink 1s step-end infinite;
   margin-left: 1px;
 }
@@ -56,13 +66,13 @@
   font-size: 0.65rem;
   padding: 2px 8px;
   border-radius: 3px;
-  color: #666;
+  color: rgba(255,255,255,0.6);
   background: rgba(255,255,255,0.04);
   letter-spacing: 1px;
 }
 .kb-mode-indicator span.active {
-  color: var(--xenia-green, #90c31d);
-  background: rgba(144,195,29,0.15);
+  color: #ffffff;
+  background: rgba(255,255,255,0.12);
   font-weight: 700;
 }
 
@@ -84,7 +94,7 @@
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 4px;
-  color: #ccc;
+  color: #ffffff;
   font-family: inherit;
   font-size: 0.9rem;
   cursor: pointer;
@@ -94,15 +104,15 @@
   justify-content: center;
 }
 .kb-key:hover {
-  background: rgba(144,195,29,0.15);
-  border-color: rgba(144,195,29,0.3);
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
   color: #fff;
 }
 .kb-key.focused {
-  background: rgba(144,195,29,0.3);
-  border-color: var(--xenia-green, #90c31d);
+  background: rgba(255,255,255,0.2);
+  border-color: #ffffff;
   color: #fff;
-  box-shadow: 0 0 10px rgba(144,195,29,0.3);
+  box-shadow: 0 0 10px rgba(255,255,255,0.2);
   transform: scale(1.08);
 }
 
@@ -121,9 +131,9 @@
   gap: 16px;
   margin-top: 12px;
   font-size: 0.65rem;
-  color: #666;
+  color: rgba(255,255,255,0.6);
 }
 .kb-hints b {
-  color: var(--xenia-green, #90c31d);
+  color: #ffffff;
   margin-right: 3px;
 }

@@ -26,6 +26,16 @@
   flex-direction: column;
   align-items: center;
   font-family: 'MC360', 'Segoe UI', 'Tahoma', sans-serif;
+  color: #ffffff;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0   -1px 0 #000,
+     0    1px 0 #000,
+    -1px  0   0 #000,
+     1px  0   0 #000;
   animation: guideSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   outline: none;
 }
@@ -75,7 +85,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* ====== PROFILE ROW ====== */
@@ -107,18 +117,18 @@
 .profile-info { flex: 1; }
 
 .profile-signin-text {
-  color: #b0e040;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   letter-spacing: 0.5px;
 }
-.profile-signin-text:hover { color: #d0ff60; }
+.profile-signin-text:hover { color: #ffffff; }
 
-.profile-gamertag { color: #e8e8e8; font-size: 14px; font-weight: 600; }
+.profile-gamertag { color: #ffffff; font-size: 14px; font-weight: 600; }
 
 .profile-clock {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -172,7 +182,7 @@
 
 .guide-tab.active {
   background: rgba(144,195,29,0.12);
-  color: #b0e040;
+  color: #ffffff;
 }
 .guide-tab.active::after {
   content: '';
@@ -181,12 +191,12 @@
   left: 10%;
   right: 10%;
   height: 2px;
-  background: #b0e040;
+  background: #ffffff;
   border-radius: 1px;
 }
 .guide-tab:hover:not(.active) {
   background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.6);
+  color: rgba(255,255,255,0.7);
 }
 
 /* ====== MENU LIST ====== */
@@ -234,7 +244,7 @@
   align-items: center;
   padding: 12px 14px;
   border-radius: 4px;
-  color: #d8dce0;
+  color: #ffffff;
   cursor: pointer;
   transition: background-color 0.12s ease, color 0.12s ease;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
@@ -264,11 +274,11 @@
 
 .menu-badge { font-size: 11px; font-weight: 600; opacity: 0.6; }
 .guide-menu-item.selected .menu-badge { color: #2a3020; opacity: 0.75; }
-.menu-badge.exit-badge { color: #ff8866; opacity: 0.85; }
+.menu-badge.exit-badge { color: rgba(255,255,255,0.8); opacity: 0.85; }
 .guide-menu-item.selected .menu-badge.exit-badge { color: #5a3020; opacity: 0.8; }
 
 .menu-badge.resume-badge {
-  color: #60d0ff;
+  color: #ffffff;
   opacity: 0.9;
   font-weight: 700;
   font-size: 10px;
@@ -318,8 +328,8 @@
   transition: all 0.15s;
 }
 .toggle-btn.active {
-  background: rgba(144,195,29,0.15);
-  color: #b0e040;
+  background: rgba(255,255,255,0.12);
+  color: #ffffff;
 }
 .toggle-btn:hover:not(.active) {
   background: rgba(255,255,255,0.05);
@@ -405,7 +415,7 @@
 .friends-empty {
   padding: 16px 8px;
   text-align: center;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.6);
   font-size: 12px;
   font-style: italic;
 }
@@ -413,7 +423,7 @@
 .friends-loading {
   padding: 20px;
   text-align: center;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.6);
   font-size: 12px;
 }
 
@@ -442,7 +452,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #c4c8cc;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -518,7 +528,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.7);
   padding: 8px 14px 4px;
 }
 
@@ -583,14 +593,14 @@
 }
 
 .party-host {
-  color: #b0e040 !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
 }
 
 .party-empty-state {
   text-align: center;
   padding: 24px 14px;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.6);
   font-size: 13px;
   font-style: italic;
 }
@@ -604,7 +614,7 @@
   justify-content: center;
 }
 .guide-menu-item.party-action.leave .menu-label {
-  color: #ff8866;
+  color: rgba(255,255,255,0.8);
 }
 .guide-menu-item.party-action.leave.selected .menu-label {
   color: #5a3020;
@@ -634,8 +644,8 @@
   flex-shrink: 0;
 }
 .invite-status.available {
-  background: rgba(144,195,29,0.2);
-  color: #b0e040;
+  background: rgba(255,255,255,0.1);
+  color: #ffffff;
 }
 .invite-status.invited {
   background: rgba(255,255,255,0.06);
@@ -677,10 +687,10 @@
 .message-text {
   display: block;
   font-size: 13px;
-  color: #ddd;
+  color: #ffffff;
   line-height: 1.4;
 }
-.message-bubble.sent .message-text { color: #e0f0b0; }
+.message-bubble.sent .message-text { color: #ffffff; }
 .message-time {
   display: block;
   font-size: 9px;
@@ -700,7 +710,7 @@
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 4px;
   padding: 8px 12px;
-  color: #eee;
+  color: #ffffff;
   font-family: inherit;
   font-size: 13px;
   outline: none;
@@ -713,9 +723,9 @@
   color: rgba(255,255,255,0.2);
 }
 .chat-send-btn {
-  background: rgba(144,195,29,0.2);
-  border: 1px solid rgba(144,195,29,0.3);
-  color: #b0e040;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #ffffff;
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -727,7 +737,7 @@
   transition: all 0.15s;
 }
 .chat-send-btn:hover:not(:disabled) {
-  background: rgba(144,195,29,0.35);
+  background: rgba(255,255,255,0.2);
 }
 .chat-send-btn:disabled {
   opacity: 0.3;
@@ -755,8 +765,8 @@
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 3px;
-  background: rgba(255,165,0,0.2);
-  color: #ffa500;
+  background: rgba(255,255,255,0.12);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -767,7 +777,7 @@
 
 .coming-soon-info {
   font-size: 11px;
-  color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.5);
   padding: 8px 14px;
   text-align: center;
   font-style: italic;
@@ -790,7 +800,7 @@
 .coming-soon-tab-title {
   font-size: 15px;
   font-weight: 700;
-  color: rgba(255,255,255,0.5);
+  color: #ffffff;
   letter-spacing: 0.5px;
 }
 .coming-soon-badge.large {
@@ -799,7 +809,7 @@
 }
 .coming-soon-tab-desc {
   font-size: 12px;
-  color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.7);
   max-width: 280px;
   line-height: 1.5;
 }
