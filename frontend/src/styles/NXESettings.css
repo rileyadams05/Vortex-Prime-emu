@@ -12,6 +12,7 @@
   flex-direction: column;
   overflow: hidden;
   font-family: 'MC360', 'Segoe UI', sans-serif;
+  color: white;
   z-index: 2000; /* Highest priority */
 }
 
