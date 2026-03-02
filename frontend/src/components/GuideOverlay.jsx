@@ -37,6 +37,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
   // Messages state
   const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messagesPlatform, setMessagesPlatform] = useState(null); // null | 'xbox' | 'discord'
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -52,6 +53,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       setFriendsPlatform(null);
       setShowInviteList(false);
       setSelectedConversation(null);
+      setMessagesPlatform(null);
     }
   }, [isOpen]);
 
@@ -90,6 +92,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       setFriendsPlatform(null);
       setShowInviteList(false);
       setSelectedConversation(null);
+      setMessagesPlatform(null);
       setTabTransition('');
     }, 150);
   }, [activeTab]);
@@ -151,13 +154,15 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           else { setFriendsSection('main'); setSelectedItem(0); }
         } else if (activeTab === 1 && selectedConversation) {
           setSelectedConversation(null); setSelectedItem(0);
+        } else if (activeTab === 1 && messagesPlatform) {
+          setMessagesPlatform(null); setSelectedItem(0);
         } else {
           onClose();
         }
         break;
       default: break;
     }
-  }, [isOpen, selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, onClose, switchTab]);
+  }, [isOpen, selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform, onClose, switchTab]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -168,8 +173,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   // Gamepad
   const stateRef = useRef({});
   useEffect(() => {
-    stateRef.current = { selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation };
-  }, [selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation]);
+    stateRef.current = { selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform };
+  }, [selectedItem, focusZone, activeTab, friendsSection, friendsPlatform, showInviteList, selectedConversation, messagesPlatform]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -186,6 +191,8 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           else { setFriendsSection('main'); setSelectedItem(0); }
         } else if (s.activeTab === 1 && s.selectedConversation) {
           setSelectedConversation(null); setSelectedItem(0);
+        } else if (s.activeTab === 1 && s.messagesPlatform) {
+          setMessagesPlatform(null); setSelectedItem(0);
         } else { onClose(); }
         return;
       }
@@ -490,27 +497,90 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       );
     }
 
-    // Conversations list
+    // Sub-view: Xbox Live conversations
+    if (messagesPlatform === 'xbox') {
+      const xboxConvos = mockConversations.filter(c => c.platform === 'xbox');
+      return (
+        <div className={`guide-tab-content ${tabTransition}`}>
+          <div className="guide-section-header-row">
+            <button className="guide-back-btn" data-testid="msg-xbox-back-btn" onClick={() => { playSound('back'); setMessagesPlatform(null); setSelectedItem(0); }}>Back</button>
+            <span className="guide-section-title">Xbox Live Messages</span>
+          </div>
+          {xboxConvos.length === 0 && <div className="friends-empty">No Xbox Live conversations</div>}
+          {xboxConvos.map((conv, i) => (
+            <div key={conv.id} className={`guide-menu-item chat-item ${focusZone === 'menu' && selectedItem === i ? 'selected' : ''}`}
+              data-testid={`guide-xbox-chat-${i}`}
+              onClick={() => { playSound('select'); setSelectedConversation(conv); setSelectedItem(0); setFocusZone('menu'); }}
+              onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(i); }}
+            >
+              <div className="chat-item-info">
+                <span className="menu-label">{conv.friend_name}</span>
+                <span className="chat-preview">{conv.last_message}</span>
+              </div>
+              <div className="chat-meta">
+                {conv.unread > 0 && <span className="chat-unread">{conv.unread}</span>}
+                <span className="chat-time">{conv.timestamp}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Sub-view: Discord conversations
+    if (messagesPlatform === 'discord') {
+      const discordConvos = mockConversations.filter(c => c.platform === 'discord');
+      return (
+        <div className={`guide-tab-content ${tabTransition}`}>
+          <div className="guide-section-header-row">
+            <button className="guide-back-btn" data-testid="msg-discord-back-btn" onClick={() => { playSound('back'); setMessagesPlatform(null); setSelectedItem(0); }}>Back</button>
+            <span className="guide-section-title">Discord Messages</span>
+          </div>
+          {discordConvos.length === 0 && <div className="friends-empty">No Discord conversations</div>}
+          {discordConvos.map((conv, i) => (
+            <div key={conv.id} className={`guide-menu-item chat-item ${focusZone === 'menu' && selectedItem === i ? 'selected' : ''}`}
+              data-testid={`guide-discord-chat-${i}`}
+              onClick={() => { playSound('select'); setSelectedConversation(conv); setSelectedItem(0); setFocusZone('menu'); }}
+              onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(i); }}
+            >
+              <div className="chat-item-info">
+                <span className="menu-label">{conv.friend_name}</span>
+                <span className="chat-preview">{conv.last_message}</span>
+              </div>
+              <div className="chat-meta">
+                {conv.unread > 0 && <span className="chat-unread">{conv.unread}</span>}
+                <span className="chat-time">{conv.timestamp}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Main view: Xbox Live / Discord buttons
+    const xboxUnread = mockConversations.filter(c => c.platform === 'xbox' && c.unread > 0).reduce((sum, c) => sum + c.unread, 0);
+    const discordUnread = mockConversations.filter(c => c.platform === 'discord' && c.unread > 0).reduce((sum, c) => sum + c.unread, 0);
+
     return (
       <div className={`guide-tab-content ${tabTransition}`}>
-        {mockConversations.length === 0 && <div className="friends-empty" data-testid="no-messages">No recent conversations</div>}
-        {mockConversations.map((conv, i) => (
-          <div key={conv.id} className={`guide-menu-item chat-item ${focusZone === 'menu' && selectedItem === i ? 'selected' : ''}`}
-            data-testid={`guide-chat-${i}`}
-            onClick={() => { playSound('select'); setSelectedConversation(conv); setSelectedItem(0); setFocusZone('menu'); }}
-            onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(i); }}
-          >
-            <div className="chat-item-info">
-              <span className="menu-label">{conv.friend_name}</span>
-              <span className="chat-preview">{conv.last_message}</span>
-            </div>
-            <div className="chat-meta">
-              {conv.unread > 0 && <span className="chat-unread">{conv.unread}</span>}
-              <span className="chat-time">{conv.timestamp}</span>
-              <span className="chat-platform-tag">{conv.platform === 'xbox' ? 'XBL' : 'DC'}</span>
-            </div>
-          </div>
-        ))}
+        <div
+          className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 0 ? 'selected' : ''}`}
+          data-testid="msg-xbox-live-btn"
+          onClick={() => { playSound('select'); setMessagesPlatform('xbox'); setSelectedItem(0); }}
+          onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(0); }}
+        >
+          <span className="menu-label">Xbox Live</span>
+          <span className="menu-badge">{xboxUnread > 0 ? `${xboxUnread} unread` : `${mockConversations.filter(c => c.platform === 'xbox').length} chats`}</span>
+        </div>
+        <div
+          className={`guide-menu-item ${focusZone === 'menu' && selectedItem === 1 ? 'selected' : ''}`}
+          data-testid="msg-discord-btn"
+          onClick={() => { playSound('select'); setMessagesPlatform('discord'); setSelectedItem(0); }}
+          onMouseEnter={() => { playSound('focus'); setFocusZone('menu'); setSelectedItem(1); }}
+        >
+          <span className="menu-label">Discord</span>
+          <span className="menu-badge">{discordUnread > 0 ? `${discordUnread} unread` : `${mockConversations.filter(c => c.platform === 'discord').length} chats`}</span>
+        </div>
       </div>
     );
   };
@@ -610,7 +680,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
           <div data-testid="guide-footer-hints" className="guide-footer-hints">
             <div className="hint-group"><div className="hint-btn green">A</div><span>Select</span></div>
             <div className="hint-group"><div className="hint-btn red">B</div><span>{
-              (activeTab === 0 && friendsSection !== 'main') || (activeTab === 1 && selectedConversation) ? 'Back' : 'Close'
+              (activeTab === 0 && friendsSection !== 'main') || (activeTab === 1 && (selectedConversation || messagesPlatform)) ? 'Back' : 'Close'
             }</span></div>
             <div className="hint-group"><span className="hint-bumper">LB</span><span className="hint-bumper">RB</span><span>Switch Tab</span></div>
           </div>
