@@ -641,8 +641,9 @@ const XeniaDashboard = () => {
       <GuideOverlay 
         isOpen={isGuideOpen}  
         onClose={() => setIsGuideOpen(false)}
-        gamerscore={xboxProfile?.gamerscore}
-        gamertag={xboxProfile?.gamertag}
+        xboxProfile={xboxProfile}
+        isLoggedIn={isLoggedIn}
+        onLogin={handleMicrosoftLogin}
       />
     </>
   );
