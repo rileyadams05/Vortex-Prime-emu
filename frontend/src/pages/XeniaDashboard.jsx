@@ -659,9 +659,15 @@ const XeniaDashboard = () => {
       <GuideOverlay 
         isOpen={isGuideOpen}  
         onClose={() => setIsGuideOpen(false)}
+        onNavigateHome={() => setCurrentView('home')}
         xboxProfile={xboxProfile}
         isLoggedIn={isLoggedIn}
         onLogin={handleMicrosoftLogin}
+        recentGames={recentGames}
+        onQuickResume={(game) => {
+          addToRecentGames(game);
+          launchGame(game);
+        }}
       />
     </>
   );
