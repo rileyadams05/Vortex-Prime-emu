@@ -177,18 +177,10 @@ const GamepadDiagnostic = ({ embedded = false }) => {
   };
 
   return (
-    <div data-testid="gamepad-diagnostic" style={{
-      position: 'fixed', top: 10, right: 10, zIndex: 99999,
-      width: 390, padding: 16,
-      background: 'rgba(10,12,8,0.96)', color: '#ddd',
-      fontFamily: "'MC360', 'Segoe UI', monospace", fontSize: 12,
-      borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
-      border: '1px solid rgba(144,195,29,0.2)',
-      lineHeight: 1.7, maxHeight: '92vh', overflowY: 'auto',
-    }}>
+    <div data-testid="gamepad-diagnostic" style={panelStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <span style={{ color: '#90c31d', fontWeight: 700, fontSize: 14, letterSpacing: 1 }}>CONTROLLER DIAGNOSTIC</span>
-        <span onClick={() => setVisible(false)} style={{ cursor: 'pointer', color: '#888', fontSize: 16 }}>X</span>
+        {!embedded && <span onClick={() => setVisible(false)} style={{ cursor: 'pointer', color: '#888', fontSize: 16 }}>X</span>}
       </div>
 
       {/* Status */}
