@@ -22,6 +22,23 @@ const XeniaDashboard = () => {
   const [gameCarouselIndex, setGameCarouselIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Recently Played Games (persisted to localStorage)
+  const [recentGames, setRecentGames] = useState(() => {
+    try {
+      const saved = localStorage.getItem('recentGames');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const addToRecentGames = (game) => {
+    setRecentGames(prev => {
+      const filtered = prev.filter(g => g.title !== game.title);
+      const updated = [{ ...game, lastPlayed: Date.now(), hasQuickResume: true }, ...filtered].slice(0, 5);
+      localStorage.setItem('recentGames', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   // Guide Button Listener (Rust Backend via Tauri events)
   useEffect(() => {
     let unlisten = null;
