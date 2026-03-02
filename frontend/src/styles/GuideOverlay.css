@@ -51,12 +51,13 @@
   }
 }
 
-/* ====== HEADER BAR (Gamerscore, Avatar, Clock) ====== */
+/* ====== HEADER BAR (Sign-in / Profile + Clock) ====== */
 .guide-header-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 330px;
+  justify-content: center;
+  gap: 12px;
+  width: 380px;
   margin-bottom: 6px;
   color: #e8e8e8;
   font-size: 15px;
@@ -64,6 +65,10 @@
   letter-spacing: 0.5px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   padding: 0 8px;
+}
+
+.header-spacer-left {
+  flex: 1;
 }
 
 .header-gamerscore {
@@ -83,6 +88,13 @@
   background: #1a1a1a;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
   overflow: hidden;
+  flex-shrink: 0;
+}
+
+.guide-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .header-avatar-box img {
@@ -97,6 +109,29 @@
   height: 24px;
   background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
   border-radius: 2px;
+}
+
+.header-signin-text {
+  color: #b0e040;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.header-signin-text:hover {
+  color: #d0ff60;
+}
+
+.header-gamertag {
+  color: #e8e8e8;
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header-clock {
