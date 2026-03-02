@@ -53,19 +53,6 @@ const XeniaDashboard = () => {
     game.title.toLowerCase().includes((searchQuery || '').toLowerCase())
   );
   
-  // Sounds
-  const navClickSound = useRef(new Audio('/assets/blades/sounds/ui_nav_click.wav'));
-  const selectSound = useRef(new Audio('/assets/blades/sounds/ui_select.wav'));
-  const backSound = useRef(new Audio('/assets/blades/sounds/ui_back.wav'));
-  const bladeShiftSound = useRef(new Audio('/assets/blades/sounds/ui_blade_shift.wav'));
-
-  const playSound = (soundRef) => {
-    if (soundRef.current) {
-      soundRef.current.currentTime = 0;
-      soundRef.current.play().catch(e => console.error("Sound play failed", e));
-    }
-  };
-
   // Auth State
   const [xboxProfile, setXboxProfile] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
