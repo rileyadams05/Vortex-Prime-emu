@@ -1,204 +1,181 @@
-/* NXE System Settings - Strict Replica */
-
-/* 1. Structure & Perspective */
+/* ===== NXE SETTINGS - Xbox 360 Two-Pane Layout ===== */
 .nxe-settings-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  /* background: black; Removed to allow aura to handle it */
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  padding: 30px 50px 20px;
   font-family: 'MC360', 'Segoe UI', sans-serif;
-  color: white;
-  z-index: 2000; /* Highest priority */
+  z-index: 5;
 }
 
-/* Aura Background - ensuring visibility */
-.nxe-aura-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at 0% 50%, rgba(57, 181, 74, 0.2) 0%, transparent 60%),
-    radial-gradient(circle at 100% 50%, rgba(16, 124, 16, 0.1) 0%, transparent 60%),
-    linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 50%, #0d0d0d 100%);
-  z-index: -1;
-  pointer-events: none;
+.nxe-settings-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
 }
 
-.nxe-content-wrapper {
+/* Body: two-pane layout */
+.nxe-settings-body {
   display: flex;
   flex: 1;
-  width: 100%;
-  height: 100%;
-  padding-top: 80px; /* Space for top header/tabs */
+  gap: 2px;
+  min-height: 0;
 }
 
-/* 3. Dynamic Preview (Left Side - 60%) */
-.nxe-preview-pane {
-  width: 60%;
-  height: 100%;
+/* ===== SIDEBAR (Left Pane) ===== */
+.nxe-sidebar {
+  width: 280px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 40px;
-  box-sizing: border-box;
+  gap: 2px;
 }
 
-.nxe-preview-icon-container {
-  margin-bottom: 30px;
-  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
-}
-
-/* Diagnostic embed in preview pane */
-.nxe-diagnostic-embed {
-  width: 100%;
-  max-width: 420px;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-  background: rgba(10, 12, 8, 0.6);
-  border-radius: 10px;
-  border: 1px solid rgba(144, 195, 29, 0.15);
-  padding: 4px;
-}
-
-.nxe-diagnostic-embed::-webkit-scrollbar { width: 4px; }
-.nxe-diagnostic-embed::-webkit-scrollbar-track { background: transparent; }
-.nxe-diagnostic-embed::-webkit-scrollbar-thumb { background: rgba(144,195,29,0.3); border-radius: 2px; }
-
-
-.nxe-preview-text {
-  text-align: center;
-}
-
-.nxe-setting-title {
-  font-family: 'Segoe UI Light', 'Segoe UI', sans-serif;
-  font-weight: 300;
-  font-size: 42px;
-  margin: 0 0 10px 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.nxe-setting-desc {
-  font-family: 'Segoe UI', sans-serif;
-  font-size: 18px;
-  color: #ccc;
-  max-width: 500px;
-  line-height: 1.4;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* Right Side: Settings List (40%) */
-.nxe-list-pane {
-  width: 40%;
-  height: 100%;
+.nxe-sidebar-item {
   display: flex;
-  justify-content: center; /* Center the list vertically */
   align-items: center;
-  perspective: 1200px; /* Set perspective on parent */
-}
-
-/* The List Slot - Smoked Glass */
-.nxe-list-container {
-  width: 80%; /* Occupy most of the pane width */
-  max-height: 70%;
-  display: flex;
-  flex-direction: column;
-  
-  /* 3D Depth Transformation */
-  transform: perspective(1200px) rotateY(-18deg) rotateX(1deg);
-  transform-origin: left center;
-  
-  /* Glass Effect */
-  background: rgba(20, 20, 20, 0.75);
-  backdrop-filter: blur(20px);
-  border-radius: 8px; /* Slight rounding for container */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 0;
-  overflow-y: auto;
-  box-shadow: -10px 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-/* Hide scrollbar for cleaner look */
-.nxe-list-container::-webkit-scrollbar {
-  display: none;
-}
-
-.nxe-list-item {
-  padding: 15px 30px;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   position: relative;
-  display: flex;
-  align-items: center;
 }
 
-.nxe-item-label {
-  font-size: 20px;
-  font-weight: 400;
-  z-index: 2; /* Above the pill background */
-  color: rgba(255, 255, 255, 0.6);
-  transition: color 0.2s ease;
+.nxe-sidebar-item:hover {
+  background: rgba(50, 50, 50, 0.8);
+  color: rgba(255, 255, 255, 0.75);
 }
 
-/* 2. The Selection "Pill" & Glow */
-.nxe-list-item.active {
-  /* The Shape: Full width pill is handled by container width + padding, 
-     but we can make it look like a pill with border-radius */
-  background: linear-gradient(to bottom, #39b54a 0%, #107c10 50%, #064a06 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 15px rgba(57, 181, 74, 0.4); /* Green glow */
+/* Active: Xbox 360 green gradient highlight */
+.nxe-sidebar-item.active {
+  background: linear-gradient(135deg, #91C300 0%, #5F8200 100%);
+  color: #fff;
+  border-color: rgba(145, 195, 0, 0.4);
+  box-shadow: 0 0 16px rgba(145, 195, 0, 0.15);
 }
 
-/* Adjust text for active state */
-.nxe-list-item.active .nxe-item-label {
-  color: white;
+.nxe-sidebar-item.active svg {
+  filter: brightness(2);
+}
+
+.nxe-sidebar-label {
+  font-size: 0.85rem;
   font-weight: 600;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6); /* Subtle white outer glow */
+  letter-spacing: 0.5px;
+  flex: 1;
 }
 
-/* Footer Guides */
-.nxe-footer {
-  position: absolute;
-  bottom: 40px;
-  left: 60px;
+.nxe-sidebar-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.nxe-sidebar-item.active .nxe-sidebar-badge {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ===== CONTENT PANE (Right Pane) ===== */
+.nxe-content-pane {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 30px 36px;
   display: flex;
-  gap: 30px;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.nxe-content-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nxe-content-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+.nxe-content-desc {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+  max-width: 480px;
+}
+
+.nxe-diagnostic-embed {
+  flex: 1;
+}
+
+/* ===== FOOTER ===== */
+.nxe-footer {
+  display: flex;
+  gap: 20px;
+  padding: 14px 0 0;
+  margin-top: 12px;
 }
 
 .nxe-footer-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 18px;
-  font-weight: 500;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
 }
 
 .xbox-btn-circle {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 16px;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
 }
-
 .xbox-btn-circle.green {
-  background-color: #107c10;
+  background: #4CAF50;
+}
+.xbox-btn-circle.red {
+  background: #E53935;
 }
 
-.xbox-btn-circle.red {
-  background-color: #d93025;
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .nxe-settings-container {
+    padding: 16px 20px 12px;
+  }
+  .nxe-sidebar {
+    width: 200px;
+  }
+  .nxe-sidebar-item {
+    padding: 10px 12px;
+  }
+  .nxe-sidebar-label {
+    font-size: 0.75rem;
+  }
+  .nxe-content-pane {
+    padding: 20px 24px;
+  }
 }

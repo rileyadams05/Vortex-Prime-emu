@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
-import { Settings, Monitor, Wifi, HardDrive, Globe, Gamepad2, Info } from 'lucide-react';
+import { AlertCircle, Monitor, Palette, Image as ImageIcon, Volume2, Globe } from 'lucide-react';
 import GamepadDiagnostic from './GamepadDiagnostic';
 import '../styles/NXESettings.css';
 
 const settingsItems = [
-  { id: 'console', label: 'Console Settings', icon: Settings, description: 'Configure console settings, including audio, language, and locale.' },
-  { id: 'display', label: 'Display', icon: Monitor, description: 'Adjust screen resolution, color space, and other display options.' },
-  { id: 'network', label: 'Network Settings', icon: Wifi, description: 'Connect to Xbox Live, test your connection, and configure network settings.' },
-  { id: 'storage', label: 'Storage', icon: HardDrive, description: 'Manage game saves, profiles, and other data on your storage devices.' },
-  { id: 'global', label: 'Global Settings', icon: Globe, description: 'Set system-wide preferences for all users.' },
-  { id: 'game', label: 'Game Settings', icon: Gamepad2, description: 'Manage game-specific settings and defaults.' },
-  { id: 'controller', label: 'Controller Diagnostic', icon: Gamepad2, description: 'Test and diagnose your controller connection. Supports Gamepad API and WebHID fallback.' },
-  { id: 'about', label: 'System Info', icon: Info, description: 'View console serial number, ID, and other system information.' },
+  { id: 'core', label: 'Core Configuration', icon: AlertCircle, description: 'Configure core system settings including emulator paths, game folders, and metadata sources. Set up your Xenia installation and scanning preferences.' },
+  { id: 'colors', label: 'Interface Colors', icon: Monitor, description: 'Customize the dashboard color scheme. Modify accent colors, background hues, and text styling across 13 customizable color zones.' },
+  { id: 'themes', label: 'Theme Settings', icon: Palette, description: 'Browse and apply visual themes. Manage installed themes, import community layouts, or create your own custom dashboard experience.' },
+  { id: 'wallpaper', label: 'Wallpaper Settings', icon: ImageIcon, description: 'Set a custom wallpaper for your dashboard background. Choose from local images or download from the community gallery.' },
+  { id: 'sound', label: 'Sound Settings', icon: Volume2, description: 'Configure UI sound effects, navigation sounds, and background music volume. Enable or disable individual audio channels.' },
+  { id: 'language', label: 'Language', icon: Globe, description: 'Change the display language for the dashboard interface. Currently set to English (EN).', badge: 'EN' },
 ];
 
 const NXESettings = ({ isActive, onBack }) => {
@@ -26,8 +24,7 @@ const NXESettings = ({ isActive, onBack }) => {
     if (!isActive) return;
 
     const handleKeyDown = (e) => {
-      // If diagnostic panel is open, let it handle its own input
-      if (activePanel === 'controller') {
+      if (activePanel) {
         if (e.key === 'Escape' || e.key === 'Backspace') {
           e.stopPropagation();
           playSound('back');
@@ -49,9 +46,6 @@ const NXESettings = ({ isActive, onBack }) => {
           break;
         case 'Enter':
           playSound('select');
-          if (settingsItems[selectedIndex].id === 'controller') {
-            setActivePanel('controller');
-          }
           break;
         case 'Escape':
         case 'Backspace':
@@ -67,7 +61,6 @@ const NXESettings = ({ isActive, onBack }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isActive, selectedIndex, onBack, activePanel]);
 
-  // Gamepad input for settings
   const selectedRef = useRef(selectedIndex);
   const activePanelRef = useRef(activePanel);
   useEffect(() => { selectedRef.current = selectedIndex; }, [selectedIndex]);
@@ -78,8 +71,7 @@ const NXESettings = ({ isActive, onBack }) => {
     const unsub = onGamepadPress((event) => {
       if (event.type !== 'press') return;
 
-      // If diagnostic is open, only handle B to close
-      if (activePanelRef.current === 'controller') {
+      if (activePanelRef.current) {
         if (event.button === 'b') {
           playSound('back');
           setActivePanel(null);
@@ -97,9 +89,6 @@ const NXESettings = ({ isActive, onBack }) => {
       }
       if (event.button === 'a') {
         playSound('select');
-        if (settingsItems[selectedRef.current].id === 'controller') {
-          setActivePanel('controller');
-        }
       }
       if (event.button === 'b') {
         playSound('back');
@@ -109,70 +98,59 @@ const NXESettings = ({ isActive, onBack }) => {
     return unsub;
   }, [isActive, onGamepadPress, onBack]);
 
-  // Scroll active item into view
   useEffect(() => {
     if (listRef.current) {
-      const activeElement = listRef.current.children[selectedIndex];
-      if (activeElement) {
-        activeElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
+      const el = listRef.current.children[selectedIndex];
+      if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [selectedIndex]);
 
   if (!isActive) return null;
 
-  const ActiveIcon = settingsItems[selectedIndex].icon;
+  const currentItem = settingsItems[selectedIndex];
+  const CurrentIcon = currentItem.icon;
 
   return (
     <div className="nxe-settings-container" data-testid="nxe-settings">
-      <div className="nxe-aura-background"></div>
+      <div className="nxe-settings-title">Settings</div>
 
-      <div className="nxe-content-wrapper">
-        {/* Left Side: Preview / Diagnostic Panel */}
-        <div className="nxe-preview-pane">
-          {activePanel === 'controller' ? (
+      <div className="nxe-settings-body">
+        {/* Left: Sidebar */}
+        <div className="nxe-sidebar" ref={listRef}>
+          {settingsItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <div 
+                key={item.id} 
+                data-testid={`settings-item-${item.id}`}
+                className={`nxe-sidebar-item ${index === selectedIndex ? 'active' : ''}`}
+                onClick={() => { playSound('focus'); setSelectedIndex(index); }}
+              >
+                <Icon size={16} strokeWidth={2} />
+                <span className="nxe-sidebar-label">{item.label}</span>
+                {item.badge && <span className="nxe-sidebar-badge">{item.badge}</span>}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Right: Content Pane */}
+        <div className="nxe-content-pane" data-testid="settings-content-pane">
+          {activePanel ? (
             <div className="nxe-diagnostic-embed" data-testid="settings-controller-diagnostic">
               <GamepadDiagnostic embedded={true} />
             </div>
           ) : (
-            <>
-              <div className="nxe-preview-icon-container">
-                <ActiveIcon size={200} strokeWidth={1} color="white" />
-              </div>
-              <div className="nxe-preview-text">
-                <h1 className="nxe-setting-title">{settingsItems[selectedIndex].label}</h1>
-                <p className="nxe-setting-desc">{settingsItems[selectedIndex].description}</p>
-              </div>
-            </>
+            <div className="nxe-content-inner">
+              <h2 className="nxe-content-title">{currentItem.label}</h2>
+              <p className="nxe-content-desc">{currentItem.description}</p>
+            </div>
           )}
-        </div>
-
-        {/* Right Side: Settings List */}
-        <div className="nxe-list-pane">
-          <div className="nxe-list-container" ref={listRef}>
-            {settingsItems.map((item, index) => (
-              <div 
-                key={item.id} 
-                data-testid={`settings-item-${item.id}`}
-                className={`nxe-list-item ${index === selectedIndex ? 'active' : ''}`}
-                onClick={() => {
-                  playSound('focus');
-                  setSelectedIndex(index);
-                  if (item.id === 'controller') {
-                    playSound('select');
-                    setActivePanel('controller');
-                  }
-                }}
-              >
-                <span className="nxe-item-label">{item.label}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="nxe-footer">
+      <div className="nxe-footer" data-testid="settings-footer">
         {activePanel ? (
           <div className="nxe-footer-item">
             <div className="xbox-btn-circle red">B</div>

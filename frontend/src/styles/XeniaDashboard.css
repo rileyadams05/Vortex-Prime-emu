@@ -733,27 +733,26 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  background: rgba(144,195,29,0.1);
-  border: 1px solid rgba(144,195,29,0.25);
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 4px;
-  color: var(--xenia-green, #90c31d);
-  font-family: 'MC360', 'Segoe UI', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 1px;
+  color: rgba(255,255,255,0.8);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .ai-toggle-btn:hover {
-  background: rgba(144,195,29,0.25);
-  box-shadow: 0 0 8px rgba(144,195,29,0.2);
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.25);
 }
 
 .open-webui-icon {
-  width: 20px;
-  height: 20px;
-  filter: invert(72%) sepia(60%) saturate(500%) hue-rotate(35deg) brightness(1.1);
+  width: 18px;
+  height: 18px;
 }
 
 /* AI Panel (Open WebUI container) */
@@ -776,7 +775,7 @@ body {
   gap: 8px;
   padding: 10px 14px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
-  color: var(--xenia-green, #90c31d);
+  color: rgba(255,255,255,0.8);
 }
 .ai-panel-header h3 {
   margin: 0;

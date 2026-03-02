@@ -67,10 +67,13 @@ const Xbox360Keyboard = ({ isOpen, onClose, onSubmit, initialValue = '', placeho
   // Gamepad navigation
   useEffect(() => {
     if (!isOpen) return;
-    const unsub = onPress((button) => {
-      if (button === 'B') { onClose?.(); return; }
+    const unsub = onPress((event) => {
+      if (event.type && event.type !== 'press') return;
+      const btn = event.button || event;
 
-      if (button === 'A') {
+      if (btn === 'b' || btn === 'B') { playSound('back'); onClose?.(); return; }
+
+      if (btn === 'a' || btn === 'A') {
         if (onActionRow) {
           handleAction(ACTION_KEYS[actionIndex].id);
         } else {
@@ -79,39 +82,39 @@ const Xbox360Keyboard = ({ isOpen, onClose, onSubmit, initialValue = '', placeho
         return;
       }
 
-      if (button === 'LB') {
+      if (btn === 'lb' || btn === 'leftBumper' || btn === 'LB') {
         setLayoutMode(prev => prev === 'lower' ? 'upper' : prev === 'upper' ? 'symbols' : 'lower');
         return;
       }
-      if (button === 'RB') {
+      if (btn === 'rb' || btn === 'rightBumper' || btn === 'RB') {
         setLayoutMode(prev => prev === 'lower' ? 'symbols' : prev === 'symbols' ? 'upper' : 'lower');
         return;
       }
-      if (button === 'X') {
+      if (btn === 'x' || btn === 'X') {
         setValue(prev => prev.slice(0, -1));
         playSound('back');
         return;
       }
-      if (button === 'Y') {
+      if (btn === 'y' || btn === 'Y') {
         setValue(prev => prev + ' ');
         playSound('focus');
         return;
       }
 
-      // D-pad navigation
-      if (button === 'DpadUp') {
+      // D-pad navigation (support both cases)
+      if (btn === 'dpadUp' || btn === 'DpadUp' || btn === 'stickUp') {
         if (onActionRow) { setOnActionRow(false); return; }
         setRow(prev => Math.max(0, prev - 1));
       }
-      if (button === 'DpadDown') {
+      if (btn === 'dpadDown' || btn === 'DpadDown' || btn === 'stickDown') {
         if (!onActionRow && row === currentLayout.length - 1) { setOnActionRow(true); return; }
         setRow(prev => Math.min(currentLayout.length - 1, prev + 1));
       }
-      if (button === 'DpadLeft') {
+      if (btn === 'dpadLeft' || btn === 'DpadLeft' || btn === 'stickLeft') {
         if (onActionRow) { setActionIndex(prev => Math.max(0, prev - 1)); }
         else { setCol(prev => Math.max(0, prev - 1)); }
       }
-      if (button === 'DpadRight') {
+      if (btn === 'dpadRight' || btn === 'DpadRight' || btn === 'stickRight') {
         if (onActionRow) { setActionIndex(prev => Math.min(ACTION_KEYS.length - 1, prev + 1)); }
         else { setCol(prev => Math.min(currentLayout[row].length - 1, prev + 1)); }
       }
@@ -119,10 +122,11 @@ const Xbox360Keyboard = ({ isOpen, onClose, onSubmit, initialValue = '', placeho
     return unsub;
   }, [isOpen, onPress, onClose, row, col, onActionRow, actionIndex, currentLayout, handleKeyPress, handleAction]);
 
-  // Keyboard navigation
+  // Keyboard navigation (focus trap — stops events from reaching Guide)
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e) => {
+      e.stopPropagation(); // Focus trap: prevent Guide from receiving events
       if (e.key === 'Escape') { onClose?.(); return; }
       if (e.key === 'Enter') {
         if (onActionRow) handleAction(ACTION_KEYS[actionIndex].id);
