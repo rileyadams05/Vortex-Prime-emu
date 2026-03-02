@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { listen } from '@tauri-apps/api/event';
 import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart } from 'lucide-react';
 import axios from 'axios';
-import { mockGames, mockAchievements } from '../data/xeniaData';
 import openWebuiIcon from '../assets/open-webui.svg';
 import NXESettings from '../components/NXESettings';
 import BladesOverlay from '../components/BladesOverlay';
@@ -86,15 +85,14 @@ const XeniaDashboard = () => {
 
   useEffect(() => { loadActiveTheme(); }, [loadActiveTheme]);
 
-  // Recently Played Games (persisted to localStorage)
-  const [recentGames, setRecentGames] = useState(() => {
-    try {
-      const saved = localStorage.getItem('recentGames');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+  // Recently Played Games — only real games from user's library
+  // Clear any stale/fake data from before the cleanup
+  const [recentGames, setRecentGames] = useState([]);
 
   const addToRecentGames = (game) => {
+    // Only track games that exist in the user's actual library
+    if (allGames.length === 0) return;
+    if (!allGames.some(g => g.title === game.title)) return;
     setRecentGames(prev => {
       const filtered = prev.filter(g => g.title !== game.title);
       const updated = [{ ...game, lastPlayed: Date.now(), hasQuickResume: true }, ...filtered].slice(0, 5);
@@ -145,8 +143,27 @@ const XeniaDashboard = () => {
     }
   }, []);
 
-  // Combined games: user-imported + any from folder scanning
-  const allGames = useMemo(() => [...userGames, ...mockGames], [userGames]);
+  // Combined games: user-imported games only (no mock data)
+  const allGames = useMemo(() => [...userGames], [userGames]);
+
+  // Load recently played from localStorage, but only keep games that exist in the library
+  useEffect(() => {
+    if (allGames.length === 0) {
+      // No games in library — clear any stale recently played data
+      localStorage.removeItem('recentGames');
+      setRecentGames([]);
+      return;
+    }
+    try {
+      const saved = localStorage.getItem('recentGames');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const valid = parsed.filter(g => allGames.some(lg => lg.title === g.title));
+        setRecentGames(valid);
+        localStorage.setItem('recentGames', JSON.stringify(valid));
+      }
+    } catch { setRecentGames([]); }
+  }, [allGames]);
 
   // Guide Button Listener (Rust Backend via Tauri events)
   useEffect(() => {
@@ -239,9 +256,9 @@ const XeniaDashboard = () => {
     if (direction === 'left') {
       setGameCarouselIndex(prev => prev > 0 ? prev - 1 : prev);
     } else if (direction === 'right') {
-      setGameCarouselIndex(prev => prev < mockGames.length - 1 ? prev + 1 : prev);
+      setGameCarouselIndex(prev => prev < filteredGames.length - 1 ? prev + 1 : prev);
     }
-  }, []);
+  }, [filteredGames.length]);
 
   // ==== GAMEPAD: Direct controller input via GamepadContext ====
   const { onPress: onGamepadPress } = useGamepad();
@@ -645,7 +662,9 @@ const XeniaDashboard = () => {
               <h2 className="section-title">Add Games to "{group.name}"</h2>
             </div>
             <div className="favorites-game-grid">
-              {mockGames.map(game => {
+              {allGames.length === 0 ? (
+                <div className="fav-empty"><p>No games in your library yet. Import a games folder first.</p></div>
+              ) : allGames.map(game => {
                 const inGroup = group.games.some(g => g.id === game.id);
                 return (
                   <div key={game.id} className={`fav-game-tile ${inGroup ? 'in-group' : ''}`}
