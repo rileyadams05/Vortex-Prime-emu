@@ -22,15 +22,26 @@ Games -> System Settings -> Achievements -> Marketplace -> Themes -> Startup
 - First 3 have Quick Resume badges
 - No duplicates between tiles
 
+## Header
+- **Open WebUI** button (custom SVG icon) → opens Open WebUI panel (localhost:8080)
+- **Sign In** / Gamertag profile
+
 ## Guide Overlay (3 tabs)
+
 ### Friends and Parties (default):
-- Friends item with Xbox Live / Discord platform toggle
-- Dynamic search (Search Gamertag... / Search Discord Username...)
-- Unified friends list via Tauri `fetch_unified_friends_list`
+- **Main view**: "Friends" (with online count) and "Parties" menu items
+- **Friends → Platform picker**: Xbox Live (with online count) / Discord (with online count)
+  - **Xbox Live**: Shows 6 mock friends with gamertags, statuses, activity
+  - **Discord**: Shows 5 mock friends with usernames, statuses, activity
+- **Parties → Create Party**: Solo party with "You" as Party Leader
+  - **Invite More**: Shows online/away friends from both platforms with Invite/Invited buttons
+  - **Leave Party**: Disbands the party
 
 ### Messages:
-- Previous chats with friends via Tauri `fetch_chat_history`
-- Shows conversation list with unread badges
+- Shows 5 mock conversations with friend names, last message, timestamps, unread badges, platform tags (XBL/DC)
+- **Conversation detail**: Shows message bubble, and two action buttons:
+  - **Invite to Party** (functional — creates party and adds friend)
+  - **Invite to Game** — **Coming Soon** badge (PC games: Steam, emulator — not yet implemented)
 
 ### Home:
 - Home button, Settings button
@@ -38,9 +49,10 @@ Games -> System Settings -> Achievements -> Marketplace -> Themes -> Startup
 - Recently Played (5 games matching dashboard, with Quick Resume badges on first 3)
 
 ### Navigation:
-- LB/RB: Switch tabs (horizontal transition)
-- D-pad: Navigate zones (tabs -> toggle -> search -> menu)
-- A: Select | B: Close
+- LB/RB: Switch tabs
+- D-pad: Navigate zones (tabs -> menu items)
+- A: Select | B: Back/Close (contextual)
+- Hierarchical back navigation (B goes up one level in sub-views)
 
 ## All Implemented Features
 - Xbox 360 Guide overlay with Gaussian blur
@@ -50,12 +62,15 @@ Games -> System Settings -> Achievements -> Marketplace -> Themes -> Startup
 - Layout-based theme system (Play/Disabled folders)
 - SteamGridDB Asset Engine (4K grids, heroes, logos)
 - Marketplace (community layouts)
-- AI box (plug-and-play Open WebUI panel)
+- Open WebUI button (plug-and-play panel with custom SVG)
 - Xbox 360 on-screen keyboard
-- Dashboard: 5 unique Recently Played game tiles at top (no overlap)
-- 3-tab Guide: Friends & Parties, Messages, Home (with 5 games)
+- Dashboard: 5 unique Recently Played game tiles (no overlap)
+- 3-tab Guide: Friends & Parties (with hierarchy), Messages (with actions), Home
+- Party system: Create/Join/Invite/Leave
+- Unified friends: Xbox Live + Discord mock data
+- Message conversations with Invite to Party and Invite to Game (Coming Soon)
 
-## Testing: 100% (16/16, iteration_11.json)
+## Testing: 100% (22/22, iteration_12.json)
 
 ## Backlog
 ### P0: Wire Controller to On-Screen Keyboard
@@ -66,3 +81,4 @@ Games -> System Settings -> Achievements -> Marketplace -> Themes -> Startup
 ### P2: Game Patches (TOML from xenia-canary/game-patches)
 ### P3: Volvo Pack Auto-Update System
 ### P4: Quick Resume Emulator Hooks
+### P4: PC Game Invites (Steam/emulator integration)
