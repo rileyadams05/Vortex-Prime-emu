@@ -4,78 +4,54 @@
 Replicate and surpass the Xbox 360 Dashboard experience (NXE/Blades) as a Tauri desktop application.
 
 ## Architecture
-- **Frontend**: React + Tailwind + custom CSS
-- **Backend**: FastAPI + MongoDB + Theme filesystem + SteamGridDB proxy
+- **Frontend**: React + custom CSS
+- **Backend**: FastAPI (mocked, placeholder for Tauri)
 - **Controller**: GamepadProvider (React Context) -> useGamepad() hook
-- **Theme System**: Folder-based with layout.json in /Themes/Play and /Themes/Disabled
-- **SteamGridDB**: Backend proxy -> SteamGridDB API v2
 - **AI**: Open WebUI plug-and-play panel (localhost:8080 in Tauri)
-- **Social**: Unified Xbox Live + Discord friends via Tauri commands
+- **Social**: Unified Xbox Live + Discord (Discord connects through Xbox account)
 - **Audio**: Xbox-authentic WAV sounds via soundManager.js
 - **Font**: MC360.ttf (Blade)
-- **Storage**: Game groups stored in localStorage
+- **Storage**: Game groups in localStorage
 
-## Dashboard Layout (6 cards)
-Games -> Favorites -> System Settings -> Achievements -> Marketplace -> Themes
-
-## Top Row: Recently Played (5 unique game tiles)
+## Dashboard Layout (4 cards)
+Games -> Favorites -> System Settings -> Achievements
 
 ## Header
 - **Open WebUI** button (custom SVG icon)
-- Static avatar circle (shows real profile pic when logged into Xbox account)
-- No "Sign In" text — avatar is static placeholder until Xbox auth
+- Static avatar circle (no "Sign In" text) — shows real profile pic when logged into Xbox
 
 ## Guide Overlay (3 tabs)
 
-### Friends and Parties (default):
-- **Friends**: Xbox Live / Discord sub-sections with individual friend lists
-- **Parties**: Create Party (solo) → Invite More → Leave Party
+### Friends and Parties:
+- **Friends**: Xbox Live / Discord → click friend → **Xbox 360 profile card popup**
+  - Shows name, platform, status, activity
+  - **Invite to Party** (X button on controller)
+  - **Invite to Game** — **Coming Soon** (Y button, PC/Steam/emulator)
+- **Parties**: Create Party → solo → **Invite More** (Xbox Live / Discord split) → invite friends
 
 ### Messages:
-- Xbox Live / Discord sub-sections (same split as Friends)
-- Conversation detail with chat input (type and send messages)
-- **Invite to Party** (functional)
-- **Invite to Game** — **Coming Soon** (PC/Steam/emulator)
+- Xbox Live / Discord split → conversations list → chat detail
+- **Chat input opens Xbox 360 on-screen keyboard** (press A / click)
+- Sent messages appear in chat bubbles
+- **Invite to Party** + **Invite to Game (Coming Soon)**
 
 ### Home:
-- Home, **My Groups** (with count), Settings, Shutdown System
-- **My Groups sub-view**: Create New Group (opens Xbox 360 keyboard) + list existing groups
-- Recently Played (5 games with Quick Resume badges)
+- Home, **My Groups** (count), Settings, Shutdown
+- My Groups sub-view: Create (keyboard) + list groups
+- Recently Played (5 games, Quick Resume badges)
 
-## Favorites / Groups System
-- Dashboard "FAVORITES" card opens groups management
-- Create unlimited custom groups (e.g., "My Favorites", "Halo Series")
-- Xbox 360 on-screen keyboard for naming groups
-- Add/remove games from groups
-- Delete groups
-- Groups persist in localStorage
-- Accessible from both dashboard and Guide
+## Favorites / Groups
+- Dashboard "FAVORITES" card → groups management
+- Create unlimited groups via Xbox 360 keyboard
+- Add/remove games, delete groups
+- Persist in localStorage
 
-## All Implemented Features
-- Xbox 360 Guide overlay with Gaussian blur, 3 tabs
-- MC360 custom font, Xbox sound effects
-- Controller support (GamepadContext, full button mapping)
-- System Settings with Controller Diagnostic
-- Layout-based theme system (Play/Disabled folders)
-- SteamGridDB Asset Engine (4K grids, heroes, logos)
-- Marketplace (community layouts)
-- Open WebUI button (custom SVG icon, plug-and-play panel)
-- Xbox 360 on-screen keyboard (controller + keyboard input)
-- Dashboard: 5 unique Recently Played game tiles
-- Friends & Parties (hierarchy with Xbox Live / Discord split)
-- Messages with Xbox Live / Discord split + chat input + send
-- Party system: Create/Invite/Leave
-- Favorites: Game groups with full CRUD
-- Static profile avatar (no Sign In text)
-
-## Testing: 100% (26/26, iteration_13.json)
+## Testing: 100% (20/20, iteration_14.json)
 
 ## Backlog
-### P1: Functional Marketplace (GitHub repo integration)
 ### P1: Tauri Backend Port
 ### P1: Real Xbox Live MSAL Auth + Discord linked accounts
 ### P2: x360db Game Database (6000+ real games)
-### P2: Game Patches (TOML from xenia-canary/game-patches)
 ### P3: Volvo Pack Auto-Update System
 ### P4: Quick Resume Emulator Hooks
 ### P4: PC Game Invites (Steam/emulator)
