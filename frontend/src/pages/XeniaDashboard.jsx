@@ -113,7 +113,7 @@ const XeniaDashboard = () => {
         return;
       }
 
-      // If Guide is open, let LB/RB (q/e) and arrows pass through to Guide handler
+      // If Guide is open, don't process dashboard keys (Guide handles its own)
       if (isGuideOpen) {
         return;
       }
@@ -128,8 +128,6 @@ const XeniaDashboard = () => {
           } else if (currentView === 'gameLibrary' || currentView === 'achievements') {
              const game = filteredGames[gameCarouselIndex];
              if (game) handleGameSelect(game);
-          } else if (currentView === 'achievement') {
-              // Toggle lock?
           }
       }
 
@@ -168,7 +166,7 @@ const XeniaDashboard = () => {
            }
       }
 
-      // Blade Switching (LB/RB -> q/e)
+      // LB/RB for fast navigation
       if (e.key === 'q') {
           playSound('channelDown');
           if (currentView === 'home') {
