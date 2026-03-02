@@ -24,6 +24,22 @@ const XeniaDashboard = () => {
   const [gameCarouselIndex, setGameCarouselIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Active Theme State
+  const [activeTheme, setActiveTheme] = useState(null);
+
+  const loadActiveTheme = useCallback(async () => {
+    try {
+      const r = await fetch(`${API}/themes/active`);
+      const data = await r.json();
+      if (data.theme) {
+        setActiveTheme(data.theme);
+        document.documentElement.style.setProperty('--xenia-green', data.theme.accent_color || '#90c31d');
+      }
+    } catch (e) { /* fallback to default */ }
+  }, []);
+
+  useEffect(() => { loadActiveTheme(); }, [loadActiveTheme]);
+
   // Recently Played Games (persisted to localStorage)
   const [recentGames, setRecentGames] = useState(() => {
     try {
