@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video } from 'lucide-react';
 import axios from 'axios';
@@ -7,6 +7,7 @@ import NXESettings from '../components/NXESettings';
 import BladesOverlay from '../components/BladesOverlay';
 import GuideOverlay from '../components/GuideOverlay';
 import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
+import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
 import '../styles/XeniaDashboard.css';
 
