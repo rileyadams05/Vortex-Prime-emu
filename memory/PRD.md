@@ -8,73 +8,60 @@ Replicate and surpass the Xbox 360 Dashboard experience (NXE/Blades) as a Tauri 
 - **Backend**: FastAPI + MongoDB + Theme filesystem + SteamGridDB proxy
 - **Controller**: GamepadProvider (React Context) -> useGamepad() hook
 - **Theme System**: Folder-based with layout.json in /Themes/Play and /Themes/Disabled
-- **SteamGridDB**: Backend proxy -> SteamGridDB API v2 (key: 4b66ee...)
-- **AI**: Open WebUI integration (localhost:8080 in Tauri, mock fallback in web)
+- **SteamGridDB**: Backend proxy -> SteamGridDB API v2
+- **AI**: Open WebUI integration (localhost:8080 in Tauri, plug-and-play panel)
+- **Social**: Unified Xbox Live + Discord friends via Tauri commands
 - **Audio**: Xbox-authentic WAV sounds via soundManager.js
 - **Font**: MC360.ttf (Blade)
 
 ## Current Dashboard Layout (6 cards)
 Games -> System Settings -> Achievements -> Marketplace -> Themes -> Startup
 
+## Guide Overlay Structure (2 tabs)
+### Friends and Parties Tab:
+- Home (navigate to dashboard)
+- Friends (unified list)
+  - Platform toggle: Xbox Live | Discord
+  - Search: dynamic placeholder ("Search Gamertag..." / "Search Discord Username...")
+  - Unified scrolling list with category headers
+  - Real data via Tauri `fetch_unified_friends_list` command
+- Shutdown System (Exit App)
+
+### Games Tab:
+- Last 5 recently played games
+- Cover art thumbnails
+- Quick Resume badges (wired to Tauri `quick_resume_load` command)
+
+### Navigation:
+- LB/RB or Arrow Left/Right: Switch tabs (horizontal transition)
+- D-pad Up/Down: Navigate between zones (tabs -> toggle -> search -> menu)
+- A: Select | B: Close
+
 ## Implemented Features
 
-### Core Dashboard (Sessions 1-5):
-- Xbox 360 Guide overlay with Gaussian blur
-- MC360 custom font, Xbox sound effects
-- Controller support (GamepadContext, useGamepad hook, full button mapping)
-- System Settings with Controller Diagnostic
-- Sign-in flow (mocked)
+### Core (Sessions 1-5): Guide overlay, MC360 font, sounds, controller support, settings, sign-in
+### Session 6 - Cleanup: Deleted unused files, fixed all React warnings
+### Session 6 - Themes: Layout-based system, Play/Disabled folders, react-dropzone import
+### Session 6 - SteamGridDB: Backend proxy, 4K art fetching, Asset Studio
+### Session 6 - Dashboard Restructure: Marketplace tab, AI box, Xbox 360 keyboard, extra game slots
+### Session 6 - Guide Overlay: Two-tab structure, unified social integration, Quick Resume wiring
 
-### Session 6 - P0 Cleanup:
-- Deleted unused GlobalControllerListener.jsx
-- Fixed all React dependency warnings, zero compilation warnings
+## Testing: 100% (19/19 tests pass, iteration_9.json)
 
-### Session 6 - Theme Management:
-- Layout-based theme system (NOT color pickers)
-- Play/Disabled folder architecture with layout.json blueprints
-- Theme swap mechanism (only 1 active at a time)
-- react-dropzone for importing layout.json files
-- 3 seeded default layouts (Classic NXE, Games First, Minimal)
+## What's NOT Mocked (Real Integration Ready)
+- Tauri commands: `fetch_unified_friends_list`, `quick_resume_load`, `launch_xenia`
+- Xbox/Discord SSO: calls real Tauri backend, returns empty when not in Tauri
+- SteamGridDB API: real 4K art via backend proxy
 
-### Session 6 - SteamGridDB Asset Engine:
-- Backend proxy for SteamGridDB API v2 (search, grids, heroes, logos)
-- Real 4K art fetching for any game
-
-### Session 6 - Major UI Restructure:
-- Removed Vibe-Design bar (Describe your layout + Generate button)
-- Moved Recently Played under "VORTEX PRIME EMU" title
-- Added Marketplace card between Achievements and Themes
-- AI box in top-right header next to Sign In (plug-and-play Open WebUI)
-- AI panel shows connection status, iframe for Open WebUI
-- 2 extra game slots at bottom of home dashboard
-- Startup section now has Play/Disabled folder structure (matching Themes)
-- Marketplace view with community themes grid
-- Xbox 360 on-screen keyboard (full controller navigation: D-pad, A select, X backspace, Y space, LB/RB switch layout)
-
-## Testing: 100% (19/19 tests pass, iteration_8.json)
-
-## What's Mocked
-- Open WebUI AI panel (localhost:8080 not reachable in preview)
-- Xbox Live sign-in (xboxAuthService.js)
-- Game data (xeniaData.js)
-- Marketplace downloads (shows alert)
-- Recently Played / Quick Resume (UI-only)
+## What's Mocked/Placeholder
+- Open WebUI AI panel (localhost:8080 not reachable in web preview)
+- Marketplace downloads (shows alert, will use GitHub repo)
+- Game data (xeniaData.js - will be replaced by x360db)
 
 ## Backlog
-### P0 (DONE): Dashboard restructure, AI box, Marketplace, Xbox 360 keyboard
-### P1 (NEXT): x360db Game Database (6000+ real games)
+### P0 (DONE): Guide restructure, social integration, Quick Resume wiring
+### P1 (NEXT): x360db Game Database (6000+ real games replacing mock data)
 ### P2: Game Patches Integration (TOML from xenia-canary/game-patches)
 ### P3: Volvo Pack Auto-Update System
-### P4: Native Tauri (Microsoft.GameInput, tauri-plugin-fs)
-### P5: Real Xbox Live Auth, Friends & Parties
-
-## Key API Endpoints
-- `/api/themes` - List layout themes
-- `/api/themes/active` - Get active theme
-- `/api/themes/create` - Create layout theme
-- `/api/themes/activate` - Swap active theme
-- `/api/steamgriddb/search/{term}` - Search games
-- `/api/steamgriddb/assets/{game_id}` - Get all art assets
-- `/api/vibe-design/generate` - Generate layout (Open WebUI + mock fallback)
-- `/api/wallpapers` - Wallpapers list
-- `/api/startup/videos` - Startup videos list
+### P4: Native Tauri (Microsoft.GameInput, tauri-plugin-fs, real file moves)
+### P5: Real Xbox Live MSAL Auth, Discord linked account fetching
