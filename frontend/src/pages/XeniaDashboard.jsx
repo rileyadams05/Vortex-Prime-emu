@@ -648,14 +648,13 @@ const XeniaDashboard = () => {
       </div>
     </div>
 
-      {/* Guide Overlay - DISABLED
+      {/* Guide Overlay - Rendered outside dashboard container to avoid blur inheritance */}
       <GuideOverlay 
         isOpen={isGuideOpen}  
         onClose={() => setIsGuideOpen(false)}
         gamerscore={xboxProfile?.gamerscore}
         gamertag={xboxProfile?.gamertag}
       />
-      */}
     </>
   );
 };
