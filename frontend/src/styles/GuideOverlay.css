@@ -3,6 +3,14 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap');
 
+@font-face {
+  font-family: 'MC360';
+  src: url('/fonts/MC360.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ====== BACKDROP (Full-screen blur layer) ====== */
 .guide-overlay-backdrop {
   position: fixed;
