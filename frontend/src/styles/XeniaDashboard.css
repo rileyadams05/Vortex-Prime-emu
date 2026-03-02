@@ -721,104 +721,131 @@ body {
 }
 
 
-/* ===== Vibe-Design Bar ===== */
-.vibe-design-bar {
+/* ===== AI Box (top-right, next to Sign In) ===== */
+.ai-box {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 20px;
-  margin-bottom: 16px;
+  gap: 12px;
 }
 
-.vibe-input {
-  flex: 1;
-  padding: 8px 14px;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(144,195,29,0.2);
+.ai-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(144,195,29,0.1);
+  border: 1px solid rgba(144,195,29,0.25);
   border-radius: 4px;
-  color: #fff;
+  color: var(--xenia-green, #90c31d);
   font-family: 'MC360', 'Segoe UI', sans-serif;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
-  transition: border-color 0.2s;
-}
-.vibe-input:focus {
-  outline: none;
-  border-color: var(--xenia-green);
-  box-shadow: 0 0 8px rgba(144,195,29,0.15);
-}
-.vibe-input::placeholder {
-  color: #555;
   font-size: 0.8rem;
-}
-
-.vibe-generate-btn {
-  padding: 8px 20px;
-  background: linear-gradient(135deg, var(--xenia-green) 0%, var(--xenia-green-dark) 100%);
-  color: #000;
-  border: none;
-  border-radius: 4px;
-  font-family: 'MC360', 'Segoe UI', sans-serif;
-  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.2s;
-  white-space: nowrap;
 }
-.vibe-generate-btn:hover:not(:disabled) {
-  transform: scale(1.03);
-  box-shadow: 0 0 12px rgba(144,195,29,0.3);
-}
-.vibe-generate-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
+.ai-toggle-btn:hover {
+  background: rgba(144,195,29,0.25);
+  box-shadow: 0 0 8px rgba(144,195,29,0.2);
 }
 
-.vibe-source {
-  font-size: 0.65rem;
-  padding: 3px 8px;
-  border-radius: 3px;
-  background: rgba(144,195,29,0.15);
-  color: var(--xenia-green);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-weight: 600;
+/* AI Panel (Open WebUI container) */
+.ai-panel {
+  position: fixed;
+  top: 60px;
+  right: 16px;
+  width: 420px;
+  max-height: calc(100vh - 120px);
+  background: linear-gradient(180deg, #1a1d14 0%, #0d0f0a 100%);
+  border: 1px solid rgba(144,195,29,0.2);
+  border-radius: 8px;
+  z-index: 500;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
 }
-
-/* ===== Custom Layout Grid ===== */
-.main-cards-container.custom-layout {
-  display: grid;
-  gap: 12px;
-  padding: 0 20px;
-  min-height: 260px;
-}
-
-.main-card.layout-tile {
-  min-height: 0;
-}
-.main-card.layout-tile .card-content {
-  height: 100%;
+.ai-panel-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  color: var(--xenia-green, #90c31d);
+}
+.ai-panel-header h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  flex: 1;
+}
+.ai-panel-close {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-family: inherit;
+}
+.ai-panel-close:hover { color: #fff; }
+
+.ai-panel-body {
+  padding: 14px;
+}
+.ai-panel-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  color: #888;
+}
+.ai-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f44;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.ai-panel-info {
+  font-size: 0.75rem;
+  color: #666;
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+.ai-panel-info code {
+  background: rgba(144,195,29,0.1);
+  color: var(--xenia-green, #90c31d);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+}
+.ai-iframe {
+  width: 100%;
+  height: 300px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+  background: #000;
+  margin-top: 10px;
 }
 
 /* ===== Recent Games Strip ===== */
 .recent-games-strip {
-  padding: 16px 20px 0;
+  padding: 0 20px 8px;
 }
 .recent-title {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   letter-spacing: 2px;
   color: var(--xenia-green);
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   text-transform: uppercase;
 }
 .recent-games-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
 }
 .recent-game-tile {
@@ -835,27 +862,17 @@ body {
   border-color: var(--xenia-green);
   transform: scale(1.05);
 }
-.recent-game-tile.small {
-  width: 80px;
-}
-.recent-game-tile.medium {
-  width: 120px;
-}
-.recent-game-tile.large {
-  width: 160px;
-}
+.recent-game-tile.small { width: 80px; }
 .recent-game-art {
   width: 100%;
-  height: 80px;
+  height: 70px;
   object-fit: cover;
   display: block;
 }
-.recent-game-tile.medium .recent-game-art { height: 120px; }
-.recent-game-tile.large .recent-game-art { height: 160px; }
 .recent-game-name {
   display: block;
-  padding: 4px 6px;
-  font-size: 0.6rem;
+  padding: 3px 5px;
+  font-size: 0.55rem;
   color: #ccc;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -863,13 +880,58 @@ body {
 }
 .qr-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 3px;
+  right: 3px;
   background: rgba(144,195,29,0.9);
   color: #000;
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   font-weight: 700;
-  padding: 1px 4px;
+  padding: 1px 3px;
   border-radius: 2px;
   letter-spacing: 0.5px;
+}
+
+/* ===== Extra Game Slots (bottom) ===== */
+.extra-game-slots {
+  display: flex;
+  gap: 14px;
+  padding: 8px 20px 0;
+}
+.extra-game-card {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  max-width: 300px;
+}
+.extra-game-card:hover {
+  border-color: var(--xenia-green);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.extra-game-cover {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+}
+.extra-game-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 8px 8px 0;
+}
+.extra-game-title {
+  font-size: 0.8rem;
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.extra-game-pub {
+  font-size: 0.65rem;
+  color: #666;
 }
