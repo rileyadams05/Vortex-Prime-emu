@@ -296,7 +296,7 @@ const XeniaDashboard = () => {
 
     window.addEventListener('keydown', handleGlobalKeyDown, true);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown, true);
-  }, [currentView, gameCarouselIndex, filteredGames, selectedCardIndex, isGuideOpen]);
+  }, [currentView, gameCarouselIndex, filteredGames, selectedCardIndex, isGuideOpen, handleCardSelect, handleGameSelect, mainCards.length, navigateCarousel]);
 
   useEffect(() => {
     // 1. Initialize MSAL
