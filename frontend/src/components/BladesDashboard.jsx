@@ -87,7 +87,7 @@ const BladesDashboard = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeBlade, selectedItem]);
 
-  // Gamepad Polling Removed - Handled by GlobalControllerListener
+  // Gamepad Polling Removed - Handled by GamepadContext
   // The component now relies purely on keyboard events dispatched globally.
 
 
