@@ -685,7 +685,7 @@ const XeniaDashboard = () => {
   );
 
   const renderStartupView = () => (
-    <div className="game-library-view">
+    <div className="game-library-view" data-testid="startup-view">
         <div className="library-header">
             <button className="back-btn" onClick={() => {
                 playSound('back');
@@ -694,17 +694,43 @@ const XeniaDashboard = () => {
                 <ChevronLeft size={24} /> Back
             </button>
             <h2 style={{marginLeft: 20}}>Startup Video Manager</h2>
+            <span style={{marginLeft: 'auto', fontSize: '0.7rem', color: '#666'}}>Play / Disabled folder structure</span>
         </div>
-        <div className="assets-grid">
-            {startupVideos.map((vid, i) => (
-                <div key={i} className={`asset-card ${vid.status}`} onClick={() => handleToggleStartupVideo(vid.name, vid.status)}>
-                    <div className="asset-icon"><Video size={48}/></div>
-                    <div className="asset-info">
-                        <h3>{vid.name}</h3>
-                        <span className={`status-badge ${vid.status}`}>{vid.status}</span>
-                    </div>
+        <div className="folder-sections">
+          <div className="folder-section">
+            <h3 className="folder-label play-label">Play (Active)</h3>
+            <div className="assets-grid">
+              {startupVideos.filter(v => v.status === 'active').map((vid, i) => (
+                <div key={i} className="asset-card active" onClick={() => handleToggleStartupVideo(vid.name, vid.status)}>
+                  <div className="asset-icon"><Video size={48}/></div>
+                  <div className="asset-info">
+                    <h3>{vid.name}</h3>
+                    <span className="status-badge active">Active</span>
+                  </div>
                 </div>
-            ))}
+              ))}
+              {startupVideos.filter(v => v.status === 'active').length === 0 && (
+                <div className="empty-folder">No active startup videos</div>
+              )}
+            </div>
+          </div>
+          <div className="folder-section">
+            <h3 className="folder-label disabled-label">Disabled</h3>
+            <div className="assets-grid">
+              {startupVideos.filter(v => v.status === 'disabled').map((vid, i) => (
+                <div key={i} className="asset-card disabled" onClick={() => handleToggleStartupVideo(vid.name, vid.status)}>
+                  <div className="asset-icon"><Video size={48}/></div>
+                  <div className="asset-info">
+                    <h3>{vid.name}</h3>
+                    <span className="status-badge disabled">Disabled</span>
+                  </div>
+                </div>
+              ))}
+              {startupVideos.filter(v => v.status === 'disabled').length === 0 && (
+                <div className="empty-folder">No disabled startup videos</div>
+              )}
+            </div>
+          </div>
         </div>
     </div>
   );
