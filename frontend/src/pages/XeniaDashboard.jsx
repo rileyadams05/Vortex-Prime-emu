@@ -100,7 +100,7 @@ const XeniaDashboard = () => {
         return;
       }
 
-      // If Guide is open, block all dashboard input
+      // If Guide is open, let LB/RB (q/e) and arrows pass through to Guide handler
       if (isGuideOpen) {
         return;
       }
