@@ -1,4 +1,4 @@
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 
 export const themeApi = {
   async listThemes() {
@@ -70,4 +70,35 @@ export const vibeDesignApi = {
     });
     return r.json();
   },
+};
+
+export const coreConfigApi = {
+  async get(gamePath = null) {
+    let endpoint = `${API}/api/config/core`;
+    if (gamePath) {
+        endpoint = `${API}/api/config/game?path=${encodeURIComponent(gamePath)}`;
+    }
+    
+    const r = await fetch(endpoint);
+    if (!r.ok) {
+        throw new Error("Failed to fetch Core Config");
+    }
+    return r.json();
+  },
+
+  async update(settings, gameId = null) {
+    const endpoint = gameId ? `${API}/api/config/game` : `${API}/api/config/core`;
+    // gameId here can be a Title ID OR an absolute path
+    const body = gameId ? { game_id: gameId, settings } : { settings };
+    
+    const r = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+        throw new Error("Core Config Update Failed");
+    }
+    return r.json();
+  }
 };

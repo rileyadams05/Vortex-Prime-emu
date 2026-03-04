@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Disc, Heart, Settings, Trophy, Loader2, Gamepad, Image as ImageIcon } from 'lucide-react';
+import { invoke } from '@tauri-apps/api/core';
 import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
 import BladeSettings from '../components/BladeSettings';
 import SetupWizard from '../components/SetupWizard';
@@ -9,12 +10,12 @@ import '../styles/NXESettings.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-import XBLogo from '../assets/XB-logo.svg';
+
 
 // Official Xbox Icon
 const XboxIcon = () => (
   <img 
-    src={XBLogo}
+    src='/assets/XB-logo.svg'
     alt="Xbox" 
     className="xbox-icon"
   />
@@ -140,11 +141,8 @@ const Xbox360Dashboard = () => {
 
   const launchGame = async (game) => {
     // Launch logic
-    if (window.__TAURI__) {
+    if (window.__TAURI_INTERNALS__) {
        try {
-           // Dynamic import to avoid build errors if @tauri-apps/api is not fully set up in build
-           const { invoke } = window.__TAURI__.core || window.__TAURI__.tauri; 
-           
            const xuid = xboxProfile?.xuid || "0000000000000000";
            const gamertag = xboxProfile?.gamertag || "Player";
            
@@ -231,7 +229,7 @@ const Xbox360Dashboard = () => {
       if (action === 'enable') {
         if (window.confirm(`Enabled ${filename}. Restart app to see changes?`)) {
            // Use Tauri process API to relaunch
-           if (window.__TAURI__) {
+           if (window.__TAURI_INTERNALS__) {
              import('@tauri-apps/plugin-process').then(({ relaunch }) => {
                 relaunch();
              });
@@ -311,7 +309,7 @@ const Xbox360Dashboard = () => {
       console.error("Login failed:", error);
       
       // Fallback: Use Tauri Shell to open browser if popup is blocked
-      if (window.__TAURI__) {
+      if (window.__TAURI_INTERNALS__) {
          if (window.confirm("Login popup may be blocked. Open in default browser?")) {
             import('@tauri-apps/plugin-shell').then(({ open }) => {
                 // We can't do the full flow this way easily without a deep link callback

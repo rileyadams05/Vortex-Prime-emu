@@ -2,29 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-    font-family: 'MC360';
-    src: url('./fonts/MC360.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
+/* 
+   Font face definitions moved to public/index.html to avoid webpack resolving issues with public assets.
+*/
 
 body {
-    margin: 0;
-    font-family: 'MC360', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    color: #ffffff;
-    text-shadow:
-        -1px -1px 0 #000,
-         1px -1px 0 #000,
-        -1px  1px 0 #000,
-         1px  1px 0 #000,
-         0   -1px 0 #000,
-         0    1px 0 #000,
-        -1px  0   0 #000,
-         1px  0   0 #000;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #101010;
+  color: white;
+  overflow: hidden; /* Prevent body scroll */
 }
 
 code {

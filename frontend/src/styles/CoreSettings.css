@@ -1,0 +1,202 @@
+
+/* Integrated Container - Fits inside the parent Dashboard content area */
+.core-settings-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: transparent; /* Parent handles background */
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Remove Fullscreen Fixed Overlays */
+.core-bg, .core-bg-overlay {
+  display: none; 
+}
+
+/* Content Wrapper - Fills the available space in the "window" */
+.core-interface-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+/* Title Area - Matches the "Core Configuration" header in screenshot */
+.core-header-area {
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.core-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.core-description {
+  font-size: 14px;
+  color: #aaa;
+  max-width: 600px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Main Split View Box */
+.core-ui-box {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  background: rgba(30, 30, 30, 0.5); /* Semi-transparent dark */
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Sidebar List */
+.core-sidebar {
+  width: 250px;
+  background: rgba(20, 20, 20, 0.6);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  overflow-y: auto;
+}
+
+.core-sidebar-item {
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #bbb;
+  cursor: pointer;
+  transition: all 0.1s;
+  display: flex;
+  align-items: center;
+}
+
+.core-sidebar-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.core-sidebar-item.active {
+  background: var(--theme-gradient, linear-gradient(135deg, #91C300 0%, #5F8200 100%));
+  color: #fff;
+  font-weight: 600;
+  border-left: 4px solid var(--theme-accent, #4CAF50);
+}
+
+/* Settings Content Panel */
+.core-content {
+  flex: 1;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: transparent;
+}
+
+.core-section-header {
+  font-size: 20px;
+  color: #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+/* Setting Rows */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.setting-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.setting-label {
+  font-size: 14px;
+  color: #ddd;
+}
+
+.setting-control {
+  width: 150px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Inputs */
+.setting-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #444;
+  color: #eee;
+  padding: 4px 8px;
+  border-radius: 4px;
+  width: 100%;
+  text-align: right;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.setting-input:focus {
+  border-color: var(--theme-primary, #91C300);
+  outline: none;
+}
+
+.setting-input:disabled {
+  background: transparent;
+  border-color: transparent;
+  color: #aaa;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #555;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggle-switch.on {
+  background: var(--theme-primary, #91C300);
+}
+
+.toggle-switch.disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.toggle-handle {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.toggle-switch.on .toggle-handle {
+  transform: translateX(16px);
+}
+
+/* Footer (Hidden mostly as main nav handles it, but kept for context if needed) */
+.core-footer {
+  display: none; 
+}

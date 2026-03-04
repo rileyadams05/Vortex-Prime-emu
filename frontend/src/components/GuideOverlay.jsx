@@ -4,8 +4,7 @@ import playSound from '../utils/soundManager';
 import '../styles/GuideOverlay.css';
 
 const tauriInvoke = async (cmd, args = {}) => {
-  if (window.__TAURI__) {
-    const { invoke } = window.__TAURI__.core || window.__TAURI__.tauri;
+  if (window.__TAURI_INTERNALS__) {
     return invoke(cmd, args);
   }
   return null;
@@ -90,7 +89,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
     else if (item.id === 'settings') { playSound('select'); onClose(); if (onNavigateSettings) onNavigateSettings(); }
     else if (item.id === 'shutdown') {
       playSound('select');
-      if (window.__TAURI__) { import('@tauri-apps/plugin-process').then(({ exit }) => exit(0)); }
+      if (window.__TAURI_INTERNALS__) { import('@tauri-apps/plugin-process').then(({ exit }) => exit(0)); }
     } else if (item.type === 'game' && item.game) {
       playSound('select');
       if (item.hasQuickResume) sendQuickResumeCommand(item.game.titleId || item.game.id, item.game.savePath || '');

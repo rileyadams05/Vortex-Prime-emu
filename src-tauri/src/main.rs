@@ -12,6 +12,92 @@ use sysinfo::System;
 use std::path::Path;
 use std::fs;
 use velopack::VelopackApp;
+use winmix::WinMix;
+
+// Use cpvc for professional audio control
+use cpvc::{get_sound_devices, get_system_volume, set_system_volume};
+
+#[derive(serde::Serialize)]
+struct AudioSession {
+    pid: u32,
+    name: String,
+    volume: f32,
+    muted: bool,
+}
+
+#[tauri::command]
+fn get_audio_sessions() -> Vec<AudioSession> {
+    unsafe {
+        let winmix = WinMix::default();
+        if let Ok(sessions) = winmix.enumerate() {
+            sessions.into_iter().map(|s| {
+                let vol = s.vol.get_master_volume().unwrap_or(0.0);
+                let mute = s.vol.get_mute().unwrap_or(false);
+                // winmix session path might be full path, we just want exe name
+                let name = Path::new(&s.path).file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or(s.path.clone());
+                    
+                AudioSession {
+                    pid: s.pid,
+                    name: name.to_string(),
+                    volume: vol * 100.0,
+                    muted: mute,
+                }
+            }).collect()
+        } else {
+            Vec::new()
+        }
+    }
+}
+
+#[derive(serde::Serialize)]
+struct AudioDevice {
+    id: String,
+    name: String,
+    backend: String,
+    #[serde(rename = "type")]
+    device_type: String,
+}
+
+#[tauri::command]
+fn get_audio_devices() -> Vec<AudioDevice> {
+    // CPVC automatically filters for Active devices on Windows
+    let names = get_sound_devices();
+    let mut devices = Vec::new();
+
+    for name in names {
+        let lower_name = name.to_lowercase();
+        let device_type = if lower_name.contains("headphone") || lower_name.contains("headset") {
+            "headphone".to_string()
+        } else if lower_name.contains("digital") || lower_name.contains("spdif") || lower_name.contains("hdmi") {
+            "digital".to_string()
+        } else {
+            "speaker".to_string()
+        };
+
+        // On Windows with cpvc, we use the name as the ID for now since cpvc returns names.
+        // This is sufficient for display. For control, we use the default device hooks.
+        devices.push(AudioDevice {
+            id: name.clone(), 
+            name: name,
+            backend: "cpvc".to_string(),
+            device_type,
+        });
+    }
+
+    devices
+}
+
+#[tauri::command]
+fn get_system_volume_cmd() -> u8 {
+    get_system_volume()
+}
+
+#[tauri::command]
+fn set_system_volume_cmd(volume: u8) -> bool {
+    set_system_volume(volume)
+}
 
 fn main() {
     VelopackApp::build().run(); // Zero-Touch Auto-Update Hook
@@ -29,12 +115,31 @@ fn main() {
             xbox_live::fetch_achievements,
             detect_controllers,
             get_gpu_info,
-            copy_xenia_files
+            copy_xenia_files,
+            get_audio_devices,
+            get_system_volume_cmd,
+            set_system_volume_cmd,
+            get_audio_sessions
         ])
         .setup(|app| {
             // Initialize application
             let window = app.get_webview_window("main").unwrap();
             window.set_title("Xbox 360 Dashboard")?;
+
+            // --- Professional Audio Sync Service ---
+            // Polls system volume to keep UI in sync with hardware changes
+            let audio_handle = app.handle().clone();
+            thread::spawn(move || {
+                let mut last_volume = get_system_volume();
+                loop {
+                    thread::sleep(Duration::from_millis(500)); // 500ms poll rate (like vol-limiter)
+                    let current_volume = get_system_volume();
+                    if current_volume != last_volume {
+                        last_volume = current_volume;
+                        let _ = audio_handle.emit("system-volume-changed", current_volume);
+                    }
+                }
+            });
 
             // Spawn Controller Thread (Gilrs)
             let app_handle = app.handle().clone();
@@ -63,13 +168,6 @@ fn main() {
                         match event {
                             EventType::ButtonPressed(button, _) => {
                                 let btn_name = format!("{:?}", button); // e.g. "South", "East"
-                                
-                                // Special handling for Guide Button (Mode) - DISABLED
-                                // if button == Button::Mode {
-                                //     // Emit global event for Guide button
-                                //     let _ = app_handle.emit("toggle-guide", ());
-                                // }
-
                                 let _ = app_handle.emit("controller-button-down", btn_name);
                             },
                             EventType::ButtonReleased(button, _) => {
@@ -126,16 +224,6 @@ struct GpuInfo {
 
 #[tauri::command]
 fn get_gpu_info() -> GpuInfo {
-    // Basic heuristic for hardware intelligence
-    // In a production app, we would use WMI or DirectX to get real GPU info.
-    // Here we return a safe default that triggers "Integrated" behavior if needed,
-    // or we can try to detect if we are on a known high-performance machine.
-    
-    // For now, we'll try to find "Intel" or "Integrated" in any component that looks like a GPU.
-    
-    // Mocking for safety if complex WMI implementation is too heavy for this step.
-    // But let's try a basic check.
-    
     let is_integrated = true; // Default to safe mode (integrated)
     let name = "Generic GPU".to_string();
 
@@ -188,10 +276,6 @@ async fn copy_xenia_files(app_handle: tauri::AppHandle) -> Result<String, String
     let dest_path = app_data_dir.join("xenia");
 
     // 3. Perform Copy
-    // Check if we need to copy (simple check: if dest doesn't exist)
-    // For a "Repair" or "Update", we might want to overwrite.
-    // The user mentioned "Auto-Repair". So let's force copy or check hash. 
-    // For now, simple overwrite is "Auto-Repair".
     if let Err(e) = copy_dir_all(&source_path, &dest_path) {
         return Err(format!("Failed to copy files: {}", e));
     }

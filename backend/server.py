@@ -9,13 +9,20 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 import uuid
 from datetime import datetime, timezone
+import subprocess
+import platform
 import shutil
 from xbox_service import get_xbox_profile, get_xbox_achievements, exchange_msal_token_for_profile
 import theme_service
 import steamgriddb_service
 import vibe_design_service
+import gpu_config_service  # New service for GPU configuration
+# import audio_service # Removed in favor of windows_audio
+# import windows_audio # Removed in favor of Rust cpvc
+# import powershell_audio # Robust fallback - Removed in favor of SoundVolumeView
 
 ROOT_DIR = Path(__file__).parent
+
 load_dotenv(ROOT_DIR / '.env')
 
 ASSETS_DIR = ROOT_DIR.parent / 'assets'
@@ -277,6 +284,44 @@ class ThemeAction(BaseModel):
 class VibeDesignRequest(BaseModel):
     prompt: str
 
+class AudioVolumeRequest(BaseModel):
+    level: int
+
+class ProcessVolumeRequest(BaseModel):
+    pid: int
+    level: int
+
+class DefaultAudioRequest(BaseModel):
+    id: str
+
+class CoreConfigRequest(BaseModel):
+    settings: dict
+
+class GameConfigRequest(BaseModel):
+    game_id: str  # Unique game identifier OR absolute file path
+    settings: dict
+
+@api_router.post("/config/game")
+async def update_game_config(request: GameConfigRequest):
+    """Update game-specific configuration."""
+    try:
+        # Pass the game_id (which can be a path now) to the service
+        gpu_config_service.update_core_config(request.settings, game_id=request.game_id)
+        return {"status": "success", "message": f"Updated config for {request.game_id}"}
+    except Exception as e:
+        logger.error(f"Error updating game config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/config/game")
+async def get_game_config(path: str):
+    """Get configuration from a specific file path."""
+    try:
+        return gpu_config_service.get_core_config(config_path=path)
+    except Exception as e:
+        logger.error(f"Error reading game config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Theme Management API (Layout-based, NO color pickers)
 @api_router.get("/themes")
 async def get_themes():
@@ -423,6 +468,10 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Server started")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

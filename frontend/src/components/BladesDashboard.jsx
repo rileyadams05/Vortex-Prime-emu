@@ -181,9 +181,6 @@ const BladesDashboard = () => {
         <div className="footer-btn">
           <div className="btn-icon btn-a">A</div> Select
         </div>
-        <div className="footer-btn">
-          <div className="btn-icon btn-b">B</div> Back
-        </div>
       </div>
     </div>
   );

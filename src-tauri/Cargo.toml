@@ -23,6 +23,17 @@ tauri-plugin-process = "2.3.1"
 gilrs = "0.11.1"
 sysinfo = "0.30"
 velopack = "0.0.1298"
+cpvc = "0.5"
+winmix = "0.1"
+windows = { version = "0.52", features = [
+    "Win32_Media_Audio",
+    "Win32_System_Com",
+    "Win32_UI_Shell_PropertiesSystem",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Variant",
+    "Win32_Devices_FunctionDiscovery",
+] }
+toml_edit = "0.25.3"
 
 [features]
 default = ["custom-protocol"]

@@ -38,6 +38,32 @@ namespace GameInputService
                 return;
             }
 
+            // Start reading stdin for commands (GPU init, etc.)
+            var inputThread = new Thread(() =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        var line = Console.ReadLine();
+                        if (line != null)
+                        {
+                            if (line.Contains("nvidia", StringComparison.OrdinalIgnoreCase))
+                            {
+                                GpuManager.Initialize("nvidia");
+                            }
+                            else if (line.Contains("amd", StringComparison.OrdinalIgnoreCase))
+                            {
+                                GpuManager.Initialize("amd");
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            });
+            inputThread.IsBackground = true;
+            inputThread.Start();
+
             bool wasGuidePressed = false;
 
             while (true)

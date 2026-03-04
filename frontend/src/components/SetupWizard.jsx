@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import GamepadSvg from '../assets/xbox-360-gamepad.svg';
 import { FolderOpen, Cpu, HardDrive } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import { gpuApi } from '../services/apiServices';
 import '../styles/SetupWizard.css';
 
 const SetupWizard = ({ isOpen, onClose, onComplete }) => {
-  const [step, setStep] = useState(1); // 1: Welcome, 2: OS Detect, 3: Init
+  const [step, setStep] = useState(1); // 1: Welcome, 2: Hardware, 3: OS Detect, 4: Init
   const [osInfo, setOsInfo] = useState("Detecting...");
+  const [gpuType, setGpuType] = useState(null);
   const [copyStatus, setCopyStatus] = useState("");
 
   useEffect(() => {
@@ -26,8 +28,30 @@ const SetupWizard = ({ isOpen, onClose, onComplete }) => {
     setStep(prev => prev + 1);
   };
 
+  const handleGpuSelection = async (type) => {
+    setGpuType(type);
+    try {
+        await gpuApi.configure(type);
+        setStep(3); // Go to OS Detect
+    } catch (e) {
+        console.error("GPU Config Error:", e);
+        // Continue anyway or show error?
+        // For now, assume it worked or failed non-critically
+        setStep(3);
+    }
+  };
+
   const handleInitialization = async () => {
     setCopyStatus("Initializing Xenia Engine...");
+    
+    // Ensure portable.txt exists (handled by Python backend now, but good to have redundant check if possible)
+    
+    if (!window.__TAURI_INTERNALS__) {
+        setCopyStatus("Error: Tauri API not available (Browser Mode)");
+        setTimeout(() => onComplete(null), 3000);
+        return;
+    }
+
     try {
         const result = await invoke('copy_xenia_files');
         setCopyStatus("Success! " + result);
@@ -62,37 +86,56 @@ const SetupWizard = ({ isOpen, onClose, onComplete }) => {
             </div>
         )}
 
-        {/* PHASE 2: SMART DETECT */}
+        {/* PHASE 2: HARDWARE SELECTION */}
         {step === 2 && (
             <div className="setup-content">
                 <div className="setup-header">
                     <Cpu size={48} className="setup-icon-lucide" />
-                    <h2>System Detection</h2>
-                    <p>Optimizing for your hardware.</p>
+                    <h2>Hardware Detection</h2>
+                    <p>Select your GPU for optimization.</p>
                 </div>
-                <div className="os-info-box">
-                    <span>Detected System:</span>
-                    <strong>{osInfo}</strong>
-                </div>
-                <div className="setup-actions">
-                    <button className="setup-btn primary" onClick={() => {
-                        handleNext();
-                        handleInitialization();
-                    }}>
-                        (A) Yes, Continue
+                <div className="setup-actions" style={{ flexDirection: 'column', gap: '10px' }}>
+                    <button className="setup-btn primary" onClick={() => handleGpuSelection('nvidia')}>
+                        (A) NVIDIA (High Performance)
                     </button>
-                    <button className="setup-btn secondary" onClick={() => alert("Manual selection not implemented in wizard.")}>
-                        (X) Select Manually
+                    <button className="setup-btn secondary" onClick={() => handleGpuSelection('amd')}>
+                        (X) AMD (Vulkan Optimized)
                     </button>
                 </div>
             </div>
         )}
 
-        {/* PHASE 3: INITIALIZATION */}
+        {/* PHASE 3: SMART DETECT */}
         {step === 3 && (
             <div className="setup-content">
                 <div className="setup-header">
                     <HardDrive size={48} className="setup-icon-lucide" />
+                    <h2>System Confirmation</h2>
+                    <p>Ready to initialize.</p>
+                </div>
+                <div className="os-info-box">
+                    <span>Detected System:</span>
+                    <strong>{osInfo}</strong>
+                    <br/>
+                    <span>GPU Mode:</span>
+                    <strong>{gpuType ? gpuType.toUpperCase() : "Standard"}</strong>
+                </div>
+                <div className="setup-actions">
+                    <button className="setup-btn primary" onClick={() => {
+                        setStep(4);
+                        handleInitialization();
+                    }}>
+                        (A) Install Engine
+                    </button>
+                </div>
+            </div>
+        )}
+
+        {/* PHASE 4: INITIALIZATION */}
+        {step === 4 && (
+            <div className="setup-content">
+                <div className="setup-header">
+                    <FolderOpen size={48} className="setup-icon-lucide" />
                     <h2>Initializing</h2>
                     <p>Setting up game engine...</p>
                 </div>

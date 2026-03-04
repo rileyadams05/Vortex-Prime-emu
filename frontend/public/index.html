@@ -14,13 +14,15 @@
     <style>
       @font-face {
         font-family: 'MC360';
-        src: url('%PUBLIC_URL%/fonts/MC360.ttf') format('truetype');
+        /* Use %PUBLIC_URL% to correctly resolve the path in dev and prod */
+        src: url('%PUBLIC_URL%/assets/blades/fonts/MC360.ttf') format('truetype');
         font-weight: normal;
         font-style: normal;
       }
       @font-face {
         font-family: 'Convection';
-        src: url('%PUBLIC_URL%/fonts/MC360.ttf') format('truetype');
+        /* Assuming you might want to use the same font or a different one if available */
+        src: url('%PUBLIC_URL%/assets/blades/fonts/MC360.ttf') format('truetype');
         font-weight: normal;
         font-style: normal;
       }
