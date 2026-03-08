@@ -1,44 +1,214 @@
-D	assets/Themes/Play/Classic NXE_88b66e3e/layout.json
-M	backend/__pycache__/gpu_config_service.cpython-311.pyc
-M	backend/gpu_config_service.py
-M	backend/server.py
-M	backend_test.py
-M	frontend/package-lock.json
-M	frontend/package.json
-D	frontend/public/assets/for app/Help.webp
-D	frontend/public/assets/for app/Setting.png
-D	frontend/public/assets/for app/XB-Windows.ico
-D	frontend/public/assets/for app/XB-logo.png
-D	frontend/public/assets/for app/XB-logo.svg
-D	frontend/public/assets/for app/achievements.png
-D	frontend/public/assets/for app/game-art.png
-D	frontend/public/assets/for app/game-list.png
-D	frontend/public/assets/for app/image.png
-D	frontend/public/assets/for app/language.png
-D	frontend/public/assets/for app/menu.png
-D	frontend/public/assets/for app/open-webui.svg
-D	frontend/public/assets/for app/sounds-settings.png
-D	frontend/public/assets/for app/translate-game-detels.png
-D	frontend/public/assets/for app/wallpaper_settings.png
-D	frontend/public/assets/for app/xbox 360-gamepad.png
-D	frontend/public/assets/for app/xbox 360-gamepad.svg
-D	frontend/public/assets/for app/xenia-canary-config.png
-M	frontend/src/authConfig.js
-M	frontend/src/components/ColorSettings.jsx
-M	frontend/src/components/CoreSettings.jsx
-M	frontend/src/components/ErrorBoundary.jsx
-M	frontend/src/components/LanguageSettings.jsx
-M	frontend/src/components/NXESettings.jsx
-M	frontend/src/components/SoundSettings.jsx
-M	frontend/src/context/ThemeContext.js
-M	frontend/src/pages/XeniaDashboard.jsx
-M	frontend/src/services/apiServices.js
-M	frontend/src/services/xboxAuthService.js
-M	frontend/src/styles/CoreSettings.css
-M	frontend/src/styles/LanguageSettings.css
-M	frontend/src/styles/NXESettings.css
-M	frontend/src/styles/SoundSettings.css
-M	frontend/src/styles/XeniaDashboard.css
-M	frontend/src/utils/soundManager.js
-M	package.json
-M	src-tauri/tauri.conf.json
+commit 114de4a63b4ac4176dd5df1950a0dbf03c94dea7
+Author: rileyadams05 <rileyadams848@gmail.com>
+Date:   Mon Mar 9 07:23:23 2026 +1100
+
+    Auto-sync update: 2026-03-09 07:23:23
+
+diff --git a/frontend/src/pages/XeniaDashboard.jsx b/frontend/src/pages/XeniaDashboard.jsx
+index a937241..c423c04 100644
+--- a/frontend/src/pages/XeniaDashboard.jsx
++++ b/frontend/src/pages/XeniaDashboard.jsx
+@@ -1273,24 +1273,11 @@ const XeniaDashboard = () => {
+               >
+ 
+                 <div className="xbox-guide-inner">
+-                  <svg viewBox="0 0 512 512" className="xbox-guide-svg">
+-                    <defs>
+-                      <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+-                        <stop offset="0%" stopColor="#e0e0e0" />
+-                        <stop offset="50%" stopColor="#f8f8f8" />
+-                        <stop offset="100%" stopColor="#d0d0d0" />
+-                      </linearGradient>
+-                      <radialGradient id="greenGlow" cx="50%" cy="50%" r="50%">
+-                        <stop offset="0%" stopColor="#107C10" />
+-                        <stop offset="100%" stopColor="#0b550b" />
+-                      </radialGradient>
+-                    </defs>
+-                    {/* Green Background (The Light) */}
+-                    <circle cx="256" cy="256" r="240" className="xbox-green-bg" fill="url(#greenGlow)" />
+-
+-                    {/* The Sphere Shell (Silver) - The X is the hole */}
+-                    <path d="M369.9 318.2c44.3 54.3 64.7 98.8 54.4 118.7-7.9 15.1-56.7 44.6-92.6 55.9-29.6 9.3-68.4 13.3-100.4 10.2-38.2-3.7-76.9-17.4-110.1-39C93.3 445.8 87 438.3 87 423.4c0-29.9 32.9-82.3 89.2-142.1 32-33.9 76.5-73.7 81.4-72.6 9.4 2.1 84.3 75.1 112.3 109.5zM188.6 143.8c-29.7-26.9-58.1-53.9-86.4-63.4-15.2-5.1-16.3-4.8-28.7 8.1-29.2 30.4-53.5 79.7-60.3 122.4-5.4 34.2-6.1 43.8-4.2 60.5 5.6 50.5 17.3 85.4 40.5 120.9 9.5 14.6 12.1 17.3 9.3 9.9-4.2-11-.3-37.5 9.5-64 14.3-39 53.9-112.9 120.3-194.4zm311.6 63.5C483.3 127.3 432.7 77 425.6 77c-7.3 0-24.2 6.5-36 13.9-23.3 14.5-41 31.4-64.3 52.8C367.7 197 427.5 283.1 448.2 346c6.8 20.7 9.7 41.1 7.4 52.3-1.7 8.5-1.7 8.5 1.4 4.6 6.1-7.7 19.9-31.3 25.4-43.5 7.4-16.2 15-40.2 18.6-58.7 4.3-22.5 3.9-70.8-.8-93.4zM141.3 43C189 40.5 251 77.5 255.6 78.4c.7.1 10.4-4.2 21.6-9.7 63.9-31.1 94-25.8 107.4-25.2-63.9-39.3-152.7-50-233.9-11.7-23.4 11.1-24 11.9-9.4 11.2z" fill="url(#silverGradient)" />
+-                  </svg>
++                  <img 
++                    src="/assets/App Icon/Windows.ico" 
++                    alt="App Icon" 
++                    style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'contain' }}
++                  />
+                 </div>
+               </div>
+               <span className="btn-label">Home</span>
+
+commit 3c3274a3523fe70c2e640813c09593d98e0f8e22
+Author: rileyadams05 <rileyadams848@gmail.com>
+Date:   Thu Mar 5 08:50:21 2026 +1100
+
+    Full Sync: Fixed 3005 Port and Icon Panic
+
+diff --git a/frontend/src/pages/XeniaDashboard.jsx b/frontend/src/pages/XeniaDashboard.jsx
+index e1616a0..5a073ce 100644
+--- a/frontend/src/pages/XeniaDashboard.jsx
++++ b/frontend/src/pages/XeniaDashboard.jsx
+@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+ import { listen } from '@tauri-apps/api/event';
+ import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart } from 'lucide-react';
+ import axios from 'axios';
+-import openWebuiIcon from '../assets/open-webui.svg';
++
+ import NXESettings from '../components/NXESettings';
+ import BladesOverlay from '../components/BladesOverlay';
+ import GuideOverlay from '../components/GuideOverlay';
+@@ -85,22 +85,6 @@ const XeniaDashboard = () => {
+ 
+   useEffect(() => { loadActiveTheme(); }, [loadActiveTheme]);
+ 
+-  // Recently Played Games — only real games from user's library
+-  // Clear any stale/fake data from before the cleanup
+-  const [recentGames, setRecentGames] = useState([]);
+-
+-  const addToRecentGames = (game) => {
+-    // Only track games that exist in the user's actual library
+-    if (allGames.length === 0) return;
+-    if (!allGames.some(g => g.title === game.title)) return;
+-    setRecentGames(prev => {
+-      const filtered = prev.filter(g => g.title !== game.title);
+-      const updated = [{ ...game, lastPlayed: Date.now(), hasQuickResume: true }, ...filtered].slice(0, 5);
+-      localStorage.setItem('recentGames', JSON.stringify(updated));
+-      return updated;
+-    });
+-  };
+-
+   // Games folder state
+   const [gamesFolder, setGamesFolder] = useState(() => {
+     return localStorage.getItem('gamesFolder') || '';
+@@ -146,6 +130,22 @@ const XeniaDashboard = () => {
+   // Combined games: user-imported games only (no mock data)
+   const allGames = useMemo(() => [...userGames], [userGames]);
+ 
++  // Recently Played Games — only real games from user's library
++  // Clear any stale/fake data from before the cleanup
++  const [recentGames, setRecentGames] = useState([]);
++
++  const addToRecentGames = useCallback((game) => {
++    // Only track games that exist in the user's actual library
++    if (allGames.length === 0) return;
++    if (!allGames.some(g => g.title === game.title)) return;
++    setRecentGames(prev => {
++      const filtered = prev.filter(g => g.title !== game.title);
++      const updated = [{ ...game, lastPlayed: Date.now(), hasQuickResume: true }, ...filtered].slice(0, 5);
++      localStorage.setItem('recentGames', JSON.stringify(updated));
++      return updated;
++    });
++  }, [allGames]);
++
+   // Load recently played from localStorage, but only keep games that exist in the library
+   useEffect(() => {
+     if (allGames.length === 0) {
+@@ -249,7 +249,7 @@ const XeniaDashboard = () => {
+     } else {
+       launchGame(game);
+     }
+-  }, [currentView, launchGame]);
++  }, [currentView, launchGame, addToRecentGames]);
+ 
+   const navigateCarousel = useCallback((direction) => {
+     playSound('focus');
+@@ -984,7 +984,7 @@ const XeniaDashboard = () => {
+             data-testid="open-webui-btn"
+             onClick={() => { playSound('select'); setIsAiPanelOpen(prev => !prev); }}
+           >
+-            <img src={openWebuiIcon} alt="Open WebUI" className="open-webui-icon" />
++            <img src="/assets/for app/open-webui.svg" alt="Open WebUI" className="open-webui-icon" />
+             <span>Open WebUI</span>
+           </button>
+           <div className="user-profile" data-testid="user-profile">
+@@ -1008,7 +1008,7 @@ const XeniaDashboard = () => {
+       {isAiPanelOpen && (
+         <div className="ai-panel" data-testid="ai-panel">
+           <div className="ai-panel-header">
+-            <img src={openWebuiIcon} alt="" className="open-webui-icon" />
++            <img src="/assets/for app/open-webui.svg" alt="" className="open-webui-icon" />
+             <h3>Open WebUI</h3>
+             <button className="ai-panel-close" onClick={() => setIsAiPanelOpen(false)} data-testid="ai-panel-close">X</button>
+           </div>
+@@ -1051,16 +1051,30 @@ const XeniaDashboard = () => {
+       </div>
+ 
+       <div className="xenia-footer">
+-        <div className="footer-controls">
+-          <div className="control-item">
+-            <span className="btn-icon bumper">LB</span>
+-            <span className="btn-icon bumper">RB</span>
+-            <span className="btn-label">Tabs</span>
+-          </div>
++        <div className="footer-controls" style={{ width: '100%' }}>
++          {currentView !== 'settings' && (
++            <>
++              <div className="control-item">
++                <span className="btn-icon green">A</span>
++                <span className="btn-label">Select</span>
++              </div>
++              <div className="control-item">
++                <span className="btn-icon bumper">LB</span>
++                <span className="btn-icon bumper">RB</span>
++                <span className="btn-label">Tabs</span>
++              </div>
++              {currentView !== 'home' && (
++                <div className="control-item">
++                  <span className="btn-icon red">B</span>
++                  <span className="btn-label">Back</span>
++                </div>
++              )}
++            </>
++          )}
+           {/* Guide Home Button */}
+-          <div className="control-item">
+-            <span 
+-              className={`btn-icon home ${isGuidePressed ? 'pressed' : ''}`} 
++          <div className="control-item" style={{ marginLeft: 'auto' }}>
++            <div 
++              className={`xbox-guide-button ${isGuidePressed ? 'pressed' : ''}`} 
+               data-testid="guide-home-button"
+               onClick={(e) => {
+                 e.preventDefault();
+@@ -1070,17 +1084,31 @@ const XeniaDashboard = () => {
+                 setTimeout(() => setIsGuidePressed(false), 200);
+                 setIsGuideOpen(prev => !prev);
+               }}
+-            ></span>
++            >
++
++              <div className="xbox-guide-inner">
++                <svg viewBox="0 0 512 512" className="xbox-guide-svg">
++                  <defs>
++                    <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
++                      <stop offset="0%" stopColor="#e0e0e0" />
++                      <stop offset="50%" stopColor="#f8f8f8" />
++                      <stop offset="100%" stopColor="#d0d0d0" />
++                    </linearGradient>
++                    <radialGradient id="greenGlow" cx="50%" cy="50%" r="50%">
++                        <stop offset="0%" stopColor="#107C10" />
++                        <stop offset="100%" stopColor="#0b550b" />
++                    </radialGradient>
++                  </defs>
++                  {/* Green Background (The Light) */}
++                  <circle cx="256" cy="256" r="240" className="xbox-green-bg" fill="url(#greenGlow)" />
++                  
++                  {/* The Sphere Shell (Silver) - The X is the hole */}
++                  <path d="M369.9 318.2c44.3 54.3 64.7 98.8 54.4 118.7-7.9 15.1-56.7 44.6-92.6 55.9-29.6 9.3-68.4 13.3-100.4 10.2-38.2-3.7-76.9-17.4-110.1-39C93.3 445.8 87 438.3 87 423.4c0-29.9 32.9-82.3 89.2-142.1 32-33.9 76.5-73.7 81.4-72.6 9.4 2.1 84.3 75.1 112.3 109.5zM188.6 143.8c-29.7-26.9-58.1-53.9-86.4-63.4-15.2-5.1-16.3-4.8-28.7 8.1-29.2 30.4-53.5 79.7-60.3 122.4-5.4 34.2-6.1 43.8-4.2 60.5 5.6 50.5 17.3 85.4 40.5 120.9 9.5 14.6 12.1 17.3 9.3 9.9-4.2-11-.3-37.5 9.5-64 14.3-39 53.9-112.9 120.3-194.4zm311.6 63.5C483.3 127.3 432.7 77 425.6 77c-7.3 0-24.2 6.5-36 13.9-23.3 14.5-41 31.4-64.3 52.8C367.7 197 427.5 283.1 448.2 346c6.8 20.7 9.7 41.1 7.4 52.3-1.7 8.5-1.7 8.5 1.4 4.6 6.1-7.7 19.9-31.3 25.4-43.5 7.4-16.2 15-40.2 18.6-58.7 4.3-22.5 3.9-70.8-.8-93.4zM141.3 43C189 40.5 251 77.5 255.6 78.4c.7.1 10.4-4.2 21.6-9.7 63.9-31.1 94-25.8 107.4-25.2-63.9-39.3-152.7-50-233.9-11.7-23.4 11.1-24 11.9-9.4 11.2z" fill="url(#silverGradient)" />
++                </svg>
++              </div>
++            </div>
+             <span className="btn-label">Home</span>
+           </div>
+-          <div className="control-item">
+-            <span className="btn-icon green">A</span>
+-            <span className="btn-label">Select</span>
+-          </div>
+-          <div className="control-item">
+-            <span className="btn-icon red">B</span>
+-            <span className="btn-label">Back</span>
+-          </div>
+         </div>
+       </div>
+     </div>
