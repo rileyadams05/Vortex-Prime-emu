@@ -43,6 +43,20 @@ _x360db: Dict[str, Dict] = {}
 
 SUPPORTED_EXTENSIONS = {".iso", ".xex", ".zar"}
 
+def get_auto_scan_paths() -> List[Path]:
+    import string
+    import os
+    paths = [DEFAULT_GAMES_FOLDER]
+    common_folders = ["Games", "Xbox 360", "Xbox360", "Roms", "Xbox 360 Games"]
+    for d in string.ascii_uppercase:
+        drive = f"{d}:\\"
+        if os.path.exists(drive):
+            for folder in common_folders:
+                p = Path(drive) / folder
+                if p.exists() and p.is_dir() and p not in paths:
+                    paths.append(p)
+    return paths
+
 
 def _ensure_games_folder():
     """Ensure the Games folder exists."""
@@ -145,6 +159,54 @@ def read_title_id_from_xex(path: Path) -> Optional[str]:
     return None
 
 
+async def auto_download_patches_and_abgx(title_id: str, title: str):
+    """
+    Auto-fetches abgx360 topology/stealth data and game patches from:
+    - https://github.com/BakasuraRCE/abgx360
+    - https://github.com/xenia-canary/game-patches
+    """
+    if not title_id:
+        return
+
+    # Check/download game-patches
+    patch_dir = PROJECT_ROOT / "patches"
+    patch_dir.mkdir(exist_ok=True)
+    patch_file = patch_dir / f"{title_id} - {title}.patch"
+    
+    if not patch_file.exists():
+        try:
+            # First search via GitHub API to find the exact patch name since it varies
+            async with httpx.AsyncClient(timeout=10) as client:
+                search_url = f"https://api.github.com/search/code?q={title_id}+in:path+repo:xenia-canary/game-patches"
+                res = await client.get(search_url)
+                if res.status_code == 200:
+                    data = res.json()
+                    if data.get("total_count", 0) > 0:
+                        download_url = data["items"][0].get("html_url", "").replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
+                        if download_url:
+                            patch_data = await client.get(download_url)
+                            with open(patch_file, "wb") as f:
+                                f.write(patch_data.content)
+                            logger.info(f"Downloaded patch for {title} via xenia-canary/game-patches")
+        except Exception as e:
+            logger.debug(f"Failed to auto-download patch for {title_id}: {e}")
+
+    # ABGX360 integration (download/update StealthFiles and topologies dynamically)
+    abgx_dir = PROJECT_ROOT / "abgx360"
+    abgx_dir.mkdir(exist_ok=True)
+    abgx_dat = abgx_dir / "abgx360.dat"
+    if not abgx_dat.exists():
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                res = await client.get("https://raw.githubusercontent.com/BakasuraRCE/abgx360/master/abgx360.dat")
+                if res.status_code == 200:
+                    with open(abgx_dat, "wb") as f:
+                        f.write(res.content)
+                    logger.info("Auto-downloaded abgx360.dat from BakasuraRCE/abgx360 for library discovery.")
+        except Exception:
+            pass
+
+
 def check_integrity(path: Path) -> str:
     """
     Perform a basic file integrity check.
@@ -217,10 +279,10 @@ async def fetch_cover_art(title: str) -> Optional[str]:
 
 async def scan_games_folder(folder_path: str = None) -> List[Dict]:
     """
-    Scan a folder for Xbox 360 game files and enrich with metadata.
+    Scan for Xbox 360 game files and enrich with metadata automatically.
     
     Args:
-        folder_path: Path to scan. Defaults to [Project Root]/Games/
+        folder_path: Optional specific path to scan. Defaults to auto-discovery.
     
     Returns:
         List of game dicts with: id, title, path, ext, title_id,
@@ -228,83 +290,24 @@ async def scan_games_folder(folder_path: str = None) -> List[Dict]:
     """
     global _scan_cache
 
-    scan_dir = Path(folder_path) if folder_path else DEFAULT_GAMES_FOLDER
     _ensure_games_folder()
 
-    if not scan_dir.exists():
-        logger.warning(f"Games folder not found: {scan_dir}")
-        return []
+    scan_dirs = []
+    if folder_path:
+        scan_dirs.append(Path(folder_path))
+    else:
+        scan_dirs = get_auto_scan_paths()
 
     # Load x360db
     await fetch_x360db()
 
     games = []
 
-    # Recursively scan for game files
+    # Recursively scan for game files in all discovered directories
     all_files = []
-    for ext in SUPPORTED_EXTENSIONS:
-        all_files.extend(scan_dir.rglob(f"*{ext}"))
-
-    logger.info(f"Found {len(all_files)} game file(s) in {scan_dir}")
-
-    for file_path in all_files:
-        integrity = check_integrity(file_path)
-        ext = file_path.suffix.lower()
-
-        # Try to read Title ID
-        title_id = None
-        if ext == ".iso":
-            title_id = read_title_id_from_iso(file_path)
-        elif ext == ".xex":
-            title_id = read_title_id_from_xex(file_path)
-
-        # Look up metadata
-        db_entry = lookup_title_local(title_id) if title_id else None
-
-        # Determine Title and Publisher
-        if db_entry:
-            title = db_entry.get("title") or db_entry.get("name") or file_path.stem
-            publisher = db_entry.get("publisher") or db_entry.get("developer") or "Unknown"
-            achievement_count = db_entry.get("achievementCount") or db_entry.get("achievements") or 0
-        else:
-            title = file_path.stem
-            publisher = "Unknown"
-            achievement_count = 0
-
-        # Fetch cover art (async)
-        cover_url = None
-        if integrity == "ok":
-            cover_url = await fetch_cover_art(title)
-
-        size_mb = round(file_path.stat().st_size / (1024 * 1024), 1)
-
-        game = {
-            "id": str(uuid.uuid4()),
-            "title": title,
-            "path": str(file_path),
-            "ext": ext,
-            "title_id": title_id or "",
-            "publisher": publisher,
-            "achievement_count": achievement_count,
-            "cover_url": cover_url or "",
-            "cover": cover_url or "",  # Alias for frontend compatibility
-            "integrity": integrity,
-            "size_mb": size_mb,
-            "description": f"Xbox 360 Title • {size_mb} MB",
-        }
-        games.append(game)
-        logger.info(f"Scanned: {title} [{title_id or 'NO_ID'}] — {integrity.upper()}")
-
-    _scan_cache = games
-    return games
-
-
-async def get_games(force_scan: bool = False) -> List[Dict]:
-    """
-    Return the game list. If cache is empty and not forced, 
-    it triggers an initial scan of the default folder.
-    """
-    global _scan_cache
-    if not _scan_cache or force_scan:
-        await scan_games_folder()
-    return _scan_cache
+    for scan_dir in scan_dirs:
+        if not scan_dir.exists():
+            continue
+        try:
+            for ext in SUPPORTED_EXTENSIONS:
+                all_files.extend(scan_di
