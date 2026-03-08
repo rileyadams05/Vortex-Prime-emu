@@ -10,10 +10,6 @@ export const SECTION_ORDER = [
 ];
 
 export const CURATED_SECTIONS = {
-    GAME: {
-        label: 'Game Config',
-        settings: [] // Special section for management dashboard
-    },
     GLOBAL: {
         label: 'Global Config',
         settings: [
@@ -68,8 +64,9 @@ export const CURATED_SECTIONS = {
             // --- Content ---
             { section: 'Content', key: 'license_mask', label: 'License Mask', type: 'select', options: [0, 1, -1] },
         ]
+    },
+    GAME: {
+        label: 'Game Config',
+        settings: [] // Special section for management dashboard
     }
 };
-
-};
-
