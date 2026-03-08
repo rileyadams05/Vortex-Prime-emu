@@ -310,4 +310,75 @@ async def scan_games_folder(folder_path: str = None) -> List[Dict]:
             continue
         try:
             for ext in SUPPORTED_EXTENSIONS:
-                all_files.extend(scan_di
+                all_files.extend(scan_dir.rglob(f"*{ext}"))
+        except Exception:
+            pass
+
+    logger.info(f"Auto-discovery found {len(all_files)} game file(s) across systems")
+
+    for file_path in all_files:
+        integrity = check_integrity(file_path)
+        ext = file_path.suffix.lower()
+
+        # Try to read Title ID
+        title_id = None
+        if ext == ".iso":
+            title_id = read_title_id_from_iso(file_path)
+        elif ext == ".xex":
+            title_id = read_title_id_from_xex(file_path)
+
+        # Look up metadata
+        db_entry = lookup_title_local(title_id) if title_id else None
+
+        # Determine Title and Publisher
+        if db_entry:
+            title = db_entry.get("title") or db_entry.get("name") or file_path.stem
+            publisher = db_entry.get("publisher") or db_entry.get("developer") or "Unknown"
+            achievement_count = db_entry.get("achievementCount") or db_entry.get("achievements") or 0
+        else:
+            title = file_path.stem
+            publisher = "Unknown"
+            achievement_count = 0
+
+        # Auto-download patches and extra data asynchronously
+        if title_id and integrity == "ok":
+            # Fire and forget without blocking scan
+            asyncio.create_task(auto_download_patches_and_abgx(title_id, title))
+
+        # Fetch cover art (async)
+        cover_url = None
+        if integrity == "ok":
+            cover_url = await fetch_cover_art(title)
+
+        size_mb = round(file_path.stat().st_size / (1024 * 1024), 1)
+
+        game = {
+            "id": str(uuid.uuid4()),
+            "title": title,
+            "path": str(file_path),
+            "ext": ext,
+            "title_id": title_id or "",
+            "publisher": publisher,
+            "achievement_count": achievement_count,
+            "cover_url": cover_url or "",
+            "cover": cover_url or "",  # Alias for frontend compatibility
+            "integrity": integrity,
+            "size_mb": size_mb,
+            "description": f"Xbox 360 Title • {size_mb} MB",
+        }
+        games.append(game)
+        logger.info(f"Scanned: {title} [{title_id or 'NO_ID'}] — {integrity.upper()}")
+
+    _scan_cache = games
+    return games
+
+
+async def get_games(force_scan: bool = False) -> List[Dict]:
+    """
+    Return the game list. If cache is empty and not forced, 
+    it triggers an initial scan of the default folder.
+    """
+    global _scan_cache
+    if not _scan_cache or force_scan:
+        await scan_games_folder()
+    return _scan_cache

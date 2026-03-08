@@ -133,13 +133,16 @@ const XeniaDashboard = () => {
    * Load cached games from backend without triggering a full rescan.
    */
   const loadCachedGames = useCallback(async () => {
+    setIsScanning(true);
     try {
       const res = await axios.get('/api/games/list');
       const cached = res.data.games || [];
       if (cached.length > 0) {
         setUserGames(cached);
       }
-    } catch { /* silent */ }
+    } catch { /* silent */ } finally {
+      setIsScanning(false);
+    }
   }, []);
 
   const onDrop = useCallback(async (acceptedFiles) => {
