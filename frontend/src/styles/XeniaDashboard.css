@@ -1092,8 +1092,7 @@ body {
 
 .games-folder-btn:hover {
   background: rgba(255, 255, 255, 0.2);
-  border-color: var(--xenia-green);
-  box-shadow: 0 0 15px rgba(16, 124, 16, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .games-folder-btn.secondary {
