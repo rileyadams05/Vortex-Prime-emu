@@ -410,6 +410,7 @@ const NXESettings = ({ isActive, onBack }) => {
                 <LanguageSettings
                   preview={true}
                   isActive={activePanel === 'country'}
+                  activeCountry={countryCode}
                   onBack={() => { playSound('back'); setActivePanel(null); }}
                   onSelect={(v) => {
                     setCountryCode(v.code);
