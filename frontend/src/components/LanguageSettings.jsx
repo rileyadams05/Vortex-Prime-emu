@@ -4,7 +4,7 @@ import playSound from '../utils/soundManager';
 import { countries, getEmojiFlag } from 'countries-list';
 import '../styles/LanguageSettings.css';
 
-const LanguageSettings = ({ isActive, onBack, onSelect, preview = false }) => {
+const LanguageSettings = ({ isActive, onBack, onSelect, preview = false, activeCountry }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const listRef = useRef(null);
@@ -39,10 +39,17 @@ const LanguageSettings = ({ isActive, onBack, onSelect, preview = false }) => {
   useEffect(() => {
     const loadCountry = async () => {
       try {
-        const { settingsApi } = await import('../services/apiServices');
-        const saved = await settingsApi.get();
-        if (saved && saved.country) {
-          const idx = filteredCountries.findIndex(c => c.code === saved.country);
+        let codeToSelect = activeCountry;
+        if (!codeToSelect) {
+          const { settingsApi } = await import('../services/apiServices');
+          const saved = await settingsApi.get();
+          if (saved && saved.country) {
+            codeToSelect = saved.country;
+          }
+        }
+        
+        if (codeToSelect) {
+          const idx = filteredCountries.findIndex(c => c.code === codeToSelect);
           if (idx !== -1) setSelectedIndex(idx);
         }
       } catch (e) {
@@ -50,7 +57,7 @@ const LanguageSettings = ({ isActive, onBack, onSelect, preview = false }) => {
       }
     };
     loadCountry();
-  }, [filteredCountries]);
+  }, [filteredCountries, activeCountry]);
 
   useEffect(() => {
     const handleGlobalSave = async () => {
