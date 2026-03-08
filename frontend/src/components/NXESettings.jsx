@@ -138,11 +138,9 @@ const NXESettings = ({ isActive, onBack }) => {
           if (e.key === 'a' || e.key === 'A' || e.key === 'Enter') {
             setShowExitPrompt(false);
             handleSave();
-          } else if (e.key === 'b' || e.key === 'B' || e.key === 'Escape' || e.key === 'Backspace') {
+          } else if (e.key === 'b' || e.key === 'B' || e.key === 'x' || e.key === 'X' || e.key === 'Escape' || e.key === 'Backspace') {
             setShowExitPrompt(false);
             executeBackout();
-          } else if (e.key === 'x' || e.key === 'X') {
-            setShowExitPrompt(false);
           }
         }
         return;
@@ -229,11 +227,9 @@ const NXESettings = ({ isActive, onBack }) => {
           if (event.button === 'a') {
             setShowExitPrompt(false);
             handleSave();
-          } else if (event.button === 'b') {
+          } else if (event.button === 'b' || event.button === 'x' || event.button === 'y') {
             setShowExitPrompt(false);
             executeBackout();
-          } else if (event.button === 'x' || event.button === 'y') {
-            setShowExitPrompt(false); // cancel
           }
         });
         return unsub;
@@ -340,34 +336,42 @@ const NXESettings = ({ isActive, onBack }) => {
 
         {/* Exit Prompt Overlay */}
         {showExitPrompt && (
-          <div className="nxe-loading-overlay animate-scale-in" style={{ zIndex: 9999 }}>
-            <div className="nxe-dialog-box" style={{ width: '400px' }}>
-              <AlertCircle size={48} color="#f44336" style={{ marginBottom: '15px' }} />
-              <div className="nxe-saving-text" style={{ fontSize: '20px', color: '#fff', marginBottom: '10px' }}>Unsaved Changes</div>
-              <div className="nxe-saving-subtext" style={{ fontSize: '14px', marginBottom: '25px', lineHeight: '1.4' }}>
-                You didn't save. Would you like to save your settings before exiting?
+          <div className="nxe-loading-overlay animate-scale-in" style={{ zIndex: 9999, backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
+            <div className="nxe-dialog-box" style={{ 
+              width: '460px', 
+              background: '#252526', 
+              border: '1px solid #454545',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
+              padding: '24px',
+              borderRadius: '4px',
+              textAlign: 'left'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <AlertCircle size={32} color="#007acc" style={{ marginRight: '16px', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: '18px', fontWeight: '500', color: '#ffffff', marginBottom: '8px', fontFamily: '"Segoe UI", system-ui, sans-serif' }}>
+                    Unsaved Settings
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#cccccc', lineHeight: '1.5', fontFamily: '"Segoe UI", system-ui, sans-serif' }}>
+                    You have modified configurations that have not been applied. Do you want to apply your changes before exiting?
+                  </div>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+              
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
                 <button
                   className="nxe-confirm-btn"
-                  style={{ background: '#107c10', minWidth: '100px' }}
+                  style={{ background: '#007acc', color: '#ffffff', minWidth: '90px', padding: '6px 16px', fontSize: '13px', borderRadius: '2px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={() => { setShowExitPrompt(false); handleSave(); }}
                 >
-                  <span style={{ fontSize: '12px', opacity: 0.8, marginRight: '8px' }}>(A)</span> YES
+                  <span style={{ fontSize: '11px', opacity: 0.7, marginRight: '6px', fontWeight: 'bold' }}>(A)</span> Apply
                 </button>
                 <button
                   className="nxe-confirm-btn"
-                  style={{ background: '#f44336', minWidth: '100px' }}
+                  style={{ background: '#3e3e42', color: '#ffffff', minWidth: '90px', padding: '6px 16px', fontSize: '13px', borderRadius: '2px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={() => { setShowExitPrompt(false); executeBackout(); }}
                 >
-                  <span style={{ fontSize: '12px', opacity: 0.8, marginRight: '8px' }}>(B)</span> NO
-                </button>
-                <button
-                  className="nxe-confirm-btn"
-                  style={{ background: '#555', minWidth: '100px' }}
-                  onClick={() => setShowExitPrompt(false)}
-                >
-                  <span style={{ fontSize: '12px', opacity: 0.8, marginRight: '8px' }}>(X)</span> CANCEL
+                  <span style={{ fontSize: '11px', opacity: 0.7, marginRight: '6px', fontWeight: 'bold' }}>(B)</span> Cancel
                 </button>
               </div>
             </div>
