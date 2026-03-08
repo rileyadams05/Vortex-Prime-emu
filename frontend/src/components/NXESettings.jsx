@@ -364,14 +364,14 @@ const NXESettings = ({ isActive, onBack }) => {
                   style={{ background: '#007acc', color: '#ffffff', minWidth: '90px', padding: '6px 16px', fontSize: '13px', borderRadius: '2px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={() => { setShowExitPrompt(false); handleSave(); }}
                 >
-                  <span style={{ fontSize: '11px', opacity: 0.7, marginRight: '6px', fontWeight: 'bold' }}>(A)</span> Apply
+                  <div className="xbox-btn-circle green" style={{ width: '18px', height: '18px', fontSize: '10px', marginRight: '8px', boxShadow: 'none' }}>A</div> Apply
                 </button>
                 <button
                   className="nxe-confirm-btn"
                   style={{ background: '#3e3e42', color: '#ffffff', minWidth: '90px', padding: '6px 16px', fontSize: '13px', borderRadius: '2px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={() => { setShowExitPrompt(false); executeBackout(); }}
                 >
-                  <span style={{ fontSize: '11px', opacity: 0.7, marginRight: '6px', fontWeight: 'bold' }}>(B)</span> Cancel
+                  <div className="xbox-btn-circle red" style={{ width: '18px', height: '18px', fontSize: '10px', marginRight: '8px', boxShadow: 'none' }}>B</div> Cancel
                 </button>
               </div>
             </div>
