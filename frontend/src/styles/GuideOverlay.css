@@ -254,10 +254,11 @@
 
 .guide-menu-item.selected {
   background: linear-gradient(180deg, #b8e040 0%, #9cd400 20%, #8ac000 80%, #7ab400 100%);
-  color: #1a1c1e;
+  color: #ffffff;
   font-weight: 700;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   border-bottom-color: transparent;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 .guide-menu-item.selected::before {
   content: '';
@@ -273,9 +274,9 @@
 .guide-menu-item.selected .menu-label { font-weight: 700; }
 
 .menu-badge { font-size: 11px; font-weight: 600; opacity: 0.6; }
-.guide-menu-item.selected .menu-badge { color: #2a3020; opacity: 0.75; }
+.guide-menu-item.selected .menu-badge { color: #ffffff; opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .menu-badge.exit-badge { color: rgba(255,255,255,0.8); opacity: 0.85; }
-.guide-menu-item.selected .menu-badge.exit-badge { color: #5a3020; opacity: 0.8; }
+.guide-menu-item.selected .menu-badge.exit-badge { color: #ffffff; opacity: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
 .menu-badge.resume-badge {
   color: #ffffff;
@@ -289,8 +290,9 @@
   border-radius: 3px;
 }
 .guide-menu-item.selected .menu-badge.resume-badge {
-  color: #1a3040;
-  background: rgba(0, 0, 0, 0.12);
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* Game items */
@@ -617,7 +619,8 @@
   color: rgba(255,255,255,0.8);
 }
 .guide-menu-item.party-action.leave.selected .menu-label {
-  color: #5a3020;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* Invite list */
