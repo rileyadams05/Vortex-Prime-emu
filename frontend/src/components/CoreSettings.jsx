@@ -1,265 +1,381 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
-import { open } from '@tauri-apps/plugin-dialog';
 import { coreConfigApi } from '../services/apiServices';
+import { CURATED_SECTIONS, SECTION_ORDER } from './coreSettingsConfig';
+import { FileSearch, Globe, Save } from 'lucide-react';
 import '../styles/CoreSettings.css';
 
-const CoreSettings = ({ onBack, preview = false }) => {
-  const [config, setConfig] = useState({});
-  const [activeSection, setActiveSection] = useState(null);
+// ─── Main Component ───────────────────────────────────────────────────────────
+const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
+  const { onPress: onGamepadPress } = useGamepad();
+  const [localConfig, setLocalConfig] = useState({});
+  const [activeSection, setActiveSection] = useState('GAME'); // Default to management view
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
 
+  // Game-specific config state
   const [gameConfigPath, setGameConfigPath] = useState(null);
+  const [gameName, setGameName] = useState('');
 
-  // Fetch config on mount
-  useEffect(() => {
-    loadConfig();
-  }, []);
-
-  const loadConfig = async (path = null) => {
+  // ── Load config from backend ──
+  const loadConfig = useCallback(async (path = null) => {
     setLoading(true);
     try {
-      // If path is provided, fetch specific game config, else fetch global core config
       const data = await coreConfigApi.get(path);
-      
-      // Validation: Ensure data is an object
-      const validData = (data && typeof data === 'object') ? data : {};
-      
-      setConfig(validData);
-      setGameConfigPath(path);
-      
-      // Active section logic moved to useEffect to ensure it runs after state update
+      if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
+        throw new Error('Empty config');
+      }
+
+      // Filter to only curated keys — Skip 'GAME' section for data
+      const local = {};
+      for (let i = 0; i < SECTION_ORDER.length; i++) {
+        const sKey = SECTION_ORDER[i];
+        if (sKey === 'GAME') continue;
+        const rawSection = data[sKey] || {};
+        local[sKey] = {};
+        const settings = CURATED_SECTIONS[sKey].settings;
+        for (let j = 0; j < settings.length; j++) {
+          const k = settings[j].key;
+          if (k in rawSection) {
+            local[sKey][k] = rawSection[k];
+          }
+        }
+      }
+      setLocalConfig(local);
+      setIsDirty(false);
     } catch (e) {
-      console.error("Failed to load config", e);
-      // Fallback for UI demonstration if API fails or is missing
-      const fallbackData = {
-          'APU': { 'apu': 'any', 'enable_xmp': true, 'debug': false },
-          'CPU': { 'cpu': 'any', 'break_on_unhandled_instruction': true },
-          'GPU': { 'gpu': 'any', 'vsync': true },
-          'Display': { 'fullscreen': false, 'resolution': '1280x720' }
-      };
-      setConfig(fallbackData);
+      console.error('Failed to load config:', e);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-  };
+  }, []);
 
-  // Ensure an active section is always selected when config loads
-  useEffect(() => {
-      if (!loading && config && Object.keys(config).length > 0 && !activeSection) {
-          const sections = Object.keys(config).filter(key => 
-            config[key] && typeof config[key] === 'object' && !Array.isArray(config[key])
-          ).sort();
+  useEffect(() => { loadConfig(gameConfigPath); }, [loadConfig, gameConfigPath]);
 
-          if (sections.includes('APU')) {
-              setActiveSection('APU');
-          } else if (sections.length > 0) {
-              setActiveSection(sections[0]);
-          }
-      }
-  }, [config, loading, activeSection]);
-
-  const handleOpenGameConfig = async () => {
-      if (preview) return;
-      try {
-          const selected = await open({
-              multiple: false,
-              filters: [{
-                  name: 'Xenia Config',
-                  extensions: ['config.toml', 'toml']
-              }]
-          });
-          
-          if (selected) {
-              console.log("Selected config file:", selected);
-              loadConfig(selected);
-          }
-      } catch (err) {
-          console.error("Failed to open file dialog", err);
-          // Fallback for browser mode (non-Tauri) or error
-          alert("Could not open file picker. Ensure you are running in Tauri or check console.");
-      }
-  };
-
-  const handleSave = async () => {
-    if (preview) return;
+  // ── Save ──
+  const handleSave = useCallback(async () => {
+    if (!isDirty) return;
+    setSaveStatus('saving');
     try {
-      await coreConfigApi.update(config, gameConfigPath || null);
-      playSound('success');
-      setIsEditing(false);
+      await coreConfigApi.update(localConfig, gameConfigPath);
+      setSaveStatus('saved');
+      setIsDirty(false);
+      playSound('panelUnfold');
+      setTimeout(() => setSaveStatus(''), 2500);
     } catch (e) {
-      console.error("Failed to save", e);
-      playSound('error');
+      console.error('Save failed:', e);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(''), 3000);
     }
-  };
+  }, [isDirty, localConfig, gameConfigPath]);
 
-  const handleSettingChange = (section, key, value) => {
-    if (preview) return;
-    if (!isEditing) return;
-    setConfig(prev => ({
+  // ── Change a setting ──
+  const handleChange = useCallback((section, key, value) => {
+    setLocalConfig(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [key]: value
-      }
+      [section]: { ...prev[section], [key]: value },
     }));
-  };
+    setIsDirty(true);
+  }, []);
 
-  // Interaction Handlers
-  const handleSectionHover = (section) => {
-    if (!isEditing) {
-      setActiveSection(section);
-      if (!preview) playSound('move');
-    }
-  };
-
-  const handleSelect = () => {
-    if (preview) return; // In preview mode, clicks do nothing (handled by parent to open modal)
-    if (!isEditing) {
-      setIsEditing(true);
-      playSound('select');
-    }
-  };
-
-  // Gamepad handling
-  useGamepad({
-    onPress: (button) => {
-      if (preview) return; // No gamepad control in preview mode
-      if (button === 'A') handleSelect();
-      if (button === 'B') {
-          if (isEditing) {
-              setIsEditing(false);
-              playSound('back');
-          } else {
-              onBack(); // Let parent handle back
-          }
+  // ── Native Browser for Game Config ──
+  const handleBrowseGameConfig = async () => {
+    playSound('select');
+    try {
+      const result = await coreConfigApi.browse();
+      if (result && result.path) {
+        setGameConfigPath(result.path);
+        setGameName(result.filename.replace('.toml', '').toUpperCase());
+        playSound('panelUnfold');
       }
-      if (button === 'X') handleSave();
+    } catch (e) {
+      console.error('Native browser failed:', e);
+      // Fallback or error UI?
     }
-  });
+  };
 
-  if (loading) return <div style={{padding: '20px'}}>Loading...</div>;
+  const clearGameConfig = () => {
+    playSound('back');
+    setGameConfigPath(null);
+    setGameName('');
+  };
 
-  const sections = Object.keys(config).filter(key => 
-    config[key] && typeof config[key] === 'object' && !Array.isArray(config[key])
-  ).sort();
+  // ── Global save event from NXESettings X button ──
+  useEffect(() => {
+    const onGlobalSave = () => { if (isActive) handleSave(); };
+    window.addEventListener('dashboard-save-settings', onGlobalSave);
+    return () => window.removeEventListener('dashboard-save-settings', onGlobalSave);
+  }, [isActive, handleSave]);
+
+  // ── Keyboard nav ──
+  useEffect(() => {
+    if (!isActive) return;
+    const onKey = (e) => {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        handleSave();
+        return;
+      }
+      const idx = SECTION_ORDER.indexOf(activeSection);
+      if (e.key === 'ArrowUp') {
+        setActiveSection(SECTION_ORDER[idx > 0 ? idx - 1 : SECTION_ORDER.length - 1]);
+        playSound('focus');
+      } else if (e.key === 'ArrowDown') {
+        setActiveSection(SECTION_ORDER[idx < SECTION_ORDER.length - 1 ? idx + 1 : 0]);
+        playSound('focus');
+      } else if (e.key === 'x') {
+        handleSave();
+      } else if (e.key === 'y' && activeSection === 'GAME') {
+        handleBrowseGameConfig();
+      } else if (e.key === 'Escape' || e.key === 'Backspace') {
+        e.preventDefault();
+        onBack?.();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [isActive, activeSection, handleSave, onBack]);
+
+  // ── Gamepad ──
+  useEffect(() => {
+    if (!isActive) return;
+    const unsub = onGamepadPress((event) => {
+      if (event.type !== 'press') return;
+      const idx = SECTION_ORDER.indexOf(activeSection);
+      if (event.button === 'dpadUp' || event.button === 'stickUp') {
+        setActiveSection(SECTION_ORDER[idx > 0 ? idx - 1 : SECTION_ORDER.length - 1]);
+        playSound('focus');
+      } else if (event.button === 'dpadDown' || event.button === 'stickDown') {
+        setActiveSection(SECTION_ORDER[idx < SECTION_ORDER.length - 1 ? idx + 1 : 0]);
+        playSound('focus');
+      } else if (event.button === 'x') {
+        handleSave();
+      } else if (event.button === 'y' && activeSection === 'GAME') {
+        handleBrowseGameConfig();
+      } else if (event.button === 'b') {
+        onBack?.();
+      }
+    });
+    return unsub;
+  }, [isActive, activeSection, handleSave, onBack, onGamepadPress]);
+
+  if (loading) {
+    return (
+      <div className="core-settings-container">
+        <div className="cs-loading">Loading Xenia Canary Config…</div>
+      </div>
+    );
+  }
+
+  const sectionMeta = CURATED_SECTIONS[activeSection];
+  const sectionData = localConfig[activeSection] || {};
 
   return (
-    <div className={`core-settings-container ${preview ? 'preview-mode' : ''}`} style={preview ? { pointerEvents: 'none' } : {}}>
-      
+    <div className={`core-settings-container${preview ? ' preview-mode' : ''}`}>
       <div className="core-interface-wrapper">
-        {/* Header matches the screenshot text */}
+
+        {/* Page title */}
         {!preview && (
-        <div className="core-header-area" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-                <div className="core-title">
-                    {gameConfigPath ? 'Core Configuration: Game Settings' : 'Core Configuration'}
-                </div>
-                <div className="core-description">
-                    {gameConfigPath 
-                        ? `Editing configuration file: ${gameConfigPath}` 
-                        : 'Configure core system settings including emulator paths, game folders, and metadata sources.'
-                    }
-                </div>
-            </div>
-            <div style={{display: 'flex', gap: '10px'}}>
-                {gameConfigPath && (
-                    <button 
-                        onClick={() => loadConfig(null)} // Reset to global
-                        style={{
-                            background: 'transparent',
-                            border: '1px solid rgba(255,255,255,0.2)',
-                            color: '#aaa',
-                            padding: '8px 12px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px'
-                        }}
-                    >
-                        Back to Global
-                    </button>
-                )}
-                <button 
-                    onClick={handleOpenGameConfig}
-                    style={{
-                        background: 'rgba(255,255,255,0.1)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        color: '#fff',
-                        padding: '8px 12px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                    }}
-                >
-                    Load Game Config
-                </button>
-            </div>
-        </div>
+          <div className="cs-page-title">
+            {gameConfigPath ? `Applied for: ${gameName}` : 'Xenia Canary Config File'}
+          </div>
         )}
-        
-        {/* Removed Manual Modal code as we use File Picker now */}
-        
-        <div className="core-ui-box" style={preview ? { border: 'none', background: 'transparent' } : {}}>
-            {/* Sidebar */}
-            <div className="core-sidebar" style={preview ? { background: 'transparent', borderRight: '1px solid rgba(255,255,255,0.1)' } : {}}>
-            {sections.map(section => (
-                <div 
-                key={section}
-                className={`core-sidebar-item ${activeSection === section ? 'active' : ''}`}
-                onMouseEnter={() => handleSectionHover(section)}
-                onClick={handleSelect}
-                style={{ opacity: isEditing && activeSection !== section ? 0.5 : 1 }}
-                >
-                [ {section} ]
-                </div>
-            ))}
+
+        <div className="core-ui-box">
+          {/* Sidebar */}
+          <div className="core-sidebar">
+            <SidebarList
+              sections={SECTION_ORDER}
+              curated={CURATED_SECTIONS}
+              activeSection={activeSection}
+              onSelect={(key) => { setActiveSection(key); playSound('focus'); }}
+            />
+          </div>
+
+          {/* Content */}
+          <div className="core-content">
+            <div className="cs-section-header">
+              <span className="cs-section-title">{sectionMeta.label}</span>
+              <div className="cs-section-underline" />
             </div>
 
-            {/* Content */}
-            <div className="core-content">
-            {activeSection && (
-                <>
-                    <div className="core-section-header">{activeSection} Settings</div>
-                    
-                    {config[activeSection] && Object.entries(config[activeSection]).map(([key, value]) => (
-                        <div key={key} className="setting-row">
-                            <div className="setting-label">{key}</div>
-                            <div className="setting-control">
-                                {typeof value === 'boolean' ? (
-                                    <div 
-                                    className={`toggle-switch ${value ? 'on' : ''} disabled`}
-                                    onClick={() => !preview && handleSettingChange(activeSection, key, !value)}
-                                    >
-                                    <div className="toggle-handle" />
-                                    </div>
-                                ) : (
-                                    <input 
-                                    className="setting-input"
-                                    value={value}
-                                    disabled={true} // Always disabled in preview
-                                    onChange={(e) => {
-                                        let val = e.target.value;
-                                        if (!isNaN(val) && val.trim() !== '') {
-                                            if (!val.endsWith('.')) {
-                                                val = Number(val);
-                                            }
-                                        }
-                                        handleSettingChange(activeSection, key, val);
-                                    }}
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </>
+            {activeSection === 'GAME' ? (
+              <div className="cs-game-dashboard">
+                <div className="cs-game-status-box">
+                  <div className="cs-status-icon">
+                    {gameConfigPath ? <FileSearch size={48} color="#107C10" /> : <Globe size={48} color="#aaa" />}
+                  </div>
+                  <div className="cs-status-info">
+                    <h3>{gameConfigPath ? 'Game Customization Active' : 'Global Settings Active'}</h3>
+                    <p className="cs-path-text">{gameConfigPath || 'Using default Xenia core configuration.'}</p>
+                  </div>
+                </div>
+
+                <div className="cs-game-actions">
+                  <button className="cs-action-btn primary" onClick={handleBrowseGameConfig}>
+                    <FileSearch size={20} />
+                    <span>BROWSE FOLDERS</span>
+                  </button>
+
+                  {gameConfigPath && (
+                    <button className="cs-action-btn secondary" onClick={clearGameConfig}>
+                      <Globe size={20} />
+                      <span>RESET TO GLOBAL</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="cs-instructions">
+                  <p>Select a game-specific <strong>.toml</strong> file to apply custom overrides for just that title.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="cs-settings-list">
+                <SettingsList
+                  settings={sectionMeta.settings}
+                  data={sectionData}
+                  section={activeSection}
+                  onChange={handleChange}
+                />
+              </div>
             )}
-            </div>
+
+            {saveStatus !== '' && (
+              <div className={`cs-save-pill ${saveStatus}`}>
+                {saveStatus === 'saving' ? '💾 Saving…' : saveStatus === 'saved' ? '✓ Saved' : '✗ Save failed'}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Footer */}
+        {!preview && (
+          <div className="cs-footer">
+            <div className="cs-footer-item">
+              <div className="xbox-btn-circle green">A</div>
+              <span>Select</span>
+            </div>
+            <div className="cs-footer-item" onClick={onBack} style={{ cursor: 'pointer' }}>
+              <div className="xbox-btn-circle red">B</div>
+              <span>Back</span>
+            </div>
+            <div className="cs-footer-item" onClick={handleSave} style={{ cursor: 'pointer' }}>
+              <div className="xbox-btn-circle blue">X</div>
+              <span>{isDirty ? 'Save *' : 'Save'}</span>
+            </div>
+            {activeSection === 'GAME' && (
+              <div className="cs-footer-item" onClick={handleBrowseGameConfig} style={{ cursor: 'pointer' }}>
+                <div className="xbox-btn-circle yellow">Y</div>
+                <span>Browse Browser</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
+
+// ─── Sidebar list — extracted to break Babel plugin traversal ─────────────────
+function SidebarList({ sections, curated, activeSection, onSelect }) {
+  const items = [];
+  for (let i = 0; i < sections.length; i++) {
+    const key = sections[i];
+    items.push(
+      <div
+        key={key}
+        className={`core-sidebar-item${activeSection === key ? ' active' : ''}`}
+        onClick={() => onSelect(key)}
+      >
+        {'[ ' + curated[key].label + ' ]'}
+      </div>
+    );
+  }
+  return items;
+}
+
+// ─── Settings list — extracted to break Babel plugin traversal ────────────────
+function SettingsList({ settings, data, section, onChange }) {
+  const rows = [];
+  for (let i = 0; i < settings.length; i++) {
+    const item = settings[i];
+    const value = data[item.key];
+    if (value === undefined) continue;
+    rows.push(
+      <SettingRow
+        key={item.key}
+        label={item.label}
+        value={value}
+        type={item.type}
+        options={item.options}
+        onChange={(v) => onChange(section, item.key, v)}
+      />
+    );
+  }
+  return rows;
+}
+
+function SettingRow({ label, value, type, options, onChange }) {
+  let control;
+
+  if (type === 'bool') {
+    // Boolean is now handled by select in config, but keeping this for safety
+    // Actually user said "everything as a drop-down bar"
+    const optionEls = [
+      React.createElement('option', { key: 'true', value: 'true' }, 'Enabled'),
+      React.createElement('option', { key: 'false', value: 'false' }, 'Disabled')
+    ];
+    control = React.createElement(
+      'select',
+      {
+        className: 'setting-input setting-select',
+        value: String(value),
+        onChange: (e) => onChange(e.target.value === 'true'),
+      },
+      ...optionEls
+    );
+  } else {
+    // Use select for EVERYTHING else as requested
+    const optionEls = (options || []).map((o) => {
+      let label = o;
+      if (o === '') label = '(default)';
+      if (o === 0 && label !== '0') label = 'Off / Default';
+      if (o === true) label = 'Enabled';
+      if (o === false) label = 'Disabled';
+
+      return React.createElement('option', { key: String(o), value: String(o) }, String(label))
+    });
+
+    control = React.createElement(
+      'select',
+      {
+        className: 'setting-input setting-select',
+        value: String(value !== undefined ? value : ''),
+        onChange: (e) => {
+          let val = e.target.value;
+          // Convert types back
+          if (val === 'true') val = true;
+          else if (val === 'false') val = false;
+          else if (!isNaN(val) && val !== '') val = Number(val);
+          onChange(val);
+        },
+      },
+      ...optionEls
+    );
+  }
+
+  return React.createElement(
+    'div',
+    { className: 'setting-row' },
+    React.createElement('span', { className: 'setting-label' }, label),
+    React.createElement('div', { className: 'setting-control' }, control)
+  );
+}
+
 export default CoreSettings;
+

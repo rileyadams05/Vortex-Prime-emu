@@ -17,7 +17,7 @@ class XeniaAPITester:
         headers = {'Content-Type': 'application/json'}
 
         self.tests_run += 1
-        print(f"\n🔍 Testing {name}...")
+        print(f"\n- Testing {name}...")
         
         try:
             if method == 'GET':
@@ -34,25 +34,25 @@ class XeniaAPITester:
                 for header_name, expected_value in check_headers.items():
                     actual_value = response.headers.get(header_name)
                     if actual_value != expected_value:
-                        print(f"❌ Header check failed - {header_name}: expected '{expected_value}', got '{actual_value}'")
+                        print(f"FAIL - Header check failed - {header_name}: expected '{expected_value}', got '{actual_value}'")
                         header_success = False
 
             success = status_success and header_success
             
             if success:
                 self.tests_passed += 1
-                print(f"✅ Passed - Status: {response.status_code}")
+                print(f"PASS - Status: {response.status_code}")
                 if check_headers:
                     print(f"   Headers: {check_headers}")
             else:
-                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
+                print(f"FAIL - Expected {expected_status}, got {response.status_code}")
                 if check_headers and not header_success:
                     print(f"   Header check failed")
 
             return success, response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
 
         except Exception as e:
-            print(f"❌ Failed - Error: {str(e)}")
+            print(f"FAIL - Error: {str(e)}")
             return False, {}
 
     def test_gamepad_permissions_policy(self):
@@ -136,10 +136,15 @@ class XeniaAPITester:
         return success
 
 def main():
-    print("🎮 Testing Xenia Dashboard Backend APIs...")
+    # Determine base URL
+    base_url = "http://localhost:3001"
+    if len(sys.argv) > 1:
+        base_url = sys.argv[1]
+    
+    print(f"Testing {base_url} Backend APIs...")
     print("=" * 50)
     
-    tester = XeniaAPITester()
+    tester = XeniaAPITester(base_url=base_url)
     
     # Run tests
     tests = [
@@ -155,18 +160,18 @@ def main():
         try:
             test_func()
         except Exception as e:
-            print(f"❌ Test failed with exception: {str(e)}")
+            print(f"FAIL - Test failed with exception: {str(e)}")
             tester.tests_run += 1
 
     # Print results
     print("\n" + "=" * 50)
-    print(f"📊 Backend API Tests: {tester.tests_passed}/{tester.tests_run} passed")
+    print(f"Backend API Tests: {tester.tests_passed}/{tester.tests_run} passed")
     
     if tester.tests_passed == tester.tests_run:
-        print("🎉 All backend tests passed!")
+        print("SUCCESS - All backend tests passed!")
         return 0
     else:
-        print("⚠️  Some backend tests failed")
+        print("WARN - Some backend tests failed")
         return 1
 
 if __name__ == "__main__":

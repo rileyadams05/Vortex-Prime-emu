@@ -4,3 +4,9 @@ target/
 bin/
 obj/
 *.log
+
+# Ignore massive bundled binaries and dependencies (GitHub 100MB limit)
+runtime/
+Internal/Engine/Xenia/
+src-tauri/target/
+src-tauri/resources/xenia/

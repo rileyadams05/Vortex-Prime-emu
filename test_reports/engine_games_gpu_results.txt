@@ -1,0 +1,88 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.0, pytest-9.0.2, pluggy-1.6.0 -- C:\Program Files\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: M:\my project\my-emu
+plugins: anyio-4.12.1, langsmith-0.7.9
+collecting ... collected 11 items
+
+backend/tests/test_engine_games_gpu.py::TestEngineAPI::test_engine_status_returns_json FAILED [  9%]
+backend/tests/test_engine_games_gpu.py::TestEngineAPI::test_engine_status_fields_types FAILED [ 18%]
+backend/tests/test_engine_games_gpu.py::TestEngineAPI::test_engine_migrate_missing_source_returns_error FAILED [ 27%]
+backend/tests/test_engine_games_gpu.py::TestGamesScanAPI::test_games_list_returns_json FAILED [ 36%]
+backend/tests/test_engine_games_gpu.py::TestGamesScanAPI::test_games_scan_returns_list FAILED [ 45%]
+backend/tests/test_engine_games_gpu.py::TestGamesScanAPI::test_games_scan_structure_when_games_found FAILED [ 54%]
+backend/tests/test_engine_games_gpu.py::TestGamesScanAPI::test_games_launch_rejects_if_xenia_running FAILED [ 63%]
+backend/tests/test_engine_games_gpu.py::TestGPUProfileAPI::test_gpu_detect_returns_vendor FAILED [ 72%]
+backend/tests/test_engine_games_gpu.py::TestGPUProfileAPI::test_gpu_detect_profile_structure FAILED [ 81%]
+backend/tests/test_engine_games_gpu.py::TestGPUProfileAPI::test_gpu_apply_profile_ok FAILED [ 90%]
+backend/tests/test_engine_games_gpu.py::TestGPUProfileAPI::test_gpu_apply_profile_with_vendor_override FAILED [100%]
+
+================================== FAILURES ===================================
+________________ TestEngineAPI.test_engine_status_returns_json ________________
+backend\tests\test_engine_games_gpu.py:19: in test_engine_status_returns_json
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404]>.status_code
+________________ TestEngineAPI.test_engine_status_fields_types ________________
+backend\tests\test_engine_games_gpu.py:33: in test_engine_status_fields_types
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404]>.status_code
+_______ TestEngineAPI.test_engine_migrate_missing_source_returns_error ________
+backend\tests\test_engine_games_gpu.py:48: in test_engine_migrate_missing_source_returns_error
+    assert response.status_code == 500
+E   assert 404 == 500
+E    +  where 404 = <Response [404]>.status_code
+________________ TestGamesScanAPI.test_games_list_returns_json ________________
+backend\tests\test_engine_games_gpu.py:59: in test_games_list_returns_json
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404]>.status_code
+________________ TestGamesScanAPI.test_games_scan_returns_list ________________
+backend\tests\test_engine_games_gpu.py:72: in test_games_scan_returns_list
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404]>.status_code
+_________ TestGamesScanAPI.test_games_scan_structure_when_games_found _________
+backend\tests\test_engine_games_gpu.py:88: in test_games_scan_structure_when_games_found
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404]>.status_code
+_________ TestGamesScanAPI.test_games_launch_rejects_if_xenia_running _________
+backend\tests\test_engine_games_gpu.py:112: in test_games_launch_rejects_if_xenia_running
+    assert response.status_code in (409, 500)
+E   assert 404 in (409, 500)
+E    +  where 404 = <Response [404]>.status_code
+______________ TestGPUProfileAPI.test_gpu_detect_returns_vendor _______________
+backend\tests\test_engine_games_gpu.py:123: in test_gpu_detect_returns_vendor
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404]>.status_code
+_____________ TestGPUProfileAPI.test_gpu_detect_profile_structure _____________
+backend\tests\test_engine_games_gpu.py:133: in test_gpu_detect_profile_structure
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404]>.status_code
+_________________ TestGPUProfileAPI.test_gpu_apply_profile_ok _________________
+backend\tests\test_engine_games_gpu.py:148: in test_gpu_apply_profile_ok
+    assert response.status_code in (200, 500)
+E   assert 404 in (200, 500)
+E    +  where 404 = <Response [404]>.status_code
+________ TestGPUProfileAPI.test_gpu_apply_profile_with_vendor_override ________
+backend\tests\test_engine_games_gpu.py:164: in test_gpu_apply_profile_with_vendor_override
+    assert response.status_code in (200, 500)
+E   assert 404 in (200, 500)
+E    +  where 404 = <Response [404]>.status_code
+=========================== short test summary info ===========================
+FAILED backend/tests/test_engine_games_gpu.py::TestEngineAPI::test_engine_status_returns_json
+FAILED backend/tests/test_engine_games_gpu.py::TestEngineAPI::test_engine_status_fields_types
+FAILED backend/tests/test_engine_games_gpu.py::TestEngineAPI::test_engine_migrate_missing_source_returns_error
+FAILED backend/tests/test_engine_games_gpu.py::TestGamesScanAPI::test_games_list_returns_json
+FAILED backend/tests/test_engine_games_gpu.py::TestGamesScanAPI::test_games_scan_returns_list
+FAILED backend/tests/test_engine_games_gpu.py::TestGamesScanAPI::test_games_scan_structure_when_games_found
+FAILED backend/tests/test_engine_games_gpu.py::TestGamesScanAPI::test_games_launch_rejects_if_xenia_running
+FAILED backend/tests/test_engine_games_gpu.py::TestGPUProfileAPI::test_gpu_detect_returns_vendor
+FAILED backend/tests/test_engine_games_gpu.py::TestGPUProfileAPI::test_gpu_detect_profile_structure
+FAILED backend/tests/test_engine_games_gpu.py::TestGPUProfileAPI::test_gpu_apply_profile_ok
+FAILED backend/tests/test_engine_games_gpu.py::TestGPUProfileAPI::test_gpu_apply_profile_with_vendor_override
+============================= 11 failed in 22.63s =============================

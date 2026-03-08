@@ -8,7 +8,8 @@
     "build": "tauri build",
     "tauri": "tauri",
     "frontend:dev": "cd frontend && npm start",
-    "frontend:build": "cd frontend && npm run build"
+    "frontend:build": "cd frontend && npm run build",
+    "postinstall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\provision_java.ps1"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0"

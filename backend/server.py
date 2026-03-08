@@ -1,4 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.staticfiles import StaticFiles
+
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -12,11 +14,15 @@ from datetime import datetime, timezone
 import subprocess
 import platform
 import shutil
+import tkinter as tk
+from tkinter import filedialog
 from xbox_service import get_xbox_profile, get_xbox_achievements, exchange_msal_token_for_profile
 import theme_service
 import steamgriddb_service
 import vibe_design_service
-import gpu_config_service  # New service for GPU configuration
+import gpu_config_service  # GPU detection, hardware profiles, Write-Before-Flight launch
+import engine_service      # Engine hot-swap (Replacement Guard)
+import games_service       # Game scanning, x360db lookup, integrity checks
 # import audio_service # Removed in favor of windows_audio
 # import windows_audio # Removed in favor of Rust cpvc
 # import powershell_audio # Robust fallback - Removed in favor of SoundVolumeView
@@ -26,6 +32,7 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 ASSETS_DIR = ROOT_DIR.parent / 'assets'
+FRONTEND_ASSETS_DIR = ROOT_DIR.parent / 'frontend' / 'public' / 'assets'
 # Correct paths as per user requirement (Start ups/Play vs startup/play)
 STARTUP_PLAY_DIR = ASSETS_DIR / 'Start ups' / 'Play'
 STARTUP_DISABLED_DIR = ASSETS_DIR / 'Start ups' / 'Disable'
@@ -49,6 +56,20 @@ app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Serve the assets directory at /assets
+# Mount specific frontend assets first so they take precedence for shared paths
+app.mount("/assets/audio", StaticFiles(directory=str(FRONTEND_ASSETS_DIR / 'audio')), name="audio")
+app.mount("/assets/for-app", StaticFiles(directory=str(FRONTEND_ASSETS_DIR / 'for-app')), name="for-app")
+app.mount("/assets/blades", StaticFiles(directory=str(FRONTEND_ASSETS_DIR / 'blades')), name="blades")
+
+# Main backend-managed assets
+app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
+
+# Also serve wallpapers specifically if needed (optional but good for compatibility)
+app.mount("/wallpapers", StaticFiles(directory=str(ASSETS_DIR / 'wallpapers')), name="wallpapers")
+app.mount("/startup", StaticFiles(directory=str(ASSETS_DIR / 'Start ups')), name="startup")
+
 
 
 # Define Models
@@ -301,6 +322,35 @@ class GameConfigRequest(BaseModel):
     game_id: str  # Unique game identifier OR absolute file path
     settings: dict
 
+class GameLaunchRequest(BaseModel):
+    game_path: str
+    title_id: str = ""
+    gpu_vendor: str = None  # Optional override; auto-detected if not provided
+
+class CreateFolderRequest(BaseModel):
+    path: str
+
+@api_router.post("/games/create-folder")
+async def create_game_folder(request: CreateFolderRequest):
+    """Create a new folder on disk."""
+    try:
+        folder = Path(request.path)
+        folder.mkdir(parents=True, exist_ok=True)
+        return {"status": "success", "path": str(folder)}
+    except Exception as e:
+        logger.error(f"Error creating folder: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class GameScanRequest(BaseModel):
+    folder: str = ""  # Defaults to [Project Root]/Games/
+
+class EngineMigrateRequest(BaseModel):
+    source_path: str = ""  # Optional override; defaults to M:\\my project\\For xenia\\dashbroad\\xenia-canary
+    target_path: str = ""  # Optional override
+
+class GpuProfileRequest(BaseModel):
+    vendor: str = None  # Optional override; auto-detected if not provided
+
 @api_router.post("/config/game")
 async def update_game_config(request: GameConfigRequest):
     """Update game-specific configuration."""
@@ -319,6 +369,180 @@ async def get_game_config(path: str):
         return gpu_config_service.get_core_config(config_path=path)
     except Exception as e:
         logger.error(f"Error reading game config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/config/core")
+async def get_core_config():
+    """Get the global Xenia core configuration."""
+    try:
+        return gpu_config_service.get_core_config()
+    except Exception as e:
+        logger.error(f"Error reading core config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/config/core")
+async def update_core_config(request: CoreConfigRequest):
+    """Update global core configuration."""
+    try:
+        gpu_config_service.update_core_config(request.settings)
+        return {"status": "success", "message": "Updated global core config"}
+    except Exception as e:
+        logger.error(f"Error updating core config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/config/browse")
+async def browse_config_file():
+    """Open a native Windows file explorer to select a .toml config."""
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        # Default to the Games directory if it exists
+        initial_dir = str(ROOT_DIR.parent / 'Games')
+        if not os.path.exists(initial_dir):
+            initial_dir = None
+            
+        file_path = filedialog.askopenfilename(
+            parent=root,
+            title="Select Xenia Game Config (.toml)",
+            initialdir=initial_dir,
+            filetypes=[("TOML files", "*.toml"), ("All files", "*.*")]
+        )
+        
+        root.destroy()
+        
+        if file_path:
+            return {"path": file_path, "filename": os.path.basename(file_path)}
+        return {"path": None}
+    except Exception as e:
+        logger.error(f"File browse error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/games/browse-folder")
+async def browse_games_folder():
+    """Open a native Windows directory picker."""
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        folder_path = filedialog.askdirectory(
+            parent=root,
+            title="Select Xbox 360 Games Folder"
+        )
+        
+        root.destroy()
+        
+        if folder_path:
+            # Normalize path for Windows
+            return {"path": folder_path.replace('/', '\\')}
+        return {"path": None}
+    except Exception as e:
+        logger.error(f"Folder browse error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── Engine Hot-Swap API ──────────────────────────────────────────────────────
+
+@api_router.get("/engine/status")
+async def engine_status():
+    """Get the current status of the internal Xenia engine."""
+    return engine_service.get_engine_status()
+
+@api_router.post("/engine/migrate")
+async def engine_migrate(request: EngineMigrateRequest):
+    """
+    Migrate the Xenia engine from the source M:\ drive path to the project's
+    internal storage (Replacement Guard: wipe old, move new, ensure portable.txt).
+    """
+    try:
+        result = engine_service.migrate_engine(
+            source_path=request.source_path or None,
+            target_path=request.target_path or None,
+        )
+        if not result["success"]:
+            raise HTTPException(status_code=500, detail=result["message"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Engine migration error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── Games Scanning API ───────────────────────────────────────────────────────
+
+@api_router.post("/games/scan")
+async def scan_games(request: GameScanRequest):
+    """
+    Scan a folder for Xbox 360 games. Identifies Title IDs, fetches cover art,
+    and checks integrity. Results are cached server-side.
+    """
+    try:
+        folder = request.folder.strip() or None
+        games = await games_service.scan_games_folder(folder)
+        return {"games": games, "count": len(games)}
+    except Exception as e:
+        logger.error(f"Games scan error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/games/list")
+async def list_games():
+    """Return the cached game list from the last scan (auto-scans if empty)."""
+    return {"games": await games_service.get_games()}
+
+@api_router.post("/games/launch")
+async def launch_game(request: GameLaunchRequest):
+    """
+    Write-Before-Flight game launch:
+    1. Detect GPU, write hardware profile to TOML (handle closed before launch)
+    2. Apply game-specific patches
+    3. Launch xenia_canary.exe
+    """
+    try:
+        result = gpu_config_service.launch_game_safe(
+            game_path=request.game_path,
+            title_id=request.title_id or None,
+            gpu_vendor=request.gpu_vendor or None,
+        )
+        if not result["success"]:
+            # 409 if xenia already running, 500 for other errors
+            status_code = 409 if "already running" in result.get("message", "") else 500
+            raise HTTPException(status_code=status_code, detail=result["message"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Game launch error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── GPU Hardware Profile API ─────────────────────────────────────────────────
+
+@api_router.get("/gpu/detect")
+async def gpu_detect():
+    """Detect the installed GPU vendor and return the recommended profile."""
+    try:
+        vendor = gpu_config_service.detect_gpu_vendor()
+        profile = gpu_config_service.get_hardware_profile(vendor)
+        return {"vendor": vendor, "profile": profile}
+    except Exception as e:
+        logger.error(f"GPU detection error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/gpu/apply-profile")
+async def gpu_apply_profile(request: GpuProfileRequest):
+    """Apply the hardware GPU profile (NVIDIA=d3d12 / AMD=vulkan) to the TOML config."""
+    try:
+        result = gpu_config_service.apply_hardware_profile(vendor=request.vendor or None)
+        if not result["success"]:
+            raise HTTPException(status_code=500, detail=result.get("error", "Failed to apply profile"))
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"GPU profile apply error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -390,6 +614,19 @@ async def vibe_design_generate(req: VibeDesignRequest):
     except Exception as e:
         logger.error(f"Vibe-Design error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+import app_settings_service
+
+# App Settings API
+@api_router.get("/settings")
+async def get_app_settings():
+    """Get general dashboard settings."""
+    return app_settings_service.get_settings()
+
+@api_router.post("/settings")
+async def save_app_settings(settings: dict):
+    """Save general dashboard settings."""
+    return app_settings_service.save_settings(settings)
 
 # SteamGridDB Asset Engine API
 @api_router.get("/steamgriddb/search/{term}")
@@ -472,6 +709,30 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Server started")
+    
+    # Java Runtime Integration (Mission Parameter)
+    # Ensure subprocesses use the bundled OpenJDK if present
+    java_bin = ROOT_DIR.parent / 'runtime' / 'java_env' / 'bin'
+    if java_bin.exists():
+        os.environ["PATH"] = f"{java_bin}{os.pathsep}{os.environ['PATH']}"
+        java_exe = java_bin / 'java.exe'
+        if java_exe.exists():
+            try:
+                # Log version to confirm it works
+                v_res = subprocess.run([str(java_exe), "-version"], capture_output=True, text=True, timeout=5)
+                logger.info(f"Bundled Java identified: {v_res.stderr.strip().splitlines()[0]}")
+            except Exception as e:
+                logger.warning(f"Bundled Java found but failed to execute: {e}")
+
+    # Automate internal engine migration (Integration Guard)
+    try:
+        import engine_service
+        status = engine_service.get_engine_status()
+        if not status["exe_found"] and status["source_available"]:
+            logger.info("Internal engine missing but found at source. Automating migration...")
+            engine_service.migrate_engine()
+    except Exception as e:
+        logger.error(f"Failed to automate engine migration: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

@@ -4,14 +4,14 @@ import playSound from '../utils/soundManager';
 import { countries, getEmojiFlag } from 'countries-list';
 import '../styles/LanguageSettings.css';
 
-const LanguageSettings = ({ isActive, onBack, onSelect }) => {
+const LanguageSettings = ({ isActive, onBack, onSelect, preview = false }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const listRef = useRef(null);
   const inputRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
 
-  // Convert countries object to array and sort by name
+  // 1. Core Data Memoization
   const allCountries = useMemo(() => {
     return Object.entries(countries).map(([code, data]) => ({
       code,
@@ -24,19 +24,51 @@ const LanguageSettings = ({ isActive, onBack, onSelect }) => {
     });
   }, []);
 
-  // Filter countries based on search query
   const filteredCountries = useMemo(() => {
     if (!searchQuery) return allCountries;
-    
+
     const query = searchQuery.toLowerCase();
-    return allCountries.filter(country => 
-      country.name.toLowerCase().includes(query) || 
-      country.native.toLowerCase().includes(query) || 
+    return allCountries.filter(country =>
+      country.name.toLowerCase().includes(query) ||
+      country.native.toLowerCase().includes(query) ||
       country.code.toLowerCase().includes(query)
     );
   }, [allCountries, searchQuery]);
 
-  // Reset selection when filter changes
+  // 2. Effects & Listeners
+  useEffect(() => {
+    const loadCountry = async () => {
+      try {
+        const { settingsApi } = await import('../services/apiServices');
+        const saved = await settingsApi.get();
+        if (saved && saved.country) {
+          const idx = filteredCountries.findIndex(c => c.code === saved.country);
+          if (idx !== -1) setSelectedIndex(idx);
+        }
+      } catch (e) {
+        console.error("LanguageSettings: Failed to load country:", e);
+      }
+    };
+    loadCountry();
+  }, [filteredCountries]);
+
+  useEffect(() => {
+    const handleGlobalSave = async () => {
+      try {
+        const { settingsApi } = await import('../services/apiServices');
+        const current = filteredCountries[selectedIndex];
+        if (current) {
+          await settingsApi.update({ country: current.code });
+        }
+      } catch (e) {
+        console.error("LanguageSettings: Failed to save country:", e);
+      }
+    };
+
+    window.addEventListener('dashboard-save-settings', handleGlobalSave);
+    return () => window.removeEventListener('dashboard-save-settings', handleGlobalSave);
+  }, [selectedIndex, filteredCountries]);
+
   useEffect(() => {
     setSelectedIndex(0);
   }, [searchQuery]);
@@ -50,18 +82,18 @@ const LanguageSettings = ({ isActive, onBack, onSelect }) => {
       if (inputRef.current && document.activeElement === inputRef.current) {
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
           // Fall through to navigation logic
-          e.preventDefault(); 
+          e.preventDefault();
         } else if (e.key === 'Escape') {
           inputRef.current.blur();
           return;
         } else {
           // Let standard input events happen
-          return; 
+          return;
         }
       }
 
       e.stopPropagation();
-      
+
       switch (e.key) {
         case 'ArrowUp':
           playSound('focus');
@@ -82,8 +114,8 @@ const LanguageSettings = ({ isActive, onBack, onSelect }) => {
           // If search has text, backspace deletes it (handled by input default if focused)
           // If input is NOT focused, or is empty, Backspace goes back
           if (document.activeElement !== inputRef.current) {
-             playSound('back');
-             if (onBack) onBack();
+            playSound('back');
+            if (onBack) onBack();
           }
           break;
         default:
@@ -135,20 +167,22 @@ const LanguageSettings = ({ isActive, onBack, onSelect }) => {
   }, [selectedIndex]);
 
   return (
-    <div className="language-settings-container">
-      <div className="language-header">
-        <h2 className="nxe-content-title" style={{ margin: 0 }}>Select Country</h2>
-        <input 
-          ref={inputRef}
-          type="text" 
-          className="language-search-input"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          autoFocus
-        />
-      </div>
-      
+    <div className={`language-settings-container ${preview ? 'preview-mode' : ''}`} style={{ pointerEvents: (!isActive && preview) ? 'none' : 'auto', opacity: (!isActive && preview) ? 0.8 : 1 }}>
+      {!preview && (
+        <div className="language-header">
+          <h2 className="nxe-content-title" style={{ margin: 0 }}>Select Country</h2>
+          <input
+            ref={inputRef}
+            type="text"
+            className="language-search-input"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+          />
+        </div>
+      )}
+
       <div className="language-list" ref={listRef}>
         {filteredCountries.length > 0 ? (
           filteredCountries.map((country, index) => (

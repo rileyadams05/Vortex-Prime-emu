@@ -1,66 +1,66 @@
 {
-    "productName":  "Vortex Prime Emu",
-    "version":  "1.0.0",
-    "identifier":  "com.vortex.prime.emu",
-    "build":  {
-                  "beforeDevCommand":  "cd frontend \u0026\u0026 npm start",
-                  "beforeBuildCommand":  "cd frontend \u0026\u0026 npm run build",
-                  "devUrl":  "http://localhost:3005",
-                  "frontendDist":  "../frontend/build"
-              },
-    "app":  {
-                "windows":  [
-                                {
-                                    "title":  "Vortex Prime Emu",
-                                    "width":  1280,
-                                    "height":  720,
-                                    "resizable":  true,
-                                    "fullscreen":  false,
-                                    "decorations":  true,
-                                    "alwaysOnTop":  false,
-                                    "center":  true,
-                                    "minWidth":  1024,
-                                    "minHeight":  600,
-                                    "transparent":  false,
-                                    "skipTaskbar":  false
-                                }
-                            ],
-                "security":  {
-                                 "csp":  "default-src \u0027self\u0027; script-src \u0027self\u0027 \u0027unsafe-inline\u0027; style-src \u0027self\u0027 \u0027unsafe-inline\u0027; img-src \u0027self\u0027 data: https:; connect-src \u0027self\u0027 https://xbl.io https://login.live.com https://customer-assets.emergentagent.com"
-                             },
-                "trayIcon":  {
-                                 "iconPath": "../frontend/public/assets/App Icon/Windows.ico",
-                                 "iconAsTemplate":  true,
-                                 "menuOnLeftClick":  false
-                             }
-            },
-    "bundle":  {
-                   "active":  true,
-                   "targets":  [
-                                   "msi",
-                                   "nsis"
-                               ],
-                   "icon": ["../frontend/public/assets/App Icon/Windows.ico"],
-                   "resources":  [
-                                     "resources/**/*"
-                                 ],
-                   "externalBin":  [
-
-                                   ],
-                   "copyright":  "Copyright © 2025 Vortex Prime",
-                   "category":  "Game",
-                   "shortDescription":  "Xbox 360 Dashboard for Vortex Prime Emu",
-                   "longDescription":  "A professional Xbox 360-style dashboard interface for managing and launching Xbox 360 games via the Vortex Prime Emu.",
-                   "windows":  {
-                                   "certificateThumbprint":  null,
-                                   "digestAlgorithm":  "sha256",
-                                   "timestampUrl":  ""
-                               }
-               },
-    "plugins":  {
-                    "fs":  {
-                               "requireLiteralLeadingDot":  false
-                           }
-                }
+    "productName": "Vortex Prime Emu",
+    "version": "1.0.0",
+    "identifier": "com.vortex.prime.emu",
+    "build": {
+        "beforeDevCommand": "cd frontend \u0026\u0026 npm start",
+        "beforeBuildCommand": "cd frontend \u0026\u0026 npm run build",
+        "devUrl": "http://localhost:3005",
+        "frontendDist": "../frontend/build"
+    },
+    "app": {
+        "windows": [
+            {
+                "title": "Vortex Prime Emu",
+                "width": 1280,
+                "height": 720,
+                "resizable": true,
+                "fullscreen": false,
+                "decorations": true,
+                "alwaysOnTop": false,
+                "center": true,
+                "minWidth": 1024,
+                "minHeight": 600,
+                "transparent": false,
+                "skipTaskbar": false
+            }
+        ],
+        "security": {
+            "csp": "default-src \u0027self\u0027; script-src \u0027self\u0027 \u0027unsafe-inline\u0027; style-src \u0027self\u0027 \u0027unsafe-inline\u0027; img-src \u0027self\u0027 data: https:; connect-src \u0027self\u0027 https://xbl.io https://login.live.com https://customer-assets.emergentagent.com"
+        },
+        "trayIcon": {
+            "iconPath": "../frontend/public/assets/App Icon/Windows.ico",
+            "iconAsTemplate": true,
+            "menuOnLeftClick": false
+        }
+    },
+    "bundle": {
+        "active": true,
+        "targets": [
+            "msi",
+            "nsis"
+        ],
+        "icon": [
+            "../frontend/public/assets/App Icon/Windows.ico"
+        ],
+        "resources": [
+            "resources/**/*",
+            "../runtime/java_env/**/*"
+        ],
+        "externalBin": [],
+        "copyright": "Copyright © 2025 Vortex Prime",
+        "category": "Game",
+        "shortDescription": "Xbox 360 Dashboard for Vortex Prime Emu",
+        "longDescription": "A professional Xbox 360-style dashboard interface for managing and launching Xbox 360 games via the Vortex Prime Emu.",
+        "windows": {
+            "certificateThumbprint": null,
+            "digestAlgorithm": "sha256",
+            "timestampUrl": ""
+        }
+    },
+    "plugins": {
+        "fs": {
+            "requireLiteralLeadingDot": false
+        }
+    }
 }
-

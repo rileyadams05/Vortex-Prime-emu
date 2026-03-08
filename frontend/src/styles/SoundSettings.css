@@ -3,9 +3,17 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-  color: white;
-  font-family: "Segoe UI", sans-serif;
+  color: #ffffff;
   overflow: hidden;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 -1px 0 #000,
+    0 1px 0 #000,
+    -1px 0 0 #000,
+    1px 0 0 #000;
 }
 
 .sound-settings-header {
@@ -17,7 +25,6 @@
   font-size: 2rem;
   font-weight: 300;
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .sound-settings-body {
@@ -37,10 +44,11 @@
   overflow-y: auto;
   padding-right: 10px;
   /* Hide scrollbar for cleaner look */
-  scrollbar-width: none; 
+  scrollbar-width: none;
 }
+
 .sound-list-panel::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 .sound-list-item {
@@ -54,11 +62,12 @@
   cursor: pointer;
 }
 
+.sound-list-item:hover,
 .sound-list-item.active {
-  background: linear-gradient(180deg, #e6e6e6 0%, #a0a0a0 100%);
-  color: #333;
-  border-color: white;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  background: rgba(10, 10, 10, 0.8) !important;
+  color: #ffffff;
+  border: 4px solid #107C10 !important;
+  box-shadow: 0 0 16px rgba(16, 124, 16, 0.25);
   transform: scale(1.02);
   z-index: 10;
 }
@@ -85,14 +94,16 @@
   position: relative;
 }
 
+.sound-list-item:hover .xbox-slider-track,
 .sound-list-item.active .xbox-slider-track {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-color: #666;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .xbox-slider-fill {
   height: 100%;
-  background: linear-gradient(180deg, #9bf00b 0%, #4a8f05 100%); /* Glossy Green */
+  background: linear-gradient(180deg, #107C10 0%, #0A4D0A 100%);
+  /* Xbox Green */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: width 0.1s linear;
 }
@@ -110,10 +121,11 @@
   font-size: 0.9rem;
 }
 
+.sound-list-item:hover .sound-select-value,
 .sound-list-item.active .sound-select-value {
-    background-color: rgba(0,0,0,0.1);
-    color: #333;
-    font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  font-weight: bold;
 }
 
 
@@ -128,7 +140,8 @@
 }
 
 .sound-info-panel h3 {
-  color: #9bf00b; /* Xbox Green */
+  color: #107C10;
+  /* Xbox Green */
   margin-top: 0;
   margin-bottom: 10px;
   font-size: 1.4rem;
@@ -152,7 +165,8 @@
 
 .shortcut-label {
   font-weight: bold;
-  color: #ffcc00; /* Xbox Yellow */
+  color: #ffcc00;
+  /* Xbox Yellow */
   margin-left: 10px;
   font-size: 1.1rem;
 }
@@ -173,21 +187,32 @@
   font-weight: bold;
   font-size: 14px;
   color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.xbox-btn-circle.green { background: linear-gradient(135deg, #7dbc00, #4a8f05); }
-.xbox-btn-circle.red { background: linear-gradient(135deg, #ee3b3b, #b30000); }
-.xbox-btn-circle.yellow { background: linear-gradient(135deg, #fcd206, #dcb300); }
-.xbox-btn-circle.blue { background: linear-gradient(135deg, #009bf0, #005ea5); }
+.xbox-btn-circle.green {
+  background: linear-gradient(135deg, #107C10, #0A4D0A);
+}
+
+.xbox-btn-circle.red {
+  background: linear-gradient(135deg, #ee3b3b, #b30000);
+}
+
+.xbox-btn-circle.yellow {
+  background: linear-gradient(135deg, #fcd206, #dcb300);
+}
+
+.xbox-btn-circle.blue {
+  background: linear-gradient(135deg, #009bf0, #005ea5);
+}
 
 /* Footer */
 .sound-footer {
   display: flex;
   padding: 20px 60px;
   gap: 30px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
 }
 
 .footer-btn {
