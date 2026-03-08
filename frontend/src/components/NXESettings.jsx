@@ -15,6 +15,8 @@ const NXESettings = ({ isActive, onBack }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [activePanel, setActivePanel] = useState(null); // Default to null (Sidebar active)
   const [isSaving, setIsSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showExitPrompt, setShowExitPrompt] = useState(false);
   const [saveStatus, setSaveStatus] = useState(''); // 'saving', 'saved'
   const [countryCode, setCountryCode] = useState('AU');
   const listRef = useRef(null);
@@ -40,7 +42,7 @@ const NXESettings = ({ isActive, onBack }) => {
     { id: 'sunshine', label: 'Sunshine', icon: Moon, description: 'Configure Sunshine as a game streaming host on your PC. Allows remote devices to connect and stream games from this machine.' },
     { id: 'sound', label: 'Sound Settings', icon: Volume2, description: 'Configure UI sound effects, navigation sounds, and background music volume. Enable or disable individual audio channels.' },
     { id: 'country', label: 'Country', icon: Globe, description: 'Change the display country/region for the dashboard interface.', badge: countryCode },
-    { id: 'color', label: 'Theme Color', icon: Palette, description: 'Change the global accent color for the dashboard interface.' },
+    { id: 'color', label: 'Hover Color', icon: Palette, description: 'Change the global accent color for the dashboard interface.' },
   ];
 
   const handleSave = () => {
@@ -54,8 +56,28 @@ const NXESettings = ({ isActive, onBack }) => {
     // Sequence: Saving (2s) -> Ready to Restart
     setTimeout(() => {
       setSaveStatus('saved');
+      setIsDirty(false);
       playSound('panelUnfold'); // Success sound
     }, 2000);
+  };
+
+  const executeBackout = () => {
+    playSound('back');
+    onBack();
+  };
+
+  const attemptExit = () => {
+    if (activePanel) {
+      playSound('back');
+      setActivePanel(null);
+    } else {
+      if (isDirty) {
+        playSound('error');
+        setShowExitPrompt(true);
+      } else {
+        executeBackout();
+      }
+    }
   };
 
   const handleRestart = async () => {
@@ -77,8 +99,13 @@ const NXESettings = ({ isActive, onBack }) => {
 
   const handleDefault = () => {
     playSound('select');
-    if (activePanel === 'color' || settingsItems[selectedIndex].id === 'color') {
+    const currentId = activePanel || dynamicSettingsItems[selectedIndex].id;
+    if (currentId === 'color') {
       changeTheme('#107C10');
+      setIsDirty(true);
+    } else if (currentId === 'country') {
+      setCountryCode('AU');
+      setIsDirty(true);
     } else {
       console.log("Restored to default");
       // Could add a similar overlay for restore if desired
@@ -101,10 +128,23 @@ const NXESettings = ({ isActive, onBack }) => {
     if (!isActive || isSaving) return; // Block input during saving
 
     const handleKeyDown = (e) => {
-      // If saving, block all input
-      if (isSaving) {
+      // If saving or prompting to exit, block background keys
+      if (isSaving || showExitPrompt) {
         e.preventDefault();
         e.stopImmediatePropagation();
+        
+        // Handle Exit Prompt Keys using generic letters instead of just xbox keys
+        if (showExitPrompt) {
+          if (e.key === 'a' || e.key === 'A' || e.key === 'Enter') {
+            setShowExitPrompt(false);
+            handleSave();
+          } else if (e.key === 'b' || e.key === 'B' || e.key === 'Escape' || e.key === 'Backspace') {
+            setShowExitPrompt(false);
+            executeBackout();
+          } else if (e.key === 'x' || e.key === 'X') {
+            setShowExitPrompt(false);
+          }
+        }
         return;
       }
 
@@ -165,12 +205,7 @@ const NXESettings = ({ isActive, onBack }) => {
         case 'Backspace':
           e.preventDefault();
           e.stopImmediatePropagation(); // Prevent dashboard from seeing this
-          playSound('back');
-          if (activePanel) {
-            setActivePanel(null);
-          } else {
-            onBack();
-          }
+          attemptExit();
           break;
         default:
           break;
@@ -179,7 +214,7 @@ const NXESettings = ({ isActive, onBack }) => {
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [isActive, selectedIndex, onBack, activePanel, isSaving]);
+  }, [isActive, selectedIndex, onBack, activePanel, isSaving, isDirty, showExitPrompt]);
 
   const selectedRef = useRef(selectedIndex);
   const activePanelRef = useRef(activePanel);
@@ -187,7 +222,25 @@ const NXESettings = ({ isActive, onBack }) => {
   useEffect(() => { activePanelRef.current = activePanel; }, [activePanel]);
 
   useEffect(() => {
-    if (!isActive || isSaving) return;
+    if (!isActive || isSaving || showExitPrompt) {
+      if (showExitPrompt) {
+        const unsub = onGamepadPress((event) => {
+          if (event.type !== 'press') return;
+          if (event.button === 'a') {
+            setShowExitPrompt(false);
+            handleSave();
+          } else if (event.button === 'b') {
+            setShowExitPrompt(false);
+            executeBackout();
+          } else if (event.button === 'x' || event.button === 'y') {
+            setShowExitPrompt(false); // cancel
+          }
+        });
+        return unsub;
+      }
+      return;
+    }
+    
     const unsub = onGamepadPress((event) => {
       if (event.type !== 'press') return;
 
@@ -237,12 +290,11 @@ const NXESettings = ({ isActive, onBack }) => {
         }
       }
       if (event.button === 'b') {
-        playSound('back');
-        onBack();
+        attemptExit();
       }
     });
     return unsub;
-  }, [isActive, onGamepadPress, onBack, isSaving]);
+  }, [isActive, onGamepadPress, onBack, isSaving, isDirty, showExitPrompt]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -286,6 +338,42 @@ const NXESettings = ({ isActive, onBack }) => {
           </div>
         )}
 
+        {/* Exit Prompt Overlay */}
+        {showExitPrompt && (
+          <div className="nxe-loading-overlay animate-scale-in" style={{ zIndex: 9999 }}>
+            <div className="nxe-dialog-box" style={{ width: '400px' }}>
+              <AlertCircle size={48} color="#f44336" style={{ marginBottom: '15px' }} />
+              <div className="nxe-saving-text" style={{ fontSize: '20px', color: '#fff', marginBottom: '10px' }}>Unsaved Changes</div>
+              <div className="nxe-saving-subtext" style={{ fontSize: '14px', marginBottom: '25px', lineHeight: '1.4' }}>
+                You didn't save. Would you like to save your settings before exiting?
+              </div>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                <button
+                  className="nxe-confirm-btn"
+                  style={{ background: '#107c10', minWidth: '100px' }}
+                  onClick={() => { setShowExitPrompt(false); handleSave(); }}
+                >
+                  <span style={{ fontSize: '12px', opacity: 0.8, marginRight: '8px' }}>(A)</span> YES
+                </button>
+                <button
+                  className="nxe-confirm-btn"
+                  style={{ background: '#f44336', minWidth: '100px' }}
+                  onClick={() => { setShowExitPrompt(false); executeBackout(); }}
+                >
+                  <span style={{ fontSize: '12px', opacity: 0.8, marginRight: '8px' }}>(B)</span> NO
+                </button>
+                <button
+                  className="nxe-confirm-btn"
+                  style={{ background: '#555', minWidth: '100px' }}
+                  onClick={() => setShowExitPrompt(false)}
+                >
+                  <span style={{ fontSize: '12px', opacity: 0.8, marginRight: '8px' }}>(X)</span> CANCEL
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Left: Sidebar */}
         <div className="nxe-sidebar" ref={listRef}>
           {dynamicSettingsItems.map((item, index) => (
@@ -323,14 +411,22 @@ const NXESettings = ({ isActive, onBack }) => {
                   preview={true}
                   isActive={activePanel === 'country'}
                   onBack={() => { playSound('back'); setActivePanel(null); }}
-                  onSelect={(v) => setCountryCode(v.code)}
+                  onSelect={(v) => {
+                    setCountryCode(v.code);
+                    setIsDirty(true);
+                  }}
                 />
               )}
               {dynamicSettingsItems[selectedIndex].id === 'sound' && (
                 <SoundSettings preview={true} isActive={activePanel === 'sound'} onBack={() => { playSound('back'); setActivePanel(null); }} />
               )}
               {dynamicSettingsItems[selectedIndex].id === 'color' && (
-                <ColorSettings preview={true} isActive={activePanel === 'color'} onBack={() => { playSound('back'); setActivePanel(null); }} />
+                <ColorSettings 
+                  preview={true} 
+                  isActive={activePanel === 'color'} 
+                  onBack={() => { playSound('back'); setActivePanel(null); }}
+                  onColorChange={() => setIsDirty(true)}
+                />
               )}
               {dynamicSettingsItems[selectedIndex].id === 'sunshine' && (
                 <div style={{ color: '#aaa', padding: '20px', height: '100%' }}>Sunshine configuration coming soon.</div>
@@ -380,7 +476,7 @@ const NXESettings = ({ isActive, onBack }) => {
           <div className="xbox-btn-circle green">A</div>
           <span>Select</span>
         </div>
-        <div className="nxe-footer-item" onClick={() => { playSound('back'); setActivePanel(null); if (!activePanel) onBack(); }} style={{ cursor: 'pointer' }}>
+        <div className="nxe-footer-item" onClick={attemptExit} style={{ cursor: 'pointer' }}>
           <div className="xbox-btn-circle red">B</div>
           <span>{activePanel ? 'Back to Settings' : 'Back to Dashboard'}</span>
         </div>
