@@ -1091,8 +1091,8 @@ body {
 }
 
 .games-folder-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: #2e3018;
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .games-folder-btn.secondary {
@@ -1102,7 +1102,7 @@ body {
 }
 
 .games-folder-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #1e2010;
   border-color: rgba(255, 255, 255, 0.4);
   color: #fff;
 }
