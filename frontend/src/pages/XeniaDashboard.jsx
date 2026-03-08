@@ -896,7 +896,7 @@ const XeniaDashboard = () => {
       {allGames.length === 0 ? (
         <div {...getRootProps()} className={`games-empty-state ${isDragActive ? 'drag-active' : ''}`} data-testid="games-empty-state">
           <input {...getInputProps()} />
-          <h3 className="games-empty-title">No Games Found</h3>
+          <h3 className="games-empty-title">{isScanning ? 'Discovering Library...' : 'No Games Found'}</h3>
 
           <div className="game-path-main-asset" style={{ margin: '20px 0', position: 'relative' }}>
             <img
@@ -913,24 +913,22 @@ const XeniaDashboard = () => {
           </div>
 
           <p className="games-empty-desc" style={{ marginBottom: '30px' }}>
-            {isDragActive
-              ? "Drop your games folder here to begin scanning..."
-              : 'Set your game path to discover and identify your Xbox 360 library.'
+            {isScanning 
+              ? "Automatically pulling game data and patches..."
+              : isDragActive
+                ? "Drop your games here..."
+                : "Library discovery is fully automated using abgx360, x360db, and SteamGridDB. Just drop your games folder or wait for background discovery."
             }
           </p>
 
           <div className="empty-actions" style={{ display: 'flex', gap: '20px' }}>
-            <button className="games-folder-btn" data-testid="create-games-folder-btn" onClick={createGamesFolder}>
-              {gamesFolder ? 'Change Game Path' : 'Set Game Path'}
-            </button>
-            <button className="games-folder-btn secondary" onClick={handleManualCreateFolder}>
-              Create New Folder
-            </button>
+            {isScanning && (
+              <div className="loading-spinner" style={{
+                width: 30, height: 30, border: '3px solid rgba(255,255,255,0.1)',
+                borderTopColor: '#90C31D', borderRadius: '50%', animation: 'spin 1s linear infinite'
+              }} />
+            )}
           </div>
-
-          {gamesFolder && !isDragActive && (
-            <span className="games-folder-path" data-testid="games-folder-path">Selected Path: {gamesFolder}</span>
-          )}
         </div>
       ) : (
         <div className="games-loaded-content">
