@@ -361,17 +361,17 @@ const NXESettings = ({ isActive, onBack }) => {
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
                 <button
                   className="nxe-confirm-btn"
-                  style={{ background: '#007acc', color: '#ffffff', minWidth: '90px', padding: '6px 16px', fontSize: '13px', borderRadius: '2px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ background: '#007acc', color: '#ffffff', minWidth: '90px', padding: '6px 16px', fontSize: '14px', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={() => { setShowExitPrompt(false); handleSave(); }}
                 >
-                  <div className="xbox-btn-circle green" style={{ width: '18px', height: '18px', fontSize: '10px', marginRight: '8px', boxShadow: 'none' }}>A</div> Apply
+                  <div className="xbox-btn-circle green" style={{ marginRight: '8px', transform: 'scale(0.8)' }}>A</div> Apply
                 </button>
                 <button
                   className="nxe-confirm-btn"
-                  style={{ background: '#3e3e42', color: '#ffffff', minWidth: '90px', padding: '6px 16px', fontSize: '13px', borderRadius: '2px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ background: '#3e3e42', color: '#ffffff', minWidth: '90px', padding: '6px 16px', fontSize: '14px', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={() => { setShowExitPrompt(false); executeBackout(); }}
                 >
-                  <div className="xbox-btn-circle red" style={{ width: '18px', height: '18px', fontSize: '10px', marginRight: '8px', boxShadow: 'none' }}>B</div> Cancel
+                  <div className="xbox-btn-circle red" style={{ marginRight: '8px', transform: 'scale(0.8)' }}>B</div> Cancel
                 </button>
               </div>
             </div>
