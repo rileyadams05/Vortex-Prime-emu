@@ -919,12 +919,18 @@ const XeniaDashboard = () => {
             {isScanning 
               ? "Automatically pulling game data and patches..."
               : isDragActive
-                ? "Drop your games here..."
-                : "Library discovery is fully automated using abgx360, x360db, and SteamGridDB. Just drop your games folder or wait for background discovery."
+                ? "Drop your ROMs folder here to begin scanning..."
+                : 'Set your ROMs path to discover and identify your Xbox 360 library.'
             }
           </p>
 
           <div className="empty-actions" style={{ display: 'flex', gap: '20px' }}>
+            <button className="games-folder-btn" data-testid="create-games-folder-btn" onClick={createGamesFolder}>
+              {gamesFolder ? 'Change ROMs Path' : 'Set ROMs Path'}
+            </button>
+            <button className="games-folder-btn secondary" onClick={handleManualCreateFolder}>
+              Create New Folder
+            </button>
             {isScanning && (
               <div className="loading-spinner" style={{
                 width: 30, height: 30, border: '3px solid rgba(255,255,255,0.1)',
@@ -932,6 +938,10 @@ const XeniaDashboard = () => {
               }} />
             )}
           </div>
+
+          {gamesFolder && !isDragActive && (
+            <span className="games-folder-path" data-testid="games-folder-path">Selected Path: {gamesFolder}</span>
+          )}
         </div>
       ) : (
         <div className="games-loaded-content">
