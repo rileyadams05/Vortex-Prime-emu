@@ -1467,12 +1467,12 @@ body {
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
   /* Simple depth shadow, no glow */
   transform: translateZ(0);
-  animation: float-up-down 5s ease-in-out infinite;
+  animation: float-up-down 2.5s ease-in-out infinite;
 }
 
 /* Animate only the green X parts */
 .xbox-x-glow {
-  animation: inner-green-pulse 4s infinite ease-in-out;
+  animation: inner-green-pulse 2s infinite ease-in-out;
   transform-origin: center;
 }
 
@@ -1498,6 +1498,6 @@ body {
   }
 
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-8px);
   }
 }
