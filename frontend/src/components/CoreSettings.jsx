@@ -10,7 +10,7 @@ import '../styles/CoreSettings.css';
 const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
   const { onPress: onGamepadPress } = useGamepad();
   const [localConfig, setLocalConfig] = useState({});
-  const [activeSection, setActiveSection] = useState('GAME'); // Default to management view
+  const [activeSection, setActiveSection] = useState('GLOBAL'); // Default to global config
   const [loading, setLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
@@ -28,21 +28,21 @@ const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
         throw new Error('Empty config');
       }
 
-      // Filter to only curated keys — Skip 'GAME' section for data
+      // Map TOML sections based on the flat GLOBAL array
       const local = {};
-      for (let i = 0; i < SECTION_ORDER.length; i++) {
-        const sKey = SECTION_ORDER[i];
-        if (sKey === 'GAME') continue;
-        const rawSection = data[sKey] || {};
-        local[sKey] = {};
-        const settings = CURATED_SECTIONS[sKey].settings;
-        for (let j = 0; j < settings.length; j++) {
-          const k = settings[j].key;
-          if (k in rawSection) {
-            local[sKey][k] = rawSection[k];
-          }
+      const globalSettings = CURATED_SECTIONS['GLOBAL'].settings;
+      
+      for (let j = 0; j < globalSettings.length; j++) {
+        const { section, key } = globalSettings[j];
+        if (!local[section]) local[section] = {};
+        
+        const rawSection = data[section] || {};
+        if (key in rawSection) {
+          local[section][key] = rawSection[key];
         }
       }
+      
+      // Store under GLOBAL for the activeSection to access it directly
       setLocalConfig(local);
       setIsDirty(false);
     } catch (e) {
@@ -172,7 +172,7 @@ const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
   }
 
   const sectionMeta = CURATED_SECTIONS[activeSection];
-  const sectionData = localConfig[activeSection] || {};
+  const sectionData = localConfig;
 
   return (
     <div className={`core-settings-container${preview ? ' preview-mode' : ''}`}>
@@ -302,9 +302,30 @@ function SidebarList({ sections, curated, activeSection, onSelect }) {
 // ─── Settings list — extracted to break Babel plugin traversal ────────────────
 function SettingsList({ settings, data, section, onChange }) {
   const rows = [];
+  let currentGroup = null;
+
   for (let i = 0; i < settings.length; i++) {
     const item = settings[i];
-    const value = data[item.key];
+    
+    // Group headers for cleanly displaying the unified GLOBAL settings
+    if (item.section !== currentGroup) {
+      currentGroup = item.section;
+      rows.push(
+        React.createElement('div', { key: `hdr-${currentGroup}`, className: 'cs-group-header', style: {
+            marginTop: rows.length > 0 ? '20px' : '0',
+            marginBottom: '10px',
+            fontSize: '15px',
+            color: '#107C10',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '1.5px',
+            borderBottom: '1px solid rgba(16, 124, 16, 0.4)',
+            paddingBottom: '4px'
+        } }, currentGroup)
+      );
+    }
+
+    const value = data[item.section] ? data[item.section][item.key] : undefined;
     if (value === undefined) continue;
     rows.push(
       <SettingRow
@@ -313,7 +334,7 @@ function SettingsList({ settings, data, section, onChange }) {
         value={value}
         type={item.type}
         options={item.options}
-        onChange={(v) => onChange(section, item.key, v)}
+        onChange={(v) => onChange(item.section, item.key, v)}
       />
     );
   }
