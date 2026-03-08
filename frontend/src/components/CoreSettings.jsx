@@ -20,7 +20,7 @@ const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
   const [gameName, setGameName] = useState('');
 
   // ── Load config from backend ──
-  const loadConfig = useCallback(async (path = null) => {
+  const loadConfig = useCallback(async (path = null, currentSection = 'GLOBAL') => {
     setLoading(true);
     try {
       const data = await coreConfigApi.get(path);
@@ -28,12 +28,11 @@ const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
         throw new Error('Empty config');
       }
 
-      // Map TOML sections based on the flat GLOBAL array
       const local = {};
-      const globalSettings = CURATED_SECTIONS['GLOBAL'].settings;
+      const settingsToMap = CURATED_SECTIONS[currentSection]?.settings || [];
       
-      for (let j = 0; j < globalSettings.length; j++) {
-        const { section, key } = globalSettings[j];
+      for (let j = 0; j < settingsToMap.length; j++) {
+        const { section, key } = settingsToMap[j];
         if (!local[section]) local[section] = {};
         
         const rawSection = data[section] || {};
@@ -42,7 +41,6 @@ const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
         }
       }
       
-      // Store under GLOBAL for the activeSection to access it directly
       setLocalConfig(local);
       setIsDirty(false);
     } catch (e) {
@@ -52,7 +50,7 @@ const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
     }
   }, []);
 
-  useEffect(() => { loadConfig(gameConfigPath); }, [loadConfig, gameConfigPath]);
+  useEffect(() => { loadConfig(gameConfigPath, activeSection); }, [loadConfig, gameConfigPath, activeSection]);
 
   // ── Save ──
   const handleSave = useCallback(async () => {
