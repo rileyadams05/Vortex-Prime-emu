@@ -362,12 +362,23 @@ function SettingRow({ label, value, type, options, onChange }) {
     // Use select for EVERYTHING else as requested
     const optionEls = (options || []).map((o) => {
       let label = o;
-      if (o === '') label = '(default)';
-      if (o === 0 && label !== '0') label = 'Off / Default';
-      if (o === true) label = 'Enabled';
-      if (o === false) label = 'Disabled';
+      if (o === '') label = 'Standard (Default)';
+      else if (o === 0 && label !== '0') label = 'Off / Uncapped';
+      else if (o === true) label = 'Enabled';
+      else if (o === false) label = 'Disabled';
+      
+      // Specifically target known numbers/strings for friendlier text
+      else if (o === 30) label = '30 FPS Console Lock';
+      else if (o === 60) label = '60 FPS Target';
+      else if (o === 1) label = 'Native 1x (720p)';
+      else if (o === 2) label = 'Enhanced 2x (1440p)';
+      else if (o === 3) label = 'Maxed 3x (4K/2160p)';
+      else if (o === 'fxaa') label = 'Fast Edge Smoothing (FXAA)';
+      else if (o === 'fxaa_extreme') label = 'Ultra Edge Smoothing (FXAA Extreme)';
+      else if (o === 'fsr') label = 'AMD FSR Upscaling';
+      else if (o === 'cas') label = 'AMD CAS Sharpening';
 
-      return React.createElement('option', { key: String(o), value: String(o) }, String(label))
+      return React.createElement('option', { key: String(o), value: String(o) }, String(label));
     });
 
     control = React.createElement(
