@@ -66,8 +66,8 @@ echo.
 echo [INFO] Starting Vortex Prime...
 echo.
 
-REM Start the 100% Guaranteed Auto-Git Sync Engine in a separate background window
-start "Vortex Prime - Auto-Git Sync Engine" powershell -NoProfile -ExecutionPolicy Bypass -File scripts\auto_git_sync.ps1
+REM Start the Guaranteed Auto-Git Sync Engine silently in the background
+powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File scripts\auto_git_sync.ps1
 
 REM Launch Tauri dev
 call npm run dev
