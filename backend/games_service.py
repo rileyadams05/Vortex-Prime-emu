@@ -27,7 +27,7 @@ BACKEND_DIR = Path(__file__).parent
 PROJECT_ROOT = BACKEND_DIR.parent
 
 # Default games folder
-DEFAULT_GAMES_FOLDER = PROJECT_ROOT / "Games"
+DEFAULT_GAMES_FOLDER = PROJECT_ROOT / "ROMs" / "Xbox 360"
 
 # x360db cache (local copy of the database)
 X360DB_CACHE_FILE = PROJECT_ROOT / "Internal" / "x360db_cache.json"
@@ -42,21 +42,6 @@ _scan_cache: List[Dict] = []
 _x360db: Dict[str, Dict] = {}
 
 SUPPORTED_EXTENSIONS = {".iso", ".xex", ".zar"}
-
-def get_auto_scan_paths() -> List[Path]:
-    import string
-    import os
-    paths = [DEFAULT_GAMES_FOLDER]
-    common_folders = ["Games", "Xbox 360", "Xbox360", "Roms", "Xbox 360 Games"]
-    for d in string.ascii_uppercase:
-        drive = f"{d}:\\"
-        if os.path.exists(drive):
-            for folder in common_folders:
-                p = Path(drive) / folder
-                if p.exists() and p.is_dir() and p not in paths:
-                    paths.append(p)
-    return paths
-
 
 def _ensure_games_folder():
     """Ensure the Games folder exists."""
@@ -279,10 +264,10 @@ async def fetch_cover_art(title: str) -> Optional[str]:
 
 async def scan_games_folder(folder_path: str = None) -> List[Dict]:
     """
-    Scan for Xbox 360 game files and enrich with metadata automatically.
+    Scan a folder for Xbox 360 game files and enrich with metadata.
     
     Args:
-        folder_path: Optional specific path to scan. Defaults to auto-discovery.
+        folder_path: Path to scan. Defaults to [Project Root]/ROMs/Xbox 360/
     
     Returns:
         List of game dicts with: id, title, path, ext, title_id,
@@ -290,31 +275,24 @@ async def scan_games_folder(folder_path: str = None) -> List[Dict]:
     """
     global _scan_cache
 
+    scan_dir = Path(folder_path) if folder_path else DEFAULT_GAMES_FOLDER
     _ensure_games_folder()
 
-    scan_dirs = []
-    if folder_path:
-        scan_dirs.append(Path(folder_path))
-    else:
-        scan_dirs = get_auto_scan_paths()
+    if not scan_dir.exists():
+        logger.warning(f"Games folder not found: {scan_dir}")
+        return []
 
     # Load x360db
     await fetch_x360db()
 
     games = []
 
-    # Recursively scan for game files in all discovered directories
+    # Recursively scan for game files
     all_files = []
-    for scan_dir in scan_dirs:
-        if not scan_dir.exists():
-            continue
-        try:
-            for ext in SUPPORTED_EXTENSIONS:
-                all_files.extend(scan_dir.rglob(f"*{ext}"))
-        except Exception:
-            pass
+    for ext in SUPPORTED_EXTENSIONS:
+        all_files.extend(scan_dir.rglob(f"*{ext}"))
 
-    logger.info(f"Auto-discovery found {len(all_files)} game file(s) across systems")
+    logger.info(f"Found {len(all_files)} game file(s) in {scan_dir}")
 
     for file_path in all_files:
         integrity = check_integrity(file_path)
