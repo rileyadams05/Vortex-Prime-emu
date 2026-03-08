@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 STEAMGRIDDB_BASE = "https://www.steamgriddb.com/api/v2"
-STEAMGRIDDB_KEY = "4b66ee611da63591e8a434ef42146eb7"
+STEAMGRIDDB_KEY = "4b66ee611da63591e8a4340f42146eb7"
 
 HEADERS = {
     "Authorization": f"Bearer {STEAMGRIDDB_KEY}"
