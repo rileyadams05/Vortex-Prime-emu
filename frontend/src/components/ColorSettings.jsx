@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import iro from '@jaames/iro';
 
-const ColorSettings = ({ isActive, onBack, preview = false }) => {
+const ColorSettings = ({ isActive, onBack, preview = false, onColorChange }) => {
   const { themeColor, changeTheme } = useTheme();
 
   const colorPickerRef = useRef(null);
@@ -35,6 +35,7 @@ const ColorSettings = ({ isActive, onBack, preview = false }) => {
       colorPickerInstance.current.on('color:change', function (color) {
         setHexInput(color.hexString);
         changeTheme(color.hexString); // Sync bi-directionally with CSS var (ThemeContext automatically handles it)
+        if (onColorChange) onColorChange();
       });
     }
 
@@ -77,6 +78,7 @@ const ColorSettings = ({ isActive, onBack, preview = false }) => {
         colorPickerInstance.current.color.hexString = val;
       }
       changeTheme(val);
+      if (onColorChange) onColorChange();
     }
   };
 
@@ -84,7 +86,7 @@ const ColorSettings = ({ isActive, onBack, preview = false }) => {
     <div className={preview ? 'preview-mode' : ''} style={{ padding: '20px', height: '100%', display: 'flex', flexDirection: 'column', pointerEvents: (!isActive && preview) ? 'none' : 'auto', opacity: (!isActive && preview) ? 0.8 : 1 }}>
       {!preview && (
         <>
-          <h2 style={{ fontSize: '24px', marginBottom: '10px', color: '#fff' }}>Theme Color</h2>
+          <h2 style={{ fontSize: '24px', marginBottom: '10px', color: '#fff' }}>Hover Color</h2>
           <p style={{ color: '#aaa', marginBottom: '30px' }}>Select an accent color for the dashboard interface.</p>
         </>
       )}
