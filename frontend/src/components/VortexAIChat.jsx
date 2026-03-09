@@ -244,29 +244,36 @@ const VortexAIChat = forwardRef((props, ref) => {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about games, compatibility, settings..."
+          placeholder="Ask anything about games, settings, or compatibility..."
           rows={1}
           style={{
             flex: 1,
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: 10,
-            padding: '8px 12px',
+            background: 'rgba(255,255,255,0.07)',
+            border: '1px solid rgba(144,195,29,0.3)',
+            borderRadius: 14,
+            padding: '12px 18px',
             color: '#ffffff',
-            fontSize: '0.92rem',
+            fontSize: '1rem',
             resize: 'none',
             outline: 'none',
-            fontFamily: "'Segoe UI', sans-serif",
-            lineHeight: 1.4,
-            maxHeight: 80,
+            fontFamily: "'Segoe UI', system-ui, sans-serif",
+            lineHeight: 1.5,
+            maxHeight: 120,
             overflowY: 'auto',
-            transition: 'border-color 0.2s',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.2)',
           }}
-          onFocus={e => { e.target.style.borderColor = 'rgba(144,195,29,0.5)'; }}
-          onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+          onFocus={e => { 
+            e.target.style.borderColor = 'rgba(144,195,29,0.6)'; 
+            e.target.style.background = 'rgba(255,255,255,0.09)';
+          }}
+          onBlur={e => { 
+            e.target.style.borderColor = 'rgba(144,195,29,0.3)'; 
+            e.target.style.background = 'rgba(255,255,255,0.07)';
+          }}
           onInput={e => {
             e.target.style.height = 'auto';
-            e.target.style.height = Math.min(e.target.scrollHeight, 80) + 'px';
+            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
           }}
         />
 
@@ -274,21 +281,27 @@ const VortexAIChat = forwardRef((props, ref) => {
           onClick={sendMessage}
           disabled={!input.trim() || isLoading}
           style={{
+            width: 44,
+            height: 44,
             background: input.trim() && !isLoading
-              ? 'rgba(144,195,29,0.85)'
+              ? 'linear-gradient(135deg, #90C31D 0%, #6da110 100%)'
               : 'rgba(255,255,255,0.06)',
-            border: '1px solid ' + (input.trim() && !isLoading ? 'rgba(144,195,29,0.6)' : 'rgba(255,255,255,0.1)'),
-            borderRadius: 10,
-            padding: '7px 10px',
+            border: 'none',
+            borderRadius: '50%',
             cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
-            color: input.trim() && !isLoading ? '#0a1a00' : 'rgba(255,255,255,0.25)',
+            color: input.trim() && !isLoading ? '#000' : 'rgba(255,255,255,0.2)',
             display: 'flex',
             alignItems: 'center',
-            transition: 'all 0.2s',
+            justifyContent: 'center',
+            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
             flexShrink: 0,
+            boxShadow: input.trim() && !isLoading ? '0 4px 12px rgba(144,195,29,0.3)' : 'none',
+            transform: input.trim() && !isLoading ? 'scale(1)' : 'scale(0.95)',
           }}
+          onMouseEnter={e => { if(input.trim() && !isLoading) e.currentTarget.style.transform = 'scale(1.1)'; }}
+          onMouseLeave={e => { if(input.trim() && !isLoading) e.currentTarget.style.transform = 'scale(1)'; }}
         >
-          {isLoading ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={15} />}
+          {isLoading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={20} />}
         </button>
       </div>
 
