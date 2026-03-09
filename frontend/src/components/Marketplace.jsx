@@ -11,8 +11,7 @@ import '../styles/Marketplace.css';
 const COMMUNITY_DASHBOARDS = [];
 
 const SORT_OPTIONS = ['Most Popular', 'Trending', 'Newest', 'Top Rated'];
-const TAG_FILTERS = ['All', 'Featured'];ded'];
-const TAG_FILTERS = ['All', 'Featured', 'Sci-Fi', 'Dark', 'Retro', 'Neon', 'Fantasy', 'Racing'];
+const TAG_FILTERS = ['All', 'Featured'];
 
 function formatNumber(n) {
   if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
