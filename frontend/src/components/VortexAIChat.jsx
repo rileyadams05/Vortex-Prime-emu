@@ -45,6 +45,10 @@ const VortexAIChat = forwardRef((props, ref) => {
   }));
 
   useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('.mode-menu-container')) setIsModeMenuOpen(false);
       if (!e.target.closest('.model-menu-container')) setIsModelMenuOpen(false);
