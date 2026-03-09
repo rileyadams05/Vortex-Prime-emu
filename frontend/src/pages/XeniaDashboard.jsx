@@ -9,6 +9,7 @@ import GuideOverlay from '../components/GuideOverlay';
 import ThemeManager from '../components/ThemeManager';
 import Marketplace from '../components/Marketplace';
 import Xbox360Keyboard from '../components/Xbox360Keyboard';
+import VortexAIChat from '../components/VortexAIChat';
 import { useDropzone } from 'react-dropzone';
 import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
 import { useGamepad } from '../context/GamepadContext';
@@ -1179,8 +1180,8 @@ const XeniaDashboard = () => {
               data-testid="open-webui-btn"
               onClick={() => { playSound('select'); setIsAiPanelOpen(prev => !prev); }}
             >
-              <img src="/assets/for-app/open-webui.svg" alt="Open WebUI" className="open-webui-icon" />
-              <span>Open WebUI</span>
+              <img src="/assets/for-app/open-webui.svg" alt="Vortex AI" className="open-webui-icon" />
+              <span>Vortex AI</span>
             </button>
             <div className="user-profile" data-testid="user-profile">
               {isLoggedIn && (
@@ -1201,31 +1202,16 @@ const XeniaDashboard = () => {
           </div>
         </div>
 
-        {/* AI Panel - Open WebUI container (plug-and-play) */}
+        {/* AI Panel - Vortex AI (native Gemini chat) */}
         {isAiPanelOpen && (
           <div className="ai-panel" data-testid="ai-panel">
             <div className="ai-panel-header">
               <img src="/assets/for-app/open-webui.svg" alt="" className="open-webui-icon" />
-              <h3>Open WebUI</h3>
-              <button className="ai-panel-close" onClick={() => setIsAiPanelOpen(false)} data-testid="ai-panel-close">X</button>
+              <h3>Vortex AI</h3>
+              <button className="ai-panel-close" onClick={() => setIsAiPanelOpen(false)} data-testid="ai-panel-close">✕</button>
             </div>
-            <div className="ai-panel-body">
-              <div className="ai-panel-status">
-                <div className="ai-status-dot"></div>
-                <span>Waiting for local connection</span>
-              </div>
-              <p className="ai-panel-info">
-                Connect to your local Open WebUI at <code>localhost:8080</code>
-              </p>
-              <p className="ai-panel-info">
-                This panel will automatically connect when running as a Tauri desktop app.
-              </p>
-              <iframe
-                src="http://localhost:8080"
-                title="Open WebUI"
-                className="ai-iframe"
-                sandbox="allow-scripts allow-same-origin allow-forms"
-              />
+            <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <VortexAIChat />
             </div>
           </div>
         )}
