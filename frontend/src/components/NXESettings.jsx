@@ -434,7 +434,15 @@ const NXESettings = ({ isActive, onBack }) => {
                 />
               )}
               {dynamicSettingsItems[selectedIndex].id === 'sunshine' && (
-                <div style={{ color: '#aaa', padding: '20px', height: '100%' }}>Sunshine configuration coming soon.</div>
+                <div style={{ color: '#ffffff', padding: '24px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <h3 style={{ marginTop: 0, color: '#90C31D' }}>Sunshine Streaming Host</h3>
+                  <p style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#ccc' }}>
+                    Sunshine is currently running on the host machine. You can connect from your phone, tablet, or another PC using <strong>Moonlight</strong>.
+                  </p>
+                  <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '15px' }}>
+                    Configuration is managed via the Sunshine Web Interface at <code style={{ color: '#fff' }}>https://localhost:47990</code>
+                  </p>
+                </div>
               )}
 
               {activePanel ? (
