@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart, Cpu, Shield, AlertTriangle, Trash2, Plus, RotateCcw, X, Star } from 'lucide-react';
+import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart, Cpu, Shield, AlertTriangle, Trash2, Plus, RotateCcw, X, Star, Minus } from 'lucide-react';
 import axios from 'axios';
 
 import NXESettings from '../components/NXESettings';
@@ -32,7 +32,11 @@ const XeniaDashboard = () => {
 
   // AI Panel state
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
+  const [isAiMinimised, setIsAiMinimised] = useState(false);
+  const [aiPosition, setAiPosition] = useState({ x: 0, y: 0 });
   const aiChatRef = useRef(null);
+  const isDragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
 
   // Xbox 360 Keyboard state
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -49,6 +53,63 @@ const XeniaDashboard = () => {
   useEffect(() => {
     localStorage.setItem('gameGroups', JSON.stringify(gameGroups));
   }, [gameGroups]);
+
+  // Handle AI Panel Dragging
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging.current) return;
+      setAiPosition({
+        x: e.clientX - dragStart.current.x,
+        y: e.clientY - dragStart.current.y
+      });
+    };
+
+    const handleMouseUp = () => {
+      isDragging.current = false;
+      document.body.style.userSelect = '';
+    };
+
+    if (isDragging.current) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isAiPanelOpen]); // Re-bind when dragging state changes or panel open
+
+  // We need a more reliable way to sync mousemove. Let's use a simpler approach.
+  const onAiDragStart = (e) => {
+    isDragging.current = true;
+    dragStart.current = {
+      x: e.clientX - aiPosition.x,
+      y: e.clientY - aiPosition.y
+    };
+    document.body.style.userSelect = 'none';
+
+    const onMove = (moveEvent) => {
+      if (!isDragging.current) return;
+      setAiPosition({
+        x: moveEvent.clientX - dragStart.current.x,
+        y: moveEvent.clientY - dragStart.current.y
+      });
+    };
+
+    const onEnd = () => {
+      isDragging.current = false;
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+  };
 
   const createGroup = useCallback((name) => {
     if (!name.trim()) return;
@@ -1205,36 +1266,63 @@ const XeniaDashboard = () => {
 
         {/* AI Panel - Vortex AI (native Gemini chat) */}
         {isAiPanelOpen && (
-          <div className="ai-panel" data-testid="ai-panel">
-            <div className="ai-panel-header">
+          <div 
+            className="ai-panel" 
+            data-testid="ai-panel"
+            style={{
+              transform: `translate(${aiPosition.x}px, ${aiPosition.y}px)`,
+              height: isAiMinimised ? 'auto' : 'calc(100vh - 132px)',
+              transition: isDragging.current ? 'none' : 'transform 0.3s ease, height 0.3s ease',
+            }}
+          >
+            <div 
+              className="ai-panel-header" 
+              onMouseDown={onAiDragStart}
+              style={{ cursor: 'move', userSelect: 'none' }}
+            >
               <h3>Vortex Prime UI</h3>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
                 <button 
                   className="ai-header-btn" 
-                  onClick={() => { playSound('select'); aiChatRef.current?.clearChat(); }}
+                  onClick={(e) => { e.stopPropagation(); playSound('select'); aiChatRef.current?.openCommandHub(); }}
+                  title="Command Hub"
+                >
+                  <Star size={20} />
+                </button>
+                <button 
+                  className="ai-header-btn" 
+                  onClick={(e) => { e.stopPropagation(); playSound('select'); aiChatRef.current?.clearChat(); }}
                   title="New Chat"
                 >
                   <Plus size={22} />
                 </button>
                 <button 
                   className="ai-header-btn" 
-                  onClick={() => { playSound('select'); /* Logic for history would go here */ }}
-                  title="Chat History"
+                  onClick={(e) => { e.stopPropagation(); playSound('select'); setIsAiMinimised(!isAiMinimised); }}
+                  title={isAiMinimised ? "Restore" : "Minimise"}
                 >
-                  <RotateCcw size={20} />
+                  <Minus size={20} />
                 </button>
                 <button 
                   className="ai-header-btn" 
-                  onClick={() => { playSound('back'); setIsAiPanelOpen(false); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    playSound('back'); 
+                    setIsAiPanelOpen(false); 
+                    setAiPosition({ x: 0, y: 0 }); // Reset position on close
+                    setIsAiMinimised(false); // Reset minimised on close
+                  }}
                   title="Close"
                 >
                   <X size={22} />
                 </button>
               </div>
             </div>
-            <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <VortexAIChat ref={aiChatRef} />
-            </div>
+            {!isAiMinimised && (
+              <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <VortexAIChat ref={aiChatRef} />
+              </div>
+            )}
           </div>
         )}
 
