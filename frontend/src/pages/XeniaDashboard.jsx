@@ -1240,7 +1240,17 @@ const XeniaDashboard = () => {
             <button
               className="ai-toggle-btn"
               data-testid="open-webui-btn"
-              onClick={() => { playSound('select'); setIsAiPanelOpen(prev => !prev); }}
+              onClick={() => { 
+                playSound('select'); 
+                if (!isAiPanelOpen) {
+                  setIsAiPanelOpen(true);
+                  setIsAiMinimised(false);
+                } else if (isAiMinimised) {
+                  setIsAiMinimised(false);
+                } else {
+                  setIsAiMinimised(true);
+                }
+              }}
             >
               <img src="/assets/AppIcon/icon.png" alt="Vortex Prime UI" className="open-webui-icon" style={{ width: 88, height: 88, marginRight: '16px' }} />
               <span>Vortex Prime UI</span>
@@ -1272,8 +1282,9 @@ const XeniaDashboard = () => {
             data-testid="ai-panel"
             style={{
               transform: `translate(${aiPosition.x}px, ${aiPosition.y}px)`,
-              height: isAiMinimised ? 'auto' : 'calc(100vh - 132px)',
-              transition: isDragging.current ? 'none' : 'transform 0.3s ease, height 0.3s ease',
+              display: isAiMinimised ? 'none' : 'flex',
+              height: 'calc(100vh - 132px)',
+              transition: isDragging.current ? 'none' : 'transform 0.3s ease',
             }}
           >
             <div 
@@ -1299,8 +1310,8 @@ const XeniaDashboard = () => {
                 </button>
                 <button 
                   className="ai-header-btn" 
-                  onClick={(e) => { e.stopPropagation(); playSound('select'); setIsAiMinimised(!isAiMinimised); }}
-                  title={isAiMinimised ? "Restore" : "Minimise"}
+                  onClick={(e) => { e.stopPropagation(); playSound('select'); setIsAiMinimised(true); }}
+                  title="Minimise"
                 >
                   <Minus size={20} />
                 </button>
@@ -1319,11 +1330,9 @@ const XeniaDashboard = () => {
                 </button>
               </div>
             </div>
-            {!isAiMinimised && (
-              <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <VortexAIChat ref={aiChatRef} />
-              </div>
-            )}
+            <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <VortexAIChat ref={aiChatRef} />
+            </div>
           </div>
         )}
 
