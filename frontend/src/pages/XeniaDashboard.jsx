@@ -1207,7 +1207,6 @@ const XeniaDashboard = () => {
         {isAiPanelOpen && (
           <div className="ai-panel" data-testid="ai-panel">
             <div className="ai-panel-header">
-              <img src="/assets/AppIcon/icon.png" alt="" className="open-webui-icon" style={{ width: 100, height: 100, marginRight: '24px' }} />
               <h3>Vortex AI</h3>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button 
