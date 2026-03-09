@@ -1033,11 +1033,11 @@ const VortexAIChat = forwardRef((props, ref) => {
           <div style={{
             width: '100%',
             maxWidth: '380px',
-            background: 'rgb(28,28,28)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: '#000',
+            border: '1px solid rgba(255,255,255,0.2)',
             borderRadius: '24px',
             padding: '32px 24px',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
+            boxShadow: '0 25px 60px rgba(0,0,0,1)',
             animation: 'menuIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
             position: 'relative',
           }}>
@@ -1053,7 +1053,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                 <Lock size={28} color="#90C31D" />
               </div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Pro Subscription</h2>
-              <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>
+              <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
                 Sign in to your {loginDetails.provider || 'AI provider'} account to unlock this model.
               </p>
             </div>
@@ -1067,27 +1067,27 @@ const VortexAIChat = forwardRef((props, ref) => {
                   justifyContent: 'center',
                   gap: '12px',
                   padding: '14px',
-                  background: '#fff',
-                  border: 'none',
+                  background: '#0a0a0a',
+                  border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '12px',
-                  color: '#000',
+                  color: '#fff',
                   fontSize: '1rem',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'transform 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(255,255,255,0.1)'
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
                 }}
                 onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: 18, height: 18 }} />
+                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: 18, height: 18, filter: 'brightness(1.2)' }} />
                 Sign in with Google
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '8px 0' }}>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.05em' }}>OR USE OTHER FRONTEND ACCOUNT</span>
-                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
+                <span style={{ fontSize: '0.75rem', color: '#fff', letterSpacing: '0.05em', fontWeight: 'bold' }}>OR USE OTHER FRONTEND ACCOUNT</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
               </div>
 
               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1137,7 +1137,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                   marginTop: '12px',
                   padding: '14px',
                   background: '#90C31D',
-                  color: '#000',
+                  color: '#fff',
                   border: 'none',
                   borderRadius: '12px',
                   fontSize: '1rem',
