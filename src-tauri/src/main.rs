@@ -121,7 +121,8 @@ fn main() {
             get_audio_devices,
             get_system_volume_cmd,
             set_system_volume_cmd,
-            get_audio_sessions
+            get_audio_sessions,
+            check_sunshine_status
         ])
         .setup(|app| {
             // Initialize application
