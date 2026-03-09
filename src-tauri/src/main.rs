@@ -11,6 +11,8 @@ use std::time::Duration;
 use sysinfo::System;
 use std::path::Path;
 use std::fs;
+use std::net::Ipv4Addr;
+use mdns_sd::{ServiceDaemon, ServiceInfo};
 use velopack::VelopackApp;
 use winmix::WinMix;
 
@@ -145,6 +147,8 @@ fn main() {
             // Silently provisions Sunshine config, SSL certs, hosts file, and firewall per production requirements
             thread::spawn(|| {
                 println!("Streaming Gateway Service: Initializing Zero-Configuration Backend...");
+                
+                // 1. Setup Script (Launch and Config)
                 let script_path = Path::new("scripts/setup_streaming.ps1")
                     .canonicalize()
                     .unwrap_or_else(|_| Path::new("../scripts/setup_streaming.ps1").to_path_buf());
@@ -162,6 +166,44 @@ fn main() {
                     println!("Streaming Gateway Service: Setup & Launch complete.");
                 } else {
                     println!("Streaming Gateway Service: setup_streaming.ps1 not found.");
+                }
+
+                // 2. The "First Link" Priority Logic: mDNS Broadcast
+                let mdns = ServiceDaemon::new().expect("Failed to create mDNS daemon");
+                
+                let service_type = "_http._tcp.local.";
+                let instance_name = "Vortex-Prime-Emu-streaming";
+                // Host PC name could be used, but we hardcode local for the domain
+                let host_name = "vortex-prime.local.";
+                let port = 3000;
+                let properties: Vec<(&str, &str)> = vec![("path", "/")];
+
+                let my_info = ServiceInfo::new(
+                    service_type,
+                    instance_name,
+                    host_name,
+                    "", // bind to all interfaces
+                    port,
+                    &properties[..],
+                ).expect("Valid mDNS service info");
+
+                if let Err(e) = mdns.register(my_info) {
+                    eprintln!("Failed to register mDNS service: {}", e);
+                } else {
+                    println!("Streaming Gateway Service: mDNS broadcast Active -> Vortex-Prime-Emu-streaming._http._tcp.local");
+                }
+
+                // 3. Automatic UPnP Refresh / Firewall Port check
+                // Every 5 minutes (handling sleep/wake cycle reconnects implicitly)
+                loop {
+                    thread::sleep(Duration::from_secs(300));
+                    let _ = std::process::Command::new("powershell")
+                        .arg("-NoProfile")
+                        .arg("-WindowStyle")
+                        .arg("Hidden")
+                        .arg("-Command")
+                        .arg("New-NetFirewallRule -DisplayName 'Sunshine UPnP / Streaming UDP' -Direction Inbound -Action Allow -Protocol UDP -LocalPort 47998-48000 -ErrorAction SilentlyContinue")
+                        .spawn();
                 }
             });
 
