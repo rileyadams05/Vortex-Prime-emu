@@ -827,11 +827,16 @@ body {
 }
 
 
-/* ===== AI Box (top-right, next to Sign In) ===== */
+/* ===== AI Box (moved to bottom-center) ===== */
 .ai-box {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 12px;
+  z-index: 1000;
 }
 
 .ai-toggle-btn {

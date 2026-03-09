@@ -1245,21 +1245,22 @@ const XeniaDashboard = () => {
               <img src="/assets/AppIcon/icon.png" alt="Vortex Prime UI" className="open-webui-icon" style={{ width: 88, height: 88, marginRight: '16px' }} />
               <span>Vortex Prime UI</span>
             </button>
-            <div className="user-profile" data-testid="user-profile">
-              {isLoggedIn && (
-                <>
-                  <span className="gamertag">{xboxProfile?.gamertag}</span>
-                  <span className="gamerscore">{xboxProfile?.gamerscore || 0} G</span>
-                </>
-              )}
-              <div className="user-avatar-circle">
-                {isLoggedIn && xboxProfile?.profilePicture ?
-                  <img src={xboxProfile.profilePicture} alt="Avatar" className="avatar-img" /> :
-                  <div className="user-avatar-placeholder-silhouette" style={{
-                    width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(255,255,255,0.08)'
-                  }}></div>
-                }
-              </div>
+          </div>
+
+          <div className="user-profile" data-testid="user-profile">
+            {isLoggedIn && (
+              <>
+                <span className="gamertag">{xboxProfile?.gamertag}</span>
+                <span className="gamerscore">{xboxProfile?.gamerscore || 0} G</span>
+              </>
+            )}
+            <div className="user-avatar-circle">
+              {isLoggedIn && xboxProfile?.profilePicture ?
+                <img src={xboxProfile.profilePicture} alt="Avatar" className="avatar-img" /> :
+                <div className="user-avatar-placeholder-silhouette" style={{
+                  width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(255,255,255,0.08)'
+                }}></div>
+              }
             </div>
           </div>
         </div>
