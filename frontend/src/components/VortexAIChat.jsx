@@ -1151,12 +1151,13 @@ const VortexAIChat = forwardRef((props, ref) => {
               >
                 Sign In & Unlock
               </button>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
+});
 
 export default VortexAIChat;
