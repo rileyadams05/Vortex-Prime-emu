@@ -12,17 +12,6 @@ const CoreSettings = ({ onBack, preview = false, isActive = false }) => {
   const [localConfig, setLocalConfig] = useState({});
   const [activeSection, setActiveSection] = useState('GLOBAL'); // Default to global config
   const [loading, setLoading] = useState(true);
-  const [osInfo, setOsInfo] = useState(''); // New state for OS info
-
-  // Detect OS using standard platform string or Tauri if available
-  useEffect(() => {
-    const platform = window.navigator.platform;
-    if (platform.includes('Win')) setOsInfo("Windows PC (Detected)");
-    else if (platform.includes('Mac')) setOsInfo("macOS (Detected)");
-    else if (platform.includes('Linux')) setOsInfo("Linux (Detected)");
-    else setOsInfo("Unknown System");
-  }, []); // Run once on mount
-
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
