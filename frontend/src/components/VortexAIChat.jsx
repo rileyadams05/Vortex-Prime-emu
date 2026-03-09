@@ -165,49 +165,59 @@ const VortexAIChat = forwardRef((props, ref) => {
           >
             {/* Avatar */}
             <div style={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
+              width: 100,
+              height: 100,
+              borderRadius: '16px',
               background: msg.role === 'user'
-                ? 'rgba(144,195,29,0.3)'
-                : 'rgba(255,255,255,0.1)',
+                ? 'rgba(144,195,29,0.35)'
+                : 'rgba(255,255,255,0.12)',
               border: msg.role === 'user'
-                ? '2px solid rgba(144,195,29,0.6)'
-                : '2px solid rgba(255,255,255,0.2)',
+                ? '3px solid rgba(144,195,29,0.7)'
+                : '3px solid rgba(255,255,255,0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              boxShadow: '0 6px 12px rgba(0,0,0,0.4)',
-              overflow: 'hidden'
+              boxShadow: '0 8px 16px rgba(0,0,0,0.5)',
+              overflow: 'hidden',
+              transition: 'transform 0.3s ease',
             }}>
               {msg.role === 'user'
-                ? <User size={32} color="#90C31D" />
-                : <img src="/assets/AppIcon/icon.png" style={{ width: 56, height: 56, objectFit: 'contain' }} alt="" />
+                ? <User size={48} color="#90C31D" />
+                : <img 
+                    src="/assets/AppIcon/icon.png" 
+                    style={{ 
+                      width: 90, 
+                      height: 90, 
+                      objectFit: 'contain',
+                      imageRendering: 'auto' 
+                    }} 
+                    alt="" 
+                  />
               }
             </div>
 
             {/* Bubble */}
             <div style={{
               maxWidth: '85%',
-              padding: '12px 20px',
-              borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+              padding: '16px 24px',
+              borderRadius: msg.role === 'user' ? '24px 24px 4px 24px' : '24px 24px 24px 4px',
               background: msg.role === 'user'
-                ? 'rgba(144,195,29,0.2)'
+                ? 'rgba(144,195,29,0.22)'
                 : msg.error
-                  ? 'rgba(244,67,54,0.15)'
-                  : 'rgba(255,255,255,0.08)',
+                  ? 'rgba(244,67,54,0.18)'
+                  : 'rgba(255,255,255,0.1)',
               border: msg.role === 'user'
-                ? '1px solid rgba(144,195,29,0.5)'
+                ? '2px solid rgba(144,195,29,0.6)'
                 : msg.error
-                  ? '1px solid rgba(244,67,54,0.3)'
-                  : '1px solid rgba(255,255,255,0.15)',
+                  ? '2px solid rgba(244,67,54,0.4)'
+                  : '2px solid rgba(255,255,255,0.2)',
               color: msg.error ? '#ff8a80' : '#ffffff',
-              fontSize: '1.05rem',
-              fontWeight: '500',
-              lineHeight: 1.6,
-              backdropFilter: 'blur(16px)',
-              boxShadow: '0 6px 15px rgba(0,0,0,0.4)',
+              fontSize: '1.2rem',
+              fontWeight: '600',
+              lineHeight: 1.5,
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
             }}>
               {msg.streaming && !msg.content ? (
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '2px 0' }}>
