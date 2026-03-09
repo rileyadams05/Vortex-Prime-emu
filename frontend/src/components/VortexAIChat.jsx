@@ -5,7 +5,7 @@ const GEMINI_API_KEY = 'gen-lang-client-0804196204';
 const GEMINI_MODEL = 'gemini-1.5-flash';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
-const SYSTEM_CONTEXT = `You are Vortex AI, the built-in assistant for Vortex Prime EMU — an Xbox 360 emulator frontend powered by Xenia. 
+const SYSTEM_CONTEXT = `You are Vortex Prime UI, the built-in assistant for Vortex Prime EMU — an Xbox 360 emulator frontend powered by Xenia. 
 You help users with: game compatibility, emulator settings, ROM management, troubleshooting, and general gaming questions.
 Be concise, friendly, and knowledgeable about Xbox 360 games and emulation.`;
 
@@ -13,7 +13,7 @@ const VortexAIChat = forwardRef((props, ref) => {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Hey! I'm **Vortex AI** — your built-in gaming assistant. Ask me anything about Xbox 360 games, Xenia settings, or game compatibility.",
+      content: "Hey! I'm **Vortex Prime UI** — your built-in gaming assistant. Ask me anything about Xbox 360 games, Xenia settings, or game compatibility.",
       id: Date.now(),
     }
   ]);
@@ -120,7 +120,7 @@ const VortexAIChat = forwardRef((props, ref) => {
     setIsLoading(false);
     setMessages([{
       role: 'assistant',
-      content: "Chat cleared! I'm Vortex AI — ready to help with your Xbox 360 gaming questions.",
+      content: "Chat cleared! I'm Vortex Prime UI — ready to help with your Xbox 360 gaming questions.",
       id: Date.now(),
     }]);
   };
@@ -332,4 +332,4 @@ const VortexAIChat = forwardRef((props, ref) => {
   );
 });
 
-export default VortexAIChat;
+export default VortexAI
