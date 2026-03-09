@@ -8,7 +8,7 @@ const SYSTEM_CONTEXT = `You are Vortex Prime UI, the built-in assistant for Vort
 You help users with: game compatibility, emulator settings, ROM management, troubleshooting, and general gaming questions.
 Be concise, friendly, and knowledgeable about Xbox 360 games and emulation.`;
 
-const VortexAIChat = forwardRef((props, ref) => {
+const VortexAIChat = forwardRef(({ onOpenStore }, ref) => {
   const [userName, setUserName] = useState(() => localStorage.getItem('vortex_user_name') || '');
   const [messages, setMessages] = useState(() => {
     const savedName = localStorage.getItem('vortex_user_name');
@@ -915,8 +915,8 @@ const VortexAIChat = forwardRef((props, ref) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button 
                 onClick={() => {
-                  window.open('https://vortex/Prime/emu/Store.com', '_blank');
                   setIsCommandHubOpen(false);
+                  if (onOpenStore) onOpenStore('browse');
                 }}
                 style={{
                   display: 'flex',
@@ -945,8 +945,8 @@ const VortexAIChat = forwardRef((props, ref) => {
 
               <button 
                 onClick={() => {
-                  alert("Opening Upload Wizard... (Dashboards will be uploaded to /Repository/Store)");
                   setIsCommandHubOpen(false);
+                  if (onOpenStore) onOpenStore('upload');
                 }}
                 style={{
                   display: 'flex',
