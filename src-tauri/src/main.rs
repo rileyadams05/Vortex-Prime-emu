@@ -273,8 +273,20 @@ fn main() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app_handle, event| match event {
+            tauri::RunEvent::Exit => {
+                println!("Vortex Prime shutting down. Cleaning up background streaming services...");
+                let _ = std::process::Command::new("taskkill")
+                    .args(["/F", "/IM", "sunshine.exe"])
+                    .spawn();
+                let _ = std::process::Command::new("taskkill")
+                    .args(["/F", "/IM", "node.exe"])
+                    .spawn();
+            }
+            _ => {}
+        });
 }
 
 #[tauri::command]
