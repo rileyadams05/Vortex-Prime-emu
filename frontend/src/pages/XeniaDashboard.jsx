@@ -1181,8 +1181,8 @@ const XeniaDashboard = () => {
               data-testid="open-webui-btn"
               onClick={() => { playSound('select'); setIsAiPanelOpen(prev => !prev); }}
             >
-              <img src="/assets/AppIcon/icon.png" alt="Vortex AI" className="open-webui-icon" style={{ width: 44, height: 44 }} />
-              <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>Vortex AI</span>
+              <img src="/assets/AppIcon/icon.png" alt="Vortex AI" className="open-webui-icon" style={{ width: 88, height: 88, marginRight: '16px' }} />
+              <span>Vortex AI</span>
             </button>
             <div className="user-profile" data-testid="user-profile">
               {isLoggedIn && (
@@ -1207,8 +1207,8 @@ const XeniaDashboard = () => {
         {isAiPanelOpen && (
           <div className="ai-panel" data-testid="ai-panel">
             <div className="ai-panel-header">
-              <img src="/assets/AppIcon/icon.png" alt="" className="open-webui-icon" style={{ width: 40, height: 40, marginRight: '10px' }} />
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Vortex AI</h3>
+              <img src="/assets/AppIcon/icon.png" alt="" className="open-webui-icon" style={{ width: 100, height: 100, marginRight: '24px' }} />
+              <h3>Vortex AI</h3>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button 
                   className="ai-panel-clear" 
