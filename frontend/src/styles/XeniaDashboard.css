@@ -859,7 +859,7 @@ body {
 .open-webui-icon {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  object-fit: contain;
 }
 
 /* AI Panel (Vortex AI native chat) */
