@@ -197,36 +197,43 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   if (!isOpen) return null;
 
   // ========== FRIENDS & PARTIES TAB ==========
-  const renderFriendsPartiesTab = () => (
     <div className={`guide-tab-content ${tabTransition}`}>
-      <div className="coming-soon-tab" data-testid="friends-coming-soon">
+      <div className="coming-soon-tab" data-testid="friends-empty-state">
         <div className="coming-soon-tab-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(144,195,29,0.5)" strokeWidth="1.5">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
         </div>
-        <span className="coming-soon-tab-title">Friends and Parties</span>
-        <span className="coming-soon-badge large">Coming Soon</span>
-        <p className="coming-soon-tab-desc">Sign in with your Xbox account to see your Xbox Live friends and linked Discord friends here.</p>
+        <span className="coming-soon-tab-title">{isLoggedIn ? 'No Friends Online' : 'Xbox Social'}</span>
+        <p className="coming-soon-tab-desc" style={{ maxWidth: '280px', margin: '10px auto' }}>
+          {isLoggedIn 
+            ? 'Your friends list is currently empty. Invite friends using the Xbox mobile app or console.' 
+            : 'Sign in with your Xbox account to see your friends and join parties.'}
+        </p>
+        {!isLoggedIn && (
+          <button className="guide-menu-item" style={{ width: '80%', margin: '20px auto 0', background: '#107C10', borderRadius: '4px', textAlign: 'center' }} onClick={() => { playSound('select'); onLogin?.(); onClose(); }}>
+            Sign In with Xbox
+          </button>
+        )}
       </div>
     </div>
-  );
 
   // ========== MESSAGES TAB ==========
-  const renderMessagesTab = () => (
     <div className={`guide-tab-content ${tabTransition}`}>
-      <div className="coming-soon-tab" data-testid="messages-coming-soon">
+      <div className="coming-soon-tab" data-testid="messages-empty-state">
         <div className="coming-soon-tab-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(144,195,29,0.5)" strokeWidth="1.5">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </div>
-        <span className="coming-soon-tab-title">Messages</span>
-        <span className="coming-soon-badge large">Coming Soon</span>
-        <p className="coming-soon-tab-desc">Your Xbox Live and Discord messages will appear here once you connect your Xbox account.</p>
+        <span className="coming-soon-tab-title">{isLoggedIn ? 'Inboxes are clear' : 'Messages'}</span>
+        <p className="coming-soon-tab-desc" style={{ maxWidth: '280px', margin: '10px auto' }}>
+          {isLoggedIn 
+            ? 'No unread messages from Xbox Live or Discord.' 
+            : 'Sign in with your Xbox account to view and respond to messages.'}
+        </p>
       </div>
     </div>
-  );
 
   // ========== HOME TAB ==========
   const renderHomeTab = () => {
