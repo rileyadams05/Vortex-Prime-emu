@@ -181,7 +181,7 @@ const VortexAIChat = forwardRef((props, ref) => {
             }}>
               {msg.role === 'user'
                 ? <User size={14} color="#90C31D" />
-                : <img src="/assets/vortex-icon.svg" style={{ width: 14, height: 14 }} alt="" />
+                : <img src="/assets/App%20Icon/icon.svg" style={{ width: 14, height: 14 }} alt="" />
               }
             </div>
 
