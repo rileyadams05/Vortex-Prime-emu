@@ -165,8 +165,8 @@ const VortexAIChat = forwardRef((props, ref) => {
           >
             {/* Avatar */}
             <div style={{
-              width: 28,
-              height: 28,
+              width: 32,
+              height: 32,
               borderRadius: '50%',
               background: msg.role === 'user'
                 ? 'rgba(144,195,29,0.25)'
@@ -178,10 +178,11 @@ const VortexAIChat = forwardRef((props, ref) => {
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
             }}>
               {msg.role === 'user'
-                ? <User size={14} color="#90C31D" />
-                : <img src="/assets/AppIcon/icon.png" style={{ width: 20, height: 20, objectFit: 'contain' }} alt="" />
+                ? <User size={16} color="#90C31D" />
+                : <img src="/assets/AppIcon/icon.png" style={{ width: 22, height: 22, objectFit: 'contain' }} alt="" />
               }
             </div>
 
@@ -200,10 +201,11 @@ const VortexAIChat = forwardRef((props, ref) => {
                 : msg.error
                   ? '1px solid rgba(244,67,54,0.3)'
                   : '1px solid rgba(255,255,255,0.08)',
-              color: msg.error ? '#ff8a80' : 'rgba(255,255,255,0.92)',
-              fontSize: '0.82rem',
-              lineHeight: 1.55,
-              backdropFilter: 'blur(4px)',
+              color: msg.error ? '#ff8a80' : '#ffffff',
+              fontSize: '0.92rem',
+              lineHeight: 1.5,
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
             }}>
               {msg.streaming && !msg.content ? (
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '2px 0' }}>
@@ -248,8 +250,8 @@ const VortexAIChat = forwardRef((props, ref) => {
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: 10,
             padding: '8px 12px',
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: '0.82rem',
+            color: '#ffffff',
+            fontSize: '0.92rem',
             resize: 'none',
             outline: 'none',
             fontFamily: "'Segoe UI', sans-serif",
