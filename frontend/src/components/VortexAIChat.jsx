@@ -938,8 +938,8 @@ const VortexAIChat = forwardRef((props, ref) => {
                   <Globe size={20} color="#90C31D" style={{ margin: 'auto' }} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: '600' }}>Browse Community</div>
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Explore and copy user dashboards</div>
+                  <div style={{ fontWeight: '600' }}>View / Download Dashboard</div>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Explore and copy user dashboards to apply</div>
                 </div>
               </button>
 
@@ -969,7 +969,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                 </div>
                 <div>
                   <div style={{ fontWeight: '600' }}>Upload Dashboard</div>
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Share your creation to the project gallery</div>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Creators: Share your dashboard to the project gallery</div>
                 </div>
               </button>
             </div>
