@@ -759,10 +759,10 @@ const VortexAIChat = forwardRef((props, ref) => {
                           width: 'calc(100% - 16px)',
                           margin: '8px',
                           padding: '10px',
-                          background: 'rgba(144,195,29,0.1)',
-                          border: '1px dashed rgba(144,195,29,0.3)',
+                          background: 'rgba(255,255,255,0.05)',
+                          border: '1px solid rgba(255,255,255,0.1)',
                           borderRadius: '12px',
-                          color: '#90C31D',
+                          color: 'white',
                           fontSize: '0.85rem',
                           fontWeight: '600',
                           cursor: 'pointer',
@@ -770,9 +770,12 @@ const VortexAIChat = forwardRef((props, ref) => {
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '8px',
+                          transition: 'all 0.2s ease',
                         }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                       >
-                        <Plus size={14} /> Add Custom AI Model
+                        <Plus size={14} /> Add AI Model
                       </button>
                     )}
                   </div>
