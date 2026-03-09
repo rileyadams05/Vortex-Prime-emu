@@ -332,4 +332,4 @@ const VortexAIChat = forwardRef((props, ref) => {
   );
 });
 
-export default VortexAI
+export default VortexAIChat;
