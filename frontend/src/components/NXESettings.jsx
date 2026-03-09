@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import { useTheme } from '../context/ThemeContext';
 import playSound from '../utils/soundManager';
-import { AlertCircle, Volume2, Globe, Moon, Palette, Cpu } from 'lucide-react';
+import { AlertCircle, Volume2, Globe, Palette, Cpu } from 'lucide-react';
 import GamepadDiagnostic from './GamepadDiagnostic';
 import LanguageSettings from './LanguageSettings';
 import SoundSettings from './SoundSettings';
@@ -10,6 +10,32 @@ import CoreSettings from './CoreSettings';
 import ColorSettings from './ColorSettings';
 import '../styles/NXESettings.css';
 
+import '../styles/NXESettings.css';
+
+// Custom Sunshine Logo component in Xbox Green
+const SunshineLogo = ({ size = 24, className }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="#107C10" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+);
 
 const NXESettings = ({ isActive, onBack }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -39,7 +65,7 @@ const NXESettings = ({ isActive, onBack }) => {
 
   const dynamicSettingsItems = [
     { id: 'core', label: 'Core Configuration', icon: AlertCircle, description: 'Configure core system settings including emulator paths, game folders, and metadata sources. Set up your Xenia installation and scanning preferences.' },
-    { id: 'sunshine', label: 'Sunshine', icon: Moon, description: 'Configure Sunshine as a game streaming host on your PC. Allows remote devices to connect and stream games from this machine.' },
+    { id: 'sunshine', label: 'Remote Streaming', icon: SunshineLogo, description: 'Play your Xbox 360 games anywhere. Stream Xenia to your phone, tablet, or another PC using the built-in zero-latency streaming portal.' },
     { id: 'sound', label: 'Sound Settings', icon: Volume2, description: 'Configure UI sound effects, navigation sounds, and background music volume. Enable or disable individual audio channels.' },
     { id: 'country', label: 'Country', icon: Globe, description: 'Change the display country/region for the dashboard interface.', badge: countryCode },
     { id: 'color', label: 'Hover Color', icon: Palette, description: 'Change the global accent color for the dashboard interface.' },
@@ -434,14 +460,49 @@ const NXESettings = ({ isActive, onBack }) => {
                 />
               )}
               {dynamicSettingsItems[selectedIndex].id === 'sunshine' && (
-                <div style={{ color: '#ffffff', padding: '24px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <h3 style={{ marginTop: 0, color: '#90C31D' }}>Sunshine Streaming Host</h3>
-                  <p style={{ fontSize: '0.95rem', lineHeight: '1.6', color: '#ccc' }}>
-                    Sunshine is currently running on the host machine. You can connect from your phone, tablet, or another PC using <strong>Moonlight</strong>.
-                  </p>
-                  <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '15px' }}>
-                    Configuration is managed via the Sunshine Web Interface at <code style={{ color: '#fff' }}>https://localhost:47990</code>
-                  </p>
+                <div style={{ padding: '24px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                    <div style={{ background: '#107C10', padding: '12px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <SunshineLogo size={32} />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, color: '#fff', fontSize: '1.4rem' }}>Vortex Prime Streaming Portal</h3>
+                      <p style={{ margin: '4px 0 0 0', color: '#90C31D', fontSize: '0.9rem', fontWeight: 600 }}>Zero-Latency Remote Play Powered by Sunshine & Moonlight</p>
+                    </div>
+                  </div>
+                  
+                  <div style={{ flex: 1, position: 'relative', background: '#000', borderRadius: '12px', overflow: 'hidden', border: '2px solid rgba(144, 195, 29, 0.4)' }}>
+                    {/* Embedded Secure Stream Viewer */}
+                    <iframe 
+                      src="https://Vortex-Prime-Emu-streaming"
+                      title="Vortex Prime Streaming Portal"
+                      allow="gamepad; autoplay; fullscreen"
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                      // Fallback overlay when the server isn't running
+                      onError={(e) => e.target.style.display = 'none'}
+                    ></iframe>
+                    
+                    {/* Instructions Overlay (Shows behind iframe or if iframe fails) */}
+                    <div style={{ position: 'absolute', inset: 0, zIndex: -1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px' }}>
+                      <SunshineLogo size={48} style={{ opacity: 0.2, marginBottom: '24px' }} />
+                      <h4 style={{ color: '#fff', margin: '0 0 12px 0' }}>Streaming Service Not Reachable</h4>
+                      <p style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: 1.5, maxWidth: '400px' }}>
+                        Ensure the background streaming services (Sunshine & Web Portal) are running. 
+                        You can access your portal directly from any device at <br/>
+                        <code style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', marginTop: '12px', display: 'inline-block', color: '#90C31D' }}>https://Vortex-Prime-Emu-streaming</code>
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+                    <button 
+                      onClick={() => window.open('https://Vortex-Prime-Emu-streaming', '_blank')}
+                      style={{ background: '#107C10', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '24px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <Globe size={18} /> Open in Browser
+                    </button>
+                  </div>
                 </div>
               )}
 
