@@ -7,163 +7,11 @@ import {
 import playSound from '../utils/soundManager';
 import '../styles/Marketplace.css';
 
-/* ─── Mock community dashboard data ─────────────────────────────────── */
-const COMMUNITY_DASHBOARDS = [
-  {
-    id: 1,
-    name: 'Halo Reach Dashboard',
-    author: 'SpartanUI',
-    authorAvatar: '👾',
-    downloads: 12400,
-    views: 48200,
-    likes: 3210,
-    rating: 4.8,
-    tags: ['Halo', 'Sci-Fi', 'Dark'],
-    description: 'A beautifully crafted Halo Reach-themed NXE layout with custom animations, achievement tiles, and a lush Reach backdrop. Faithful to the original game aesthetic.',
-    preview: 'linear-gradient(135deg, #1a2a3a 0%, #0d1520 50%, #0a1218 100%)',
-    accent: '#4fc3f7',
-    featured: true,
-    trending: true,
-    version: '2.1.0',
-    size: '4.2 MB',
-    updated: '2 days ago',
-  },
-  {
-    id: 2,
-    name: 'Gears Ultimate Dark',
-    author: 'COGDesign',
-    authorAvatar: '⚙️',
-    downloads: 8900,
-    views: 33100,
-    likes: 1890,
-    rating: 4.6,
-    tags: ['Gears', 'Dark', 'Steel'],
-    description: 'Gears of War dark steel layout inspired by the Coalition\'s aesthetic. Heavy textures, Crimson Omen motifs, and brutalist UI panels.',
-    preview: 'linear-gradient(135deg, #1a0a0a 0%, #2a1010 50%, #1a0808 100%)',
-    accent: '#c0382b',
-    featured: false,
-    trending: true,
-    version: '1.5.2',
-    size: '3.8 MB',
-    updated: '1 week ago',
-  },
-  {
-    id: 3,
-    name: 'Forza Horizon Grid',
-    author: 'RacerX',
-    authorAvatar: '🏎️',
-    downloads: 21000,
-    views: 75600,
-    likes: 5420,
-    rating: 4.9,
-    tags: ['Forza', 'Racing', 'Neon'],
-    description: 'Racing-inspired wide tile layout based on the Forza Horizon 5 UI. Neon accents, speed-blur effects, and car showcase panels.',
-    preview: 'linear-gradient(135deg, #0d1a2a 0%, #102030 50%, #081520 100%)',
-    accent: '#ff6b35',
-    featured: true,
-    trending: false,
-    version: '3.0.1',
-    size: '6.1 MB',
-    updated: '3 days ago',
-  },
-  {
-    id: 4,
-    name: 'Classic Blades Revival',
-    author: 'RetroXbox',
-    authorAvatar: '🎮',
-    downloads: 34000,
-    views: 120000,
-    likes: 9100,
-    rating: 5.0,
-    tags: ['Classic', 'Retro', 'Blades'],
-    description: 'The iconic Xbox 360 Blades dashboard faithfully recreated. Includes all 5 original blade sections with pixel-perfect accuracy and original sound cues.',
-    preview: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-    accent: '#90c31d',
-    featured: true,
-    trending: true,
-    version: '4.2.0',
-    size: '5.5 MB',
-    updated: '5 hours ago',
-  },
-  {
-    id: 5,
-    name: 'Mass Effect N7',
-    author: 'Normandy',
-    authorAvatar: '🚀',
-    downloads: 18900,
-    views: 62000,
-    likes: 4300,
-    rating: 4.7,
-    tags: ['Sci-Fi', 'N7', 'Space'],
-    description: 'Mass Effect tri-color N7 themed dashboard. Holographic UI panels, Normandy schematics, and dynamic starfield backdrop.',
-    preview: 'linear-gradient(135deg, #0a0a1a 0%, #0d0d2a 50%, #070715 100%)',
-    accent: '#e53935',
-    featured: false,
-    trending: false,
-    version: '2.3.1',
-    size: '4.9 MB',
-    updated: '2 weeks ago',
-  },
-  {
-    id: 6,
-    name: 'Fable III Royal Court',
-    author: 'Albion360',
-    authorAvatar: '👑',
-    downloads: 5600,
-    views: 22000,
-    likes: 1200,
-    rating: 4.4,
-    tags: ['Fantasy', 'Fable', 'Gold'],
-    description: 'Fable-themed golden dashboard with ornate royal UI elements, Albion crests, and warm candlelit color palette.',
-    preview: 'linear-gradient(135deg, #1a150a 0%, #2a200d 50%, #1a120a 100%)',
-    accent: '#ffd700',
-    featured: false,
-    trending: false,
-    version: '1.2.0',
-    size: '3.2 MB',
-    updated: '1 month ago',
-  },
-  {
-    id: 7,
-    name: 'Cyberpunk 2077 Night City',
-    author: 'NightCityDev',
-    authorAvatar: '🤖',
-    downloads: 29500,
-    views: 95000,
-    likes: 7800,
-    rating: 4.8,
-    tags: ['Cyberpunk', 'Neon', 'Futuristic'],
-    description: 'Night City-inspired neon dashboard with holographic overlays, glitchy text effects, and a dynamic cityscape backdrop.',
-    preview: 'linear-gradient(135deg, #0a001a 0%, #15002a 50%, #200040 100%)',
-    accent: '#f9e400',
-    featured: true,
-    trending: true,
-    version: '2.0.0',
-    size: '7.3 MB',
-    updated: '4 days ago',
-  },
-  {
-    id: 8,
-    name: 'Dark Souls Bonfire',
-    author: 'PrepareToUI',
-    authorAvatar: '🔥',
-    downloads: 14200,
-    views: 51000,
-    likes: 3600,
-    rating: 4.5,
-    tags: ['Dark Souls', 'Dark', 'Fantasy'],
-    description: 'Dark Souls themed minimalist dashboard. Ember tones, bonfire particle effects, and ancient stone UI elements.',
-    preview: 'linear-gradient(135deg, #100808 0%, #1a0c0c 50%, #0d0606 100%)',
-    accent: '#ff6600',
-    featured: false,
-    trending: false,
-    version: '1.8.0',
-    size: '4.0 MB',
-    updated: '3 weeks ago',
-  },
-];
+/* No dashboards yet — the store populates when creators submit real ones */
+const COMMUNITY_DASHBOARDS = [];
 
-const SORT_OPTIONS = ['Most Popular', 'Trending', 'Newest', 'Top Rated', 'Most Downloaded'];
+const SORT_OPTIONS = ['Most Popular', 'Trending', 'Newest', 'Top Rated'];
+const TAG_FILTERS = ['All', 'Featured'];ded'];
 const TAG_FILTERS = ['All', 'Featured', 'Sci-Fi', 'Dark', 'Retro', 'Neon', 'Fantasy', 'Racing'];
 
 function formatNumber(n) {
@@ -251,14 +99,18 @@ const BrowseTab = () => {
       {/* Stats Banner */}
       <div className="mp-stats-banner">
         <div className="mp-stat"><Flame size={14} /><span>{COMMUNITY_DASHBOARDS.length} Dashboards</span></div>
-        <div className="mp-stat"><Download size={14} /><span>150k+ Total Downloads</span></div>
-        <div className="mp-stat"><User size={14} /><span>420+ Creators</span></div>
         <div className="mp-stat"><Award size={14} /><span>All Free</span></div>
       </div>
 
       {/* Grid */}
       <div className="mp-grid" data-testid="store-grid">
-        {filtered.length === 0 ? (
+        {COMMUNITY_DASHBOARDS.length === 0 ? (
+          <div className="mp-empty">
+            <Globe size={40} />
+            <p>No dashboards yet.</p>
+            <p style={{ fontSize: '0.75rem', opacity: 0.5, marginTop: 4 }}>Be the first to upload one!</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="mp-empty">
             <Globe size={40} />
             <p>No dashboards match your search.</p>
