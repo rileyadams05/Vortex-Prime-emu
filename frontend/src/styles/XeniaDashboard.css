@@ -862,19 +862,21 @@ body {
   border-radius: 50%;
 }
 
-/* AI Panel (Open WebUI container) */
+/* AI Panel (Vortex AI native chat) */
 .ai-panel {
   position: fixed;
   top: 60px;
   right: 16px;
   width: 420px;
-  max-height: calc(100vh - 120px);
+  height: calc(100vh - 120px);
   background: linear-gradient(180deg, #1a1d14 0%, #0d0f0a 100%);
   border: 1px solid rgba(144, 195, 29, 0.2);
   border-radius: 8px;
   z-index: 500;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
 }
 
 .ai-panel-header {
@@ -908,7 +910,10 @@ body {
 }
 
 .ai-panel-body {
-  padding: 14px;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .ai-panel-status {
