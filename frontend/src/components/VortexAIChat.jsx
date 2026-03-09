@@ -453,8 +453,31 @@ const VortexAIChat = forwardRef((props, ref) => {
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                title="Upload File"
               >
                 <Plus size={20} />
+              </button>
+
+              <button
+                onClick={() => setIsCommandHubOpen(true)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                title="Command Hub"
+              >
+                <Star size={20} />
               </button>
 
               {/* Mode Selector */}
