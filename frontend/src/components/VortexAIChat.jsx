@@ -2,8 +2,6 @@ import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHand
 import { Send, User, Loader2, Plus, Mic, ChevronUp, ArrowRight, Sparkles, Zap, Brain } from 'lucide-react';
 
 const GEMINI_API_KEY = 'gen-lang-client-0804196204';
-const GEMINI_MODEL = 'gemini-1.5-flash';
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_CONTEXT = `You are Vortex Prime UI, the built-in assistant for Vortex Prime EMU — an Xbox 360 emulator frontend powered by Xenia. 
 You help users with: game compatibility, emulator settings, ROM management, troubleshooting, and general gaming questions.
@@ -134,7 +132,15 @@ const VortexAIChat = forwardRef((props, ref) => {
 
       const history = buildHistory(newMessages.slice(0, -1)); // exclude current user msg
 
-      const response = await fetch(API_URL, {
+      const modelMap = {
+        'Gemini 1.5 Flash (Free)': 'gemini-1.5-flash',
+        'Gemini 3 Flash': 'gemini-1.5-flash',
+        'Gemini 3 Pro': 'gemini-1.5-pro'
+      };
+      const apiModel = modelMap[selectedModel] || 'gemini-1.5-flash';
+      const dynamicUrl = `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${GEMINI_API_KEY}`;
+
+      const response = await fetch(dynamicUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
@@ -173,7 +179,7 @@ const VortexAIChat = forwardRef((props, ref) => {
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  }, [input, isLoading, messages, buildHistory]);
+  }, [input, isLoading, messages, buildHistory, selectedModel]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
