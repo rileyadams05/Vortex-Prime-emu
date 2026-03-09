@@ -138,10 +138,6 @@ const VortexAIChat = forwardRef((props, ref) => {
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
       background: 'transparent',
       fontFamily: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif",
     }}>
@@ -193,27 +189,25 @@ const VortexAIChat = forwardRef((props, ref) => {
 
             {/* Bubble */}
             <div style={{
-              maxWidth: '80%',
-              padding: '8px 12px',
-              borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+              maxWidth: '85%',
+              padding: '12px 20px',
+              borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
               background: msg.role === 'user'
-                ? 'rgba(144,195,29,0.18)'
+                ? 'rgba(144,195,29,0.2)'
                 : msg.error
-                  ? 'rgba(244,67,54,0.12)'
-                  : 'rgba(255,255,255,0.06)',
+                  ? 'rgba(244,67,54,0.15)'
+                  : 'rgba(255,255,255,0.08)',
               border: msg.role === 'user'
-                ? '1px solid rgba(144,195,29,0.3)'
+                ? '1px solid rgba(144,195,29,0.5)'
                 : msg.error
                   ? '1px solid rgba(244,67,54,0.3)'
-                  : '1px solid rgba(255,255,255,0.08)',
+                  : '1px solid rgba(255,255,255,0.15)',
               color: msg.error ? '#ff8a80' : '#ffffff',
-              fontSize: '0.95rem',
+              fontSize: '1.05rem',
+              fontWeight: '500',
               lineHeight: 1.6,
-              backdropFilter: 'blur(12px)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-              border: msg.role === 'user'
-                ? '1px solid rgba(144,195,29,0.4)'
-                : '1px solid rgba(255,255,255,0.15)',
+              backdropFilter: 'blur(16px)',
+              boxShadow: '0 6px 15px rgba(0,0,0,0.4)',
             }}>
               {msg.streaming && !msg.content ? (
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '2px 0' }}>
