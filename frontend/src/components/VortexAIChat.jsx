@@ -915,7 +915,7 @@ const VortexAIChat = forwardRef((props, ref) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button 
                 onClick={() => {
-                  window.open('https://vortex-prime-marketplace.com/dashboards', '_blank');
+                  window.open('https://VortexPrimeEmuStore.com', '_blank');
                   setIsCommandHubOpen(false);
                 }}
                 style={{
