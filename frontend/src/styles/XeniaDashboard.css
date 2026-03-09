@@ -856,8 +856,9 @@ body {
 .ai-toggle-btn:active, 
 .ai-toggle-btn.active,
 .ai-toggle-btn:focus {
-  background: rgba(10, 15, 10, 1) !important;
+  background: #000000 !important;
   border-color: #90C31D !important;
+  box-shadow: 0 0 30px rgba(144, 195, 29, 0.4) !important;
 }
 
 .ai-toggle-btn span {
@@ -865,10 +866,10 @@ body {
 }
 
 .ai-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.05); /* Neutral subtle highlight */
-  border-color: rgba(144, 195, 29, 0.8); /* Stronger green border glow */
-  transform: translateY(-2px);
-  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.6), 0 0 20px rgba(144, 195, 29, 0.15);
+  background: #000000 !important; /* Force pure black background on hover */
+  border-color: #90C31D !important; /* Sharp green border */
+  transform: translateY(-3px);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(144, 195, 29, 0.3);
 }
 
 .open-webui-icon {
