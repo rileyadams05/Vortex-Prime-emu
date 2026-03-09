@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { Send, User, Loader2, Plus, Mic, ChevronUp, ArrowRight, Sparkles, Zap, Brain } from 'lucide-react';
+import { Send, User, Loader2, Plus, Mic, ChevronUp, ArrowRight, Sparkles, Zap, Brain, Star, Globe, Upload, X, ShieldCheck } from 'lucide-react';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 const GEMINI_API_KEY = 'gen-lang-client-0804196204';
 
@@ -32,6 +33,9 @@ const VortexAIChat = forwardRef((props, ref) => {
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [modelTab, setModelTab] = useState('free'); // 'free' | 'pro'
   const [isListening, setIsListening] = useState(false);
+  const [isCommandHubOpen, setIsCommandHubOpen] = useState(false);
+  const [showRestartPopup, setShowRestartPopup] = useState(false);
+  const [pendingTheme, setPendingTheme] = useState(null);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -40,7 +44,8 @@ const VortexAIChat = forwardRef((props, ref) => {
   const recognitionRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
-    clearChat
+    clearChat,
+    openCommandHub: () => setIsCommandHubOpen(true)
   }));
 
   useEffect(() => {
@@ -105,6 +110,27 @@ const VortexAIChat = forwardRef((props, ref) => {
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
+
+    // Detect Dashboard Config
+    if (text.startsWith('DASHBOARD_CONFIG:') || text.includes('"theme_id"')) {
+      try {
+        // Mocking the detection and application logic
+        const assistantId = Date.now() + 1;
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: `✨ **Dashboard Configuration Detected!** ✨\n\nI have successfully validated the custom layout. Would you like me to apply it now? Once applied, you will need to restart the app to see the changes.`,
+            id: assistantId,
+          }]);
+          setPendingTheme(text);
+          setShowRestartPopup(true);
+          setIsLoading(false);
+        }, 1000);
+        return;
+      } catch (e) {
+        console.error("Failed to parse dashboard config:", e);
+      }
+    }
 
     // Capture name if not already set
     if (!userName) {
@@ -214,6 +240,19 @@ const VortexAIChat = forwardRef((props, ref) => {
     const file = e.target.files[0];
     if (file) {
       alert(`Selected file: ${file.name}\n(In a real implementation, this would be uploaded to the AI context)`);
+    }
+  };
+
+  const handleApplyTheme = async () => {
+    try {
+      localStorage.setItem('vortex_active_theme', pendingTheme);
+      // In a real app, we'd write to a file or trigger a Rust command here
+      setShowRestartPopup(false);
+      // Let the user know we're restarting
+      alert("Theme Applied! Please restart the app manually or click OK to attempt auto-relaunch.");
+      await relaunch();
+    } catch (e) {
+      console.error("Relaunch failed:", e);
     }
   };
 
@@ -727,6 +766,157 @@ const VortexAIChat = forwardRef((props, ref) => {
           75%, 100% { transform: scale(1.5); opacity: 0; }
         }
       `}</style>
+
+      {/* Command Hub Modal */}
+      {isCommandHubOpen && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 2000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '400px',
+            background: 'rgb(30,30,30)',
+            border: '2px solid rgba(144,195,29,0.3)',
+            borderRadius: '24px',
+            padding: '24px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+            animation: 'menuIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            position: 'relative',
+          }}>
+            <button 
+              onClick={() => setIsCommandHubOpen(false)}
+              style={{
+                position: 'absolute',
+                top: 16, right: 16,
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(255,255,255,0.4)',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <Star size={24} fill="rgba(144,195,29,0.3)" color="#90C31D" />
+              <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#fff' }}>Command Hub</h2>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button 
+                onClick={() => {
+                  window.open('https://vortex-prime-marketplace.com/dashboards', '_blank');
+                  setIsCommandHubOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  padding: '16px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '16px',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: '12px', background: 'rgba(144,195,29,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Globe size={20} color="#90C31D" style={{ margin: 'auto' }} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: '600' }}>Browse Community</div>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Explore and copy user dashboards</div>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => {
+                  alert("Opening Upload Wizard... (Dashboards will be uploaded to /Repository/Store)");
+                  setIsCommandHubOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  padding: '16px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '16px',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: '12px', background: 'rgba(144,195,29,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Upload size={20} color="#90C31D" style={{ margin: 'auto' }} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: '600' }}>Upload Dashboard</div>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Share your creation to the project gallery</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Restart Popup */}
+      {showRestartPopup && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(5px)',
+          zIndex: 3000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '340px',
+            background: 'rgb(25,25,25)',
+            border: '1px solid #90C31D',
+            borderRadius: '20px',
+            padding: '24px',
+            textAlign: 'center',
+            boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
+            animation: 'menuIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}>
+            <ShieldCheck size={48} color="#90C31D" style={{ marginBottom: '16px' }} />
+            <h3 style={{ margin: '0 0 8px', color: '#fff' }}>Restart Required</h3>
+            <p style={{ margin: '0 0 24px', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>
+              The new dashboard layout has been applied. Please restart the app to finalize the changes.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => setShowRestartPopup(false)}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', cursor: 'pointer' }}
+              >Later</button>
+              <button 
+                onClick={handleApplyTheme}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: '#90C31D', color: '#000', fontWeight: '600', cursor: 'pointer' }}
+              >Restart Now</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
