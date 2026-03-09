@@ -129,7 +129,7 @@ const VortexAIChat = forwardRef((props, ref) => {
     // Simple markdown: bold, code, line breaks
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/`([^`]+)`/g, '<code style="background:rgba(144,195,29,0.15);padding:2px 5px;border-radius:3px;font-family:monospace;font-size:0.85em">$1</code>')
+      .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.15);padding:3px 6px;border-radius:4px;font-family:monospace;font-size:0.95em;color:#90C31D">$1</code>')
       .replace(/\n/g, '<br/>');
   };
 
