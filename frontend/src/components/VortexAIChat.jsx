@@ -278,6 +278,17 @@ const VortexAIChat = forwardRef((props, ref) => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    // Simulating the automatic Google/Antigravity connection
+    alert("Connecting to Google Account via Antigravity Subscription...");
+    setTimeout(() => {
+      setIsSubscribed(true);
+      localStorage.setItem('vortex_ai_subscribed', 'true');
+      setShowLoginModal(false);
+      alert("Antigravity Subscription verified! All Pro models are now unlocked.");
+    }, 1200);
+  };
+
   const addCustomAI = () => {
     const name = prompt("Enter the name of the new AI model:");
     if (name) {
@@ -1047,7 +1058,39 @@ const VortexAIChat = forwardRef((props, ref) => {
               </p>
             </div>
 
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <button 
+                onClick={handleGoogleLogin}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  padding: '14px',
+                  background: '#fff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: '#000',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(255,255,255,0.1)'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: 18, height: 18 }} />
+                Sign in with Google
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '8px 0' }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>OR USE EMAIL</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+              </div>
+
+              <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ position: 'relative' }}>
                 <Mail size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
                 <input 
