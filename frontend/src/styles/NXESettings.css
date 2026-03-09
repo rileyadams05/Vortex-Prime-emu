@@ -473,3 +473,14 @@
     padding: 20px 24px;
   }
 }
+
+/* Sunshine Gateway Pulse Animation */
+@keyframes sunshine-pulse-anim {
+  0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)); opacity: 0.9; }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9)); opacity: 1; }
+  100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)); opacity: 0.9; }
+}
+
+.sunshine-pulse {
+  animation: sunshine-pulse-anim 3s ease-in-out infinite;
+}
