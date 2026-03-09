@@ -8,6 +8,7 @@ import BladesOverlay from '../components/BladesOverlay';
 import GuideOverlay from '../components/GuideOverlay';
 import ThemeManager from '../components/ThemeManager';
 import Marketplace from '../components/Marketplace';
+import CommunityHubModal from '../components/CommunityHubModal';
 import Xbox360Keyboard from '../components/Xbox360Keyboard';
 import VortexAIChat from '../components/VortexAIChat';
 import { useDropzone } from 'react-dropzone';
@@ -18,6 +19,7 @@ import { coreConfigApi } from '../services/apiServices';
 import '../styles/XeniaDashboard.css';
 import '../styles/Marketplace.css';
 import '../styles/Xbox360Keyboard.css';
+import '../styles/CommunityHubModal.css';
 
 const API = '/api';
 
@@ -29,6 +31,10 @@ const XeniaDashboard = () => {
   const [selectedCardIndex, setSelectedCardIndex] = useState(0);
   const [gameCarouselIndex, setGameCarouselIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Community Hub / Store state
+  const [isCommunityHubOpen, setIsCommunityHubOpen] = useState(false);
+  const [storeDefaultTab, setStoreDefaultTab] = useState('browse');
 
   // AI Panel state
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
@@ -1257,6 +1263,16 @@ const XeniaDashboard = () => {
             </button>
           </div>
 
+          {/* ⭐ Community Hub Star Button */}
+          <button
+            className="community-hub-btn"
+            data-testid="community-hub-btn"
+            title="Community Hub"
+            onClick={() => { playSound('select'); setIsCommunityHubOpen(true); }}
+          >
+            <Star size={22} fill="currentColor" />
+          </button>
+
           <div className="user-profile" data-testid="user-profile">
             {isLoggedIn && (
               <>
@@ -1335,7 +1351,10 @@ const XeniaDashboard = () => {
           {currentView === 'gameLibrary' && renderGameLibrary()}
           {currentView === 'achievements' && renderGameLibrary()}
           {currentView === 'marketplace' && (
-            <Marketplace onBack={() => { playSound('back'); setCurrentView('home'); }} />
+            <Marketplace
+              onBack={() => { playSound('back'); setCurrentView('home'); }}
+              defaultTab={storeDefaultTab}
+            />
           )}
           {currentView === 'themes' && renderThemesView()}
           {currentView === 'startup' && renderStartupView()}
@@ -1408,6 +1427,22 @@ const XeniaDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Community Hub Modal */}
+      <CommunityHubModal
+        isOpen={isCommunityHubOpen}
+        onClose={() => setIsCommunityHubOpen(false)}
+        onViewStore={() => {
+          setIsCommunityHubOpen(false);
+          setStoreDefaultTab('browse');
+          setCurrentView('marketplace');
+        }}
+        onUpload={() => {
+          setIsCommunityHubOpen(false);
+          setStoreDefaultTab('upload');
+          setCurrentView('marketplace');
+        }}
+      />
 
       {/* Guide Overlay - Rendered outside dashboard container to avoid blur inheritance */}
       <GuideOverlay
