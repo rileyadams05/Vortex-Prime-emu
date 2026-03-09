@@ -134,7 +134,12 @@ const VortexAIChat = forwardRef((props, ref) => {
 
       const modelMap = {
         'Gemini 1.5 Flash (Free)': 'gemini-1.5-flash',
-        'Gemini 3 Pro': 'gemini-1.5-pro'
+        'Gemini 3 Flash': 'gemini-1.5-flash',
+        'Gemini 3.1 Pro (High)': 'gemini-1.5-pro',
+        'Gemini 3.1 Pro (Low)': 'gemini-1.5-pro',
+        'Claude Sonnet 4.6 (Thinking)': 'gemini-1.5-pro',
+        'Claude Opus 4.6 (Thinking)': 'gemini-1.5-pro',
+        'GPT-OSS 120B (Medium)': 'gemini-1.5-pro'
       };
       const apiModel = modelMap[selectedModel] || 'gemini-1.5-flash';
       const dynamicUrl = `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${GEMINI_API_KEY}`;
@@ -548,26 +553,47 @@ const VortexAIChat = forwardRef((props, ref) => {
                   }}>
                     <div style={{ padding: '8px 12px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available Models</div>
                     
-                    {['Gemini 3 Pro', 'Gemini 1.5 Flash (Free)'].map(m => (
+                    {[
+                      { name: 'Gemini 3.1 Pro (High)', new: true },
+                      { name: 'Gemini 3.1 Pro (Low)', new: true },
+                      { name: 'Gemini 3 Flash' },
+                      { name: 'Claude Sonnet 4.6 (Thinking)' },
+                      { name: 'Claude Opus 4.6 (Thinking)' },
+                      { name: 'GPT-OSS 120B (Medium)' },
+                      { name: 'Gemini 1.5 Flash (Free)' }
+                    ].map(m => (
                       <button
-                        key={m}
-                        onClick={() => { setSelectedModel(m); setIsModelMenuOpen(false); }}
+                        key={m.name}
+                        onClick={() => { setSelectedModel(m.name); setIsModelMenuOpen(false); }}
                         style={{
                           width: '100%',
                           textAlign: 'left',
                           padding: '10px 12px',
                           borderRadius: '12px',
                           border: 'none',
-                          background: selectedModel === m ? 'rgba(255,255,255,0.08)' : 'transparent',
+                          background: selectedModel === m.name ? 'rgba(255,255,255,0.08)' : 'transparent',
                           color: 'white',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '8px',
                           fontWeight: '500',
+                          position: 'relative',
                         }}
                       >
-                        <Sparkles size={14} style={{ color: '#90C31D' }} /> {m}
+                        <Sparkles size={14} style={{ color: '#90C31D' }} /> 
+                        <span>{m.name}</span>
+                        {m.new && (
+                          <span style={{
+                            marginLeft: 'auto',
+                            background: 'rgba(255,255,255,0.1)',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '0.7rem',
+                            color: 'rgba(255,255,255,0.6)',
+                            fontWeight: '600'
+                          }}>New</span>
+                        )}
                       </button>
                     ))}
                   </div>
