@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart, Cpu, Shield, AlertTriangle } from 'lucide-react';
+import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart, Cpu, Shield, AlertTriangle, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 import NXESettings from '../components/NXESettings';
@@ -32,6 +32,7 @@ const XeniaDashboard = () => {
 
   // AI Panel state
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
+  const aiChatRef = useRef(null);
 
   // Xbox 360 Keyboard state
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -1180,7 +1181,7 @@ const XeniaDashboard = () => {
               data-testid="open-webui-btn"
               onClick={() => { playSound('select'); setIsAiPanelOpen(prev => !prev); }}
             >
-              <img src="/assets/for-app/open-webui.svg" alt="Vortex AI" className="open-webui-icon" />
+              <img src="/assets/App Icon/icon.svg" alt="Vortex AI" className="open-webui-icon" />
               <span>Vortex AI</span>
             </button>
             <div className="user-profile" data-testid="user-profile">
@@ -1206,12 +1207,34 @@ const XeniaDashboard = () => {
         {isAiPanelOpen && (
           <div className="ai-panel" data-testid="ai-panel">
             <div className="ai-panel-header">
-              <img src="/assets/for-app/open-webui.svg" alt="" className="open-webui-icon" />
+              <img src="/assets/App Icon/icon.svg" alt="" className="open-webui-icon" />
               <h3>Vortex AI</h3>
-              <button className="ai-panel-close" onClick={() => setIsAiPanelOpen(false)} data-testid="ai-panel-close">✕</button>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button 
+                  className="ai-panel-clear" 
+                  onClick={() => { playSound('back'); aiChatRef.current?.clearChat(); }}
+                  title="Clear Chat"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'rgba(255,255,255,0.4)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '4px',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#ff6b6b'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+                >
+                  <Trash2 size={16} />
+                </button>
+                <button className="ai-panel-close" onClick={() => setIsAiPanelOpen(false)} data-testid="ai-panel-close">✕</button>
+              </div>
             </div>
             <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <VortexAIChat />
+              <VortexAIChat ref={aiChatRef} />
             </div>
           </div>
         )}
