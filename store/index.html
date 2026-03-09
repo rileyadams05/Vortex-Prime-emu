@@ -904,10 +904,8 @@
 const REPO_RAW = 'https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/store';
 const DASHBOARDS_INDEX = `${REPO_RAW}/dashboards`;
 
-// Inline dashboard data (loaded from repo JSON files — fallback while repo populates)
-const DASHBOARDS = [
-  {
-    id: 'classic-blades-revival',
+// Dashboards are loaded from store/dashboards/*.json — empty until creators submit
+const DASHBOARDS = [];
     code: 'VP-STORE-CLASSIC-BLADES-4200',
     name: 'Classic Blades Revival',
     author: 'RetroXbox',
