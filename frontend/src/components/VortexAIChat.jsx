@@ -9,7 +9,9 @@ You help users with: game compatibility, emulator settings, ROM management, trou
 Be concise, friendly, and knowledgeable about Xbox 360 games and emulation.`;
 
 const VortexAIChat = forwardRef(({ onOpenStore }, ref) => {
-  const [userName, setUserName] = useState(() => localStorage.getItem('vortex_user_name') || '');
+  // Clear saved name on load (remove this line once you've confirmed the reset worked)
+  localStorage.removeItem('vortex_user_name');
+  const [userName, setUserName] = useState('');
   const [messages, setMessages] = useState(() => {
     const savedName = localStorage.getItem('vortex_user_name');
     if (savedName) {
