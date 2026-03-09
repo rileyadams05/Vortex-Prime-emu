@@ -10,20 +10,22 @@ import CoreSettings from './CoreSettings';
 import ColorSettings from './ColorSettings';
 import '../styles/NXESettings.css';
 
+import { invoke } from '@tauri-apps/api/core';
 import '../styles/NXESettings.css';
 
-// Custom Sunshine Logo component in Xbox Green
-const SunshineLogo = ({ size = 24, className }) => (
+// Custom Sunshine Logo component in Xbox Green (with optional pulsing/red ring states)
+const SunshineLogo = ({ size = 24, className, color = '#107C10', style }) => (
   <svg 
     width={size} 
     height={size} 
     viewBox="0 0 24 24" 
     fill="none" 
-    stroke="#107C10" 
+    stroke={color} 
     strokeWidth="2" 
     strokeLinecap="round" 
     strokeLinejoin="round" 
     className={className}
+    style={style}
   >
     <circle cx="12" cy="12" r="5"></circle>
     <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -45,9 +47,33 @@ const NXESettings = ({ isActive, onBack }) => {
   const [showExitPrompt, setShowExitPrompt] = useState(false);
   const [saveStatus, setSaveStatus] = useState(''); // 'saving', 'saved'
   const [countryCode, setCountryCode] = useState('AU');
+  const [isSunshineRunning, setIsSunshineRunning] = useState(true); // Assume true initially for smooth visual, updated by polling
   const listRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
   const { changeTheme } = useTheme();
+
+  // Poll Sunshine streaming service status for visual indicator
+  useEffect(() => {
+    let interval;
+    if (activePanel === 'sunshine') {
+      const checkStatus = async () => {
+        try {
+          if (window.__TAURI__) {
+            const running = await invoke('check_sunshine_status');
+            setIsSunshineRunning(running);
+          }
+        } catch (e) {
+          console.error("Failed to check Sunshine status:", e);
+          setIsSunshineRunning(false);
+        }
+      };
+      checkStatus();
+      interval = setInterval(checkStatus, 3000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [activePanel]);
 
   // Load initial country code
   useEffect(() => {
@@ -462,16 +488,31 @@ const NXESettings = ({ isActive, onBack }) => {
               {dynamicSettingsItems[selectedIndex].id === 'sunshine' && (
                 <div style={{ padding: '24px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                    <div style={{ background: '#107C10', padding: '12px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <SunshineLogo size={32} />
+                    <div style={{ 
+                      background: isSunshineRunning ? '#107C10' : '#4a0d0d', 
+                      padding: '12px', 
+                      borderRadius: '50%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      transition: 'background-color 0.5s ease',
+                      boxShadow: isSunshineRunning ? '0 0 15px rgba(16, 124, 16, 0.4)' : '0 0 15px rgba(220, 20, 60, 0.4)'
+                    }}>
+                      <SunshineLogo 
+                        size={32} 
+                        color={isSunshineRunning ? '#fff' : '#DC143C'} 
+                        className={isSunshineRunning ? 'sunshine-pulse' : ''} 
+                      />
                     </div>
                     <div>
                       <h3 style={{ margin: 0, color: '#fff', fontSize: '1.4rem' }}>Vortex Prime Streaming Portal</h3>
-                      <p style={{ margin: '4px 0 0 0', color: '#90C31D', fontSize: '0.9rem', fontWeight: 600 }}>Zero-Latency Remote Play Powered by Sunshine & Moonlight</p>
+                      <p style={{ margin: '4px 0 0 0', color: isSunshineRunning ? '#90C31D' : '#DC143C', fontSize: '0.9rem', fontWeight: 600, transition: 'color 0.5s ease' }}>
+                        {isSunshineRunning ? 'Zero-Latency Remote Play Powered by Sunshine & Moonlight' : 'Streaming Service Not Reachable - Restart Core'}
+                      </p>
                     </div>
                   </div>
                   
-                  <div style={{ flex: 1, position: 'relative', background: '#000', borderRadius: '12px', overflow: 'hidden', border: '2px solid rgba(144, 195, 29, 0.4)' }}>
+                  <div style={{ flex: 1, position: 'relative', background: '#000', borderRadius: '12px', overflow: 'hidden', border: `2px solid ${isSunshineRunning ? 'rgba(144, 195, 29, 0.4)' : 'rgba(220, 20, 60, 0.4)'}`, transition: 'border-color 0.5s ease' }}>
                     {/* Embedded Secure Stream Viewer */}
                     <iframe 
                       src="https://Vortex-Prime-Emu-streaming"
