@@ -22,7 +22,7 @@ const VortexAIChat = forwardRef((props, ref) => {
     }
     return [{
       role: 'assistant',
-      content: "Hey,there user! Welcome to **Vortex Prime Emulator**. What's your name? So we can get started!!!",
+      content: "Hey,there user! Welcome to **Vortex Prime Emu!!!**. What's your name? So we can get started!!!",
       id: Date.now(),
     }];
   });
