@@ -10,13 +10,22 @@ You help users with: game compatibility, emulator settings, ROM management, trou
 Be concise, friendly, and knowledgeable about Xbox 360 games and emulation.`;
 
 const VortexAIChat = forwardRef((props, ref) => {
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: "Hey! I'm **Vortex Prime UI** — your built-in gaming assistant. Ask me anything about Xbox 360 games, Xenia settings, or game compatibility.",
-      id: Date.now(),
+  const [userName, setUserName] = useState(() => localStorage.getItem('vortex_user_name') || '');
+  const [messages, setMessages] = useState(() => {
+    const savedName = localStorage.getItem('vortex_user_name');
+    if (savedName) {
+      return [{
+        role: 'assistant',
+        content: `Hey there, **${savedName}**! How can I help you today?`,
+        id: Date.now(),
+      }];
     }
-  ]);
+    return [{
+      role: 'assistant',
+      content: "Hey, welcome there! Welcome to **Vortex Prime Emulator**. What's your name? So we can get started!!!",
+      id: Date.now(),
+    }];
+  });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -57,6 +66,24 @@ const VortexAIChat = forwardRef((props, ref) => {
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
+
+    // Capture name if not already set
+    if (!userName) {
+      localStorage.setItem('vortex_user_name', text);
+      setUserName(text);
+      
+      const assistantId = Date.now() + 1;
+      setTimeout(() => {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: `Hey there, **${text}**! How can I help you today?`, 
+          id: assistantId, 
+          streaming: false 
+        }]);
+        setIsLoading(false);
+      }, 600);
+      return;
+    }
 
     const assistantId = Date.now() + 1;
     setMessages(prev => [...prev, { role: 'assistant', content: '', id: assistantId, streaming: true }]);
@@ -118,9 +145,12 @@ const VortexAIChat = forwardRef((props, ref) => {
   const clearChat = () => {
     abortRef.current?.abort();
     setIsLoading(false);
+    const savedName = localStorage.getItem('vortex_user_name');
     setMessages([{
       role: 'assistant',
-      content: "Chat cleared! I'm Vortex Prime UI — ready to help with your Xbox 360 gaming questions.",
+      content: savedName 
+        ? `Chat cleared! How can I help you today, **${savedName}**?`
+        : "Welcome to **Vortex Prime Emulator**. What's your name? So we can get started!!!",
       id: Date.now(),
     }]);
   };
