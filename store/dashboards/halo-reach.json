@@ -1,0 +1,21 @@
+{
+  "id": "halo-reach",
+  "code": "VP-STORE-HALO-REACH-2100",
+  "name": "Halo Reach Dashboard",
+  "author": "SpartanUI",
+  "version": "2.1.0",
+  "description": "A beautifully crafted Halo Reach-themed NXE layout with custom animations, achievement tiles, and a lush Reach backdrop. Faithful to the original game aesthetic.",
+  "tags": ["Halo", "Sci-Fi", "Dark"],
+  "accent": "#4fc3f7",
+  "preview_gradient": "linear-gradient(135deg, #1a2a3a 0%, #0d1520 50%, #0a1218 100%)",
+  "emoji": "👾",
+  "downloads": 12400,
+  "likes": 3210,
+  "rating": 4.8,
+  "size_mb": 4.2,
+  "updated": "2026-03-07",
+  "featured": true,
+  "trending": true,
+  "package": "packages/halo-reach-v210.zip",
+  "install_target": "themes/store/halo-reach"
+}
