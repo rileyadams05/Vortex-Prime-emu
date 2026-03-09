@@ -1214,7 +1214,7 @@ const XeniaDashboard = () => {
                   onClick={() => { playSound('select'); aiChatRef.current?.openCommandHub(); }}
                   title="Command Hub"
                 >
-                  <Star size={20} fill="rgba(144,195,29,0.3)" color="#90C31D" />
+                  <Star size={20} />
                 </button>
                 <button 
                   className="ai-header-btn" 
