@@ -857,10 +857,10 @@ body {
 }
 
 .ai-toggle-btn:hover {
-  background: rgba(144, 195, 29, 0.1);
-  border-color: rgba(144, 195, 29, 0.6);
+  background: rgba(255, 255, 255, 0.05); /* Neutral subtle highlight */
+  border-color: rgba(144, 195, 29, 0.8); /* Stronger green border glow */
   transform: translateY(-2px);
-  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.6), 0 0 20px rgba(144, 195, 29, 0.15);
 }
 
 .open-webui-icon {
