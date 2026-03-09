@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart, Cpu, Shield, AlertTriangle, Trash2 } from 'lucide-react';
+import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart, Cpu, Shield, AlertTriangle, Trash2, Plus, RotateCcw, X } from 'lucide-react';
 import axios from 'axios';
 
 import NXESettings from '../components/NXESettings';
@@ -1208,28 +1208,28 @@ const XeniaDashboard = () => {
           <div className="ai-panel" data-testid="ai-panel">
             <div className="ai-panel-header">
               <h3>Vortex Prime UI</h3>
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
                 <button 
-                  className="ai-panel-clear" 
-                  onClick={() => { playSound('back'); aiChatRef.current?.clearChat(); }}
-                  title="Clear Chat"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'rgba(255,255,255,0.4)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '4px',
-                    transition: 'color 0.2s'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#ff6b6b'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+                  className="ai-header-btn" 
+                  onClick={() => { playSound('select'); aiChatRef.current?.clearChat(); }}
+                  title="New Chat"
                 >
-                  <Trash2 size={16} />
+                  <Plus size={22} />
                 </button>
-                <button className="ai-panel-close" onClick={() => setIsAiPanelOpen(false)} data-testid="ai-panel-close">✕</button>
+                <button 
+                  className="ai-header-btn" 
+                  onClick={() => { playSound('select'); /* Logic for history would go here */ }}
+                  title="Chat History"
+                >
+                  <RotateCcw size={20} />
+                </button>
+                <button 
+                  className="ai-header-btn" 
+                  onClick={() => { playSound('back'); setIsAiPanelOpen(false); }}
+                  title="Close"
+                >
+                  <X size={22} />
+                </button>
               </div>
             </div>
             <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
