@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { Send, User, Loader2 } from 'lucide-react';
+import { Send, User, Loader2, Plus, Mic, ChevronUp, ArrowRight, Sparkles, Zap, Brain } from 'lucide-react';
 
 const GEMINI_API_KEY = 'gen-lang-client-0804196204';
 const GEMINI_MODEL = 'gemini-1.5-flash';
@@ -28,20 +28,56 @@ const VortexAIChat = forwardRef((props, ref) => {
   });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState('fast'); // 'fast' | 'planning'
+  const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash');
+  const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fileRef = useRef(null);
   const abortRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     clearChat
   }));
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.mode-menu-container')) setIsModeMenuOpen(false);
+      if (!e.target.closest('.model-menu-container')) setIsModelMenuOpen(false);
+    };
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     inputRef.current?.focus();
+    
+    // Initialize Web Speech API
+    if (window.webkitSpeechRecognition || window.SpeechRecognition) {
+      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(prev => prev + transcript);
+        setIsListening(false);
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+    }
   }, []);
 
   const buildHistory = useCallback((msgs) => {
@@ -139,6 +175,30 @@ const VortexAIChat = forwardRef((props, ref) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const toggleVoice = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      try {
+        recognitionRef.current?.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Failed to start speech recognition:', err);
+      }
+    }
+  };
+
+  const handleFileClick = () => {
+    fileRef.current?.click();
+  };
+
+  const onFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      alert(`Selected file: ${file.name}\n(In a real implementation, this would be uploaded to the AI context)`);
     }
   };
 
@@ -270,64 +330,304 @@ const VortexAIChat = forwardRef((props, ref) => {
 
       {/* Input area */}
       <div style={{
-        padding: '16px 20px',
-        display: 'flex',
-        gap: '12px',
-        alignItems: 'center',
+        padding: '12px 20px 24px',
         background: 'transparent',
+        position: 'relative',
       }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '28px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(30px)',
+          padding: '8px 16px 12px',
+          transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+        }}>
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask me anything."
+            rows={1}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              padding: '12px 0 8px',
+              color: '#ffffff',
+              fontSize: '1.15rem',
+              resize: 'none',
+              outline: 'none',
+              fontFamily: "'Segoe UI', system-ui, sans-serif",
+              lineHeight: 1.5,
+              maxHeight: 250,
+              overflowY: 'auto',
+            }}
+            onInput={e => {
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
+          />
 
-
-        <textarea
-          ref={inputRef}
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask me anything."
-          rows={1}
-          style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            padding: '12px 10px',
-            color: '#ffffff',
-            fontSize: '1.15rem',
-            resize: 'none',
-            outline: 'none',
-            fontFamily: "'Segoe UI', system-ui, sans-serif",
-            lineHeight: 1.5,
-            maxHeight: 250,
-            overflowY: 'auto',
-          }}
-          onInput={e => {
-            e.target.style.height = 'auto';
-            e.target.style.height = e.target.scrollHeight + 'px';
-          }}
-        />
-
-        <button
-          onClick={sendMessage}
-          disabled={!input.trim() || isLoading}
-          style={{
-            width: 48,
-            height: 48,
-            background: input.trim() && !isLoading
-              ? 'rgba(144,195,29,0.9)'
-              : 'transparent',
-            border: 'none',
-            borderRadius: '50%',
-            cursor: input.trim() && !isLoading ? 'pointer' : 'default',
-            color: input.trim() && !isLoading ? '#000' : 'rgba(255,255,255,0.2)',
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.3s ease',
-            flexShrink: 0,
-            opacity: input.trim() && !isLoading ? 1 : 0.4
-          }}
-        >
-          {isLoading ? <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={24} />}
-        </button>
+            justifyContent: 'space-between',
+            marginTop: '4px',
+          }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Plus Button */}
+              <input type="file" ref={fileRef} style={{ display: 'none' }} onChange={onFileChange} />
+              <button
+                onClick={handleFileClick}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <Plus size={20} />
+              </button>
+
+              {/* Mode Selector */}
+              <div style={{ position: 'relative' }} className="mode-menu-container">
+                <button
+                  onClick={() => setIsModeMenuOpen(!isModeMenuOpen)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: 'rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.8)',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                >
+                  <ChevronUp size={14} />
+                  <span style={{ textTransform: 'capitalize' }}>{mode}</span>
+                </button>
+
+                {isModeMenuOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '100%',
+                    left: 0,
+                    marginBottom: '12px',
+                    width: '320px',
+                    background: 'rgb(24, 24, 24)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    padding: '8px',
+                    boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+                    zIndex: 1000,
+                    animation: 'menuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}>
+                    <div style={{ padding: '8px 12px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Conversation mode</div>
+                    
+                    <button
+                      onClick={() => { setMode('planning'); setIsModeMenuOpen(false); }}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '12px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: mode === 'planning' ? 'rgba(255,255,255,0.08)' : 'transparent',
+                        color: 'white',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' }}>
+                        <Brain size={16} /> Planning
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', fontWeight: '400' }}>
+                        Agent can plan before executing tasks. Use for deep research, complex tasks, or collaborative work
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => { setMode('fast'); setIsModeMenuOpen(false); }}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '12px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: mode === 'fast' ? 'rgba(255,255,255,0.08)' : 'transparent',
+                        color: 'white',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                        marginTop: '4px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' }}>
+                        <Zap size={16} /> Fast
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', fontWeight: '400' }}>
+                        Agent will execute tasks directly. Use for simple tasks that can be completed faster
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Model Selector */}
+              <div style={{ position: 'relative' }} className="model-menu-container">
+                <button
+                  onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: 'rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.8)',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                >
+                  <ChevronUp size={14} />
+                  <span>{selectedModel}</span>
+                </button>
+
+                {isModelMenuOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '100%',
+                    left: 0,
+                    marginBottom: '12px',
+                    width: '240px',
+                    background: 'rgb(24, 24, 24)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    padding: '8px',
+                    boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+                    zIndex: 1000,
+                    animation: 'menuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}>
+                    <div style={{ padding: '8px 12px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available Models</div>
+                    
+                    {['Gemini 1.5 Flash', 'Gemini 1.5 Pro', 'Gemini 1.0 Pro'].map(m => (
+                      <button
+                        key={m}
+                        onClick={() => { setSelectedModel(m); setIsModelMenuOpen(false); }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 12px',
+                          borderRadius: '12px',
+                          border: 'none',
+                          background: selectedModel === m ? 'rgba(255,255,255,0.08)' : 'transparent',
+                          color: 'white',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          fontWeight: '500',
+                        }}
+                      >
+                        <Sparkles size={14} style={{ color: '#90C31D' }} /> {m}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Voice Button */}
+              <button
+                onClick={toggleVoice}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: isListening ? 'rgba(144,195,29,0.2)' : 'transparent',
+                  color: isListening ? '#90C31D' : 'rgba(255,255,255,0.6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  position: 'relative',
+                }}
+                onMouseEnter={e => !isListening && (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+                onMouseLeave={e => !isListening && (e.currentTarget.style.background = 'transparent')}
+              >
+                <Mic size={20} />
+                {isListening && (
+                  <div style={{
+                    position: 'absolute',
+                    top: -2,
+                    left: -2,
+                    right: -2,
+                    bottom: -2,
+                    borderRadius: '50%',
+                    border: '2px solid #90C31D',
+                    animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite',
+                  }} />
+                )}
+              </button>
+
+              {/* Send Button */}
+              <button
+                onClick={sendMessage}
+                disabled={!input.trim() || isLoading}
+                style={{
+                  width: 40,
+                  height: 40,
+                  background: input.trim() && !isLoading
+                    ? '#ffffff'
+                    : 'rgba(255,255,255,0.1)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  cursor: input.trim() && !isLoading ? 'pointer' : 'default',
+                  color: input.trim() && !isLoading ? '#000' : 'rgba(255,255,255,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease',
+                  flexShrink: 0,
+                }}
+              >
+                {isLoading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <ArrowRight size={20} />}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <style>{`
@@ -341,6 +641,13 @@ const VortexAIChat = forwardRef((props, ref) => {
         }
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        @keyframes menuIn {
+          from { opacity: 0; transform: translateY(10px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes ping {
+          75%, 100% { transform: scale(1.5); opacity: 0; }
         }
       `}</style>
     </div>
