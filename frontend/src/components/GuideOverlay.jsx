@@ -197,6 +197,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   if (!isOpen) return null;
 
   // ========== FRIENDS & PARTIES TAB ==========
+  const renderFriendsPartiesTab = () => (
     <div className={`guide-tab-content ${tabTransition}`}>
       <div className="coming-soon-tab" data-testid="friends-empty-state">
         <div className="coming-soon-tab-icon">
@@ -217,8 +218,10 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
         )}
       </div>
     </div>
+  );
 
   // ========== MESSAGES TAB ==========
+  const renderMessagesTab = () => (
     <div className={`guide-tab-content ${tabTransition}`}>
       <div className="coming-soon-tab" data-testid="messages-empty-state">
         <div className="coming-soon-tab-icon">
@@ -234,6 +237,7 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
         </p>
       </div>
     </div>
+  );
 
   // ========== HOME TAB ==========
   const renderHomeTab = () => {
