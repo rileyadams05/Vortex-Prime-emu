@@ -34,6 +34,7 @@ const VortexAIChat = forwardRef(({ onOpenStore }, ref) => {
   const [modelTab, setModelTab] = useState('free'); // 'free' | 'pro'
   const [isListening, setIsListening] = useState(false);
   const [isCommandHubOpen, setIsCommandHubOpen] = useState(false);
+  const [isStoreReminderOpen, setIsStoreReminderOpen] = useState(false);
   const [showRestartPopup, setShowRestartPopup] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(() => localStorage.getItem('vortex_ai_subscribed') === 'true');
@@ -939,7 +940,7 @@ const VortexAIChat = forwardRef(({ onOpenStore }, ref) => {
               <button 
                 onClick={() => {
                   setIsCommandHubOpen(false);
-                  window.open('https://rileyadams05.github.io/Vortex-Prime-emu/store/', '_blank');
+                  setIsStoreReminderOpen(true);
                 }}
                 style={{
                   display: 'flex',
@@ -995,6 +996,98 @@ const VortexAIChat = forwardRef(({ onOpenStore }, ref) => {
                   <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Creators: Share your dashboard to the project gallery</div>
                 </div>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ⚠️ Pre-release Store Reminder */}
+      {isStoreReminderOpen && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 2100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '420px',
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '40px 32px 32px',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.9)',
+            animation: 'menuIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            color: '#24292f',
+            textAlign: 'center',
+            position: 'relative',
+          }}>
+            {/* GitHub 404 style */}
+            <div style={{ fontSize: '4rem', fontWeight: '900', color: '#24292f', lineHeight: 1, marginBottom: '12px' }}>404</div>
+            <p style={{ fontSize: '1rem', color: '#cf222e', fontWeight: '600', marginBottom: '6px' }}>
+              There isn't a GitHub Pages site here.
+            </p>
+            <p style={{ fontSize: '0.78rem', color: '#57606a', marginBottom: '24px', lineHeight: 1.5 }}>
+              If you're trying to publish one, read the full documentation to learn how to set up GitHub Pages for your repository.
+            </p>
+
+            {/* Reminder banner */}
+            <div style={{
+              background: '#fff8c5',
+              border: '1px solid #d4a72c',
+              borderRadius: '8px',
+              padding: '14px 16px',
+              marginBottom: '20px',
+              textAlign: 'left',
+            }}>
+              <div style={{ fontWeight: '700', fontSize: '0.78rem', color: '#7d4e00', marginBottom: '6px' }}>⚠️ Pre-release reminder — just for you</div>
+              <div style={{ fontSize: '0.72rem', color: '#7d4e00', lineHeight: 1.5 }}>
+                The store is ready, but the repo is still <strong>private</strong>. Before you release Vortex Prime, go to:<br />
+                <code style={{ background: 'rgba(0,0,0,0.08)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.68rem' }}>
+                  GitHub → Settings → Pages → make repo Public
+                </code>
+                <br />Then the store will go live automatically.
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setIsStoreReminderOpen(false)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: '1px solid #d0d7de',
+                  background: '#f6f8fa',
+                  color: '#24292f',
+                  fontFamily: 'inherit',
+                  fontSize: '0.82rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >Got it</button>
+              <button
+                onClick={() => {
+                  setIsStoreReminderOpen(false);
+                  window.open('https://rileyadams05.github.io/Vortex-Prime-emu/store/', '_blank');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#24292f',
+                  color: '#fff',
+                  fontFamily: 'inherit',
+                  fontSize: '0.82rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >Open anyway</button>
             </div>
           </div>
         </div>
