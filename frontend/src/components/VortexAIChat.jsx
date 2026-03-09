@@ -1154,9 +1154,9 @@ const VortexAIChat = forwardRef((props, ref) => {
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
-});
+      </div>
+    )}
+  </div>
+);
 
 export default VortexAIChat;
