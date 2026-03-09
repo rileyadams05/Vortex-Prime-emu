@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { Send, User, Loader2, Plus, Mic, ChevronUp, ArrowRight, Sparkles, Zap, Brain, Star, Globe, Upload, X, ShieldCheck } from 'lucide-react';
+import { Send, User, Loader2, Plus, Mic, ChevronUp, ArrowRight, Sparkles, Zap, Brain, Star, Globe, Upload, X, ShieldCheck, Lock, Mail, Key } from 'lucide-react';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 const GEMINI_API_KEY = 'gen-lang-client-0804196204';
@@ -35,7 +35,15 @@ const VortexAIChat = forwardRef((props, ref) => {
   const [isListening, setIsListening] = useState(false);
   const [isCommandHubOpen, setIsCommandHubOpen] = useState(false);
   const [showRestartPopup, setShowRestartPopup] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(() => localStorage.getItem('vortex_ai_subscribed') === 'true');
   const [pendingTheme, setPendingTheme] = useState(null);
+  const [loginDetails, setLoginDetails] = useState({ provider: '', email: '', password: '' });
+  
+  const [customModels, setCustomModels] = useState(() => {
+    const saved = localStorage.getItem('vortex_custom_ais');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -68,13 +76,17 @@ const VortexAIChat = forwardRef((props, ref) => {
     if (window.webkitSpeechRecognition || window.SpeechRecognition) {
       const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.continuous = true; // Record for however long you want
+      recognitionRef.current.interimResults = true;
       
       recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(prev => prev + transcript);
-        setIsListening(false);
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) setInput(prev => prev + (prev ? ' ' : '') + finalTranscript);
       };
       
       recognitionRef.current.onend = () => {
@@ -253,6 +265,25 @@ const VortexAIChat = forwardRef((props, ref) => {
       await relaunch();
     } catch (e) {
       console.error("Relaunch failed:", e);
+    }
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (loginDetails.email && loginDetails.password) {
+      setIsSubscribed(true);
+      localStorage.setItem('vortex_ai_subscribed', 'true');
+      setShowLoginModal(false);
+      alert(`Successfully logged into ${loginDetails.provider || 'AI Provider'}. Pro models are now unlocked!`);
+    }
+  };
+
+  const addCustomAI = () => {
+    const name = prompt("Enter the name of the new AI model:");
+    if (name) {
+      const newModels = [...customModels, { name, isCustom: true }];
+      setCustomModels(newModels);
+      localStorage.setItem('vortex_custom_ais', JSON.stringify(newModels));
     }
   };
 
@@ -659,16 +690,25 @@ const VortexAIChat = forwardRef((props, ref) => {
                     {(modelTab === 'free' ? [
                       { name: 'Gemini 1.5 Flash (Free)' }
                     ] : [
-                      { name: 'Gemini 3.1 Pro (High)', new: true },
-                      { name: 'Gemini 3.1 Pro (Low)', new: true },
-                      { name: 'Gemini 3 Flash' },
-                      { name: 'Claude Sonnet 4.6 (Thinking)' },
-                      { name: 'Claude Opus 4.6 (Thinking)' },
-                      { name: 'GPT-OSS 120B (Medium)' }
+                      { name: 'Gemini 3.1 Pro (High)', new: true, locked: !isSubscribed },
+                      { name: 'Gemini 3.1 Pro (Low)', new: true, locked: !isSubscribed },
+                      { name: 'Gemini 3 Flash', locked: !isSubscribed },
+                      { name: 'Claude Sonnet 4.6 (Thinking)', locked: !isSubscribed },
+                      { name: 'Claude Opus 4.6 (Thinking)', locked: !isSubscribed },
+                      { name: 'GPT-OSS 120B (Medium)', locked: !isSubscribed },
+                      ...customModels
                     ]).map(m => (
                       <button
                         key={m.name}
-                        onClick={() => { setSelectedModel(m.name); setIsModelMenuOpen(false); }}
+                        onClick={() => { 
+                          if (m.locked) {
+                            setLoginDetails(prev => ({ ...prev, provider: m.name.split(' ')[0] }));
+                            setShowLoginModal(true);
+                            return;
+                          }
+                          setSelectedModel(m.name); 
+                          setIsModelMenuOpen(false); 
+                        }}
                         style={{
                           width: '100%',
                           textAlign: 'left',
@@ -676,7 +716,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                           borderRadius: '12px',
                           border: 'none',
                           background: selectedModel === m.name ? 'rgba(255,255,255,0.08)' : 'transparent',
-                          color: 'white',
+                          color: m.locked ? 'rgba(255,255,255,0.3)' : 'white',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -685,7 +725,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                           position: 'relative',
                         }}
                       >
-                        <Sparkles size={14} style={{ color: modelTab === 'free' ? 'rgba(255,255,255,0.4)' : '#90C31D' }} /> 
+                        {m.locked ? <Lock size={14} /> : <Sparkles size={14} style={{ color: modelTab === 'free' ? 'rgba(255,255,255,0.4)' : '#90C31D' }} />}
                         <span>{m.name}</span>
                         {m.new && (
                           <span style={{
@@ -700,6 +740,30 @@ const VortexAIChat = forwardRef((props, ref) => {
                         )}
                       </button>
                     ))}
+                    
+                    {modelTab === 'pro' && (
+                      <button
+                        onClick={addCustomAI}
+                        style={{
+                          width: 'calc(100% - 16px)',
+                          margin: '8px',
+                          padding: '10px',
+                          background: 'rgba(144,195,29,0.1)',
+                          border: '1px dashed rgba(144,195,29,0.3)',
+                          borderRadius: '12px',
+                          color: '#90C31D',
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <Plus size={14} /> Add Custom AI Model
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -714,8 +778,8 @@ const VortexAIChat = forwardRef((props, ref) => {
                   height: 40,
                   borderRadius: '50%',
                   border: 'none',
-                  background: isListening ? 'rgba(144,195,29,0.2)' : 'transparent',
-                  color: isListening ? '#90C31D' : 'rgba(255,255,255,0.6)',
+                  background: isListening ? '#f44336' : 'transparent',
+                  color: isListening ? '#fff' : 'rgba(255,255,255,0.6)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -725,17 +789,18 @@ const VortexAIChat = forwardRef((props, ref) => {
                 }}
                 onMouseEnter={e => !isListening && (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
                 onMouseLeave={e => !isListening && (e.currentTarget.style.background = 'transparent')}
+                title={isListening ? "Recording... (Click to Stop)" : "Voice-to-Text"}
               >
                 <Mic size={20} />
                 {isListening && (
                   <div style={{
                     position: 'absolute',
-                    top: -2,
-                    left: -2,
-                    right: -2,
-                    bottom: -2,
+                    top: -4,
+                    left: -4,
+                    right: -4,
+                    bottom: -4,
                     borderRadius: '50%',
-                    border: '2px solid #90C31D',
+                    border: '2px solid #f44336',
                     animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite',
                   }} />
                 )}
@@ -937,6 +1002,113 @@ const VortexAIChat = forwardRef((props, ref) => {
                 style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: '#90C31D', color: '#000', fontWeight: '600', cursor: 'pointer' }}
               >Restart Now</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Login Modal */}
+      {showLoginModal && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(12px)',
+          zIndex: 4000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '380px',
+            background: 'rgb(28,28,28)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '24px',
+            padding: '32px 24px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
+            animation: 'menuIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            position: 'relative',
+          }}>
+            <button 
+              onClick={() => setShowLoginModal(false)}
+              style={{ position: 'absolute', top: 20, right: 20, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '16px', background: 'rgba(144,195,29,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <Lock size={28} color="#90C31D" />
+              </div>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Pro Subscription</h2>
+              <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>
+                Sign in to your {loginDetails.provider || 'AI provider'} account to unlock this model.
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ position: 'relative' }}>
+                <Mail size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                <input 
+                  type="email" 
+                  placeholder="Subscription Email" 
+                  required
+                  value={loginDetails.email}
+                  onChange={e => setLoginDetails(prev => ({ ...prev, email: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '14px 14px 14px 44px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    outline: 'none',
+                    fontSize: '0.95rem'
+                  }}
+                />
+              </div>
+              <div style={{ position: 'relative' }}>
+                <Key size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                <input 
+                  type="password" 
+                  placeholder="Password" 
+                  required
+                  value={loginDetails.password}
+                  onChange={e => setLoginDetails(prev => ({ ...prev, password: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '14px 14px 14px 44px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    outline: 'none',
+                    fontSize: '0.95rem'
+                  }}
+                />
+              </div>
+              <button 
+                type="submit"
+                style={{
+                  marginTop: '12px',
+                  padding: '14px',
+                  background: '#90C31D',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '1rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(144,195,29,0.3)',
+                  transition: 'transform 0.2s ease'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                Sign In & Unlock
+              </button>
+            </form>
           </div>
         </div>
       )}
