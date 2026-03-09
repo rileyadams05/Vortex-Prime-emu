@@ -1296,13 +1296,6 @@ const XeniaDashboard = () => {
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
                 <button 
                   className="ai-header-btn" 
-                  onClick={(e) => { e.stopPropagation(); playSound('select'); aiChatRef.current?.openCommandHub(); }}
-                  title="Command Hub"
-                >
-                  <Star size={20} />
-                </button>
-                <button 
-                  className="ai-header-btn" 
                   onClick={(e) => { e.stopPropagation(); playSound('select'); aiChatRef.current?.clearChat(); }}
                   title="New Chat"
                 >
