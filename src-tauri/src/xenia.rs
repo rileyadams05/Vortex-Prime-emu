@@ -28,6 +28,24 @@ pub async fn launch_xenia(game_path: String, xuid: String, gamertag: String) -> 
         .spawn()
         .map_err(|e| format!("Failed to launch Xenia: {}", e))?;
     
+    // Force Xenia to the foreground for browser API streaming (Gamepad Passthrough)
+    std::thread::spawn(|| {
+        std::thread::sleep(std::time::Duration::from_millis(2000)); // Wait for Xenia window to initialize
+        let focus_script = r#"
+            $WsShell = New-Object -ComObject wscript.shell;
+            if ($WsShell.AppActivate("Xenia Canary") -or $WsShell.AppActivate("Xenia")) {
+                Write-Host "Vortex Prime: Activated Xenia Window for streaming."
+            }
+        "#;
+        let _ = std::process::Command::new("powershell")
+            .arg("-NoProfile")
+            .arg("-WindowStyle")
+            .arg("Hidden")
+            .arg("-Command")
+            .arg(focus_script)
+            .spawn();
+    });
+
     Ok(format!("Launched game: {} as {}", game_path, gamertag))
 }
 
