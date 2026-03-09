@@ -287,32 +287,21 @@ const VortexAIChat = forwardRef((props, ref) => {
           rows={1}
           style={{
             flex: 1,
-            background: 'rgba(255,255,255,0.07)',
-            border: '1px solid rgba(144,195,29,0.3)',
-            borderRadius: 14,
-            padding: '12px 18px',
+            background: 'transparent',
+            border: 'none',
+            padding: '12px 10px',
             color: '#ffffff',
-            fontSize: '1rem',
+            fontSize: '1.15rem',
             resize: 'none',
             outline: 'none',
             fontFamily: "'Segoe UI', system-ui, sans-serif",
             lineHeight: 1.5,
-            maxHeight: 120,
+            maxHeight: 250,
             overflowY: 'auto',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.2)',
-          }}
-          onFocus={e => {
-            e.target.style.borderColor = 'rgba(144,195,29,0.6)';
-            e.target.style.background = 'rgba(255,255,255,0.09)';
-          }}
-          onBlur={e => {
-            e.target.style.borderColor = 'rgba(144,195,29,0.3)';
-            e.target.style.background = 'rgba(255,255,255,0.07)';
           }}
           onInput={e => {
             e.target.style.height = 'auto';
-            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            e.target.style.height = e.target.scrollHeight + 'px';
           }}
         />
 
@@ -320,27 +309,24 @@ const VortexAIChat = forwardRef((props, ref) => {
           onClick={sendMessage}
           disabled={!input.trim() || isLoading}
           style={{
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             background: input.trim() && !isLoading
-              ? 'linear-gradient(135deg, #90C31D 0%, #6da110 100%)'
-              : 'rgba(255,255,255,0.06)',
+              ? 'rgba(144,195,29,0.9)'
+              : 'transparent',
             border: 'none',
             borderRadius: '50%',
-            cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
+            cursor: input.trim() && !isLoading ? 'pointer' : 'default',
             color: input.trim() && !isLoading ? '#000' : 'rgba(255,255,255,0.2)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            transition: 'all 0.3s ease',
             flexShrink: 0,
-            boxShadow: input.trim() && !isLoading ? '0 4px 12px rgba(144,195,29,0.3)' : 'none',
-            transform: input.trim() && !isLoading ? 'scale(1)' : 'scale(0.95)',
+            opacity: input.trim() && !isLoading ? 1 : 0.4
           }}
-          onMouseEnter={e => { if (input.trim() && !isLoading) e.currentTarget.style.transform = 'scale(1.1)'; }}
-          onMouseLeave={e => { if (input.trim() && !isLoading) e.currentTarget.style.transform = 'scale(1)'; }}
         >
-          {isLoading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={20} />}
+          {isLoading ? <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={24} />}
         </button>
       </div>
 
