@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vortex Prime Store — Community Dashboards</title>
+  <meta name="description" content="Browse, download, and share custom dashboard layouts for Vortex Prime EMU. The official community store powered by the Vortex Prime repository." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #90c31d;
+      --green-dim: rgba(144,195,29,0.15);
+      --green-border: rgba(144,195,29,0.25);
+      --blue: #00a0dc;
+      --purple: #9c27b0;
+      --bg: #080c08;
+      --bg2: #0e140e;
+      --bg3: #131a13;
+      --border: rgba(255,255,255,0.07);
+      --text: #ffffff;
+      --text-dim: rgba(255,255,255,0.5);
+      --text-faint: rgba(255,255,255,0.25);
+      --radius: 12px;
+      --font: 'Outfit', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background ─────────────────────────── */
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(144,195,29,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(0,160,220,0.05) 0%, transparent 60%);
+    }
+
+    /* ── Nav ────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 40px;
+      height: 64px;
+      background: rgba(8,12,8,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .nav-badge {
+      font-size: 0.6rem;
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+      color: var(--green);
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .nav-spacer { flex: 1; }
+
+    .nav-upload-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,160,220,0.3);
+      background: rgba(0,160,220,0.08);
+      color: var(--blue);
+      font-family: var(--font);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .nav-upload-btn:hover {
+      background: rgba(0,160,220,0.18);
+      box-shadow: 0 0 16px rgba(0,160,220,0.2);
+    }
+
+    .nav-github-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .nav-github-btn:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+
+    /* ── Hero ───────────────────────────────── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 60px 40px 40px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--green-border);
+      background: var(--green-dim);
+      color: var(--green);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero-accent { color: var(--green); }
+
+    .hero p {
+      font-size: 1rem;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hero-stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .hero-stat-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Toolbar ────────────────────────────── */
+    .toolbar {
+      position: sticky;
+      top: 64px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 40px;
+      background: rgba(8,12,8,0.8);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-wrap {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 14px;
+      transition: border-color 0.2s;
+    }
+    .search-wrap:focus-within {
+      border-color: var(--green-border);
+    }
+
+    .search-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      padding: 10px 0;
+    }
+    .search-wrap input::placeholder { color: var(--text-faint); }
+
+    .search-icon { color: var(--text-faint); font-size: 0.85rem; }
+
+    .tag-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tag-btn:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+    .tag-btn.active {
+      background: var(--green-dim);
+      border-color: var(--green-border);
+      color: var(--green);
+    }
+
+    .sort-select {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: 0.75rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .sort-select option { background: #1a1a2e; }
+
+    /* ── Grid ───────────────────────────────── */
+    .grid-section {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 40px 80px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Card ───────────────────────────────── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    }
+
+    .card-preview {
+      height: 140px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-preview-glow {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-emoji {
+      font-size: 3rem;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.8));
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-badges {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .badge-featured { background: rgba(144,195,29,0.9); color: #0a1a0a; }
+    .badge-trending { background: rgba(255,100,30,0.9); color: #fff; }
+
+    /* Code tag */
+    .card-code-tag {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.5);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      font-family: monospace;
+    }
+
+    .card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .card-rating {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.72rem;
+      color: #ffd700;
+      flex-shrink: 0;
+    }
+
+    .card-author { font-size: 0.68rem; color: var(--text-faint); }
+
+    .card-desc {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .card-tags {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .card-tag {
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.6rem;
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 0.62rem;
+      color: var(--text-faint);
+    }
+
+    .card-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── Code & Copy ────────────────────────── */
+    .card-code-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 2px;
+    }
+
+    .card-code-label {
+      font-size: 0.58rem;
+      color: var(--text-faint);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .card-code-value {
+      flex: 1;
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: var(--green);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.5px;
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--green-border);
+      background: var(--green-dim);
+      color: var(--green);
+      font-family: var(--font);
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { background: rgba(144,195,29,0.25); box-shadow: 0 0 10px rgba(144,195,29,0.2); }
+    .copy-btn.copied {
+      border-color: rgba(0,200,100,0.4);
+      background: rgba(0,200,100,0.12);
+      color: #00c864;
+    }
+
+    .card-hint {
+      font-size: 0.62rem;
+      color: var(--text-faint);
+      line-height: 1.4;
+      text-align: center;
+      padding: 4px 0 2px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Empty ──────────────────────────────── */
+    .empty {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 80px 20px;
+      color: var(--text-faint);
+    }
+    .empty-icon { font-size: 3rem; }
+    .empty p { font-size: 0.9rem; }
+
+    /* ── Upload Section ─────────────────────── */
+    .upload-section {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 auto 80px;
+      padding: 0 40px;
+      display: none;
+    }
+    .upload-section.visible { display: block; }
+
+    .upload-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+
+    .upload-hero {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      background: rgba(0,160,220,0.06);
+      border: 1px solid rgba(0,160,220,0.15);
+      border-radius: 10px;
+      color: var(--blue);
+    }
+    .upload-hero h2 { margin: 0 0 4px; font-size: 1rem; color: #fff; }
+    .upload-hero p  { margin: 0; font-size: 0.75rem; color: var(--text-dim); }
+
+    .form { display: flex; flex-direction: column; gap: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.72rem; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px; }
+    .form-group .req { color: var(--green); }
+
+    .form-input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 0.82rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .form-input:focus { border-color: var(--green-border); }
+    .form-input::placeholder { color: var(--text-faint); }
+    textarea.form-input { resize: vertical; min-height: 90px; }
+
+    .file-drop {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 24px;
+      border: 2px dashed rgba(255,255,255,0.12);
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      background: rgba(255,255,255,0.02);
+      transition: all 0.2s;
+    }
+    .file-drop:hover, .file-drop.has-file {
+      border-color: var(--green-border);
+      background: var(--green-dim);
+    }
+    .file-drop input { display: none; }
+    .file-name { font-size: 0.78rem; color: var(--green); font-weight: 700; }
+    .file-hint { font-size: 0.62rem; color: var(--text-faint); }
+
+    .guidelines {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .guidelines h4 { margin: 0 0 10px; font-size: 0.78rem; color: var(--text-dim); }
+    .guidelines ul { padding-left: 18px; }
+    .guidelines li { font-size: 0.68rem; color: var(--text-faint); margin-bottom: 5px; line-height: 1.4; }
+
+    .submit-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,160,220,0.4);
+      background: rgba(0,160,220,0.12);
+      color: var(--blue);
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .submit-btn:hover:not(:disabled) { background: rgba(0,160,220,0.25); box-shadow: 0 0 20px rgba(0,160,220,0.2); }
+    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .success-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .success-state.visible { display: flex; }
+    .success-icon {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--green-dim);
+      border: 2px solid var(--green-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem;
+      animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+    .success-state h2 { font-size: 1.2rem; }
+    .success-state p { font-size: 0.8rem; color: var(--text-dim); max-width: 360px; line-height: 1.5; }
+
+    /* ── Footer ─────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 32px 40px;
+      border-top: 1px solid var(--border);
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    footer a { color: var(--green); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Toast ──────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a2a1a;
+      border: 1px solid var(--green-border);
+      color: var(--green);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      z-index: 9999;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Tab switcher ───────────────────────── */
+    .tab-bar {
+      display: flex;
+      gap: 6px;
+      padding: 12px 40px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+      background: var(--bg);
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+
+    @media (max-width: 600px) {
+      nav, .toolbar, .grid-section { padding-left: 16px; padding-right: 16px; }
+      .hero { padding: 40px 16px 28px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <!-- Nav -->
+  <nav>
+    <a class="nav-logo" href="#">
+      <span class="nav-logo-icon">⚡</span>
+      VORTEX PRIME
+    </a>
+    <span class="nav-badge">STORE</span>
+    <span class="nav-spacer"></span>
+    <a class="nav-github-btn" href="https://github.com/rileyadams05/Vortex-Prime-emu" target="_blank">
+      ⬡ Repo
+    </a>
+    <button class="nav-upload-btn" onclick="switchTab('upload')">
+      ↑ Upload Dashboard
+    </button>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">⭐ COMMUNITY HUB</div>
+    <h1>Vortex Prime <span class="hero-accent">Store</span></h1>
+    <p>Browse and install free custom dashboard layouts made by the Vortex Prime community. Copy a code and hand it to your AI — it does the rest.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-value" id="stat-count">—</span>
+        <span class="hero-stat-label">Dashboards</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-value">150k+</span>
+        <span class="hero-stat-label">Downloads</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-value">420+</span>
+        <span class="hero-stat-label">Creators</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-value">Free</span>
+        <span class="hero-stat-label">Always</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-browse" onclick="switchTab('browse')">🌐 Browse</button>
+    <button class="tab-btn" id="tab-upload" onclick="switchTab('upload')">↑ Upload</button>
+  </div>
+
+  <!-- Toolbar (browse only) -->
+  <div class="toolbar" id="browse-toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search dashboards, creators..." oninput="filterCards()" />
+    </div>
+    <div class="tag-btns" id="tag-btns"></div>
+    <select class="sort-select" id="sort-select" onchange="filterCards()">
+      <option>Most Popular</option>
+      <option>Top Rated</option>
+      <option>Newest</option>
+      <option>Trending</option>
+    </select>
+  </div>
+
+  <!-- Browse Section -->
+  <div class="grid-section" id="browse-section">
+    <div class="section-label" id="result-label">⬡ &nbsp; ALL DASHBOARDS</div>
+    <div class="grid" id="card-grid"></div>
+  </div>
+
+  <!-- Upload Section -->
+  <div class="upload-section" id="upload-section">
+    <div class="upload-card">
+      <div id="upload-form-wrap">
+        <div class="upload-hero">
+          <span style="font-size:2rem">↑</span>
+          <div>
+            <h2>Share Your Dashboard</h2>
+            <p>Submissions go to the Vortex Prime repository first, then appear in the store after review.</p>
+          </div>
+        </div>
+
+        <form class="form" id="upload-form" onsubmit="submitUpload(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Dashboard Name <span class="req">*</span></label>
+              <input class="form-input" id="u-name" placeholder="e.g. My Awesome Dashboard" required />
+            </div>
+            <div class="form-group">
+              <label>Your Creator Name <span class="req">*</span></label>
+              <input class="form-input" id="u-author" placeholder="e.g. YourGamertag" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description <span class="req">*</span></label>
+            <textarea class="form-input" id="u-desc" placeholder="Describe your dashboard — theme, features, what makes it unique..." required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tags <span style="color:var(--text-faint);">(comma separated)</span></label>
+              <input class="form-input" id="u-tags" placeholder="e.g. Dark, Sci-Fi, Neon" />
+            </div>
+            <div class="form-group">
+              <label>Version</label>
+              <input class="form-input" id="u-version" placeholder="1.0.0" value="1.0.0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Dashboard Package (.zip) <span class="req">*</span></label>
+            <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()">
+              <input type="file" id="file-input" accept=".zip" onchange="onFileChange()" />
+              <div id="file-drop-content">
+                <div style="font-size:1.5rem;margin-bottom:4px">📦</div>
+                <span>Drop your .zip file here or <u>click to browse</u></span>
+                <span class="file-hint">Max 50 MB · Must include manifest.json + preview.png</span>
+              </div>
+            </div>
+          </div>
+          <div class="guidelines">
+            <h4>📋 Submission Guidelines</h4>
+            <ul>
+              <li>Dashboard must be your original work or carry proper attribution</li>
+              <li>Package as .zip including a <code>manifest.json</code> and <code>preview.png</code></li>
+              <li>Your submission goes to the Vortex Prime repo for review first</li>
+              <li>Review typically takes 24–48 hours — approved dashboards appear in the store</li>
+              <li>No inappropriate content or unlicensed copyrighted brand assets</li>
+            </ul>
+          </div>
+          <button type="submit" class="submit-btn" id="submit-btn">↑ &nbsp; Submit for Review</button>
+        </form>
+      </div>
+
+      <div class="success-state" id="upload-success">
+        <div class="success-icon">✓</div>
+        <h2>Submitted!</h2>
+        <p id="success-msg">Your dashboard has been submitted to the Vortex Prime repository for review. It will appear in the store once approved.</p>
+        <button class="nav-upload-btn" style="margin-top:8px" onclick="resetUpload()">Upload Another</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Footer -->
+  <footer>
+    <span>⚡ Vortex Prime Store</span>
+    <span>·</span>
+    <a href="https://github.com/rileyadams05/Vortex-Prime-emu" target="_blank">GitHub Repository</a>
+    <span>·</span>
+    <span>All dashboards are free</span>
+    <span>·</span>
+    <span>© 2026 Vortex Prime EMU</span>
+  </footer>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const REPO_RAW = 'https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/store';
+const DASHBOARDS_INDEX = `${REPO_RAW}/dashboards`;
+
+// Inline dashboard data (loaded from repo JSON files — fallback while repo populates)
+const DASHBOARDS = [
+  {
+    id: 'classic-blades-revival',
+    code: 'VP-STORE-CLASSIC-BLADES-4200',
+    name: 'Classic Blades Revival',
+    author: 'RetroXbox',
+    version: '4.2.0',
+    description: 'The iconic Xbox 360 Blades dashboard faithfully recreated. Includes all 5 original blade sections with pixel-perfect accuracy and original sound cues.',
+    tags: ['Classic', 'Retro', 'Blades'],
+    accent: '#90c31d',
+    preview: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    emoji: '🎮',
+    downloads: 34000,
+    rating: 5.0,
+    updated: '2026-03-08',
+    featured: true,
+    trending: true,
+    size_mb: 5.5,
+  },
+  {
+    id: 'cyberpunk-night-city',
+    code: 'VP-STORE-CYBERPUNK-NC-2000',
+    name: 'Cyberpunk 2077 Night City',
+    author: 'NightCityDev',
+    version: '2.0.0',
+    description: 'Night City-inspired neon dashboard with holographic overlays, glitchy text effects, and a dynamic cityscape backdrop.',
+    tags: ['Cyberpunk', 'Neon', 'Futuristic'],
+    accent: '#f9e400',
+    preview: 'linear-gradient(135deg, #0a001a 0%, #15002a 50%, #200040 100%)',
+    emoji: '🤖',
+    downloads: 29500,
+    rating: 4.8,
+    updated: '2026-03-05',
+    featured: true,
+    trending: true,
+    size_mb: 7.3,
+  },
+  {
+    id: 'halo-reach',
+    code: 'VP-STORE-HALO-REACH-2100',
+    name: 'Halo Reach Dashboard',
+    author: 'SpartanUI',
+    version: '2.1.0',
+    description: 'A beautifully crafted Halo Reach-themed NXE layout with custom animations, achievement tiles, and a lush Reach backdrop. Faithful to the original game aesthetic.',
+    tags: ['Halo', 'Sci-Fi', 'Dark'],
+    accent: '#4fc3f7',
+    preview: 'linear-gradient(135deg, #1a2a3a 0%, #0d1520 50%, #0a1218 100%)',
+    emoji: '👾',
+    downloads: 12400,
+    rating: 4.8,
+    updated: '2026-03-07',
+    featured: true,
+    trending: true,
+    size_mb: 4.2,
+  },
+  {
+    id: 'mass-effect-n7',
+    code: 'VP-STORE-MASSEFFECT-N7-2310',
+    name: 'Mass Effect N7',
+    author: 'Normandy',
+    version: '2.3.1',
+    description: 'Mass Effect tri-color N7 themed dashboard. Holographic UI panels, Normandy schematics, and dynamic starfield backdrop.',
+    tags: ['Sci-Fi', 'N7', 'Space'],
+    accent: '#e53935',
+    preview: 'linear-gradient(135deg, #0a0a1a 0%, #0d0d2a 50%, #070715 100%)',
+    emoji: '🚀',
+    downloads: 18900,
+    rating: 4.7,
+    updated: '2026-02-23',
+    featured: false,
+    trending: false,
+    size_mb: 4.9,
+  },
+  {
+    id: 'gears-ultimate-dark',
+    code: 'VP-STORE-GEARS-DARK-1520',
+    name: 'Gears Ultimate Dark',
+    author: 'COGDesign',
+    version: '1.5.2',
+    description: 'Gears of War dark steel layout with Crimson Omen motifs, heavy textures, and brutalist UI panels inspired by the Coalition aesthetic.',
+    tags: ['Gears', 'Dark', 'Steel'],
+    accent: '#c0392b',
+    preview: 'linear-gradient(135deg, #1a0a0a 0%, #2a1010 50%, #1a0808 100%)',
+    emoji: '⚙️',
+    downloads: 8900,
+    rating: 4.6,
+    updated: '2026-03-02',
+    featured: false,
+    trending: true,
+    size_mb: 3.8,
+  },
+  {
+    id: 'forza-horizon-grid',
+    code: 'VP-STORE-FORZA-GRID-3010',
+    name: 'Forza Horizon Grid',
+    author: 'RacerX',
+    version: '3.0.1',
+    description: 'Racing-inspired wide tile layout based on Forza Horizon 5 UI. Neon accents, speed-blur effects, and car showcase panels.',
+    tags: ['Forza', 'Racing', 'Neon'],
+    accent: '#ff6b35',
+    preview: 'linear-gradient(135deg, #0d1a2a 0%, #102030 50%, #081520 100%)',
+    emoji: '🏎️',
+    downloads: 21000,
+    rating: 4.9,
+    updated: '2026-03-06',
+    featured: true,
+    trending: false,
+    size_mb: 6.1,
+  },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let activeTag = 'All';
+let copiedCode = null;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function init() {
+  document.getElementById('stat-count').textContent = DASHBOARDS.length;
+
+  // Build tag list
+  const allTags = ['All', 'Featured', 'Trending', ...new Set(DASHBOARDS.flatMap(d => d.tags))];
+  const tagBar = document.getElementById('tag-btns');
+  allTags.forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'tag-btn' + (tag === 'All' ? ' active' : '');
+    btn.textContent = tag;
+    btn.onclick = () => {
+      document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeTag = tag;
+      filterCards();
+    };
+    tagBar.appendChild(btn);
+  });
+
+  renderCards(DASHBOARDS);
+}
+
+// ── Filter & Sort ─────────────────────────────────────────────────────────────
+function filterCards() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const sort = document.getElementById('sort-select').value;
+
+  let data = DASHBOARDS.filter(d => {
+    const matchQ = !q || d.name.toLowerCase().includes(q) || d.author.toLowerCase().includes(q) || d.tags.some(t => t.toLowerCase().includes(q));
+    const matchTag = activeTag === 'All'
+      ? true
+      : activeTag === 'Featured'
+        ? d.featured
+        : activeTag === 'Trending'
+          ? d.trending
+          : d.tags.includes(activeTag);
+    return matchQ && matchTag;
+  });
+
+  if (sort === 'Most Popular') data.sort((a, b) => b.downloads - a.downloads);
+  else if (sort === 'Top Rated') data.sort((a, b) => b.rating - a.rating);
+  else if (sort === 'Trending') data.sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0));
+
+  const label = document.getElementById('result-label');
+  label.textContent = `⬡   ${data.length} DASHBOARD${data.length !== 1 ? 'S' : ''}`;
+
+  renderCards(data);
+}
+
+// ── Render Cards ──────────────────────────────────────────────────────────────
+function renderCards(data) {
+  const grid = document.getElementById('card-grid');
+  if (data.length === 0) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🌐</div><p>No dashboards match your search.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = data.map(d => `
+    <div class="card" id="card-${d.id}">
+      <div class="card-preview" style="background:${d.preview}">
+        <div class="card-preview-glow" style="background:radial-gradient(circle at 50% 70%, ${d.accent}22 0%, transparent 70%)"></div>
+        <span class="card-emoji">${d.emoji}</span>
+        <div class="card-badges">
+          ${d.featured ? '<span class="badge badge-featured">✦ Featured</span>' : ''}
+          ${d.trending ? '<span class="badge badge-trending">🔥 Trending</span>' : ''}
+        </div>
+        <span class="card-code-tag">${d.code}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <span class="card-name">${d.name}</span>
+          <span class="card-rating">★ ${d.rating.toFixed(1)}</span>
+        </div>
+        <div class="card-author">by ${d.author} · v${d.version} · ${d.size_mb} MB</div>
+        <div class="card-desc">${d.description}</div>
+        <div class="card-tags">
+          ${d.tags.map(t => `<span class="card-tag" style="border-color:${d.accent}44;color:${d.accent}">${t}</span>`).join('')}
+        </div>
+        <div class="card-meta">
+          <span>⬇ ${fmt(d.downloads)}</span>
+          <span>📅 ${d.updated}</span>
+        </div>
+        <div class="card-code-row">
+          <span class="card-code-label">Install Code</span>
+          <span class="card-code-value">${d.code}</span>
+          <button class="copy-btn" id="copy-${d.id}" onclick="copyCode('${d.id}','${d.code}')">
+            📋 Copy
+          </button>
+        </div>
+        <div class="card-hint">Copy the code above → paste it into <strong>Vortex Prime UI</strong> → AI installs automatically</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Copy Code ─────────────────────────────────────────────────────────────────
+function copyCode(id, code) {
+  // Copy the install command (AI picks this up)
+  const installCmd = `INSTALL_DASHBOARD:${code}`;
+  navigator.clipboard.writeText(installCmd).then(() => {
+    const btn = document.getElementById(`copy-${id}`);
+    if (btn) {
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    }
+    showToast(`Copied! Paste into Vortex Prime UI to install.`);
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = `INSTALL_DASHBOARD:${code}`;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast(`Copied! Paste into Vortex Prime UI to install.`);
+  });
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Tab Switch ────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  const browseSection = document.getElementById('browse-section');
+  const uploadSection = document.getElementById('upload-section');
+  const toolbar = document.getElementById('browse-toolbar');
+  const tabBrowse = document.getElementById('tab-browse');
+  const tabUpload = document.getElementById('tab-upload');
+
+  if (tab === 'browse') {
+    browseSection.style.display = '';
+    uploadSection.classList.remove('visible');
+    toolbar.style.display = '';
+    tabBrowse.classList.add('active');
+    tabUpload.classList.remove('active');
+  } else {
+    browseSection.style.display = 'none';
+    uploadSection.classList.add('visible');
+    toolbar.style.display = 'none';
+    tabBrowse.classList.remove('active');
+    tabUpload.classList.add('active');
+  }
+}
+
+// ── Upload ────────────────────────────────────────────────────────────────────
+function onFileChange() {
+  const f = document.getElementById('file-input').files[0];
+  const drop = document.getElementById('file-drop');
+  const content = document.getElementById('file-drop-content');
+  if (f) {
+    drop.classList.add('has-file');
+    content.innerHTML = `<div style="font-size:1.5rem;margin-bottom:4px">✅</div><span class="file-name">${f.name}</span>`;
+  }
+}
+
+function submitUpload(e) {
+  e.preventDefault();
+  const name = document.getElementById('u-name').value.trim();
+  const author = document.getElementById('u-author').value.trim();
+
+  document.getElementById('upload-form-wrap').style.display = 'none';
+  const success = document.getElementById('upload-success');
+  success.classList.add('visible');
+  document.getElementById('success-msg').textContent =
+    `"${name}" by ${author} has been submitted to the Vortex Prime repository for review. Once approved it will appear in the store with its own unique install code.`;
+}
+
+function resetUpload() {
+  document.getElementById('upload-form').reset();
+  document.getElementById('file-drop').classList.remove('has-file');
+  document.getElementById('file-drop-content').innerHTML = `
+    <div style="font-size:1.5rem;margin-bottom:4px">📦</div>
+    <span>Drop your .zip file here or <u>click to browse</u></span>
+    <span class="file-hint">Max 50 MB · Must include manifest.json + preview.png</span>`;
+  document.getElementById('upload-form-wrap').style.display = '';
+  document.getElementById('upload-success').classList.remove('visible');
+}
+
+function fmt(n) { return n >= 1000 ? (n/1000).toFixed(1)+'k' : n; }
+
+// ── Check URL params (e.g. ?tab=upload from app) ──────────────────────────────
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('tab') === 'upload') switchTab('upload');
+
+init();
+</script>
+</body>
+</html>
