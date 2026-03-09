@@ -138,8 +138,12 @@ const VortexAIChat = forwardRef((props, ref) => {
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
       background: 'transparent',
-      fontFamily: "'Segoe UI', sans-serif",
+      fontFamily: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif",
     }}>
       {/* Messages */}
       <div style={{
@@ -165,25 +169,25 @@ const VortexAIChat = forwardRef((props, ref) => {
           >
             {/* Avatar */}
             <div style={{
-              width: 48,
-              height: 48,
+              width: 64,
+              height: 64,
               borderRadius: '50%',
               background: msg.role === 'user'
-                ? 'rgba(144,195,29,0.25)'
-                : 'rgba(255,255,255,0.08)',
+                ? 'rgba(144,195,29,0.3)'
+                : 'rgba(255,255,255,0.1)',
               border: msg.role === 'user'
-                ? '1px solid rgba(144,195,29,0.5)'
-                : '1px solid rgba(255,255,255,0.12)',
+                ? '2px solid rgba(144,195,29,0.6)'
+                : '2px solid rgba(255,255,255,0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+              boxShadow: '0 6px 12px rgba(0,0,0,0.4)',
               overflow: 'hidden'
             }}>
               {msg.role === 'user'
-                ? <User size={24} color="#90C31D" />
-                : <img src="/assets/AppIcon/icon.png" style={{ width: 40, height: 40, objectFit: 'contain' }} alt="" />
+                ? <User size={32} color="#90C31D" />
+                : <img src="/assets/AppIcon/icon.png" style={{ width: 56, height: 56, objectFit: 'contain' }} alt="" />
               }
             </div>
 
