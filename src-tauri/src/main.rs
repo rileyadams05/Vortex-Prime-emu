@@ -312,6 +312,18 @@ fn get_gpu_info() -> GpuInfo {
     }
 }
 
+#[tauri::command]
+fn check_sunshine_status() -> bool {
+    let mut sys = System::new_all();
+    sys.refresh_processes();
+    for (pid, process) in sys.processes() {
+        if process.name().to_lowercase().contains("sunshine") {
+            return true;
+        }
+    }
+    false
+}
+
 // Helper to copy directory recursively
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> std::io::Result<()> {
     fs::create_dir_all(&dst)?;
