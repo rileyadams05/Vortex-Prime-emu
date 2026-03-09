@@ -123,7 +123,30 @@ const VortexAIChat = forwardRef(({ onOpenStore }, ref) => {
     setInput('');
     setIsLoading(true);
 
-    // Detect Dashboard Config
+    // Detect Store Install Code (INSTALL_DASHBOARD:VP-STORE-...)
+    if (text.startsWith('INSTALL_DASHBOARD:')) {
+      const code = text.replace('INSTALL_DASHBOARD:', '').trim();
+      const assistantId = Date.now() + 1;
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `🏪 **Store Dashboard Detected!**\n\nInstall code: \`${code}\`\n\nFetching dashboard from the Vortex Prime Store repository...`,
+        id: assistantId,
+      }]);
+      // Simulate fetch + install from store
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `✅ **Dashboard installed successfully!**\n\nThe dashboard **${code}** has been downloaded from the community store and applied to your Vortex Prime setup.\n\nRestarting app to apply changes...`,
+          id: Date.now() + 2,
+        }]);
+        setPendingTheme(code);
+        setShowRestartPopup(true);
+        setIsLoading(false);
+      }, 2000);
+      return;
+    }
+
+    // Detect Dashboard Config (existing)
     if (text.startsWith('DASHBOARD_CONFIG:') || text.includes('"theme_id"')) {
       try {
         // Mocking the detection and application logic
@@ -916,7 +939,7 @@ const VortexAIChat = forwardRef(({ onOpenStore }, ref) => {
               <button 
                 onClick={() => {
                   setIsCommandHubOpen(false);
-                  if (onOpenStore) onOpenStore('browse');
+                  window.open('https://rileyadams05.github.io/Vortex-Prime-emu/store/', '_blank');
                 }}
                 style={{
                   display: 'flex',
@@ -946,7 +969,7 @@ const VortexAIChat = forwardRef(({ onOpenStore }, ref) => {
               <button 
                 onClick={() => {
                   setIsCommandHubOpen(false);
-                  if (onOpenStore) onOpenStore('upload');
+                  window.open('https://rileyadams05.github.io/Vortex-Prime-emu/store/?tab=upload', '_blank');
                 }}
                 style={{
                   display: 'flex',

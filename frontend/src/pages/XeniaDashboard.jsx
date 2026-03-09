@@ -1330,13 +1330,7 @@ const XeniaDashboard = () => {
               </div>
             </div>
             <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <VortexAIChat
-                ref={aiChatRef}
-                onOpenStore={(tab) => {
-                  setStoreDefaultTab(tab);
-                  setCurrentView('marketplace');
-                }}
-              />
+              <VortexAIChat ref={aiChatRef} />
             </div>
           </div>
         )}
