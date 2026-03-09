@@ -29,7 +29,7 @@ const VortexAIChat = forwardRef((props, ref) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState('fast'); // 'fast' | 'planning'
-  const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash');
+  const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash (Free)');
   const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -543,7 +543,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                   }}>
                     <div style={{ padding: '8px 12px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available Models</div>
                     
-                    {['Gemini 1.5 Flash', 'Gemini 1.5 Pro', 'Gemini 1.0 Pro'].map(m => (
+                    {['Gemini 3 Pro', 'Gemini 3 Flash', 'Gemini 1.5 Flash (Free)'].map(m => (
                       <button
                         key={m}
                         onClick={() => { setSelectedModel(m); setIsModelMenuOpen(false); }}
