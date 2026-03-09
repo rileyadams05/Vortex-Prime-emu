@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart, Cpu, Shield, AlertTriangle, Trash2, Plus, RotateCcw, X } from 'lucide-react';
+import { Search, Disc, Trophy, Settings, ChevronLeft, ChevronRight, Image as ImageIcon, Video, Store, Heart, Cpu, Shield, AlertTriangle, Trash2, Plus, RotateCcw, X, Star } from 'lucide-react';
 import axios from 'axios';
 
 import NXESettings from '../components/NXESettings';
@@ -1209,6 +1209,13 @@ const XeniaDashboard = () => {
             <div className="ai-panel-header">
               <h3>Vortex Prime UI</h3>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <button 
+                  className="ai-header-btn" 
+                  onClick={() => { playSound('select'); aiChatRef.current?.openCommandHub(); }}
+                  title="Command Hub"
+                >
+                  <Star size={20} fill="rgba(144,195,29,0.3)" color="#90C31D" />
+                </button>
                 <button 
                   className="ai-header-btn" 
                   onClick={() => { playSound('select'); aiChatRef.current?.clearChat(); }}
