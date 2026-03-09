@@ -48,6 +48,9 @@ const NXESettings = ({ isActive, onBack }) => {
   const [saveStatus, setSaveStatus] = useState(''); // 'saving', 'saved'
   const [countryCode, setCountryCode] = useState('AU');
   const [isSunshineRunning, setIsSunshineRunning] = useState(true); // Assume true initially for smooth visual, updated by polling
+  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState('');
   const listRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
   const { changeTheme } = useTheme();
@@ -74,6 +77,37 @@ const NXESettings = ({ isActive, onBack }) => {
       if (interval) clearInterval(interval);
     };
   }, [activePanel]);
+
+  const handleSendMagicLink = async () => {
+    if (!magicLinkEmail || !magicLinkEmail.includes('@')) {
+      setEmailStatus('Please enter a valid email address.');
+      return;
+    }
+    
+    setSendingEmail(true);
+    setEmailStatus('Sending...');
+    
+    try {
+      if (window.__TAURI__) {
+        const result = await invoke('send_magic_link_email', { toEmail: magicLinkEmail });
+        setEmailStatus(result);
+        setMagicLinkEmail('');
+        setTimeout(() => setEmailStatus(''), 5000);
+      } else {
+        // Fallback for dev mode
+        setTimeout(() => {
+          setEmailStatus('Magic Link sent (Dev Mode)!');
+          setMagicLinkEmail('');
+          setTimeout(() => setEmailStatus(''), 5000);
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Failed to send magic link:", error);
+      setEmailStatus('Failed to send magic link.');
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   // Load initial country code
   useEffect(() => {
@@ -537,9 +571,34 @@ const NXESettings = ({ isActive, onBack }) => {
                   </div>
                   
                   <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '12px', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#ccc', fontWeight: 600 }}>Send Magic Link to Console/Phone</label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input 
+                          type="email" 
+                          placeholder="your.email@example.com"
+                          value={magicLinkEmail}
+                          onChange={(e) => setMagicLinkEmail(e.target.value)}
+                          style={{ flex: 1, padding: '10px 14px', borderRadius: '4px', border: '1px solid rgba(144, 195, 29, 0.4)', background: 'rgba(255,255,255,0.05)', color: '#fff', outline: 'none' }}
+                        />
+                        <button 
+                          onClick={handleSendMagicLink}
+                          disabled={sendingEmail}
+                          style={{ background: '#107C10', color: '#fff', border: 'none', padding: '0 16px', borderRadius: '4px', fontWeight: 'bold', cursor: sendingEmail ? 'wait' : 'pointer', opacity: sendingEmail ? 0.7 : 1 }}
+                        >
+                          Send
+                        </button>
+                      </div>
+                      {emailStatus && (
+                        <span style={{ fontSize: '0.8rem', color: emailStatus.includes('Failed') ? '#DC143C' : '#90C31D' }}>
+                          {emailStatus}
+                        </span>
+                      )}
+                    </div>
+                    
                     <button 
                       onClick={() => window.open('https://Vortex-Prime-Emu-streaming', '_blank')}
-                      style={{ background: '#107C10', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '24px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      style={{ background: '#107C10', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '24px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}
                     >
                       <Globe size={18} /> Open in Browser
                     </button>
