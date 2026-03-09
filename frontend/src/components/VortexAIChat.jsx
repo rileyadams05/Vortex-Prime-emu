@@ -22,7 +22,7 @@ const VortexAIChat = forwardRef((props, ref) => {
     }
     return [{
       role: 'assistant',
-      content: "Hey, welcome there! Welcome to **Vortex Prime Emulator**. What's your name? So we can get started!!!",
+      content: "Hey,there user! Welcome to **Vortex Prime Emulator**. What's your name? So we can get started!!!",
       id: Date.now(),
     }];
   });
@@ -31,7 +31,7 @@ const VortexAIChat = forwardRef((props, ref) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const abortRef = useRef(null);
-  
+
   useImperativeHandle(ref, () => ({
     clearChat
   }));
@@ -71,14 +71,14 @@ const VortexAIChat = forwardRef((props, ref) => {
     if (!userName) {
       localStorage.setItem('vortex_user_name', text);
       setUserName(text);
-      
+
       const assistantId = Date.now() + 1;
       setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: `Hey there, **${text}**! How can I help you today?`, 
-          id: assistantId, 
-          streaming: false 
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Hey there, **${text}**! How can I help you today?`,
+          id: assistantId,
+          streaming: false
         }]);
         setIsLoading(false);
       }, 600);
@@ -148,7 +148,7 @@ const VortexAIChat = forwardRef((props, ref) => {
     const savedName = localStorage.getItem('vortex_user_name');
     setMessages([{
       role: 'assistant',
-      content: savedName 
+      content: savedName
         ? `Chat cleared! How can I help you today, **${savedName}**?`
         : "Welcome to **Vortex Prime Emulator**. What's your name? So we can get started!!!",
       id: Date.now(),
@@ -214,16 +214,16 @@ const VortexAIChat = forwardRef((props, ref) => {
             }}>
               {msg.role === 'user'
                 ? <User size={48} color="#90C31D" />
-                : <img 
-                    src="/assets/AppIcon/icon.png" 
-                    style={{ 
-                      width: 90, 
-                      height: 90, 
-                      objectFit: 'contain',
-                      imageRendering: 'auto' 
-                    }} 
-                    alt="" 
-                  />
+                : <img
+                  src="/assets/AppIcon/icon.png"
+                  style={{
+                    width: 90,
+                    height: 90,
+                    objectFit: 'contain',
+                    imageRendering: 'auto'
+                  }}
+                  alt=""
+                />
               }
             </div>
 
@@ -303,12 +303,12 @@ const VortexAIChat = forwardRef((props, ref) => {
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.2)',
           }}
-          onFocus={e => { 
-            e.target.style.borderColor = 'rgba(144,195,29,0.6)'; 
+          onFocus={e => {
+            e.target.style.borderColor = 'rgba(144,195,29,0.6)';
             e.target.style.background = 'rgba(255,255,255,0.09)';
           }}
-          onBlur={e => { 
-            e.target.style.borderColor = 'rgba(144,195,29,0.3)'; 
+          onBlur={e => {
+            e.target.style.borderColor = 'rgba(144,195,29,0.3)';
             e.target.style.background = 'rgba(255,255,255,0.07)';
           }}
           onInput={e => {
@@ -338,8 +338,8 @@ const VortexAIChat = forwardRef((props, ref) => {
             boxShadow: input.trim() && !isLoading ? '0 4px 12px rgba(144,195,29,0.3)' : 'none',
             transform: input.trim() && !isLoading ? 'scale(1)' : 'scale(0.95)',
           }}
-          onMouseEnter={e => { if(input.trim() && !isLoading) e.currentTarget.style.transform = 'scale(1.1)'; }}
-          onMouseLeave={e => { if(input.trim() && !isLoading) e.currentTarget.style.transform = 'scale(1)'; }}
+          onMouseEnter={e => { if (input.trim() && !isLoading) e.currentTarget.style.transform = 'scale(1.1)'; }}
+          onMouseLeave={e => { if (input.trim() && !isLoading) e.currentTarget.style.transform = 'scale(1)'; }}
         >
           {isLoading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={20} />}
         </button>
