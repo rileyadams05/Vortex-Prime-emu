@@ -113,12 +113,12 @@ if ($AutoStart) {
     Start-Process -FilePath "$SunshinePath\sunshine.exe" -WindowStyle Hidden
     
     # Start Web Server
-    Write-Log "Starting Moonlight Web Stream Node server..." "Cyan"
+    Write-Log "Starting Moonlight Web Stream Node server in zero-latency mode..." "Cyan"
     Set-Location $WebStreamPath
     if (Get-Command -Name npm -ErrorAction SilentlyContinue) {
         Start-Process -FilePath "npm" -ArgumentList "install" -Wait -WindowStyle Hidden
-        Start-Process -FilePath "npm" -ArgumentList "start" -WindowStyle Hidden
-        Write-Log "Moonlight Web Stream started on port 3000." "Green"
+        Start-Process -FilePath "npm" -ArgumentList "start -- --video-codec h264 --low-latency" -WindowStyle Hidden
+        Write-Log "Moonlight Web Stream started on port 3000 with h264 low-latency profile." "Green"
     } else {
         Write-Log "npm not found. Could not start Web Server automatically." "Red"
     }
