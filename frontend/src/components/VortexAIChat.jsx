@@ -270,12 +270,11 @@ const VortexAIChat = forwardRef((props, ref) => {
 
       {/* Input area */}
       <div style={{
-        padding: '10px 12px',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
+        padding: '16px 20px',
         display: 'flex',
-        gap: '8px',
-        alignItems: 'flex-end',
-        background: 'rgba(0,0,0,0.15)',
+        gap: '12px',
+        alignItems: 'center',
+        background: 'transparent',
       }}>
 
 
@@ -284,7 +283,7 @@ const VortexAIChat = forwardRef((props, ref) => {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask anything about games, settings, or compatibility..."
+          placeholder="Ask me anything."
           rows={1}
           style={{
             flex: 1,
