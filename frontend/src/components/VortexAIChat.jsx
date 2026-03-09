@@ -1049,8 +1049,8 @@ const VortexAIChat = forwardRef((props, ref) => {
             </button>
 
             <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '16px', background: 'rgba(144,195,29,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <Lock size={28} color="#90C31D" />
+              <div style={{ width: 56, height: 56, borderRadius: '16px', background: 'rgba(244,67,54,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <Lock size={28} color="#f44336" />
               </div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Pro Subscription</h2>
               <p style={{ margin: '8px 0 0', color: '#fff', fontSize: '0.9rem' }}>
