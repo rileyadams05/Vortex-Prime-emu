@@ -1053,7 +1053,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                 <Lock size={28} color="#90C31D" />
               </div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Pro Subscription</h2>
-              <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
+              <p style={{ margin: '8px 0 0', color: '#fff', fontSize: '0.9rem' }}>
                 Sign in to your {loginDetails.provider || 'AI provider'} account to unlock this model.
               </p>
             </div>
