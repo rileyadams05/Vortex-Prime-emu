@@ -495,12 +495,18 @@ const NXESettings = ({ isActive, onBack }) => {
                     </div>
                   </div>
                   
-                  <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                     <button 
                       onClick={() => window.open('https://Vortex-Prime-Emu-streaming', '_blank')}
                       style={{ background: '#107C10', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '24px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
                       <Globe size={18} /> Open in Browser
+                    </button>
+                    <button 
+                      onClick={() => window.open('https://Vortex-Prime-Emu-streaming/cert.pem', '_blank')}
+                      style={{ background: 'transparent', color: '#90C31D', border: '1px solid rgba(144, 195, 29, 0.4)', padding: '6px 16px', borderRadius: '16px', fontSize: '0.85rem', cursor: 'pointer' }}
+                    >
+                      Install/Trust SSL Certificate to Enable Gamepad
                     </button>
                   </div>
                 </div>
