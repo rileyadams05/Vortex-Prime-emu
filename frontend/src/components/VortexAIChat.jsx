@@ -30,6 +30,7 @@ const VortexAIChat = forwardRef((props, ref) => {
   const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash (Free)');
   const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const [modelTab, setModelTab] = useState('free'); // 'free' | 'pro'
   const [isListening, setIsListening] = useState(false);
   
   const messagesEndRef = useRef(null);
@@ -551,17 +552,58 @@ const VortexAIChat = forwardRef((props, ref) => {
                     zIndex: 1000,
                     animation: 'menuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}>
-                    <div style={{ padding: '8px 12px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available Models</div>
+                    <div style={{ padding: '8px 12px 6px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available Models</div>
                     
-                    {[
+                    {/* Tab Switcher */}
+                    <div style={{
+                      display: 'flex',
+                      padding: '4px',
+                      background: 'rgba(255,255,255,0.05)',
+                      borderRadius: '10px',
+                      margin: '4px 8px 12px',
+                    }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setModelTab('free'); }}
+                        style={{
+                          flex: 1,
+                          padding: '6px',
+                          border: 'none',
+                          borderRadius: '7px',
+                          fontSize: '0.8rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          background: modelTab === 'free' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                          color: modelTab === 'free' ? '#fff' : 'rgba(255,255,255,0.5)',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >Free AI</button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setModelTab('pro'); }}
+                        style={{
+                          flex: 1,
+                          padding: '6px',
+                          border: 'none',
+                          borderRadius: '7px',
+                          fontSize: '0.8rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          background: modelTab === 'pro' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                          color: modelTab === 'pro' ? '#fff' : 'rgba(255,255,255,0.5)',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >Pro AI</button>
+                    </div>
+
+                    {(modelTab === 'free' ? [
+                      { name: 'Gemini 1.5 Flash (Free)' }
+                    ] : [
                       { name: 'Gemini 3.1 Pro (High)', new: true },
                       { name: 'Gemini 3.1 Pro (Low)', new: true },
                       { name: 'Gemini 3 Flash' },
                       { name: 'Claude Sonnet 4.6 (Thinking)' },
                       { name: 'Claude Opus 4.6 (Thinking)' },
-                      { name: 'GPT-OSS 120B (Medium)' },
-                      { name: 'Gemini 1.5 Flash (Free)' }
-                    ].map(m => (
+                      { name: 'GPT-OSS 120B (Medium)' }
+                    ]).map(m => (
                       <button
                         key={m.name}
                         onClick={() => { setSelectedModel(m.name); setIsModelMenuOpen(false); }}
@@ -581,7 +623,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                           position: 'relative',
                         }}
                       >
-                        <Sparkles size={14} style={{ color: '#90C31D' }} /> 
+                        <Sparkles size={14} style={{ color: modelTab === 'free' ? 'rgba(255,255,255,0.4)' : '#90C31D' }} /> 
                         <span>{m.name}</span>
                         {m.new && (
                           <span style={{
