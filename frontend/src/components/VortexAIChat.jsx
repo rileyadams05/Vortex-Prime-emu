@@ -1086,7 +1086,7 @@ const VortexAIChat = forwardRef((props, ref) => {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '8px 0' }}>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>OR USE EMAIL</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.05em' }}>OR USE OTHER FRONTEND ACCOUNT</span>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
               </div>
 
