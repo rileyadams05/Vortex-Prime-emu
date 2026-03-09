@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Send, Trash2, Bot, User, Loader2 } from 'lucide-react';
 
 const GEMINI_API_KEY = 'gen-lang-client-0804196204';
@@ -9,7 +9,7 @@ const SYSTEM_CONTEXT = `You are Vortex AI, the built-in assistant for Vortex Pri
 You help users with: game compatibility, emulator settings, ROM management, troubleshooting, and general gaming questions.
 Be concise, friendly, and knowledgeable about Xbox 360 games and emulation.`;
 
-export default function VortexAIChat() {
+const VortexAIChat = forwardRef((props, ref) => {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -22,6 +22,10 @@ export default function VortexAIChat() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const abortRef = useRef(null);
+  
+  useImperativeHandle(ref, () => ({
+    clearChat
+  }));
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -229,26 +233,7 @@ export default function VortexAIChat() {
         alignItems: 'flex-end',
         background: 'rgba(0,0,0,0.15)',
       }}>
-        <button
-          onClick={clearChat}
-          title="Clear chat"
-          style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 8,
-            padding: '7px 8px',
-            cursor: 'pointer',
-            color: 'rgba(255,255,255,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            transition: 'all 0.2s',
-            flexShrink: 0,
-          }}
-          onMouseEnter={e => { e.currentTarget.style.color = '#ff6b6b'; e.currentTarget.style.borderColor = 'rgba(255,107,107,0.4)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-        >
-          <Trash2 size={14} />
-        </button>
+
 
         <textarea
           ref={inputRef}
@@ -318,4 +303,6 @@ export default function VortexAIChat() {
       `}</style>
     </div>
   );
-}
+});
+
+export default VortexAIChat;
