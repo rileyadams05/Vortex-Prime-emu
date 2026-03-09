@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, User, Loader2 } from 'lucide-react';
 
 const GEMINI_API_KEY = 'gen-lang-client-0804196204';
 const GEMINI_MODEL = 'gemini-1.5-flash';
