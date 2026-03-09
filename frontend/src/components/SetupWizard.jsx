@@ -12,9 +12,12 @@ const SetupWizard = ({ isOpen, onClose, onComplete }) => {
   const [copyStatus, setCopyStatus] = useState("");
 
   useEffect(() => {
-    // Detect OS (Mock for now, or use tauri info)
-    // navigator.platform is deprecated but useful for quick check, or invoke Rust command
-    setOsInfo("Windows 11 (Detected)"); 
+    // Detect OS using standard platform string
+    const platform = window.navigator.platform;
+    if (platform.includes('Win')) setOsInfo("Windows PC (Detected)");
+    else if (platform.includes('Mac')) setOsInfo("macOS (Detected)");
+    else if (platform.includes('Linux')) setOsInfo("Linux (Detected)");
+    else setOsInfo("Unknown System");
   }, []);
 
   if (!isOpen) return null;
