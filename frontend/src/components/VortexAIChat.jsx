@@ -165,8 +165,8 @@ const VortexAIChat = forwardRef((props, ref) => {
           >
             {/* Avatar */}
             <div style={{
-              width: 32,
-              height: 32,
+              width: 48,
+              height: 48,
               borderRadius: '50%',
               background: msg.role === 'user'
                 ? 'rgba(144,195,29,0.25)'
@@ -178,11 +178,12 @@ const VortexAIChat = forwardRef((props, ref) => {
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+              overflow: 'hidden'
             }}>
               {msg.role === 'user'
-                ? <User size={16} color="#90C31D" />
-                : <img src="/assets/AppIcon/icon.png" style={{ width: 22, height: 22, objectFit: 'contain' }} alt="" />
+                ? <User size={24} color="#90C31D" />
+                : <img src="/assets/AppIcon/icon.png" style={{ width: 40, height: 40, objectFit: 'contain' }} alt="" />
               }
             </div>
 
@@ -202,10 +203,13 @@ const VortexAIChat = forwardRef((props, ref) => {
                   ? '1px solid rgba(244,67,54,0.3)'
                   : '1px solid rgba(255,255,255,0.08)',
               color: msg.error ? '#ff8a80' : '#ffffff',
-              fontSize: '0.92rem',
-              lineHeight: 1.5,
-              backdropFilter: 'blur(8px)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+              fontSize: '0.95rem',
+              lineHeight: 1.6,
+              backdropFilter: 'blur(12px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              border: msg.role === 'user'
+                ? '1px solid rgba(144,195,29,0.4)'
+                : '1px solid rgba(255,255,255,0.15)',
             }}>
               {msg.streaming && !msg.content ? (
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '2px 0' }}>
