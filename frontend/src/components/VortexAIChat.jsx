@@ -134,7 +134,6 @@ const VortexAIChat = forwardRef((props, ref) => {
 
       const modelMap = {
         'Gemini 1.5 Flash (Free)': 'gemini-1.5-flash',
-        'Gemini 3 Flash': 'gemini-1.5-flash',
         'Gemini 3 Pro': 'gemini-1.5-pro'
       };
       const apiModel = modelMap[selectedModel] || 'gemini-1.5-flash';
@@ -549,7 +548,7 @@ const VortexAIChat = forwardRef((props, ref) => {
                   }}>
                     <div style={{ padding: '8px 12px 12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Available Models</div>
                     
-                    {['Gemini 3 Pro', 'Gemini 3 Flash', 'Gemini 1.5 Flash (Free)'].map(m => (
+                    {['Gemini 3 Pro', 'Gemini 1.5 Flash (Free)'].map(m => (
                       <button
                         key={m}
                         onClick={() => { setSelectedModel(m); setIsModelMenuOpen(false); }}
