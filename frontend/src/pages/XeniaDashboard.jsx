@@ -1263,16 +1263,6 @@ const XeniaDashboard = () => {
             </button>
           </div>
 
-          {/* ⭐ Community Hub Star Button */}
-          <button
-            className="community-hub-btn"
-            data-testid="community-hub-btn"
-            title="Community Hub"
-            onClick={() => { playSound('select'); setIsCommunityHubOpen(true); }}
-          >
-            <Star size={22} fill="currentColor" />
-          </button>
-
           <div className="user-profile" data-testid="user-profile">
             {isLoggedIn && (
               <>
@@ -1340,7 +1330,13 @@ const XeniaDashboard = () => {
               </div>
             </div>
             <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <VortexAIChat ref={aiChatRef} />
+              <VortexAIChat
+                ref={aiChatRef}
+                onOpenStore={(tab) => {
+                  setStoreDefaultTab(tab);
+                  setCurrentView('marketplace');
+                }}
+              />
             </div>
           </div>
         )}
