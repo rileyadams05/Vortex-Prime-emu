@@ -93,6 +93,34 @@ body {
   background: rgba(0, 0, 0, 0.7);
 }
 
+/* ── Community Hub / Star Button ─────────────────── */
+.community-hub-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(144, 195, 29, 0.3);
+  background: rgba(144, 195, 29, 0.08);
+  color: #90c31d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.community-hub-btn:hover {
+  background: rgba(144, 195, 29, 0.2);
+  border-color: rgba(144, 195, 29, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 0 16px rgba(144, 195, 29, 0.3);
+}
+
+.community-hub-btn:active {
+  transform: scale(0.95);
+}
+
 .gamertag {
   font-family: 'MC360', 'Segoe UI', sans-serif;
   font-weight: 600;
