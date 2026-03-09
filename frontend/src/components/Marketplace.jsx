@@ -1,62 +1,556 @@
-import React from 'react';
-import { ChevronLeft, Store, Download, Globe } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  ChevronLeft, Store, Download, Upload, Globe, Search,
+  Star, Eye, Heart, Clock, Filter, CheckCircle, X, User,
+  Sparkles, Flame, Award
+} from 'lucide-react';
 import playSound from '../utils/soundManager';
+import '../styles/Marketplace.css';
 
-const COMMUNITY_THEMES = [
-  { id: 1, name: 'Halo Reach Dashboard', author: 'SpartanUI', downloads: 1240, description: 'Halo Reach themed NXE layout' },
-  { id: 2, name: 'Gears Ultimate', author: 'COGDesign', downloads: 890, description: 'Gears of War dark steel layout' },
-  { id: 3, name: 'Forza Horizon', author: 'RacerX', downloads: 2100, description: 'Racing-inspired wide tile layout' },
-  { id: 4, name: 'Classic Blades', author: 'RetroXbox', downloads: 3400, description: 'Original Xbox 360 Blades dashboard recreation' },
-  { id: 5, name: 'Fable III Royal', author: 'Albion360', downloads: 560, description: 'Fable-themed golden layout' },
-  { id: 6, name: 'Mass Effect N7', author: 'Normandy', downloads: 1890, description: 'Mass Effect sci-fi themed dashboard' },
+/* ─── Mock community dashboard data ─────────────────────────────────── */
+const COMMUNITY_DASHBOARDS = [
+  {
+    id: 1,
+    name: 'Halo Reach Dashboard',
+    author: 'SpartanUI',
+    authorAvatar: '👾',
+    downloads: 12400,
+    views: 48200,
+    likes: 3210,
+    rating: 4.8,
+    tags: ['Halo', 'Sci-Fi', 'Dark'],
+    description: 'A beautifully crafted Halo Reach-themed NXE layout with custom animations, achievement tiles, and a lush Reach backdrop. Faithful to the original game aesthetic.',
+    preview: 'linear-gradient(135deg, #1a2a3a 0%, #0d1520 50%, #0a1218 100%)',
+    accent: '#4fc3f7',
+    featured: true,
+    trending: true,
+    version: '2.1.0',
+    size: '4.2 MB',
+    updated: '2 days ago',
+  },
+  {
+    id: 2,
+    name: 'Gears Ultimate Dark',
+    author: 'COGDesign',
+    authorAvatar: '⚙️',
+    downloads: 8900,
+    views: 33100,
+    likes: 1890,
+    rating: 4.6,
+    tags: ['Gears', 'Dark', 'Steel'],
+    description: 'Gears of War dark steel layout inspired by the Coalition\'s aesthetic. Heavy textures, Crimson Omen motifs, and brutalist UI panels.',
+    preview: 'linear-gradient(135deg, #1a0a0a 0%, #2a1010 50%, #1a0808 100%)',
+    accent: '#c0382b',
+    featured: false,
+    trending: true,
+    version: '1.5.2',
+    size: '3.8 MB',
+    updated: '1 week ago',
+  },
+  {
+    id: 3,
+    name: 'Forza Horizon Grid',
+    author: 'RacerX',
+    authorAvatar: '🏎️',
+    downloads: 21000,
+    views: 75600,
+    likes: 5420,
+    rating: 4.9,
+    tags: ['Forza', 'Racing', 'Neon'],
+    description: 'Racing-inspired wide tile layout based on the Forza Horizon 5 UI. Neon accents, speed-blur effects, and car showcase panels.',
+    preview: 'linear-gradient(135deg, #0d1a2a 0%, #102030 50%, #081520 100%)',
+    accent: '#ff6b35',
+    featured: true,
+    trending: false,
+    version: '3.0.1',
+    size: '6.1 MB',
+    updated: '3 days ago',
+  },
+  {
+    id: 4,
+    name: 'Classic Blades Revival',
+    author: 'RetroXbox',
+    authorAvatar: '🎮',
+    downloads: 34000,
+    views: 120000,
+    likes: 9100,
+    rating: 5.0,
+    tags: ['Classic', 'Retro', 'Blades'],
+    description: 'The iconic Xbox 360 Blades dashboard faithfully recreated. Includes all 5 original blade sections with pixel-perfect accuracy and original sound cues.',
+    preview: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    accent: '#90c31d',
+    featured: true,
+    trending: true,
+    version: '4.2.0',
+    size: '5.5 MB',
+    updated: '5 hours ago',
+  },
+  {
+    id: 5,
+    name: 'Mass Effect N7',
+    author: 'Normandy',
+    authorAvatar: '🚀',
+    downloads: 18900,
+    views: 62000,
+    likes: 4300,
+    rating: 4.7,
+    tags: ['Sci-Fi', 'N7', 'Space'],
+    description: 'Mass Effect tri-color N7 themed dashboard. Holographic UI panels, Normandy schematics, and dynamic starfield backdrop.',
+    preview: 'linear-gradient(135deg, #0a0a1a 0%, #0d0d2a 50%, #070715 100%)',
+    accent: '#e53935',
+    featured: false,
+    trending: false,
+    version: '2.3.1',
+    size: '4.9 MB',
+    updated: '2 weeks ago',
+  },
+  {
+    id: 6,
+    name: 'Fable III Royal Court',
+    author: 'Albion360',
+    authorAvatar: '👑',
+    downloads: 5600,
+    views: 22000,
+    likes: 1200,
+    rating: 4.4,
+    tags: ['Fantasy', 'Fable', 'Gold'],
+    description: 'Fable-themed golden dashboard with ornate royal UI elements, Albion crests, and warm candlelit color palette.',
+    preview: 'linear-gradient(135deg, #1a150a 0%, #2a200d 50%, #1a120a 100%)',
+    accent: '#ffd700',
+    featured: false,
+    trending: false,
+    version: '1.2.0',
+    size: '3.2 MB',
+    updated: '1 month ago',
+  },
+  {
+    id: 7,
+    name: 'Cyberpunk 2077 Night City',
+    author: 'NightCityDev',
+    authorAvatar: '🤖',
+    downloads: 29500,
+    views: 95000,
+    likes: 7800,
+    rating: 4.8,
+    tags: ['Cyberpunk', 'Neon', 'Futuristic'],
+    description: 'Night City-inspired neon dashboard with holographic overlays, glitchy text effects, and a dynamic cityscape backdrop.',
+    preview: 'linear-gradient(135deg, #0a001a 0%, #15002a 50%, #200040 100%)',
+    accent: '#f9e400',
+    featured: true,
+    trending: true,
+    version: '2.0.0',
+    size: '7.3 MB',
+    updated: '4 days ago',
+  },
+  {
+    id: 8,
+    name: 'Dark Souls Bonfire',
+    author: 'PrepareToUI',
+    authorAvatar: '🔥',
+    downloads: 14200,
+    views: 51000,
+    likes: 3600,
+    rating: 4.5,
+    tags: ['Dark Souls', 'Dark', 'Fantasy'],
+    description: 'Dark Souls themed minimalist dashboard. Ember tones, bonfire particle effects, and ancient stone UI elements.',
+    preview: 'linear-gradient(135deg, #100808 0%, #1a0c0c 50%, #0d0606 100%)',
+    accent: '#ff6600',
+    featured: false,
+    trending: false,
+    version: '1.8.0',
+    size: '4.0 MB',
+    updated: '3 weeks ago',
+  },
 ];
 
-const Marketplace = ({ onBack }) => {
+const SORT_OPTIONS = ['Most Popular', 'Trending', 'Newest', 'Top Rated', 'Most Downloaded'];
+const TAG_FILTERS = ['All', 'Featured', 'Sci-Fi', 'Dark', 'Retro', 'Neon', 'Fantasy', 'Racing'];
+
+function formatNumber(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return n.toString();
+}
+
+/* ─── Browse Tab ─────────────────────────────────────────────────────── */
+const BrowseTab = () => {
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('Most Popular');
+  const [activeTag, setActiveTag] = useState('All');
+  const [downloading, setDownloading] = useState(null);
+  const [downloaded, setDownloaded] = useState([]);
+  const [liked, setLiked] = useState([]);
+  const [selectedDash, setSelectedDash] = useState(null);
+
+  const filtered = COMMUNITY_DASHBOARDS.filter(d => {
+    const matchesSearch = !search || d.name.toLowerCase().includes(search.toLowerCase()) || d.author.toLowerCase().includes(search.toLowerCase());
+    const matchesTag = activeTag === 'All' || (activeTag === 'Featured' ? d.featured : d.tags.includes(activeTag));
+    return matchesSearch && matchesTag;
+  }).sort((a, b) => {
+    if (sortBy === 'Most Popular') return b.downloads - a.downloads;
+    if (sortBy === 'Trending') return (b.trending ? 1 : 0) - (a.trending ? 1 : 0);
+    if (sortBy === 'Top Rated') return b.rating - a.rating;
+    return 0;
+  });
+
+  const handleDownload = (d) => {
+    if (downloaded.includes(d.id)) return;
+    playSound('select');
+    setDownloading(d.id);
+    setTimeout(() => {
+      setDownloading(null);
+      setDownloaded(prev => [...prev, d.id]);
+    }, 1800);
+  };
+
+  const handleLike = (id) => {
+    playSound('select');
+    setLiked(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  return (
+    <div className="mp-browse">
+      {/* Search + Sort Bar */}
+      <div className="mp-search-bar">
+        <div className="mp-search-input-wrap">
+          <Search size={16} />
+          <input
+            className="mp-search-input"
+            placeholder="Search dashboards, creators..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            data-testid="store-search-input"
+          />
+          {search && (
+            <button className="mp-search-clear" onClick={() => setSearch('')}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        <div className="mp-sort-wrap">
+          <Filter size={14} />
+          <select className="mp-sort-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            {SORT_OPTIONS.map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Tag Filters */}
+      <div className="mp-tag-bar">
+        {TAG_FILTERS.map(tag => (
+          <button
+            key={tag}
+            className={`mp-tag-btn ${activeTag === tag ? 'active' : ''}`}
+            onClick={() => { playSound('focus'); setActiveTag(tag); }}
+          >
+            {tag === 'Featured' && <Sparkles size={11} />}
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      {/* Stats Banner */}
+      <div className="mp-stats-banner">
+        <div className="mp-stat"><Flame size={14} /><span>{COMMUNITY_DASHBOARDS.length} Dashboards</span></div>
+        <div className="mp-stat"><Download size={14} /><span>150k+ Total Downloads</span></div>
+        <div className="mp-stat"><User size={14} /><span>420+ Creators</span></div>
+        <div className="mp-stat"><Award size={14} /><span>All Free</span></div>
+      </div>
+
+      {/* Grid */}
+      <div className="mp-grid" data-testid="store-grid">
+        {filtered.length === 0 ? (
+          <div className="mp-empty">
+            <Globe size={40} />
+            <p>No dashboards match your search.</p>
+          </div>
+        ) : filtered.map(d => (
+          <div
+            key={d.id}
+            className={`mp-card ${downloaded.includes(d.id) ? 'mp-card-owned' : ''}`}
+            data-testid={`store-card-${d.id}`}
+          >
+            {/* Preview */}
+            <div className="mp-card-preview" style={{ background: d.preview }}>
+              <div className="mp-card-preview-overlay" style={{ '--accent': d.accent }}>
+                <span className="mp-card-preview-icon">{d.authorAvatar}</span>
+              </div>
+              {d.featured && <span className="mp-badge featured"><Sparkles size={10} /> Featured</span>}
+              {d.trending && <span className="mp-badge trending"><Flame size={10} /> Trending</span>}
+              {downloaded.includes(d.id) && <span className="mp-badge owned"><CheckCircle size={10} /> Installed</span>}
+            </div>
+
+            {/* Info */}
+            <div className="mp-card-body">
+              <div className="mp-card-top">
+                <h3 className="mp-card-name">{d.name}</h3>
+                <div className="mp-card-rating">
+                  <Star size={11} fill="#ffd700" color="#ffd700" />
+                  <span>{d.rating}</span>
+                </div>
+              </div>
+              <p className="mp-card-author">by {d.author} · v{d.version}</p>
+              <p className="mp-card-desc">{d.description}</p>
+
+              <div className="mp-card-tags">
+                {d.tags.map(t => <span key={t} className="mp-card-tag" style={{ borderColor: d.accent + '44', color: d.accent }}>{t}</span>)}
+              </div>
+
+              <div className="mp-card-meta">
+                <span><Download size={11} /> {formatNumber(d.downloads)}</span>
+                <span><Eye size={11} /> {formatNumber(d.views)}</span>
+                <span><Clock size={11} /> {d.updated}</span>
+                <span>{d.size}</span>
+              </div>
+
+              <div className="mp-card-actions">
+                <button
+                  className={`mp-like-btn ${liked.includes(d.id) ? 'liked' : ''}`}
+                  onClick={() => handleLike(d.id)}
+                  title="Like"
+                >
+                  <Heart size={14} fill={liked.includes(d.id) ? 'currentColor' : 'none'} />
+                  {formatNumber(d.likes + (liked.includes(d.id) ? 1 : 0))}
+                </button>
+                <button
+                  className={`mp-details-btn`}
+                  onClick={() => { playSound('select'); setSelectedDash(selectedDash?.id === d.id ? null : d); }}
+                >
+                  <Eye size={13} /> Preview
+                </button>
+                <button
+                  className={`mp-download-btn ${downloaded.includes(d.id) ? 'installed' : ''} ${downloading === d.id ? 'loading' : ''}`}
+                  data-testid={`download-btn-${d.id}`}
+                  onClick={() => handleDownload(d)}
+                  disabled={downloaded.includes(d.id) || downloading === d.id}
+                >
+                  {downloading === d.id
+                    ? <><span className="mp-spin" /> Installing…</>
+                    : downloaded.includes(d.id)
+                      ? <><CheckCircle size={13} /> Installed</>
+                      : <><Download size={13} /> Install</>
+                  }
+                </button>
+              </div>
+
+              {/* Expanded Preview */}
+              {selectedDash?.id === d.id && (
+                <div className="mp-expanded-preview" style={{ '--accent': d.accent }}>
+                  <div className="mp-expanded-screen" style={{ background: d.preview }}>
+                    <div className="mp-expanded-mock">
+                      <div className="mp-mock-header" style={{ background: d.accent + '33' }}><span style={{ color: d.accent }}>{d.name}</span></div>
+                      <div className="mp-mock-tiles">
+                        {[...Array(6)].map((_, i) => (
+                          <div key={i} className="mp-mock-tile" style={{ background: d.accent + '18', border: `1px solid ${d.accent}33` }} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mp-expanded-desc">{d.description}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ─── Upload Tab ─────────────────────────────────────────────────────── */
+const UploadTab = () => {
+  const [form, setForm] = useState({
+    name: '',
+    author: '',
+    description: '',
+    tags: '',
+    version: '1.0.0',
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [file, setFile] = useState(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.name || !form.author || !form.description) return;
+    playSound('select');
+    setSubmitted(true);
+  };
+
+  if (submitted) {
+    return (
+      <div className="mp-upload-success">
+        <div className="mp-upload-success-icon">
+          <CheckCircle size={48} />
+        </div>
+        <h2>Dashboard Submitted!</h2>
+        <p>Your dashboard <strong>"{form.name}"</strong> has been submitted for community review. It will appear in the store once approved.</p>
+        <button className="mp-upload-again-btn" onClick={() => { setSubmitted(false); setForm({ name: '', author: '', description: '', tags: '', version: '1.0.0' }); setFile(null); }}>
+          Upload Another
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mp-upload">
+      <div className="mp-upload-hero">
+        <Upload size={28} />
+        <div>
+          <h2>Share Your Dashboard</h2>
+          <p>Upload your custom Vortex Prime dashboard for the community to enjoy</p>
+        </div>
+      </div>
+
+      <form className="mp-upload-form" onSubmit={handleSubmit} data-testid="upload-form">
+        <div className="mp-form-row">
+          <div className="mp-form-group">
+            <label>Dashboard Name <span className="mp-required">*</span></label>
+            <input
+              className="mp-input"
+              placeholder="e.g. My Awesome Dashboard"
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              data-testid="upload-name"
+            />
+          </div>
+          <div className="mp-form-group">
+            <label>Your Creator Name <span className="mp-required">*</span></label>
+            <input
+              className="mp-input"
+              placeholder="e.g. YourGamertag"
+              value={form.author}
+              onChange={e => setForm(f => ({ ...f, author: e.target.value }))}
+              data-testid="upload-author"
+            />
+          </div>
+        </div>
+
+        <div className="mp-form-group">
+          <label>Description <span className="mp-required">*</span></label>
+          <textarea
+            className="mp-input mp-textarea"
+            placeholder="Describe your dashboard theme, features, and what makes it unique..."
+            value={form.description}
+            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+            rows={4}
+            data-testid="upload-desc"
+          />
+        </div>
+
+        <div className="mp-form-row">
+          <div className="mp-form-group">
+            <label>Tags</label>
+            <input
+              className="mp-input"
+              placeholder="e.g. Dark, Sci-Fi, Neon (comma separated)"
+              value={form.tags}
+              onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
+              data-testid="upload-tags"
+            />
+          </div>
+          <div className="mp-form-group">
+            <label>Version</label>
+            <input
+              className="mp-input"
+              placeholder="e.g. 1.0.0"
+              value={form.version}
+              onChange={e => setForm(f => ({ ...f, version: e.target.value }))}
+              data-testid="upload-version"
+            />
+          </div>
+        </div>
+
+        {/* File Drop Area */}
+        <div className="mp-form-group">
+          <label>Dashboard File (.zip)</label>
+          <div
+            className={`mp-file-drop ${file ? 'has-file' : ''}`}
+            onClick={() => document.getElementById('mp-file-input').click()}
+            data-testid="upload-file-area"
+          >
+            <input
+              id="mp-file-input"
+              type="file"
+              accept=".zip"
+              style={{ display: 'none' }}
+              onChange={e => setFile(e.target.files[0])}
+            />
+            {file ? (
+              <>
+                <CheckCircle size={24} style={{ color: '#90c31d' }} />
+                <span className="mp-file-name">{file.name}</span>
+                <button type="button" className="mp-file-remove" onClick={e => { e.stopPropagation(); setFile(null); }}>
+                  <X size={14} />
+                </button>
+              </>
+            ) : (
+              <>
+                <Upload size={24} style={{ color: 'rgba(255,255,255,0.4)' }} />
+                <span>Drop your .zip file here or <u>click to browse</u></span>
+                <span className="mp-file-hint">Max 50 MB</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Guidelines */}
+        <div className="mp-guidelines">
+          <h4>📋 Submission Guidelines</h4>
+          <ul>
+            <li>Dashboard must be your original work or have proper credits</li>
+            <li>No inappropriate content, copyrighted brand logos without permission</li>
+            <li>Package as .zip including a manifest.json and preview screenshot</li>
+            <li>Review process typically takes 24–48 hours</li>
+          </ul>
+        </div>
+
+        <button
+          type="submit"
+          className="mp-submit-btn"
+          data-testid="upload-submit"
+          disabled={!form.name || !form.author || !form.description}
+        >
+          <Upload size={16} />
+          Submit for Review
+        </button>
+      </form>
+    </div>
+  );
+};
+
+/* ─── Main Marketplace Component ─────────────────────────────────────── */
+const Marketplace = ({ onBack, defaultTab = 'browse' }) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
   return (
     <div className="marketplace-view" data-testid="marketplace-view">
+      {/* Header */}
       <div className="market-header">
         <button className="back-btn" data-testid="marketplace-back-btn" onClick={() => { playSound('back'); onBack(); }}>
           <ChevronLeft size={20} /> Back
         </button>
-        <Store size={20} style={{ color: '#90c31d' }} />
-        <h1 className="market-title">MARKETPLACE</h1>
-        <span className="market-hint">Community Dashboard Layouts</span>
-      </div>
-
-      <div className="market-banner" data-testid="marketplace-banner">
-        <Globe size={24} />
-        <div>
-          <h3>Community Hub</h3>
-          <p>Browse and download dashboard layouts shared by the community. All layouts are free.</p>
+        <Store size={18} style={{ color: '#90c31d' }} />
+        <h1 className="market-title">VORTEX STORE</h1>
+        <div className="market-tabs">
+          <button
+            className={`market-tab ${activeTab === 'browse' ? 'active' : ''}`}
+            data-testid="tab-browse"
+            onClick={() => { playSound('focus'); setActiveTab('browse'); }}
+          >
+            <Globe size={14} /> Browse
+          </button>
+          <button
+            className={`market-tab ${activeTab === 'upload' ? 'active' : ''}`}
+            data-testid="tab-upload"
+            onClick={() => { playSound('focus'); setActiveTab('upload'); }}
+          >
+            <Upload size={14} /> Upload
+          </button>
         </div>
       </div>
 
-      <div className="market-grid" data-testid="marketplace-grid">
-        {COMMUNITY_THEMES.map((theme) => (
-          <div key={theme.id} className="market-card" data-testid={`market-card-${theme.id}`}>
-            <div className="market-card-preview">
-              <Store size={32} />
-            </div>
-            <div className="market-card-info">
-              <h3>{theme.name}</h3>
-              <p className="market-card-desc">{theme.description}</p>
-              <div className="market-card-meta">
-                <span className="market-author">by {theme.author}</span>
-                <span className="market-downloads">{theme.downloads} downloads</span>
-              </div>
-              <button
-                className="market-download-btn"
-                data-testid={`download-${theme.id}`}
-                onClick={() => {
-                  playSound('select');
-                  alert(`Downloaded "${theme.name}" to /Themes/Disabled`);
-                }}
-              >
-                <Download size={14} /> Download
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* Tab Content */}
+      <div className="market-content">
+        {activeTab === 'browse' ? <BrowseTab /> : <UploadTab />}
       </div>
     </div>
   );
