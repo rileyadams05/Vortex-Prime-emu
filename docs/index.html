@@ -236,7 +236,7 @@
             background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: transparent;
         }
 
         .hero-subtitle {
@@ -1677,7 +1677,7 @@
                     const zipFile = document.getElementById('themeZipInput').files[0];
                     if (zipFile) formData.append('theme', zipFile);
 
-                    fetch('https://discord.vortex-prime-emu.com/api/store/upload', {
+                    fetch(STORE_API_BASE + '/api/store/upload', {
                         method: 'POST',
                         body: formData,
                     })
@@ -1707,16 +1707,23 @@
                 });
 
                 // Load community themes from the API
+                const STORE_API_BASE = 'https://discord.vortex-prime-emu.com';
+
                 function loadCommunityThemes() {
-                    fetch('https://discord.vortex-prime-emu.com/api/store/themes')
-                        .then(res => res.json())
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                    fetch(STORE_API_BASE + '/api/store/themes', { signal: controller.signal })
+                        .then(res => { clearTimeout(timeoutId); return res.json(); })
                         .then(data => {
                             const grid = document.querySelector('.store-grid');
-                            (data.themes || []).forEach(theme => {
+                            const themes = data.themes || [];
+                            if (themes.length === 0) return;
+                            themes.forEach(theme => {
                                 const card = document.createElement('div');
                                 card.className = 'theme-card';
                                 const previewStyle = theme.preview_url
-                                    ? `background: var(--color-bg-elevated); background-image: url('https://discord.vortex-prime-emu.com${theme.preview_url}'); background-size: cover; background-position: center;`
+                                    ? `background: var(--color-bg-elevated); background-image: url('${STORE_API_BASE}${theme.preview_url}'); background-size: cover; background-position: center;`
                                     : 'background: linear-gradient(135deg, var(--color-bg-elevated), var(--color-bg-dark));';
                                 card.innerHTML = `
                                     <div class="theme-preview" style="${previewStyle}">
@@ -1737,7 +1744,7 @@
                                 grid.appendChild(card);
                             });
                         })
-                        .catch(() => {});
+                        .catch(() => { clearTimeout(timeoutId); });
                 }
 
                 function escapeHtml(str) {
