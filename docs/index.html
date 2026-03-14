@@ -1267,14 +1267,7 @@
 
                 function handleStoreClick(event) {
                     event.preventDefault();
-
-                    if (!discordUser) {
-                        // Not logged in, redirect directly to Discord OAuth
-                        loginWithDiscord();
-                    } else {
-                        // Already logged in, show store
-                        showPage('store');
-                    }
+                    showPage('store');
                 }
 
                 function loginWithDiscord() {
