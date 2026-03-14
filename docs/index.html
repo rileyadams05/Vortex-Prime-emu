@@ -9,7 +9,28 @@
     <meta property="og:title" content="Vortex Prime - Multi-Platform Emulation Frontend">
     <meta property="og:description" content="One frontend for all your games. Unified achievements, customizable themes, community store.">
     <meta property="og:type" content="website">
+    
+    <!-- Cache-Busting: Nuke local browser cache for HTML -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <title>Vortex Prime | Multi-Platform Emulation Frontend</title>
+    
+    <!-- Service Worker Nuclear Option: Kill stale service workers and clear cache storage -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (let registration of registrations) { registration.unregister(); }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
+    </script>
+
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -883,6 +904,103 @@
             color: var(--color-text);
         }
 
+        /* Upload Form Styles */
+        .modal-content.wide { max-width: 560px; }
+
+        .upload-form { text-align: left; }
+
+        .form-group { margin-bottom: 1.25rem; }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus { border-color: var(--color-primary); }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-upload-area {
+            position: relative;
+            border: 2px dashed var(--color-border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--color-bg-dark);
+        }
+
+        .file-upload-area:hover, .file-upload-area.has-file {
+            border-color: var(--color-primary);
+            background: rgba(16, 185, 129, 0.04);
+        }
+
+        .file-upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .file-upload-icon {
+            width: 28px;
+            height: 28px;
+            fill: var(--color-text-muted);
+            display: block;
+            margin: 0 auto 0.4rem;
+        }
+
+        .file-upload-text {
+            font-size: 0.825rem;
+            color: var(--color-text-muted);
+        }
+
+        .file-upload-name {
+            font-size: 0.825rem;
+            color: var(--color-primary-light);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        .upload-success { padding: 0.5rem 0; }
+
+        .upload-success-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+
+        .upload-success-icon svg { width: 32px; height: 32px; fill: white; }
+
         /* Responsive */
         @media (max-width: 768px) {
             .nav-links { display: none; }
@@ -919,9 +1037,9 @@
                     </a>
                     <div class="nav-links">
                         <a href="#" class="nav-link active" onclick="showPage('home')" id="nav-home">Home</a>
-                        <a href="#" class="nav-link" onclick="handleStoreClick(event)" id="nav-store">Store</a>
-                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu" class="nav-link" target="_blank">GitHub</a>
-                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank">Docs</a>
+                         <a href="#" class="nav-link" onclick="handleStoreClick(event)" id="nav-store">Store</a>
+                         <button class="nav-link" style="background:none; border:none; cursor:pointer;" onclick="handleUploadThemeClick()">Upload</button>
+                         <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank">Docs</a>
                     </div>
                     <div id="discordUserProfile" style="display: none;" class="discord-user">
                         <img id="discordAvatar" class="discord-avatar" src="" alt="Discord Avatar">
@@ -1193,13 +1311,23 @@
                         <p>Each theme can include a custom startup video (MP4). When you download a theme, click on it in-app to access the startup video sub-tab.</p>
                     </div>
 
-                    <div class="store-cta">
+                     <div class="store-cta">
                         <h3>Create & Share Your Own</h3>
-                        <p>Build custom themes with your own startup videos. Upload via Discord login and get a unique code to share.</p>
-                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki/Creating-Themes" class="btn btn-primary" target="_blank">
-                            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                            Theme Creation Guide
-                        </a>
+                        <p>Build custom themes and share them with the community. Upload via Discord login to get your own unique install code.</p>
+                        
+                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
+                            <!-- Theme Creation Guide Button (Green) -->
+                            <button class="btn" style="background: #23a559; color: white; border: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem;" onclick="handleUploadThemeClick()">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                Theme Creation Guide
+                            </button>
+
+                            <!-- GitHub Repository Button (Blue) -->
+                            <a href="https://github.com/rileyadams05/Vortex-Prime-emu" target="_blank" class="btn" style="background: #5865F2; color: white; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.230 3.285-1.230.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                                GitHub Repository
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -1237,12 +1365,92 @@
                 </div>
             </div>
 
+            <!-- Discord Login Modal (for upload flow) -->
+            <div class="modal" id="discordLoginModal">
+                <div class="modal-backdrop" onclick="closeDiscordLoginModal()"></div>
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeDiscordLoginModal()">×</button>
+                    <div class="modal-icon">
+                        <svg viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+                    </div>
+                    <h3>Login to Upload</h3>
+                    <p>Connect your Discord account to upload and share themes with the community.</p>
+                    <div class="modal-actions">
+                        <button class="modal-btn discord" onclick="loginWithDiscordForUpload()">
+                            <svg viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+                            Continue with Discord
+                        </button>
+                        <button class="modal-btn secondary" onclick="closeDiscordLoginModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Theme Modal -->
+            <div class="modal" id="uploadThemeModal">
+                <div class="modal-backdrop" onclick="closeUploadModal()"></div>
+                <div class="modal-content wide">
+                    <button class="modal-close" onclick="closeUploadModal()">×</button>
+
+                    <div id="uploadFormView">
+                        <h3 style="margin-bottom: 0.25rem;">Upload Theme</h3>
+                        <p>Share your theme with the Vortex Prime community.</p>
+
+                        <form class="upload-form" id="uploadThemeForm" onsubmit="handleUploadSubmit(event)">
+                            <div class="form-group">
+                                <label class="form-label" for="themeName">Theme Name</label>
+                                <input type="text" class="form-input" id="themeName" placeholder="My Awesome Theme" required maxlength="60">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="themeDescription">Description</label>
+                                <textarea class="form-textarea" id="themeDescription" placeholder="Describe your theme — what it looks like, what inspired it, what's included..." required maxlength="500"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Preview Image</label>
+                                <div class="file-upload-area" id="previewUploadArea">
+                                    <input type="file" id="previewImageInput" accept="image/*" onchange="handleFileSelect(this, 'previewUploadArea', 'previewFileName')">
+                                    <svg class="file-upload-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                                    <div class="file-upload-text">Click to upload a preview image (PNG, JPG, GIF)</div>
+                                    <div class="file-upload-name" id="previewFileName" style="display:none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Theme ZIP File <span style="color: var(--color-warning);">*</span></label>
+                                <div class="file-upload-area" id="zipUploadArea">
+                                    <input type="file" id="themeZipInput" accept=".zip" onchange="handleFileSelect(this, 'zipUploadArea', 'zipFileName')" required>
+                                    <svg class="file-upload-icon" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-2 6h-2v2h2v2h-2v2h-2v-2h2v-2h-2v-2h2v-2h-2V8h2v2h2v2z"/></svg>
+                                    <div class="file-upload-text">Click to upload your theme ZIP file</div>
+                                    <div class="file-upload-name" id="zipFileName" style="display:none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="modal-actions">
+                                <button type="submit" class="modal-btn primary" id="uploadSubmitBtn">Upload Theme</button>
+                                <button type="button" class="modal-btn secondary" onclick="closeUploadModal()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="uploadSuccessView" style="display:none;" class="upload-success">
+                        <div class="upload-success-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </div>
+                        <h3>Theme Submitted!</h3>
+                        <p>Your theme has been submitted for review. You'll receive a unique code once it's approved and live in the store.</p>
+                        <button class="modal-btn primary" onclick="closeUploadModal()" style="margin-top: 1rem; width: 100%;">Done</button>
+                    </div>
+                </div>
+            </div>
+
             <script>
                 // Discord Authentication
                 const DISCORD_CLIENT_ID = "1481235544993431554";
                 const DISCORD_REDIRECT_URI = "https://vortex-prime-emu.com/oauth-callback.html";
 
                 let discordUser = null;
+                let pendingUploadAfterLogin = false;
 
                 // Check for Discord login on page load
                 function checkDiscordLogin() {
@@ -1295,7 +1503,13 @@
                             discordUser = event.data.profile;
                             localStorage.setItem('discordUser', JSON.stringify(discordUser));
                             updateDiscordUI();
-                            showPage('store');
+                            if (pendingUploadAfterLogin) {
+                                pendingUploadAfterLogin = false;
+                                showPage('store');
+                                openUploadModal();
+                            } else {
+                                showPage('store');
+                            }
                             popup?.close();
                             window.removeEventListener('message', handleAuth);
                         } else if (event.data.type === 'DISCORD_AUTH_ERROR') {
@@ -1388,8 +1602,101 @@
                 });
 
                 document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') closeModal();
+                    if (e.key === 'Escape') {
+                        closeModal();
+                        closeDiscordLoginModal();
+                        closeUploadModal();
+                    }
                 });
+
+                // Upload Theme Flow
+                function handleUploadThemeClick() {
+                    if (discordUser) {
+                        openUploadModal();
+                    } else {
+                        document.getElementById('discordLoginModal').classList.add('active');
+                    }
+                }
+
+                function closeDiscordLoginModal() {
+                    document.getElementById('discordLoginModal').classList.remove('active');
+                }
+
+                function loginWithDiscordForUpload() {
+                    pendingUploadAfterLogin = true;
+                    closeDiscordLoginModal();
+                    loginWithDiscord();
+                }
+
+                function openUploadModal() {
+                    document.getElementById('uploadFormView').style.display = 'block';
+                    document.getElementById('uploadSuccessView').style.display = 'none';
+                    document.getElementById('uploadThemeModal').classList.add('active');
+                }
+
+                function closeUploadModal() {
+                    document.getElementById('uploadThemeModal').classList.remove('active');
+                    document.getElementById('uploadThemeForm').reset();
+                    ['previewUploadArea', 'zipUploadArea'].forEach(id => {
+                        document.getElementById(id).classList.remove('has-file');
+                    });
+                    ['previewFileName', 'zipFileName'].forEach(id => {
+                        const el = document.getElementById(id);
+                        el.style.display = 'none';
+                        el.textContent = '';
+                    });
+                }
+
+                function handleFileSelect(input, areaId, nameId) {
+                    const area = document.getElementById(areaId);
+                    const nameEl = document.getElementById(nameId);
+                    if (input.files && input.files[0]) {
+                        area.classList.add('has-file');
+                        nameEl.textContent = input.files[0].name;
+                        nameEl.style.display = 'block';
+                    } else {
+                        area.classList.remove('has-file');
+                        nameEl.style.display = 'none';
+                    }
+                }
+
+                function handleUploadSubmit(event) {
+                    event.preventDefault();
+                    const btn = document.getElementById('uploadSubmitBtn');
+                    btn.textContent = 'Uploading...';
+                    btn.disabled = true;
+
+                    const formData = new FormData();
+                    formData.append('name', document.getElementById('themeName').value);
+                    formData.append('description', document.getElementById('themeDescription').value);
+                    formData.append('discord_id', discordUser.discordId);
+                    formData.append('author', discordUser.name);
+                    formData.append('access_token', discordUser.accessToken || '');
+                    const previewFile = document.getElementById('previewImageInput').files[0];
+                    if (previewFile) formData.append('preview', previewFile);
+                    const zipFile = document.getElementById('themeZipInput').files[0];
+                    if (zipFile) formData.append('theme', zipFile);
+
+                    fetch('https://discord.vortex-prime-emu.com/api/store/upload', {
+                        method: 'POST',
+                        body: formData,
+                    })
+                    .then(res => {
+                        if (!res.ok) return res.json().then(d => Promise.reject(d.detail || 'Upload failed'));
+                        return res.json();
+                    })
+                    .then(() => {
+                        document.getElementById('uploadFormView').style.display = 'none';
+                        document.getElementById('uploadSuccessView').style.display = 'block';
+                    })
+                    .catch(err => {
+                        alert('Upload failed: ' + err);
+                    })
+                    .finally(() => {
+                        btn.textContent = 'Upload Theme';
+                        btn.disabled = false;
+                    });
+                }
 
                 // Store tabs (visual only for now)
                 document.querySelectorAll('.store-tab').forEach(tab => {
@@ -1398,6 +1705,48 @@
                         tab.classList.add('active');
                     });
                 });
+
+                // Load community themes from the API
+                function loadCommunityThemes() {
+                    fetch('https://discord.vortex-prime-emu.com/api/store/themes')
+                        .then(res => res.json())
+                        .then(data => {
+                            const grid = document.querySelector('.store-grid');
+                            (data.themes || []).forEach(theme => {
+                                const card = document.createElement('div');
+                                card.className = 'theme-card';
+                                const previewStyle = theme.preview_url
+                                    ? `background: var(--color-bg-elevated); background-image: url('https://discord.vortex-prime-emu.com${theme.preview_url}'); background-size: cover; background-position: center;`
+                                    : 'background: linear-gradient(135deg, var(--color-bg-elevated), var(--color-bg-dark));';
+                                card.innerHTML = `
+                                    <div class="theme-preview" style="${previewStyle}">
+                                        ${!theme.preview_url ? '<span class="theme-preview-placeholder">🎨</span>' : ''}
+                                        <span class="theme-badge-community">Community</span>
+                                    </div>
+                                    <div class="theme-info">
+                                        <h3>${escapeHtml(theme.name)}</h3>
+                                        <p>${escapeHtml(theme.description)}</p>
+                                        <div class="theme-code">
+                                            <code>${escapeHtml(theme.code)}</code>
+                                            <button class="theme-code-copy" onclick="copyCode(this, '${escapeHtml(theme.code)}')">Copy</button>
+                                        </div>
+                                        <div class="theme-meta">
+                                            <span class="theme-author">by ${escapeHtml(theme.author)}</span>
+                                        </div>
+                                    </div>`;
+                                grid.appendChild(card);
+                            });
+                        })
+                        .catch(() => {});
+                }
+
+                function escapeHtml(str) {
+                    const d = document.createElement('div');
+                    d.textContent = String(str);
+                    return d.innerHTML;
+                }
+
+                loadCommunityThemes();
             </script>
         </body>
         </html>
