@@ -1280,7 +1280,7 @@
                 function loginWithDiscord() {
                     // Real Discord OAuth flow
                     const scopes = 'identify email';
-                    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(scopes)}`;
+                    const authUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(scopes)}`;
 
                     // Open Discord OAuth in a popup
                     const width = 500;
