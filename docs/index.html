@@ -522,6 +522,47 @@
             margin-bottom: 1rem;
         }
 
+        .theme-code {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .theme-code code {
+            flex: 1;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: var(--color-primary-light);
+            letter-spacing: 0.5px;
+        }
+
+        .theme-code-copy {
+            background: var(--color-bg-elevated);
+            border: none;
+            color: var(--color-text-muted);
+            padding: 0.375rem 0.625rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .theme-code-copy:hover {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .theme-code-copy.copied {
+            background: var(--color-success);
+            color: white;
+        }
+
         .theme-meta {
             display: flex;
             justify-content: space-between;
@@ -542,6 +583,75 @@
         }
 
         .theme-downloads svg { width: 14px; height: 14px; fill: currentColor; }
+
+        /* How it works section */
+        .how-it-works {
+            max-width: 900px;
+            margin: 0 auto 3rem;
+            padding: 2rem;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+        }
+
+        .how-it-works h3 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .step {
+            text-align: center;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin: 0 auto 0.75rem;
+        }
+
+        .step h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .step p {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        .keyboard-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--color-bg-elevated);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--color-text-secondary);
+        }
+
+        .kbd {
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
 
         .store-cta {
             max-width: 800px;
@@ -888,138 +998,224 @@
             </div>
 
             <!-- Store Page -->
-            <div class="page" id="page-store">
-                <section class="store-hero">
-                    <h1>Theme Store</h1>
-                    <p>Discover and download themes created by the community. Or create your own and share it with the world.</p>
+                <div class="page" id="page-store">
+                    <section class="store-hero">
+                        <h1>Theme Store</h1>
+                        <p>Browse themes and copy the code. Paste it in the Vortex Prime app to install.</p>
 
-                    <div class="store-tabs">
-                        <button class="store-tab active">All Themes</button>
-                        <button class="store-tab">Official</button>
-                        <button class="store-tab">Community</button>
-                        <button class="store-tab">Most Popular</button>
-                    </div>
-                </section>
-
-                <div class="store-grid">
-                    <div class="theme-card">
-                        <div class="theme-preview" style="background: linear-gradient(135deg, #1a472a, #2d5a3d);">
-                            <span class="theme-preview-placeholder">🎮</span>
-                            <span class="theme-badge-official">Official</span>
+                        <div class="store-tabs">
+                            <button class="store-tab active">All Themes</button>
+                            <button class="store-tab">Official</button>
+                            <button class="store-tab">Community</button>
+                            <button class="store-tab">Startup Videos</button>
                         </div>
-                        <div class="theme-info">
-                            <h3>Classic Green</h3>
-                            <p>The default Vortex Prime experience. Clean, minimal, powerful.</p>
-                            <div class="theme-meta">
-                                <span class="theme-author">by Vortex Team</span>
-                                <span class="theme-downloads">
-                                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    Built-in
-                                </span>
+                    </section>
+
+                    <!-- How It Works -->
+                    <div class="how-it-works">
+                        <h3>How to Install Themes</h3>
+                        <div class="steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <h4>Copy Code</h4>
+                                <p>Find a theme you like and copy its code</p>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <h4>Open Store in App</h4>
+                                <p>Go to the Store tab in Vortex Prime</p>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <h4>Paste & Enter</h4>
+                                <p>Paste the code and press Enter to download</p>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <h4>Enable Theme</h4>
+                                <p>Move from Disabled to Play to activate</p>
+                            </div>
+                        </div>
+                        <div class="keyboard-hint">
+                            <span>Keyboard shortcuts:</span>
+                            <span class="kbd">Ctrl+P</span> Move to Play
+                            <span class="kbd">Ctrl+D</span> Move to Disabled
+                        </div>
+                    </div>
+
+                    <div class="store-grid">
+                        <!-- Official Themes -->
+                        <div class="theme-card">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #1a472a, #2d5a3d);">
+                                <span class="theme-preview-placeholder">🎮</span>
+                                <span class="theme-badge-official">Official</span>
+                            </div>
+                            <div class="theme-info">
+                                <h3>Classic Green</h3>
+                                <p>The default Vortex Prime experience. Clean, minimal, powerful.</p>
+                                <div class="theme-code">
+                                    <code>VP-THEME-CLASSIC-001</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, 'VP-THEME-CLASSIC-001')">Copy</button>
+                                </div>
+                                <div class="theme-meta">
+                                    <span class="theme-author">by Vortex Team</span>
+                                    <span class="theme-downloads">Built-in</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="theme-card">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #1e3a5f, #2d5a8a);">
+                                <span class="theme-preview-placeholder">🎯</span>
+                                <span class="theme-badge-official">Official</span>
+                            </div>
+                            <div class="theme-info">
+                                <h3>PlayStation Style</h3>
+                                <p>Inspired by the iconic PlayStation interface design.</p>
+                                <div class="theme-code">
+                                    <code>VP-THEME-PSSTYLE-002</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, 'VP-THEME-PSSTYLE-002')">Copy</button>
+                                </div>
+                                <div class="theme-meta">
+                                    <span class="theme-author">by Vortex Team</span>
+                                    <span class="theme-downloads">Coming Soon</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="theme-card">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #e60012, #8b0000);">
+                                <span class="theme-preview-placeholder">🍄</span>
+                                <span class="theme-badge-official">Official</span>
+                            </div>
+                            <div class="theme-info">
+                                <h3>Nintendo Style</h3>
+                                <p>Bright, playful, and family-friendly interface.</p>
+                                <div class="theme-code">
+                                    <code>VP-THEME-NINTNDO-003</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, 'VP-THEME-NINTNDO-003')">Copy</button>
+                                </div>
+                                <div class="theme-meta">
+                                    <span class="theme-author">by Vortex Team</span>
+                                    <span class="theme-downloads">Coming Soon</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="theme-card">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #2a2a2a, #1a1a1a);">
+                                <span class="theme-preview-placeholder">💻</span>
+                                <span class="theme-badge-official">Official</span>
+                            </div>
+                            <div class="theme-info">
+                                <h3>PC Master</h3>
+                                <p>Sleek desktop-focused design for keyboard & mouse.</p>
+                                <div class="theme-code">
+                                    <code>VP-THEME-PCMSTR-004</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, 'VP-THEME-PCMSTR-004')">Copy</button>
+                                </div>
+                                <div class="theme-meta">
+                                    <span class="theme-author">by Vortex Team</span>
+                                    <span class="theme-downloads">Coming Soon</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Community Themes -->
+                        <div class="theme-card">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #4a1a6b, #2d1040);">
+                                <span class="theme-preview-placeholder">🌌</span>
+                                <span class="theme-badge-community">Community</span>
+                            </div>
+                            <div class="theme-info">
+                                <h3>Nebula Dark</h3>
+                                <p>A cosmic purple theme for late-night gaming sessions.</p>
+                                <div class="theme-code">
+                                    <code>VP-COMM-NEBULA-A7X2</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, 'VP-COMM-NEBULA-A7X2')">Copy</button>
+                                </div>
+                                <div class="theme-meta">
+                                    <span class="theme-author">by community</span>
+                                    <span class="theme-downloads">Coming Soon</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="theme-card">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #1a1a2e, #16213e);">
+                                <span class="theme-preview-placeholder">🕹️</span>
+                                <span class="theme-badge-community">Community</span>
+                            </div>
+                            <div class="theme-info">
+                                <h3>Retro Arcade</h3>
+                                <p>Neon lights and pixel nostalgia.</p>
+                                <div class="theme-code">
+                                    <code>VP-COMM-ARCADE-K9M4</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, 'VP-COMM-ARCADE-K9M4')">Copy</button>
+                                </div>
+                                <div class="theme-meta">
+                                    <span class="theme-author">by community</span>
+                                    <span class="theme-downloads">Coming Soon</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="theme-card">
-                        <div class="theme-preview" style="background: linear-gradient(135deg, #1e3a5f, #2d5a8a);">
-                            <span class="theme-preview-placeholder">🎯</span>
-                            <span class="theme-badge-official">Official</span>
+                    <!-- Startup Videos Section -->
+                    <div class="section-header" style="padding: 2rem;">
+                        <h2>Startup Videos</h2>
+                        <p>Custom boot animations (MP4). Same process — copy code, paste in app.</p>
+                    </div>
+
+                    <div class="store-grid">
+                        <div class="theme-card">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #0a0a0a, #1a1a1a);">
+                                <span class="theme-preview-placeholder">▶️</span>
+                                <span class="theme-badge-official">Official</span>
+                            </div>
+                            <div class="theme-info">
+                                <h3>Vortex Boot</h3>
+                                <p>Default startup animation with Vortex Prime logo.</p>
+                                <div class="theme-code">
+                                    <code>VP-VIDEO-BOOT-001</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, 'VP-VIDEO-BOOT-001')">Copy</button>
+                                </div>
+                                <div class="theme-meta">
+                                    <span class="theme-author">by Vortex Team</span>
+                                    <span class="theme-downloads">Built-in</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="theme-info">
-                            <h3>PlayStation Style</h3>
-                            <p>Inspired by the iconic PlayStation interface design.</p>
-                            <div class="theme-meta">
-                                <span class="theme-author">by Vortex Team</span>
-                                <span class="theme-downloads">
-                                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    Coming Soon
-                                </span>
+
+                        <div class="theme-card">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #0d1117, #161b22);">
+                                <span class="theme-preview-placeholder">🎬</span>
+                                <span class="theme-badge-community">Community</span>
+                            </div>
+                            <div class="theme-info">
+                                <h3>Minimal Fade</h3>
+                                <p>Simple fade-in animation. Clean and fast.</p>
+                                <div class="theme-code">
+                                    <code>VP-VIDEO-MNFADE-B2K</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, 'VP-VIDEO-MNFADE-B2K')">Copy</button>
+                                </div>
+                                <div class="theme-meta">
+                                    <span class="theme-author">by community</span>
+                                    <span class="theme-downloads">Coming Soon</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="theme-card">
-                        <div class="theme-preview" style="background: linear-gradient(135deg, #e60012, #8b0000);">
-                            <span class="theme-preview-placeholder">🍄</span>
-                            <span class="theme-badge-official">Official</span>
-                        </div>
-                        <div class="theme-info">
-                            <h3>Nintendo Style</h3>
-                            <p>Bright, playful, and family-friendly interface.</p>
-                            <div class="theme-meta">
-                                <span class="theme-author">by Vortex Team</span>
-                                <span class="theme-downloads">
-                                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    Coming Soon
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="theme-card">
-                        <div class="theme-preview" style="background: linear-gradient(135deg, #2a2a2a, #1a1a1a);">
-                            <span class="theme-preview-placeholder">💻</span>
-                            <span class="theme-badge-official">Official</span>
-                        </div>
-                        <div class="theme-info">
-                            <h3>PC Master</h3>
-                            <p>Sleek desktop-focused design for keyboard & mouse.</p>
-                            <div class="theme-meta">
-                                <span class="theme-author">by Vortex Team</span>
-                                <span class="theme-downloads">
-                                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    Coming Soon
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="theme-card">
-                        <div class="theme-preview" style="background: linear-gradient(135deg, #4a1a6b, #2d1040);">
-                            <span class="theme-preview-placeholder">🌌</span>
-                            <span class="theme-badge-community">Community</span>
-                        </div>
-                        <div class="theme-info">
-                            <h3>Nebula Dark</h3>
-                            <p>A cosmic purple theme for late-night gaming sessions.</p>
-                            <div class="theme-meta">
-                                <span class="theme-author">by community</span>
-                                <span class="theme-downloads">
-                                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    Soon™
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="theme-card">
-                        <div class="theme-preview" style="background: linear-gradient(135deg, #1a1a2e, #16213e);">
-                            <span class="theme-preview-placeholder">🕹️</span>
-                            <span class="theme-badge-community">Community</span>
-                        </div>
-                        <div class="theme-info">
-                            <h3>Retro Arcade</h3>
-                            <p>Neon lights and pixel nostalgia.</p>
-                            <div class="theme-meta">
-                                <span class="theme-author">by community</span>
-                                <span class="theme-downloads">
-                                    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    Soon™
-                                </span>
-                            </div>
-                        </div>
+                    <div class="store-cta">
+                        <h3>Create & Share Your Own</h3>
+                        <p>Build custom themes or startup videos and share them with the community. Once uploaded, you'll get a unique code others can use.</p>
+                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki/Creating-Themes" class="btn btn-primary" target="_blank">
+                            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                            Theme Creation Guide
+                        </a>
                     </div>
                 </div>
-
-                <div class="store-cta">
-                    <h3>Create Your Own Theme</h3>
-                    <p>Have a design idea? Build a custom theme and share it with the community.</p>
-                    <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki/Creating-Themes" class="btn btn-primary" target="_blank">
-                        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                        Theme Creation Guide
-                    </a>
-                </div>
-            </div>
 
             <!-- Footer -->
             <footer>
@@ -1065,6 +1261,32 @@
                     document.getElementById('nav-' + pageId)?.classList.add('active');
 
                     window.scrollTo(0, 0);
+                }
+
+                // Copy theme code to clipboard
+                function copyCode(button, code) {
+                    navigator.clipboard.writeText(code).then(() => {
+                        button.textContent = 'Copied!';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.textContent = 'Copy';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    }).catch(() => {
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = code;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        button.textContent = 'Copied!';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.textContent = 'Copy';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    });
                 }
 
                 // Modal
