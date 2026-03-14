@@ -1254,6 +1254,9 @@
 
             <script>
                 // Discord Authentication
+                const DISCORD_CLIENT_ID = "1481235544993431554";
+                const DISCORD_REDIRECT_URI = window.location.origin + "/oauth-callback.html";
+
                 let discordUser = null;
 
                 // Check for Discord login on page load
@@ -1268,8 +1271,8 @@
                 function updateDiscordUI() {
                     if (discordUser) {
                         document.getElementById('discordUserProfile').style.display = 'flex';
-                        document.getElementById('discordAvatar').src = discordUser.avatar;
-                        document.getElementById('discordUsername').textContent = '@' + discordUser.username;
+                        document.getElementById('discordAvatar').src = discordUser.profilePicture;
+                        document.getElementById('discordUsername').textContent = '@' + discordUser.name;
                         document.getElementById('downloadBtn').style.display = 'none';
                     } else {
                         document.getElementById('discordUserProfile').style.display = 'none';
@@ -1290,22 +1293,40 @@
                 }
 
                 function loginWithDiscord() {
-                    // Simulated Discord OAuth - in real implementation this would redirect to Discord OAuth
-                    // For demo purposes, creating a mock user
-                    const mockUser = {
-                        username: 'User' + Math.floor(Math.random() * 9999),
-                        avatar: 'https://cdn.discordapp.com/embed/avatars/' + Math.floor(Math.random() * 5) + '.png',
-                        id: 'demo_' + Date.now()
-                    };
+                    // Real Discord OAuth flow
+                    const scopes = 'identify email';
+                    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(scopes)}`;
 
-                    discordUser = mockUser;
-                    localStorage.setItem('discordUser', JSON.stringify(mockUser));
-                    updateDiscordUI();
-                    closeDiscordModal();
-                    showPage('store');
+                    // Open Discord OAuth in a popup
+                    const width = 500;
+                    const height = 700;
+                    const left = (window.screen.width - width) / 2;
+                    const top = (window.screen.height - height) / 2;
 
-                    // In production, this would be:
-                    // window.location.href = 'YOUR_DISCORD_OAUTH_URL';
+                    const popup = window.open(
+                        authUrl,
+                        'Discord Login',
+                        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no`
+                    );
+
+                    // Listen for the callback message
+                    window.addEventListener('message', function handleAuth(event) {
+                        if (event.origin !== window.location.origin) return;
+
+                        if (event.data.type === 'DISCORD_AUTH_SUCCESS') {
+                            discordUser = event.data.profile;
+                            localStorage.setItem('discordUser', JSON.stringify(discordUser));
+                            updateDiscordUI();
+                            closeDiscordModal();
+                            showPage('store');
+                            popup?.close();
+                            window.removeEventListener('message', handleAuth);
+                        } else if (event.data.type === 'DISCORD_AUTH_ERROR') {
+                            alert('Discord authentication failed: ' + event.data.error);
+                            popup?.close();
+                            window.removeEventListener('message', handleAuth);
+                        }
+                    });
                 }
 
                 function logoutDiscord() {
