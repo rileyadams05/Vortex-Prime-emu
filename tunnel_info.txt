@@ -1,0 +1,6 @@
+NAME:     vortex
+ID:       1fad916c-1f3f-4e41-ac61-2b088b1c3c4c
+CREATED:  2026-03-11 11:44:52.21193 +0000 UTC
+
+CONNECTOR ID                         CREATED              ARCHITECTURE  VERSION  ORIGIN IP      EDGE                      
+bc8fdc28-989d-4c00-b1d7-e8719f08b2fc 2026-03-14T16:59:37Z windows_amd64 2025.8.1 49.190.251.214 2xmel02, 1xsyd01, 1xsyd05 
