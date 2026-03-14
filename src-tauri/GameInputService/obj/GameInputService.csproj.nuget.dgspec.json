@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj": {}
+    "m:\\my project\\my-emu\\src-tauri\\GameInputService\\GameInputService.csproj": {}
   },
   "projects": {
-    "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj": {
+    "m:\\my project\\my-emu\\src-tauri\\GameInputService\\GameInputService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
+        "projectUniqueName": "m:\\my project\\my-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
         "projectName": "GameInputService",
-        "projectPath": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
+        "projectPath": "m:\\my project\\my-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
         "packagesPath": "C:\\Users\\Riley\\.nuget\\packages\\",
-        "outputPath": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\obj\\",
+        "outputPath": "m:\\my project\\my-emu\\src-tauri\\GameInputService\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -54,6 +54,10 @@
             "GameInputSharp.Core": {
               "target": "Package",
               "version": "[0.1.0-alpha, )"
+            },
+            "NvAPIWrapper.Net": {
+              "target": "Package",
+              "version": "[0.8.1.101, )"
             }
           },
           "imports": [
@@ -70,19 +74,19 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[9.0.13, 9.0.13]"
+              "version": "[9.0.14, 9.0.14]"
             },
             {
               "name": "Microsoft.NETCore.App.Host.win-x64",
-              "version": "[9.0.13, 9.0.13]"
+              "version": "[9.0.14, 9.0.14]"
             },
             {
               "name": "Microsoft.NETCore.App.Ref",
-              "version": "[9.0.13, 9.0.13]"
+              "version": "[9.0.14, 9.0.14]"
             },
             {
               "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[9.0.13, 9.0.13]"
+              "version": "[9.0.14, 9.0.14]"
             }
           ],
           "frameworkReferences": {
@@ -90,7 +94,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.104/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

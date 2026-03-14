@@ -31,6 +31,13 @@ ROOT_DIR = Path(__file__).parent
 
 load_dotenv(ROOT_DIR / '.env')
 
+# Configure logging early
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 ASSETS_DIR = ROOT_DIR.parent / 'assets'
 FRONTEND_ASSETS_DIR = ROOT_DIR.parent / 'frontend' / 'public' / 'assets'
 # Correct paths as per user requirement (Start ups/Play vs startup/play)
@@ -45,11 +52,17 @@ STARTUP_DISABLED_DIR.mkdir(parents=True, exist_ok=True)
 WALLPAPER_PLAY_DIR.mkdir(parents=True, exist_ok=True)
 WALLPAPER_DISABLED_DIR.mkdir(parents=True, exist_ok=True)
 
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-db_name = os.environ.get('DB_NAME', 'vortex_prime')
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
+# MongoDB connection (optional - only for status checks)
+try:
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'vortex_prime')
+    client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=2000)
+    db = client[db_name]
+    mongo_available = True
+except Exception as e:
+    logger.warning(f"MongoDB not available: {e}")
+    mongo_available = False
+    db = None
 
 # Create the main app without a prefix
 app = FastAPI()
@@ -101,26 +114,32 @@ async def root():
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
+    if not mongo_available:
+        raise HTTPException(status_code=503, detail="MongoDB not available")
+
     status_dict = input.model_dump()
     status_obj = StatusCheck(**status_dict)
-    
+
     # Convert to dict and serialize datetime to ISO string for MongoDB
     doc = status_obj.model_dump()
     doc['timestamp'] = doc['timestamp'].isoformat()
-    
+
     _ = await db.status_checks.insert_one(doc)
     return status_obj
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
+    if not mongo_available:
+        return []
+
     # Exclude MongoDB's _id field from the query results
     status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
+
     # Convert ISO string timestamps back to datetime objects
     for check in status_checks:
         if isinstance(check['timestamp'], str):
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
+
     return status_checks
 
 # Xbox Live API endpoints
@@ -174,6 +193,20 @@ async def handle_auth_callback(request: dict):
         "gamertag": "DemoGamer360",
         "gamerscore": 25000,
         "profilePicture": None
+    }
+
+# API Configuration
+@api_router.get("/config/external-apis")
+async def get_external_api_config():
+    """Get configuration for external APIs (RetroAchievements, TMDB)"""
+    return {
+        "retroAchievements": {
+            "apiKey": os.environ.get("RETROACHIEVEMENTS_API_KEY", ""),
+            "username": os.environ.get("RETROACHIEVEMENTS_USERNAME", "")
+        },
+        "tmdb": {
+            "apiKey": os.environ.get("TMDB_API_KEY", "")
+        }
     }
 
 # Startup Video Management
@@ -616,6 +649,9 @@ async def vibe_design_generate(req: VibeDesignRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 import app_settings_service
+import discord_webhook_service
+import store_service
+from fastapi import UploadFile, File, Form
 
 # App Settings API
 @api_router.get("/settings")
@@ -676,7 +712,64 @@ async def steamgriddb_logos(game_id: int, limit: int = 10):
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
 
+# ─── Community Store API ─────────────────────────────────────────────────────
+
+@api_router.post("/store/upload")
+async def upload_store_theme(
+    name: str = Form(...),
+    description: str = Form(...),
+    discord_id: str = Form(...),
+    author: str = Form(...),
+    access_token: str = Form(""),
+    theme: UploadFile = File(...),
+    preview: UploadFile = File(None),
+):
+    """Accept a community theme submission from the website."""
+    # Verify Discord token when provided
+    if access_token:
+        user_info = await store_service.verify_discord_token(access_token)
+        if not user_info or str(user_info.get("id")) != discord_id:
+            raise HTTPException(status_code=401, detail="Discord token invalid or mismatched")
+
+    # Validate ZIP
+    if not theme.filename.lower().endswith(".zip"):
+        raise HTTPException(status_code=400, detail="Theme file must be a ZIP archive")
+    zip_bytes = await theme.read()
+    if len(zip_bytes) > store_service.MAX_ZIP_SIZE:
+        raise HTTPException(status_code=413, detail="ZIP file exceeds 50 MB limit")
+
+    # Read optional preview image
+    preview_bytes = None
+    preview_ext = None
+    if preview and preview.filename:
+        preview_bytes = await preview.read()
+        if len(preview_bytes) > store_service.MAX_IMAGE_SIZE:
+            raise HTTPException(status_code=413, detail="Preview image exceeds 5 MB limit")
+        preview_ext = Path(preview.filename).suffix
+
+    result = await store_service.save_submission(
+        name=name,
+        description=description,
+        discord_id=discord_id,
+        author=author,
+        zip_bytes=zip_bytes,
+        zip_filename=theme.filename,
+        preview_bytes=preview_bytes,
+        preview_ext=preview_ext,
+        db=db if mongo_available else None,
+    )
+    return result
+
+
+@api_router.get("/store/themes")
+async def get_store_themes():
+    """Return all approved community themes for the website store."""
+    themes = await store_service.get_approved_themes(db=db if mongo_available else None)
+    return {"themes": themes}
+
+
 # Include the router in the main app
+api_router.include_router(discord_webhook_service.router)
 app.include_router(api_router)
 
 app.add_middleware(
@@ -691,20 +784,18 @@ app.add_middleware(
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request as StarletteRequest
 
-class PermissionsPolicyMiddleware(BaseHTTPMiddleware):
+class CacheControlMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: StarletteRequest, call_next):
         response = await call_next(request)
         response.headers["Permissions-Policy"] = "gamepad=(*)"
+        # Aggressive Cache-Busting for the entire system
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        response.headers["Surrogate-Control"] = "no-store"
         return response
 
-app.add_middleware(PermissionsPolicyMiddleware)
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+app.add_middleware(CacheControlMiddleware)
 
 @app.on_event("startup")
 async def startup_event():

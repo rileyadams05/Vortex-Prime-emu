@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
+import { toast } from 'sonner';
 import '../styles/GuideOverlay.css';
 
 const tauriInvoke = async (cmd, args = {}) => {
@@ -17,7 +18,7 @@ const sendQuickResumeCommand = async (gameId, savePath) => {
 const TAB_NAMES = ['Friends and Parties', 'Messages', 'Home'];
 const TAB_COUNT = 3;
 
-const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xboxProfile, isLoggedIn, onLogin, recentGames, onQuickResume, gameGroups, onCreateGroup, onOpenGroups, onOpenKeyboard }) => {
+const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, userProfile, isLoggedIn, onLogin, recentGames, onQuickResume, gameGroups, onCreateGroup, onOpenGroups, onOpenKeyboard }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState(0);
   const [selectedItem, setSelectedItem] = useState(0);
@@ -29,7 +30,29 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   // Home tab sub-views
   const [homeSection, setHomeSection] = useState('main'); // main | groups
 
-  // Friends & Parties + Messages: Coming Soon (requires Xbox account)
+  // Discord integration state (mocked for now)
+  const [discordStatus, setDiscordStatus] = useState('Disconnected');
+  const [googleProfilePic, setGoogleProfilePic] = useState(null);
+  const [discordFriends, setDiscordFriends] = useState([]);
+  const [discordMessages, setDiscordMessages] = useState([]);
+
+  useEffect(() => {
+    if (userProfile?.profilePicture) {
+      setGoogleProfilePic(userProfile.profilePicture);
+    }
+  }, [userProfile]);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setGoogleProfilePic(reader.result);
+        // In a real app, you'd save this to the user profile on the backend
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -50,6 +73,73 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
   }, [isOpen]);
 
   const formatTime = useCallback((date) => date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }), []);
+
+  useEffect(() => {
+    let ws = null;
+    let reconnectTimer = null;
+
+    const connectWS = () => {
+      if (!isLoggedIn) return;
+      
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
+      const wsUrl = `${protocol}//${host}/api/discord/ws`;
+
+      ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log("Connected to Discord WebSocket Bridge");
+        setDiscordStatus('Connected');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("Received live Discord event:", data);
+          
+          if (data && data.type !== 1) { // Ignore Discord PING acknowledgments
+            playSound('focus'); 
+            
+            // This is a naive catch-all for any incoming Discord webhook
+            // You can specialize this depending on the `data.type` or `data.event.type`
+            toast('Discord Notification', { 
+              description: "A new event arrived from Discord!" 
+            });
+            
+            setDiscordMessages(prev => [{
+                id: Date.now(), 
+                author: 'Discord Webhook', 
+                content: 'New event received. Check console for payload.', 
+                time: new Date()
+            }, ...prev]);
+          }
+        } catch(e) {
+          console.error("WS Parse error", e);
+        }
+      };
+      
+      ws.onclose = () => {
+        setDiscordStatus('Disconnected');
+        reconnectTimer = setTimeout(connectWS, 3000);
+      };
+      
+      ws.onerror = (e) => {
+        console.error("WebSocket error", e);
+      };
+    };
+
+    if (isLoggedIn) {
+       connectWS();
+    }
+
+    return () => {
+      if (ws) {
+        ws.onclose = null; // don't try to reconnect on expected unmount
+        ws.close();
+      }
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+    };
+  }, [isLoggedIn]);
 
   // Seed initial messages for a conversation if not yet loaded
   // HOME tab items
@@ -196,25 +286,28 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
 
   if (!isOpen) return null;
 
-  // ========== FRIENDS & PARTIES TAB ==========
+  // ========== DISCORD FRIENDS & PARTIES TAB ==========
   const renderFriendsPartiesTab = () => (
     <div className={`guide-tab-content ${tabTransition}`}>
       <div className="coming-soon-tab" data-testid="friends-empty-state">
         <div className="coming-soon-tab-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(144,195,29,0.5)" strokeWidth="1.5">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#5865F2" strokeWidth="1.5">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
         </div>
-        <span className="coming-soon-tab-title">{isLoggedIn ? 'No Friends Online' : 'Xbox Social'}</span>
+        <span className="coming-soon-tab-title">{isLoggedIn ? `Discord Friends (${discordStatus})` : 'Discord Social'}</span>
         <p className="coming-soon-tab-desc" style={{ maxWidth: '280px', margin: '10px auto' }}>
           {isLoggedIn 
-            ? 'Your friends list is currently empty. Invite friends using the Xbox mobile app or console.' 
-            : 'Sign in with your Xbox account to see your friends and join parties.'}
+            ? 'Your Discord friends list is currently empty. Connect your account to see who is online.' 
+            : 'Log in with your Discord account to access Discord integration and join parties.'}
         </p>
-        {!isLoggedIn && (
-          <button className="guide-menu-item" style={{ width: '80%', margin: '20px auto 0', background: '#107C10', borderRadius: '4px', textAlign: 'center' }} onClick={() => { playSound('select'); onLogin?.(); onClose(); }}>
-            Sign In with Xbox
-          </button>
+        {isLoggedIn && (
+          <div className="guide-profile-edit" style={{ marginTop: '20px', width: '80%' }}>
+            <label className="guide-menu-item" style={{ cursor: 'pointer', borderRadius: '4px', textAlign: 'center', background: 'rgba(255,255,255,0.05)' }}>
+              Change Profile Picture
+              <input type="file" hidden accept="image/*" onChange={handleFileUpload} />
+            </label>
+          </div>
         )}
       </div>
     </div>
@@ -225,16 +318,31 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
     <div className={`guide-tab-content ${tabTransition}`}>
       <div className="coming-soon-tab" data-testid="messages-empty-state">
         <div className="coming-soon-tab-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(144,195,29,0.5)" strokeWidth="1.5">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#5865F2" strokeWidth="1.5">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </div>
-        <span className="coming-soon-tab-title">{isLoggedIn ? 'Inboxes are clear' : 'Messages'}</span>
+        <span className="coming-soon-tab-title">{isLoggedIn ? 'Discord Messages' : 'Discord Messages'}</span>
         <p className="coming-soon-tab-desc" style={{ maxWidth: '280px', margin: '10px auto' }}>
-          {isLoggedIn 
-            ? 'No unread messages from Xbox Live or Discord.' 
-            : 'Sign in with your Xbox account to view and respond to messages.'}
+          {!isLoggedIn && 'Log in with your Discord account to view and respond to Discord messages.'}
         </p>
+        
+        {isLoggedIn && discordMessages.length > 0 && (
+          <div className="discord-messages-list" style={{ marginTop: '20px', width: '100%', textAlign: 'left', maxHeight: '200px', overflowY: 'auto' }}>
+            {discordMessages.map(msg => (
+              <div key={msg.id} style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', marginBottom: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#5865F2' }}>{msg.author}</span>
+                <span style={{ fontSize: '0.8em', color: 'gray', marginLeft: '10px' }}>{msg.time.toLocaleTimeString()}</span>
+                <p style={{ margin: '5px 0 0 0', fontSize: '0.9em' }}>{msg.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {isLoggedIn && discordMessages.length === 0 && (
+          <p className="coming-soon-tab-desc" style={{ maxWidth: '280px', margin: '10px auto' }}>
+             No unread messages from Discord.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -353,14 +461,30 @@ const GuideOverlay = ({ isOpen, onClose, onNavigateHome, onNavigateSettings, xbo
       <div data-testid="guide-overlay-backdrop" className="guide-overlay-backdrop" onClick={onClose} />
       <div ref={containerRef} data-testid="guide-modal-container" className="guide-modal-container" tabIndex={-1} onClick={e => e.stopPropagation()}>
         <div data-testid="guide-center-panel" className="guide-center-panel">
-          <div className="guide-panel-header"><span className="guide-title-text">Guide</span></div>
+          <div className="guide-panel-header"><span className="guide-title-text">Guide System</span></div>
 
-          <div className="guide-profile-row" data-testid="guide-profile-row">
-            <div className="profile-avatar-box">
-              {isLoggedIn && xboxProfile?.profilePicture ? <img src={xboxProfile.profilePicture} alt="Avatar" className="guide-avatar-img" /> : <div className="avatar-inner-fallback" />}
+          <div 
+            className={`guide-profile-row ${!isLoggedIn ? 'clickable' : ''}`} 
+            data-testid="guide-profile-row"
+            onClick={() => { if (!isLoggedIn && onLogin) { playSound('select'); onLogin(); } }}
+          >
+            <div className="profile-avatar-box" style={{ borderRadius: '50%' }}>
+              {isLoggedIn && googleProfilePic ? 
+                <img src={googleProfilePic} alt="Avatar" className="guide-avatar-img" /> : 
+                <div className="avatar-inner-fallback" />
+              }
             </div>
             <div className="profile-info">
-              {isLoggedIn && xboxProfile?.gamertag && <span className="profile-gamertag" data-testid="guide-gamertag">{xboxProfile.gamertag}</span>}
+              {isLoggedIn && userProfile?.name ? (
+                <span className="profile-gamertag" data-testid="guide-gamertag">{userProfile.name}</span>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg viewBox="0 0 24 24" fill="#5865F2" width="16" height="16">
+                    <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2758-3.68-.2758-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1971.3728.2914a.077.077 0 01-.0066.1277 12.2986 12.2986 0 01-1.8732.8923.076.076 0 00-.0416.1057c.3604.698.7719 1.3628 1.226 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z"/>
+                  </svg>
+                  <span className="profile-signin-text">Log in with Discord</span>
+                </div>
+              )}
             </div>
             <span data-testid="guide-clock" className="profile-clock">{formatTime(currentTime)}</span>
           </div>

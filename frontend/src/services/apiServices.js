@@ -133,3 +133,13 @@ export const settingsApi = {
     return r.json();
   }
 };
+
+export const externalApiConfig = {
+  async get() {
+    const r = await fetch(`${API}/config/external-apis`);
+    if (!r.ok) {
+      throw new Error("Failed to fetch external API configuration");
+    }
+    return r.json();
+  }
+};

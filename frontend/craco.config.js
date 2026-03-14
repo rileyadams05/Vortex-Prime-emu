@@ -83,6 +83,17 @@ webpackConfig.devServer = (devServerConfig) => {
     devServerConfig = setupDevServer(devServerConfig);
   }
 
+  // Bypass DNS re-binding protection to allow Cloudflare Tunnels
+  devServerConfig.allowedHosts = "all";
+
+  // Aggressive Cache-Busting Headers for Production-over-Tunnel
+  devServerConfig.headers = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+    "Surrogate-Control": "no-store"
+  };
+
   // Add health check endpoints if enabled
   if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {
     const originalSetupMiddlewares = devServerConfig.setupMiddlewares;

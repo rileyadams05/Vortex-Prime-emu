@@ -58,6 +58,19 @@
       "Microsoft.GameInput/3.2.138": {
         "type": "package"
       },
+      "NvAPIWrapper.Net/0.8.1.101": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/NvAPIWrapper.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/NvAPIWrapper.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "System.Memory/4.5.5": {
         "type": "package",
         "compile": {
@@ -286,6 +299,23 @@
         "redist/GameInputRedist.msi"
       ]
     },
+    "NvAPIWrapper.Net/0.8.1.101": {
+      "sha512": "qX+5EQ32tCTqBkX/9BNfx7w4HPi18s3XhMubjbxSjPhYQ6pXWL+HGnaZEmGvFlOxvsQN+/6eV3x5bRo1CDY/mQ==",
+      "type": "package",
+      "path": "nvapiwrapper.net/0.8.1.101",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "lib/net45/NvAPIWrapper.dll",
+        "lib/net45/NvAPIWrapper.xml",
+        "lib/netstandard2.0/NvAPIWrapper.dll",
+        "lib/netstandard2.0/NvAPIWrapper.xml",
+        "nvapiwrapper.net.0.8.1.101.nupkg.sha512",
+        "nvapiwrapper.net.nuspec",
+        "readme.txt"
+      ]
+    },
     "System.Memory/4.5.5": {
       "sha512": "XIWiDvKPXaTveaB7HVganDlOCRoj03l+jrwNvcge/t8vhGYKvqV+dMv6G4SAX2NoNmN0wZfVPTAlFwZcZvVOUw==",
       "type": "package",
@@ -312,7 +342,8 @@
   },
   "projectFileDependencyGroups": {
     "net9.0": [
-      "GameInputSharp.Core >= 0.1.0-alpha"
+      "GameInputSharp.Core >= 0.1.0-alpha",
+      "NvAPIWrapper.Net >= 0.8.1.101"
     ]
   },
   "packageFolders": {
@@ -322,11 +353,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
+      "projectUniqueName": "m:\\my project\\my-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
       "projectName": "GameInputService",
-      "projectPath": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
+      "projectPath": "m:\\my project\\my-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
       "packagesPath": "C:\\Users\\Riley\\.nuget\\packages\\",
-      "outputPath": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\obj\\",
+      "outputPath": "m:\\my project\\my-emu\\src-tauri\\GameInputService\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -369,6 +400,10 @@
           "GameInputSharp.Core": {
             "target": "Package",
             "version": "[0.1.0-alpha, )"
+          },
+          "NvAPIWrapper.Net": {
+            "target": "Package",
+            "version": "[0.8.1.101, )"
           }
         },
         "imports": [
@@ -385,19 +420,19 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[9.0.13, 9.0.13]"
+            "version": "[9.0.14, 9.0.14]"
           },
           {
             "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[9.0.13, 9.0.13]"
+            "version": "[9.0.14, 9.0.14]"
           },
           {
             "name": "Microsoft.NETCore.App.Ref",
-            "version": "[9.0.13, 9.0.13]"
+            "version": "[9.0.14, 9.0.14]"
           },
           {
             "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[9.0.13, 9.0.13]"
+            "version": "[9.0.14, 9.0.14]"
           }
         ],
         "frameworkReferences": {
@@ -405,7 +440,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.104/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

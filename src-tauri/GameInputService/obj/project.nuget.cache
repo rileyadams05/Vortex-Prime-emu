@@ -1,18 +1,19 @@
 {
   "version": 2,
-  "dgSpecHash": "VgyjQPVhKKI=",
+  "dgSpecHash": "vU17XajGE8Q=",
   "success": true,
-  "projectFilePath": "M:\\my project\\my-emu\\Vortex-Prime-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
+  "projectFilePath": "m:\\my project\\my-emu\\src-tauri\\GameInputService\\GameInputService.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Riley\\.nuget\\packages\\gameinputsharp.core\\0.1.0-alpha\\gameinputsharp.core.0.1.0-alpha.nupkg.sha512",
     "C:\\Users\\Riley\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
     "C:\\Users\\Riley\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.2\\microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512",
     "C:\\Users\\Riley\\.nuget\\packages\\microsoft.gameinput\\3.2.138\\microsoft.gameinput.3.2.138.nupkg.sha512",
+    "C:\\Users\\Riley\\.nuget\\packages\\nvapiwrapper.net\\0.8.1.101\\nvapiwrapper.net.0.8.1.101.nupkg.sha512",
     "C:\\Users\\Riley\\.nuget\\packages\\system.memory\\4.5.5\\system.memory.4.5.5.nupkg.sha512",
-    "C:\\Users\\Riley\\.nuget\\packages\\microsoft.netcore.app.ref\\9.0.13\\microsoft.netcore.app.ref.9.0.13.nupkg.sha512",
-    "C:\\Users\\Riley\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\9.0.13\\microsoft.windowsdesktop.app.ref.9.0.13.nupkg.sha512",
-    "C:\\Users\\Riley\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\9.0.13\\microsoft.aspnetcore.app.ref.9.0.13.nupkg.sha512",
-    "C:\\Users\\Riley\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\9.0.13\\microsoft.netcore.app.host.win-x64.9.0.13.nupkg.sha512"
+    "C:\\Users\\Riley\\.nuget\\packages\\microsoft.netcore.app.ref\\9.0.14\\microsoft.netcore.app.ref.9.0.14.nupkg.sha512",
+    "C:\\Users\\Riley\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\9.0.14\\microsoft.windowsdesktop.app.ref.9.0.14.nupkg.sha512",
+    "C:\\Users\\Riley\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\9.0.14\\microsoft.aspnetcore.app.ref.9.0.14.nupkg.sha512",
+    "C:\\Users\\Riley\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\9.0.14\\microsoft.netcore.app.host.win-x64.9.0.14.nupkg.sha512"
   ],
   "logs": []
 }

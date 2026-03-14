@@ -2,16 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import { useTheme } from '../context/ThemeContext';
 import playSound from '../utils/soundManager';
-import { AlertCircle, Volume2, Globe, Palette, Cpu } from 'lucide-react';
+import { AlertCircle, Volume2, Globe, Palette, Cpu, Video, Wrench, User } from 'lucide-react';
 import GamepadDiagnostic from './GamepadDiagnostic';
 import LanguageSettings from './LanguageSettings';
 import SoundSettings from './SoundSettings';
 import CoreSettings from './CoreSettings';
 import ColorSettings from './ColorSettings';
-import '../styles/NXESettings.css';
-
+import AccountSettings from './AccountSettings';
 import { invoke } from '@tauri-apps/api/core';
 import '../styles/NXESettings.css';
+
+// Master Switch: Set to false to enable live streaming gateway, true for "Coming Soon" shield
+const IS_STREAMING_LOCKED = true;
 
 // Custom Sunshine Logo component in Xbox Green (with optional pulsing/red ring states)
 const SunshineLogo = ({ size = 24, className, color = '#107C10', style }) => (
@@ -39,7 +41,7 @@ const SunshineLogo = ({ size = 24, className, color = '#107C10', style }) => (
   </svg>
 );
 
-const NXESettings = ({ isActive, onBack }) => {
+const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [activePanel, setActivePanel] = useState(null); // Default to null (Sidebar active)
   const [isSaving, setIsSaving] = useState(false);
@@ -124,6 +126,7 @@ const NXESettings = ({ isActive, onBack }) => {
   }, []);
 
   const dynamicSettingsItems = [
+    { id: 'account', label: 'Account Settings', icon: User, description: 'Manage your primary Discord profile, security tokens, and session status.' },
     { id: 'core', label: 'Core Configuration', icon: AlertCircle, description: 'Configure core system settings including emulator paths, game folders, and metadata sources. Set up your Xenia installation and scanning preferences.' },
     { id: 'sunshine', label: 'Remote Streaming', icon: SunshineLogo, description: 'Play your Xbox 360 games anywhere. Stream Xenia to your phone, tablet, or another PC using the built-in zero-latency streaming portal.' },
     { id: 'sound', label: 'Sound Settings', icon: Volume2, description: 'Configure UI sound effects, navigation sounds, and background music volume. Enable or disable individual audio channels.' },
@@ -283,6 +286,8 @@ const NXESettings = ({ isActive, onBack }) => {
             setActivePanel('core');
           } else if (dynamicSettingsItems[selectedIndex].id === 'color') {
             setActivePanel('color');
+          } else if (dynamicSettingsItems[selectedIndex].id === 'account') {
+            setActivePanel('account');
           }
           break;
         case 'Escape':
@@ -369,6 +374,8 @@ const NXESettings = ({ isActive, onBack }) => {
           setActivePanel('core');
         } else if (currentItem && currentItem.id === 'color') {
           setActivePanel('color');
+        } else if (currentItem && currentItem.id === 'account') {
+          setActivePanel('account');
         }
       }
       if (event.button === 'b') {
@@ -487,141 +494,200 @@ const NXESettings = ({ isActive, onBack }) => {
         </div>
 
         {/* Right: Content Pane */}
-        <div className="nxe-content-pane" data-testid="settings-content-pane">
-          <div className="nxe-content-inner">
-            <h2 className="nxe-content-title">{dynamicSettingsItems[selectedIndex].label}</h2>
-            <p className="nxe-content-desc">{dynamicSettingsItems[selectedIndex].description}</p>
+        <div className="nxe-content-pane" data-testid="settings-content-pane" style={{ padding: (currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) ? '0' : '30px 36px', overflow: 'hidden' }}>
+          {(currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) ? (
+             /* Professional Warning Shield - Filling Entire Right Panel */
+             <div className="nxe-streaming-locked-overlay" style={{ height: '100%', borderRadius: '0', border: 'none' }}>
+                <div className="hazard-border"></div>
+                
+                <div className="nxe-locked-content">
+                  <Wrench 
+                    size={80} 
+                    color="#FFD700" 
+                    className="warning-yellow-pulse"
+                    style={{ marginBottom: '40px' }}
+                  />
+                  
+                  <div style={{ 
+                    background: '#FFD700', 
+                    color: '#fff', 
+                    padding: '12px 32px', 
+                    borderRadius: '4px', 
+                    fontWeight: '900', 
+                    fontSize: '1.2rem',
+                    letterSpacing: '1px',
+                    marginBottom: '10px',
+                    textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+                  }}>
+                    REMOTE STREAMING: COMING SOON
+                  </div>
+                  
+                  <div style={{ color: '#FFD700', fontSize: '0.8rem', fontWeight: 900, letterSpacing: '2px', marginBottom: '30px' }}>
+                    SYSTEM STATUS: UNDER CONSTRUCTION
+                  </div>
+                  
+                  <p className="warning-description" style={{ fontSize: '1.05rem', maxWidth: '600px', lineHeight: '1.8' }}>
+                    Vortex Prime is currently migrating to an official Cloudflare-backed infrastructure. 
+                    This upgrade will provide global access via a dedicated domain and guaranteed 
+                    zero-latency performance for all console browsers.
+                    <br/><br/>
+                    <span style={{ color: '#FFD700', fontWeight: 900, letterSpacing: '1px' }}>STAY TUNED...</span>
+                  </p>
+                </div>
 
-            <div className={`settings-preview-mount ${activePanel ? 'deep-focus' : ''}`}>
-              {dynamicSettingsItems[selectedIndex].id === 'core' && (
-                <CoreSettings preview={true} isActive={activePanel === 'core'} onBack={() => { playSound('back'); setActivePanel(null); }} />
-              )}
-              {dynamicSettingsItems[selectedIndex].id === 'country' && (
-                <LanguageSettings
-                  preview={true}
-                  isActive={activePanel === 'country'}
-                  activeCountry={countryCode}
-                  onBack={() => { playSound('back'); setActivePanel(null); }}
-                  onSelect={(v) => {
-                    setCountryCode(v.code);
-                    setIsDirty(true);
-                  }}
-                />
-              )}
-              {dynamicSettingsItems[selectedIndex].id === 'sound' && (
-                <SoundSettings preview={true} isActive={activePanel === 'sound'} onBack={() => { playSound('back'); setActivePanel(null); }} />
-              )}
-              {dynamicSettingsItems[selectedIndex].id === 'color' && (
-                <ColorSettings 
-                  preview={true} 
-                  isActive={activePanel === 'color'} 
-                  onBack={() => { playSound('back'); setActivePanel(null); }}
-                  onColorChange={() => setIsDirty(true)}
-                />
-              )}
-              {dynamicSettingsItems[selectedIndex].id === 'sunshine' && (
-                <div style={{ padding: '24px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                    <div style={{ 
-                      background: isSunshineRunning ? '#107C10' : '#4a0d0d', 
-                      padding: '12px', 
-                      borderRadius: '50%', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      transition: 'background-color 0.5s ease',
-                      boxShadow: isSunshineRunning ? '0 0 15px rgba(16, 124, 16, 0.4)' : '0 0 15px rgba(220, 20, 60, 0.4)'
-                    }}>
-                      <SunshineLogo 
-                        size={32} 
-                        color={isSunshineRunning ? '#fff' : '#DC143C'} 
-                        className={isSunshineRunning ? 'sunshine-pulse' : ''} 
-                      />
-                    </div>
-                    <div>
-                      <h3 style={{ margin: 0, color: '#fff', fontSize: '1.4rem' }}>Vortex Prime Streaming Portal</h3>
-                      <p style={{ margin: '4px 0 0 0', color: isSunshineRunning ? '#90C31D' : '#DC143C', fontSize: '0.9rem', fontWeight: 600, transition: 'color 0.5s ease' }}>
-                        {isSunshineRunning ? 'Zero-Latency Remote Play Powered by Sunshine & Moonlight' : 'Streaming Service Not Reachable - Restart Core'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div style={{ flex: 1, position: 'relative', background: '#000', borderRadius: '12px', overflow: 'hidden', border: `2px solid ${isSunshineRunning ? 'rgba(144, 195, 29, 0.4)' : 'rgba(220, 20, 60, 0.4)'}`, transition: 'border-color 0.5s ease' }}>
-                    {/* Embedded Secure Stream Viewer */}
-                    <iframe 
-                      src="https://Vortex-Prime-Emu-streaming"
-                      title="Vortex Prime Streaming Portal"
-                      allow="gamepad; autoplay; fullscreen"
-                      style={{ width: '100%', height: '100%', border: 'none' }}
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                      // Fallback overlay when the server isn't running
-                      onError={(e) => e.target.style.display = 'none'}
-                    ></iframe>
-                    
-                    {/* Instructions Overlay (Shows behind iframe or if iframe fails) */}
-                    <div style={{ position: 'absolute', inset: 0, zIndex: -1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px' }}>
-                      <SunshineLogo size={48} style={{ opacity: 0.2, marginBottom: '24px' }} />
-                      <h4 style={{ color: '#fff', margin: '0 0 12px 0' }}>Streaming Service Not Reachable</h4>
-                      <p style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: 1.5, maxWidth: '400px' }}>
-                        Ensure the background streaming services (Sunshine & Web Portal) are running. 
-                        You can access your portal directly from any device at <br/>
-                        <code style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', marginTop: '12px', display: 'inline-block', color: '#90C31D' }}>https://Vortex-Prime-Emu-streaming</code>
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '12px', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <label style={{ fontSize: '0.85rem', color: '#ccc', fontWeight: 600 }}>Send Magic Link to Console/Phone</label>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <input 
-                          type="email" 
-                          placeholder="your.email@example.com"
-                          value={magicLinkEmail}
-                          onChange={(e) => setMagicLinkEmail(e.target.value)}
-                          style={{ flex: 1, padding: '10px 14px', borderRadius: '4px', border: '1px solid rgba(144, 195, 29, 0.4)', background: 'rgba(255,255,255,0.05)', color: '#fff', outline: 'none' }}
+                <div className="hazard-border"></div>
+             </div>
+          ) : (
+            <div className="nxe-content-inner">
+              <h2 className="nxe-content-title">{dynamicSettingsItems[selectedIndex].label}</h2>
+              <p className="nxe-content-desc">{dynamicSettingsItems[selectedIndex].description}</p>
+
+              <div className={`settings-preview-mount ${activePanel ? 'deep-focus' : ''}`}>
+                {dynamicSettingsItems[selectedIndex].id === 'account' && (
+                  <AccountSettings 
+                    isActive={activePanel === 'account'} 
+                    userProfile={userProfile} 
+                    isLoggedIn={isLoggedIn} 
+                    onLogout={onLogout} 
+                    onBack={() => { playSound('back'); setActivePanel(null); }} 
+                  />
+                )}
+                {dynamicSettingsItems[selectedIndex].id === 'core' && (
+                  <CoreSettings preview={true} isActive={activePanel === 'core'} onBack={() => { playSound('back'); setActivePanel(null); }} />
+                )}
+                {dynamicSettingsItems[selectedIndex].id === 'country' && (
+                  <LanguageSettings
+                    preview={true}
+                    isActive={activePanel === 'country'}
+                    activeCountry={countryCode}
+                    onBack={() => { playSound('back'); setActivePanel(null); }}
+                    onSelect={(v) => {
+                      setCountryCode(v.code);
+                      setIsDirty(true);
+                    }}
+                  />
+                )}
+                {dynamicSettingsItems[selectedIndex].id === 'sound' && (
+                  <SoundSettings preview={true} isActive={activePanel === 'sound'} onBack={() => { playSound('back'); setActivePanel(null); }} />
+                )}
+                {dynamicSettingsItems[selectedIndex].id === 'color' && (
+                  <ColorSettings 
+                    preview={true} 
+                    isActive={activePanel === 'color'} 
+                    onBack={() => { playSound('back'); setActivePanel(null); }}
+                    onColorChange={() => setIsDirty(true)}
+                  />
+                )}
+                {dynamicSettingsItems[selectedIndex].id === 'sunshine' && (
+                  <div style={{ padding: '24px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                      <div style={{ 
+                        background: isSunshineRunning ? '#107C10' : '#4a0d0d', 
+                        padding: '12px', 
+                        borderRadius: '50%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        transition: 'background-color 0.5s ease',
+                        boxShadow: isSunshineRunning ? '0 0 15px rgba(16, 124, 16, 0.4)' : '0 0 15px rgba(220, 20, 60, 0.4)'
+                      }}>
+                        <SunshineLogo 
+                          size={32} 
+                          color={isSunshineRunning ? '#fff' : '#DC143C'} 
+                          className={isSunshineRunning ? 'sunshine-pulse' : ''} 
                         />
-                        <button 
-                          onClick={handleSendMagicLink}
-                          disabled={sendingEmail}
-                          style={{ background: '#107C10', color: '#fff', border: 'none', padding: '0 16px', borderRadius: '4px', fontWeight: 'bold', cursor: sendingEmail ? 'wait' : 'pointer', opacity: sendingEmail ? 0.7 : 1 }}
-                        >
-                          Send
-                        </button>
                       </div>
-                      {emailStatus && (
-                        <span style={{ fontSize: '0.8rem', color: emailStatus.includes('Failed') ? '#DC143C' : '#90C31D' }}>
-                          {emailStatus}
-                        </span>
-                      )}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <h3 style={{ margin: 0, color: '#fff', fontSize: '1.4rem' }}>Vortex Prime Streaming Portal</h3>
+                          <div className={`sunshine-indicator ${isSunshineRunning ? 'active' : 'inactive'}`} title={isSunshineRunning ? "Streaming Gateway Active" : "Streaming Gateway Offline"} style={{ marginTop: 0, marginBottom: 0 }}>
+                            <Video size={14} />
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{isSunshineRunning ? "GATEWAY ACTIVE" : "GATEWAY OFFLINE"}</span>
+                          </div>
+                        </div>
+                        <p style={{ margin: '4px 0 0 0', color: isSunshineRunning ? '#90C31D' : '#DC143C', fontSize: '0.9rem', fontWeight: 600, transition: 'color 0.5s ease' }}>
+                          {isSunshineRunning ? 'Zero-Latency Remote Play Powered by Sunshine & Moonlight' : 'Streaming Service Not Reachable - Restart Core'}
+                        </p>
+                      </div>
                     </div>
                     
-                    <button 
-                      onClick={() => window.open('https://Vortex-Prime-Emu-streaming', '_blank')}
-                      style={{ background: '#107C10', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '24px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}
-                    >
-                      <Globe size={18} /> Open in Browser
-                    </button>
-                    <button 
-                      onClick={() => window.open('https://Vortex-Prime-Emu-streaming/cert.pem', '_blank')}
-                      style={{ background: 'transparent', color: '#90C31D', border: '1px solid rgba(144, 195, 29, 0.4)', padding: '6px 16px', borderRadius: '16px', fontSize: '0.85rem', cursor: 'pointer' }}
-                    >
-                      Install/Trust SSL Certificate to Enable Gamepad
-                    </button>
+                    <div style={{ flex: 1, position: 'relative', background: '#000', borderRadius: '12px', overflow: 'hidden', border: `2px solid ${isSunshineRunning ? 'rgba(144, 195, 29, 0.4)' : 'rgba(220, 20, 60, 0.4)'}`, transition: 'border-color 0.5s ease' }}>
+                      {/* Embedded Secure Stream Viewer */}
+                      <iframe 
+                        src="https://Vortex-Prime-Emu-streaming"
+                        title="Vortex Prime Streaming Portal"
+                        allow="gamepad; autoplay; fullscreen"
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                        // Fallback overlay when the server isn't running
+                        onError={(e) => e.target.style.display = 'none'}
+                      ></iframe>
+                      
+                      {/* Instructions Overlay (Shows behind iframe or if iframe fails) */}
+                      <div style={{ position: 'absolute', inset: 0, zIndex: -1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px' }}>
+                        <SunshineLogo size={48} style={{ opacity: 0.2, marginBottom: '24px' }} />
+                        <h4 style={{ color: '#fff', margin: '0 0 12px 0' }}>Streaming Service Not Reachable</h4>
+                        <p style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: 1.5, maxWidth: '400px' }}>
+                          Ensure the background streaming services (Sunshine & Web Portal) are running. 
+                          You can access your portal directly from any device at <br/>
+                          <code style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', marginTop: '12px', display: 'inline-block', color: '#90C31D' }}>https://Vortex-Prime-Emu-streaming</code>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ background: 'rgba(0,0,0,0.4)', padding: '16px', borderRadius: '12px', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <label style={{ fontSize: '0.85rem', color: '#ccc', fontWeight: 600 }}>Send Magic Link to Console/Phone</label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input 
+                            type="email" 
+                            placeholder="your.email@example.com"
+                            value={magicLinkEmail}
+                            onChange={(e) => setMagicLinkEmail(e.target.value)}
+                            style={{ flex: 1, padding: '10px 14px', borderRadius: '4px', border: '1px solid rgba(144, 195, 29, 0.4)', background: 'rgba(255,255,255,0.05)', color: '#fff', outline: 'none' }}
+                          />
+                          <button 
+                            onClick={handleSendMagicLink}
+                            disabled={sendingEmail}
+                            style={{ background: '#107C10', color: '#fff', border: 'none', padding: '0 16px', borderRadius: '4px', fontWeight: 'bold', cursor: sendingEmail ? 'wait' : 'pointer', opacity: sendingEmail ? 0.7 : 1 }}
+                          >
+                            Send
+                          </button>
+                        </div>
+                        {emailStatus && (
+                          <span style={{ fontSize: '0.8rem', color: emailStatus.includes('Failed') ? '#DC143C' : '#90C31D' }}>
+                            {emailStatus}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <button 
+                        onClick={() => window.open('https://Vortex-Prime-Emu-streaming', '_blank')}
+                        style={{ background: '#107C10', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '24px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}
+                      >
+                        <Globe size={18} /> Open in Browser
+                      </button>
+                      <button 
+                        onClick={() => window.open('https://Vortex-Prime-Emu-streaming/cert.pem', '_blank')}
+                        style={{ background: 'transparent', color: '#90C31D', border: '1px solid rgba(144, 195, 29, 0.4)', padding: '6px 16px', borderRadius: '16px', fontSize: '0.85rem', cursor: 'pointer' }}
+                      >
+                        Install/Trust SSL Certificate to Enable Gamepad
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {activePanel ? (
-                <div className="nxe-enter-hint" style={{ color: '#fff' }}>
-                  Press B to return to list
-                  {activePanel === 'core' && ' | Press X to Save'}
-                </div>
-              ) : (
-                <div className="nxe-enter-hint">Press A to enter & edit</div>
-              )}
+                {activePanel ? (
+                  <div className="nxe-enter-hint" style={{ color: '#fff' }}>
+                    Press B to return to list
+                    {activePanel === 'core' && ' | Press X to Save'}
+                  </div>
+                ) : (
+                  <div className="nxe-enter-hint">Press A to enter & edit</div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
       </div>
@@ -633,15 +699,16 @@ const NXESettings = ({ isActive, onBack }) => {
           <div className="xbox-btn-bumper">RB</div>
           <span>Tabs</span>
         </div>
-        <div className="nxe-footer-item" onClick={handleSave} style={{ cursor: 'pointer' }}>
+        <div className="nxe-footer-item" onClick={handleSave} style={{ cursor: 'pointer', opacity: (currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) ? 0.3 : 1, pointerEvents: (currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) ? 'none' : 'auto' }}>
           <div className="xbox-btn-circle blue">X</div>
           <span>Save</span>
         </div>
-        <div className="nxe-footer-item" onClick={handleDefault} style={{ cursor: 'pointer' }}>
+        <div className="nxe-footer-item" onClick={handleDefault} style={{ cursor: 'pointer', opacity: (currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) ? 0.3 : 1, pointerEvents: (currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) ? 'none' : 'auto' }}>
           <div className="xbox-btn-circle yellow">Y</div>
           <span>Default</span>
         </div>
         <div className="nxe-footer-item" onClick={() => {
+          if (currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) return;
           playSound('select');
           if (dynamicSettingsItems[selectedIndex].id === 'country') {
             setActivePanel('country');
@@ -651,8 +718,10 @@ const NXESettings = ({ isActive, onBack }) => {
             setActivePanel('core');
           } else if (dynamicSettingsItems[selectedIndex].id === 'color') {
             setActivePanel('color');
+          } else if (dynamicSettingsItems[selectedIndex].id === 'account') {
+            setActivePanel('account');
           }
-        }} style={{ cursor: 'pointer' }}>
+        }} style={{ cursor: 'pointer', opacity: (currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) ? 0.3 : 1, pointerEvents: (currentItem.id === 'sunshine' && IS_STREAMING_LOCKED) ? 'none' : 'auto' }}>
           <div className="xbox-btn-circle green">A</div>
           <span>Select</span>
         </div>

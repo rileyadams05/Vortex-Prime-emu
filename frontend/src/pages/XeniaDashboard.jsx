@@ -10,12 +10,12 @@ import ThemeManager from '../components/ThemeManager';
 import Marketplace from '../components/Marketplace';
 import CommunityHubModal from '../components/CommunityHubModal';
 import Xbox360Keyboard from '../components/Xbox360Keyboard';
-import VortexAIChat from '../components/VortexAIChat';
 import { useDropzone } from 'react-dropzone';
-import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
+import UserProfileWidget from '../components/UserProfileWidget';
+import { loginDiscord, logout as logoutAuth } from '../services/authService';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
-import { coreConfigApi } from '../services/apiServices';
+import { coreConfigApi, externalApiConfig } from '../services/apiServices';
 import '../styles/XeniaDashboard.css';
 import '../styles/Marketplace.css';
 import '../styles/Xbox360Keyboard.css';
@@ -31,18 +31,15 @@ const XeniaDashboard = () => {
   const [selectedCardIndex, setSelectedCardIndex] = useState(0);
   const [gameCarouselIndex, setGameCarouselIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showTestPanel, setShowTestPanel] = useState(false);
 
   // Community Hub / Store state
   const [isCommunityHubOpen, setIsCommunityHubOpen] = useState(false);
   const [storeDefaultTab, setStoreDefaultTab] = useState('browse');
 
-  // AI Panel state
-  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
-  const [isAiMinimised, setIsAiMinimised] = useState(false);
-  const [aiPosition, setAiPosition] = useState({ x: 0, y: 0 });
-  const aiChatRef = useRef(null);
-  const isDragging = useRef(false);
-  const dragStart = useRef({ x: 0, y: 0 });
+  // RetroAchievements Data State
+  const [raData, setRaData] = useState(null);
+  const [isLoadingRA, setIsLoadingRA] = useState(false);
 
   // Xbox 360 Keyboard state
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -55,67 +52,13 @@ const XeniaDashboard = () => {
   });
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [isAddingToGroup, setIsAddingToGroup] = useState(false);
+  
+  // Avatar upload state
+  const avatarInputRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('gameGroups', JSON.stringify(gameGroups));
   }, [gameGroups]);
-
-  // Handle AI Panel Dragging
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isDragging.current) return;
-      setAiPosition({
-        x: e.clientX - dragStart.current.x,
-        y: e.clientY - dragStart.current.y
-      });
-    };
-
-    const handleMouseUp = () => {
-      isDragging.current = false;
-      document.body.style.userSelect = '';
-    };
-
-    if (isDragging.current) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    } else {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isAiPanelOpen]); // Re-bind when dragging state changes or panel open
-
-  // We need a more reliable way to sync mousemove. Let's use a simpler approach.
-  const onAiDragStart = (e) => {
-    isDragging.current = true;
-    dragStart.current = {
-      x: e.clientX - aiPosition.x,
-      y: e.clientY - aiPosition.y
-    };
-    document.body.style.userSelect = 'none';
-
-    const onMove = (moveEvent) => {
-      if (!isDragging.current) return;
-      setAiPosition({
-        x: moveEvent.clientX - dragStart.current.x,
-        y: moveEvent.clientY - dragStart.current.y
-      });
-    };
-
-    const onEnd = () => {
-      isDragging.current = false;
-      document.body.style.userSelect = '';
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onEnd);
-    };
-
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onEnd);
-  };
 
   const createGroup = useCallback((name) => {
     if (!name.trim()) return;
@@ -238,8 +181,32 @@ const XeniaDashboard = () => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    noClick: true, // we have a button for that
+    noClick: true,
     noKeyboard: true,
+  });
+
+  // Avatar-specific Dropzone
+  const onDropAvatar = useCallback((acceptedFiles) => {
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        setUserProfile(prev => {
+          const updated = { ...prev, profilePicture: dataUrl };
+          localStorage.setItem('userProfile', JSON.stringify(updated));
+          return updated;
+        });
+        playSound('select');
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  const { getRootProps: getAvatarRootProps, getInputProps: getAvatarInputProps } = useDropzone({
+    onDrop: onDropAvatar,
+    noClick: true,
+    accept: { 'image/*': [] }
   });
 
   const createGamesFolder = useCallback(async () => {
@@ -359,8 +326,19 @@ const XeniaDashboard = () => {
   );
 
   // Auth State
-  const [xboxProfile, setXboxProfile] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('userProfile');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setUserProfile(parsed);
+        setIsLoggedIn(true);
+      } catch (e) { console.error("Stale profile data", e); }
+    }
+  }, []);
 
   // Assets State
   const [startupVideos, setStartupVideos] = useState([]);
@@ -401,8 +379,8 @@ const XeniaDashboard = () => {
           const { invoke } = window.__TAURI__.core || window.__TAURI__.tauri;
           await invoke('launch_xenia', {
             gamePath: game.path,
-            xuid: xboxProfile?.xuid || '0000000000000000',
-            gamertag: xboxProfile?.gamertag || 'Player',
+            uid: userProfile?.id || '00000000',
+            username: userProfile?.name || 'Log in',
           });
         } catch (e) {
           console.error('Tauri fallback launch failed:', e);
@@ -413,7 +391,7 @@ const XeniaDashboard = () => {
         alert(`Failed to launch ${game.title}: ${detail}`);
       }
     }
-  }, [xboxProfile, gpuVendor]);
+  }, [userProfile, gpuVendor]);
 
   const handleGameSelect = useCallback((game) => {
     playSound('select');
@@ -545,6 +523,15 @@ const XeniaDashboard = () => {
 
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
+      // Dev Test Panel Toggle
+      if (e.key === 'F1') {
+        e.preventDefault();
+        e.stopPropagation();
+        playSound('select');
+        setShowTestPanel(prev => !prev);
+        return;
+      }
+
       // Toggle Guide on Tab / Home key
       if (e.key === 'Tab' || e.key === 'Home') {
         e.preventDefault();
@@ -596,6 +583,16 @@ const XeniaDashboard = () => {
         }
       }
 
+      // Map "Tab" key to toggle the guide open/close with press animation
+      if (e.key === 'Tab') {
+        e.preventDefault(); // Prevent default focus jump
+        playSound('panelUnfold');
+        setIsGuidePressed(true);
+        setTimeout(() => setIsGuidePressed(false), 200);
+        setIsGuideOpen(prev => !prev);
+        return;
+      }
+
       // D-Pad Right (ArrowRight) Logic
       if (e.key === 'ArrowRight') {
         if (currentView === 'home') {
@@ -633,17 +630,23 @@ const XeniaDashboard = () => {
   }, [currentView, gameCarouselIndex, filteredGames, selectedCardIndex, isGuideOpen, handleCardSelect, handleGameSelect, mainCards.length, navigateCarousel]);
 
   useEffect(() => {
-    // 1. Initialize MSAL
-    initializeMsal().catch(e => console.error('MSAL Init Error:', e));
-
-    // 2. Check Login Session
-    const savedProfile = localStorage.getItem('xboxProfile');
+    // 1. Check Login Session
+    const savedProfile = localStorage.getItem('userProfile');
     if (savedProfile) {
       try {
-        setXboxProfile(JSON.parse(savedProfile));
-        setIsLoggedIn(true);
+        const parsed = JSON.parse(savedProfile);
+        // Force logout if it's the old mock/fake profile
+        if (parsed.name === "Vortex Player" || parsed.discordId === "fake-id") {
+          console.log("Cleaning up stale demo profile...");
+          localStorage.removeItem('userProfile');
+          setUserProfile(null);
+          setIsLoggedIn(false);
+        } else {
+          setUserProfile(parsed);
+          setIsLoggedIn(true);
+        }
       } catch (e) {
-        localStorage.removeItem('xboxProfile');
+        localStorage.removeItem('userProfile');
       }
     }
 
@@ -673,17 +676,67 @@ const XeniaDashboard = () => {
     // Listen for OAuth
     const handleOAuthCallback = (event) => {
       if (event.origin !== window.location.origin) return;
-      if (event.data.type === 'XBOX_AUTH_SUCCESS') {
+      if (event.data.type === 'GOOGLE_AUTH_SUCCESS' || event.data.type === 'DISCORD_AUTH_SUCCESS') {
         const { profile } = event.data;
-        setXboxProfile(profile);
+        console.log("Auth Message Received:", event.data.type, profile);
+        setUserProfile(profile);
         setIsLoggedIn(true);
-        localStorage.setItem('xboxProfile', JSON.stringify(profile));
+        localStorage.setItem('userProfile', JSON.stringify(profile));
       }
     };
     window.addEventListener('message', handleOAuthCallback);
     return () => window.removeEventListener('message', handleOAuthCallback);
 
   }, [loadCachedGames]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadRA = async () => {
+      try {
+        // Fetch API credentials from backend
+        const apiConfig = await externalApiConfig.get();
+        const RA_KEY = apiConfig.retroAchievements?.apiKey;
+        const RA_USER = apiConfig.retroAchievements?.username;
+
+        if (!RA_KEY || !RA_USER) {
+          console.log("RetroAchievements: Credentials not configured");
+          return;
+        }
+
+        if (!isMounted) return;
+        setIsLoadingRA(true);
+
+        // The correct API endpoint format for RetroAchievements
+        const url = `https://retroachievements.org/API/API_GetUserSummary.php?y=${RA_KEY}&u=${RA_USER}`;
+        const res = await axios.get(url);
+
+        if (isMounted && res.data) {
+          setRaData(res.data);
+          console.log("RetroAchievements data loaded successfully");
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("RetroAchievements fetch failed:", err.message);
+          if (err.message?.includes('404') || err.message?.includes('Failed to fetch external API configuration')) {
+            console.error("⚠️ Backend API endpoint not found. Please restart the backend server to load the new /api/config/external-apis endpoint.");
+            console.error("💡 Run: node start-dev-servers.js");
+          } else if (err.response?.status === 422) {
+            console.error("Invalid API credentials or username. Please verify your RetroAchievements API key and username in backend/.env");
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingRA(false);
+        }
+      }
+    };
+
+    loadRA();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const loadStartupVideos = async () => {
     try {
@@ -703,15 +756,46 @@ const XeniaDashboard = () => {
     }
   };
 
-  const handleMicrosoftLogin = async () => {
+  const handleLogout = useCallback(() => {
+    console.log("Logging out...");
+    logoutAuth();
+    setUserProfile(null);
+    setIsLoggedIn(false);
+    playSound('back');
+  }, []);
+
+  const handleDiscordLogin = async () => {
     try {
-      const profileData = await loginAndFetchProfile();
-      setXboxProfile(profileData);
+      const profile = await loginDiscord();
+      setUserProfile(profile);
       setIsLoggedIn(true);
-      localStorage.setItem('xboxProfile', JSON.stringify(profileData));
+      localStorage.setItem('userProfile', JSON.stringify(profile));
+      playSound('panelUnfold');
     } catch (error) {
-      console.error("Login failed:", error);
-      alert("Login failed. Please check console for details.");
+      console.error("Discord login failed:", error);
+      alert(`Discord Login failed: ${error.message}`);
+    }
+  };
+
+  const handleAvatarUploadClick = (e) => {
+    e.stopPropagation();
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        setUserProfile(prev => {
+          const updated = { ...prev, profilePicture: dataUrl };
+          localStorage.setItem('userProfile', JSON.stringify(updated));
+          return updated;
+        });
+        playSound('select');
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -767,11 +851,10 @@ const XeniaDashboard = () => {
     return (
       <div className="xenia-home">
         <div className="home-header">
-          <h1 className="my-xenia" data-testid="dashboard-title">VORTEX PRIME EMU</h1>
-          {isLoggedIn && xboxProfile?.gamerscore != null && (
-            <div className="home-gamerscore" data-testid="home-gamerscore">
-              <span className="gs-value">{xboxProfile.gamerscore}</span>
-              <span className="gs-label">G</span>
+          
+          {isLoggedIn && userProfile?.name && (
+            <div className="home-profile-badge" data-testid="home-profile-badge">
+              <span className="profile-name-text">{userProfile.name}</span>
             </div>
           )}
         </div>
@@ -823,6 +906,45 @@ const XeniaDashboard = () => {
               </div>
             );
           })}
+
+          {/* Hidden DEV panel toggleable by F1 */}
+          {showTestPanel && (
+            <div 
+              className="main-card test-panel-card"
+              style={{ 
+                width: '200px', 
+                background: 'rgba(20, 0, 0, 0.6)', 
+                border: '2px dashed #ff3333',
+                padding: '15px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                justifyContent: 'center',
+                animation: 'slideUp 0.3s ease-out',
+                cursor: 'default'
+              }}
+              onClick={(e) => { e.stopPropagation(); }} /* Prevent dashboard click bleed */
+            >
+              <div style={{ color: '#ff7777', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', letterSpacing: '1px' }}>
+                DEBUG: POPUPS
+              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); playSound('select'); if(window.testAchievement) window.testAchievement('ps5'); }}
+                style={{ background: '#003791', color: 'white', border: '1px solid #0055d4', padding: '10px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+                TEST PS5
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); playSound('select'); if(window.testAchievement) window.testAchievement('xbox'); }}
+                style={{ background: '#107C10', color: 'white', border: '1px solid #1f9a1f', padding: '10px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+                TEST XBOX
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); playSound('select'); if(window.testAchievement) window.testAchievement('steam'); }}
+                style={{ background: '#171a21', color: 'white', border: '1px solid #333', padding: '10px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+                TEST STEAM
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -970,26 +1092,14 @@ const XeniaDashboard = () => {
           <input {...getInputProps()} />
           <h3 className="games-empty-title">{isScanning ? 'Discovering Library...' : 'No Games Found'}</h3>
 
-          <div className="game-path-main-asset" style={{ margin: '20px 0', position: 'relative' }}>
-            <img
-              src="/assets/for-app/xbox 360-gamepad.png"
-              alt="Xbox 360 Game Path Asset"
-              className="xbox-360-gamepad-img"
-              style={{
-                width: '320px',
-                opacity: isDragActive ? 0.3 : 0.9,
-                filter: 'drop-shadow(0 0 30px rgba(144, 195, 29, 0.15))',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </div>
+
 
           <p className="games-empty-desc" style={{ marginBottom: '30px' }}>
             {isScanning 
               ? "Automatically pulling game data and patches..."
               : isDragActive
                 ? "Drop your ROMs folder here to begin scanning..."
-                : 'Set your ROMs path to discover and identify your Xbox 360 library.'
+                : 'set your ROMS/games path'
             }
           </p>
 
@@ -1126,6 +1236,71 @@ const XeniaDashboard = () => {
     </div>
   );
 
+  const renderAchievementsGallery = () => {
+    return (
+      <div className="game-library-view" style={{ overflowY: 'auto' }}>
+        <div className="library-header">
+          <button className="back-btn" onClick={() => { playSound('back'); setCurrentView('home'); }}>
+            <ChevronLeft size={24} /> Back
+          </button>
+          {raData && (
+             <div style={{ marginLeft: 'auto', display: 'flex', gap: '20px', alignItems: 'center', background: 'rgba(0,0,0,0.5)', padding: '10px 20px', borderRadius: '30px' }}>
+                <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{raData.User || "Budm4n"}</span>
+                <span style={{ color: '#FFD700', fontWeight: 'bold' }}>
+                  <Trophy size={18} style={{ display:'inline', marginRight: 5, verticalAlign: 'text-bottom' }}/> 
+                  {raData.TotalPoints} / {raData.TotalTruePoints} TruePoints
+                </span>
+             </div>
+          )}
+        </div>
+        <h2 className="section-title">RetroAchievements Sync</h2>
+        
+        {isLoadingRA ? (
+            <div className="loading-spinner" style={{
+                margin: '50px auto', width: 40, height: 40, border: '3px solid rgba(255,255,255,0.1)',
+                borderTopColor: '#90C31D', borderRadius: '50%', animation: 'spin 1s linear infinite'
+              }} />
+        ) : !raData ? (
+           <div className="games-empty-state"><p>Connecting to RetroAchievements...</p></div>
+        ) : (
+           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '25px', paddingBottom: '50px', marginTop: '20px' }}>
+              {raData.RecentlyPlayed && raData.RecentlyPlayed.map((game, i) => {
+                 const possible = game.NumPossibleAchievements || 0;
+                 const earned = game.NumAchieved || 0;
+                 const percent = possible > 0 ? (earned / possible) * 100 : 0;
+                 const imgUrl = game.ImageIcon ? `https://media.retroachievements.org${game.ImageIcon}` : '';
+                 return (
+                 <div key={i} className="asset-card" style={{ padding: '0', background: 'rgba(30,30,30,0.9)', overflow: 'hidden' }} onClick={() => {
+                     playSound('select');
+                     setSelectedGame({
+                        title: game.Title,
+                        titleId: game.GameID,
+                        consoleName: game.ConsoleName,
+                        achievementCount: possible,
+                        earned: earned,
+                        banner: imgUrl
+                     });
+                     setCurrentView('achievement');
+                 }}>
+                    <div style={{ height: '140px', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                       {imgUrl && <img src={imgUrl} alt={game.Title} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />}
+                    </div>
+                    <div style={{ padding: '15px', textAlign: 'left' }}>
+                       <h3 style={{ fontSize: '1rem', margin: '0 0 5px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{game.Title}</h3>
+                       <span style={{ fontSize: '0.8rem', color: '#90C31D', fontWeight: 'bold' }}>{game.ConsoleName}</span>
+                       <div style={{ marginTop: '15px', background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+                           <div style={{ width: `${percent}%`, background: '#90C31D', height: '100%' }}></div>
+                       </div>
+                       <p style={{ fontSize: '0.8rem', marginTop: '8px', color: 'rgba(255,255,255,0.6)' }}>{earned} / {possible} Achievements</p>
+                    </div>
+                 </div>
+              )})}
+           </div>
+        )}
+      </div>
+    );
+  };
+
   const renderAchievementView = () => (
     <div className="achievement-modal-overlay" onClick={() => {
       playSound('back');
@@ -1133,22 +1308,31 @@ const XeniaDashboard = () => {
     }}>
       <div className="achievement-modal" onClick={(e) => e.stopPropagation()}>
         <div className="achievement-header">
-          <img src={selectedGame?.banner} alt={selectedGame?.title} className="game-banner" />
+          <img src={selectedGame?.banner} alt={selectedGame?.title} className="game-banner" style={{ filter: 'brightness(0.6)' }}/>
+          <div style={{ position: 'absolute', bottom: 20, left: 40, right: 40, display: 'flex', alignItems: 'flex-end', gap: 20 }}>
+              <img src={selectedGame?.banner} alt="icon" style={{ width: 100, height: 100, borderRadius: 8, border: '2px solid rgba(255,255,255,0.2)', background: 'black' }} />
+              <div>
+                  <h2 style={{ fontSize: '2rem', margin: '0 0 5px 0', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{selectedGame?.title}</h2>
+                  <p style={{ color: '#90C31D', fontWeight: 'bold', margin: 0, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{selectedGame?.consoleName}</p>
+              </div>
+          </div>
         </div>
         <div className="achievement-body">
-          <h2>{selectedGame?.title}</h2>
-          <p className="title-id">TITLE ID: {selectedGame?.titleId}</p>
+          <p className="title-id" style={{ marginTop: 0 }}>GAME ID: {selectedGame?.titleId}</p>
           <div className="achievement-score">
-            <Trophy size={32} />
-            <span className="score">0</span>
-            <p>0 / {selectedGame?.achievementCount} Achievements</p>
+            <Trophy size={32} color="#FFD700" />
+            <span className="score">{selectedGame?.earned || 0}</span>
+            <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)' }}> / {selectedGame?.achievementCount} Earned</p>
           </div>
           <div className="achievements-grid">
-            {Array.from({ length: selectedGame?.achievementCount || 30 }).map((_, i) => (
-              <div key={i} className="achievement-icon locked">
-                <div className="lock-icon">🔒</div>
-              </div>
-            ))}
+            {Array.from({ length: selectedGame?.achievementCount || 30 }).map((_, i) => {
+              const unlocked = i < (selectedGame?.earned || 0);
+              return (
+                <div key={i} className={`achievement-icon ${unlocked ? '' : 'locked'}`} style={{ borderColor: unlocked ? '#90C31D' : '#444', background: unlocked ? 'rgba(144, 195, 29, 0.1)' : '#333' }}>
+                  <div className="lock-icon" style={{ opacity: unlocked ? 1 : 0.4 }}>{unlocked ? '🏆' : '🔒'}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1232,7 +1416,7 @@ const XeniaDashboard = () => {
     <>
       <div className={`xenia-dashboard ${isGuideOpen ? 'blurred' : ''}`} data-testid="xenia-dashboard" style={{
         transition: 'filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        filter: isGuideOpen ? 'blur(12px) brightness(0.7)' : 'none'
+        filter: isGuideOpen ? 'brightness(0.7)' : 'none'
       }}>
         <BladesOverlay currentView={currentView} setCurrentView={setCurrentView} />
 
@@ -1243,97 +1427,18 @@ const XeniaDashboard = () => {
         {currentView === 'home' && (
           <div className="xenia-header">
             <div className="header-spacer"></div>
-            <div className="ai-box" data-testid="ai-box">
-              <button
-                className="ai-toggle-btn"
-                data-testid="open-webui-btn"
-                onClick={() => { 
-                  playSound('select'); 
-                  if (!isAiPanelOpen) {
-                    setIsAiPanelOpen(true);
-                    setIsAiMinimised(false);
-                  } else if (isAiMinimised) {
-                    setIsAiMinimised(false);
-                  } else {
-                    setIsAiMinimised(true);
-                  }
-                }}
-              >
-                <img src="/assets/AppIcon/icon.png" alt="Vortex Prime UI" className="open-webui-icon" style={{ width: 88, height: 88, marginRight: '16px' }} />
-                <span>Vortex Prime UI</span>
-              </button>
-            </div>
 
-            <div className="user-profile" data-testid="user-profile">
-              {isLoggedIn && (
-                <>
-                  <span className="gamertag">{xboxProfile?.gamertag}</span>
-                  <span className="gamerscore">{xboxProfile?.gamerscore || 0} G</span>
-                </>
-              )}
-              <div className="user-avatar-circle">
-                {isLoggedIn && xboxProfile?.profilePicture ?
-                  <img src={xboxProfile.profilePicture} alt="Avatar" className="avatar-img" /> :
-                  <div className="user-avatar-placeholder-silhouette" style={{
-                    width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(255,255,255,0.08)'
-                  }}></div>
-                }
-              </div>
-            </div>
-          </div>
-        )}
+            <UserProfileWidget 
+              username={userProfile?.name}
+              avatarUrl={userProfile?.profilePicture}
+              isLoggedIn={isLoggedIn}
+              onLogin={handleDiscordLogin}
+              onLogout={handleLogout}
+              dropzoneRootProps={getAvatarRootProps()}
+              dropzoneInputProps={getAvatarInputProps()}
+            />
 
-        {/* AI Panel - Vortex AI (native Gemini chat) */}
-        {isAiPanelOpen && (
-          <div 
-            className="ai-panel" 
-            data-testid="ai-panel"
-            style={{
-              transform: `translate(${aiPosition.x}px, ${aiPosition.y}px)`,
-              display: isAiMinimised ? 'none' : 'flex',
-              height: 'calc(100vh - 132px)',
-              transition: isDragging.current ? 'none' : 'transform 0.3s ease',
-            }}
-          >
-            <div 
-              className="ai-panel-header" 
-              onMouseDown={onAiDragStart}
-              style={{ cursor: 'move', userSelect: 'none' }}
-            >
-              <h3>Vortex Prime UI</h3>
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <button 
-                  className="ai-header-btn" 
-                  onClick={(e) => { e.stopPropagation(); playSound('select'); aiChatRef.current?.clearChat(); }}
-                  title="New Chat"
-                >
-                  <Plus size={22} />
-                </button>
-                <button 
-                  className="ai-header-btn" 
-                  onClick={(e) => { e.stopPropagation(); playSound('select'); setIsAiMinimised(true); }}
-                  title="Minimise"
-                >
-                  <Minus size={20} />
-                </button>
-                <button 
-                  className="ai-header-btn" 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    playSound('back'); 
-                    setIsAiPanelOpen(false); 
-                    setAiPosition({ x: 0, y: 0 }); // Reset position on close
-                    setIsAiMinimised(false); // Reset minimised on close
-                  }}
-                  title="Close"
-                >
-                  <X size={22} />
-                </button>
-              </div>
-            </div>
-            <div className="ai-panel-body" style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <VortexAIChat ref={aiChatRef} />
-            </div>
+
           </div>
         )}
 
@@ -1341,7 +1446,7 @@ const XeniaDashboard = () => {
           {currentView === 'home' && renderHome()}
           {currentView === 'favorites' && renderFavoritesView()}
           {currentView === 'gameLibrary' && renderGameLibrary()}
-          {currentView === 'achievements' && renderGameLibrary()}
+          {currentView === 'achievements' && renderAchievementsGallery()}
           {currentView === 'marketplace' && (
             <Marketplace
               onBack={() => { playSound('back'); setCurrentView('home'); }}
@@ -1354,6 +1459,9 @@ const XeniaDashboard = () => {
           <NXESettings
             isActive={currentView === 'settings'}
             onBack={() => setCurrentView('home')}
+            userProfile={userProfile}
+            isLoggedIn={isLoggedIn}
+            onLogout={handleLogout}
           />
         </div>
 
@@ -1380,9 +1488,9 @@ const XeniaDashboard = () => {
             )}
             {/* Guide Home Button */}
             {currentView === 'home' && (
-              <div className="control-item" style={{ marginLeft: 'auto' }}>
+              <div className="control-item" style={{ marginLeft: 'auto', flexDirection: 'column', gap: '0px', transform: 'translateY(-50px)' }}>
                 <div
-                  className={`xbox-guide-button ${isGuidePressed ? 'pressed' : ''}`}
+                  className={`xbox-guide-button scene-3d ${isGuidePressed ? 'pressed' : ''}`}
                   data-testid="guide-home-button"
                   onClick={(e) => {
                     e.preventDefault();
@@ -1394,25 +1502,25 @@ const XeniaDashboard = () => {
                   }}
                 >
 
-                  <div className="xbox-guide-inner">
-                    <svg viewBox="0 0 512 512" className="xbox-guide-svg">
-                      <defs>
-                        <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#e0e0e0" />
-                          <stop offset="50%" stopColor="#f8f8f8" />
-                          <stop offset="100%" stopColor="#d0d0d0" />
-                        </linearGradient>
-                        <radialGradient id="greenGlow" cx="50%" cy="50%" r="50%">
-                          <stop offset="0%" stopColor="#107C10" />
-                          <stop offset="100%" stopColor="#0b550b" />
-                        </radialGradient>
-                      </defs>
-                      <circle cx="256" cy="256" r="240" className="xbox-green-bg xbox-x-glow" fill="url(#greenGlow)" />
-                      <path d="M369.9 318.2c44.3 54.3 64.7 98.8 54.4 118.7-7.9 15.1-56.7 44.6-92.6 55.9-29.6 9.3-68.4 13.3-100.4 10.2-38.2-3.7-76.9-17.4-110.1-39C93.3 445.8 87 438.3 87 423.4c0-29.9 32.9-82.3 89.2-142.1 32-33.9 76.5-73.7 81.4-72.6 9.4 2.1 84.3 75.1 112.3 109.5zM188.6 143.8c-29.7-26.9-58.1-53.9-86.4-63.4-15.2-5.1-16.3-4.8-28.7 8.1-29.2 30.4-53.5 79.7-60.3 122.4-5.4 34.2-6.1 43.8-4.2 60.5 5.6 50.5 17.3 85.4 40.5 120.9 9.5 14.6 12.1 17.3 9.3 9.9-4.2-11-.3-37.5 9.5-64 14.3-39 53.9-112.9 120.3-194.4zm311.6 63.5C483.3 127.3 432.7 77 425.6 77c-7.3 0-24.2 6.5-36 13.9-23.3 14.5-41 31.4-64.3 52.8C367.7 197 427.5 283.1 448.2 346c6.8 20.7 9.7 41.1 7.4 52.3-1.7 8.5-1.7 8.5 1.4 4.6 6.1-7.7 19.9-31.3 25.4-43.5 7.4-16.2 15-40.2 18.6-58.7 4.3-22.5 3.9-70.8-.8-93.4zM141.3 43C189 40.5 251 77.5 255.6 78.4c.7.1 10.4-4.2 21.6-9.7 63.9-31.1 94-25.8 107.4-25.2-63.9-39.3-152.7-50-233.9-11.7-23.4 11.1-24 11.9-9.4 11.2z" fill="url(#silverGradient)" />
-                    </svg>
+                  <div className={`ground-surface ${isGuideOpen || isGuidePressed ? 'animating' : ''}`}>
+                    <div className="icon-ground-shadow"></div>
+                    <div className="ripple-wave"></div>
+                    <div className="ripple-wave"></div>
+                    <div className="ripple-wave"></div>
+                    <div className="ripple-wave"></div>
+                    <div className="ripple-wave"></div>
+                  </div>
+
+                  <div className="xbox-guide-inner guide-icon">
+                    <img 
+                      src="/assets/AppIcon/icon.svg" 
+                      alt="Home Guide" 
+                      className="xbox-guide-svg" 
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                    />
                   </div>
                 </div>
-                <span className="btn-label">Home</span>
+                
               </div>
             )}
           </div>
@@ -1441,9 +1549,9 @@ const XeniaDashboard = () => {
         onClose={() => setIsGuideOpen(false)}
         onNavigateHome={() => setCurrentView('home')}
         onNavigateSettings={() => setCurrentView('settings')}
-        xboxProfile={xboxProfile}
+        userProfile={userProfile}
         isLoggedIn={isLoggedIn}
-        onLogin={handleMicrosoftLogin}
+        onLogin={handleDiscordLogin}
         recentGames={recentGames}
         onQuickResume={(game) => {
           addToRecentGames(game);

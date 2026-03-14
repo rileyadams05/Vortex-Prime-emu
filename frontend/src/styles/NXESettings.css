@@ -109,6 +109,7 @@
   flex-direction: column;
   min-height: 0;
   overflow-y: auto;
+  position: relative; /* Lock absolute children like the overlay to this pane */
 }
 
 /* ===== MODAL POPUP (Overlay) ===== */
@@ -483,4 +484,78 @@
 
 .sunshine-pulse {
   animation: sunshine-pulse-anim 3s ease-in-out infinite;
+}
+
+/* ===== HAZARD THEME (Warning Yellow) ===== */
+.hazard-border {
+  height: 8px;
+  width: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    #FFD700,
+    #FFD700 10px,
+    #000 10px,
+    #000 20px
+  );
+}
+
+.warning-yellow-pulse {
+  animation: warning-yellow-pulse-anim 3s ease-in-out infinite;
+}
+
+@keyframes warning-yellow-pulse-anim {
+  0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4)); opacity: 0.9; }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)); opacity: 1; }
+  100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4)); opacity: 0.9; }
+}
+
+.nxe-streaming-locked-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 10;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.nxe-locked-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.warning-header {
+  color: #FFD700;
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  text-shadow: 
+    -2px -2px 0 #000,  
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+     0 0 15px rgba(0,0,0,0.8);
+}
+
+.warning-description {
+  color: #ffffff; /* White interior */
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-bottom: 30px;
+  text-shadow: 
+    -1px -1px 4px #000, 
+     1px -1px 4px #000,
+    -1px  1px 4px #000,
+     1px  1px 4px #000; /* Black outside for readability */
 }

@@ -1,5 +1,6 @@
 use std::process::{Command, Stdio};
 use std::path::PathBuf;
+use std::os::windows::process::CommandExt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,11 +31,26 @@ pub async fn launch_xenia(game_path: String, xuid: String, gamertag: String) -> 
     
     // Force Xenia to the foreground for browser API streaming (Gamepad Passthrough)
     std::thread::spawn(|| {
-        std::thread::sleep(std::time::Duration::from_millis(2000)); // Wait for Xenia window to initialize
+        std::thread::sleep(std::time::Duration::from_millis(3000)); // Wait for Xenia window to initialize
         let focus_script = r#"
-            $WsShell = New-Object -ComObject wscript.shell;
-            if ($WsShell.AppActivate("Xenia Canary") -or $WsShell.AppActivate("Xenia")) {
-                Write-Host "Vortex Prime: Activated Xenia Window for streaming."
+            Add-Type @"
+              using System;
+              using System.Runtime.InteropServices;
+              public class Win32 {
+                [DllImport("user32.dll")]
+                [return: MarshalAs(UnmanagedType.Bool)]
+                public static extern bool SetForegroundWindow(IntPtr hWnd);
+                [DllImport("user32.dll")]
+                public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+              }
+"@
+            $proc = Get-Process -Name "xenia_canary" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($proc) {
+                [Win32]::ShowWindow($proc.MainWindowHandle, 9)
+                [Win32]::SetForegroundWindow($proc.MainWindowHandle)
+                Write-Host "Vortex Prime: Hard-Activated Xenia Window for zero-latency streaming."
+            } else {
+                Write-Host "Vortex Prime: Could not find Xenia process to force foreground."
             }
         "#;
         let _ = std::process::Command::new("powershell")
@@ -43,6 +59,7 @@ pub async fn launch_xenia(game_path: String, xuid: String, gamertag: String) -> 
             .arg("Hidden")
             .arg("-Command")
             .arg(focus_script)
+            .creation_flags(0x08000000)
             .spawn();
     });
 

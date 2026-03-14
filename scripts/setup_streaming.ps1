@@ -10,16 +10,9 @@ function Write-Log($Message, $Color = "White") {
     Write-Host "[Vortex Streaming Setup] $Message" -ForegroundColor $Color
 }
 
-function Assert-Admin {
-    $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    if (-not $isAdmin) {
-        Write-Log "ERROR: This script must be run as Administrator to modify %ProgramFiles%\Sunshine and configure UPnP ports." "Red"
-        Write-Log "Please right-click PowerShell -> 'Run as Administrator' and try again." "Red"
-        Exit 1
-    }
-}
+# Admin check is now handled by the main application manifest
+# Assert-Admin removed.
 
-Assert-Admin
 
 $SunshinePath = "$env:ProgramFiles\Sunshine"
 $ConfigPath = "$SunshinePath\config\sunshine.conf"
@@ -72,6 +65,19 @@ if (-not (Test-Path $WebStreamPath)) {
     Expand-Archive -Path $zipPath -DestinationPath $env:TEMP -Force
     Move-Item -Path "$env:TEMP\moonlight-web-stream-main" -Destination $WebStreamPath -Force
     Write-Log "Moonlight Web Stream extracted to $WebStreamPath." "Green"
+    
+    # Inject Trust Certificate Button for Xbox Edge Gamepad API
+    $IndexFilePath = "$WebStreamPath\public\index.html"
+    if (-not (Test-Path $IndexFilePath)) { $IndexFilePath = "$WebStreamPath\index.html" }
+    if (Test-Path $IndexFilePath) {
+        $Injection = '<button onclick="window.open(`''https://Vortex-Prime-Emu-streaming`'', `''_blank`'')" style="position:fixed;bottom:20px;right:20px;z-index:9999;background-color:#107C10;color:#ffffff;border:none;padding:12px 24px;font-size:16px;font-weight:bold;border-radius:8px;box-shadow:0 4px 15px rgba(16,124,16,0.6);cursor:pointer;">Trust Certificate (Gamepad Fix)</button>'
+        $HtmlContent = Get-Content $IndexFilePath -Raw
+        if ($HtmlContent -notmatch "Trust Certificate") {
+            $HtmlContent = $HtmlContent -replace '(<body[^>]*>)', "`$1`n    $Injection"
+            Set-Content -Path $IndexFilePath -Value $HtmlContent
+            Write-Log "Injected 'Trust Certificate' Gamepad Fix button into Portal UI." "Green"
+        }
+    }
 }
 
 Write-Log "Step 4: Real Domain & SSL Integration" "Cyan"
