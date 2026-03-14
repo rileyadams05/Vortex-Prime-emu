@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from asgi_cors import asgi_cors
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -772,14 +773,6 @@ async def get_store_themes():
 api_router.include_router(discord_webhook_service.router)
 app.include_router(api_router)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Add Permissions-Policy header to allow gamepad in iframes
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request as StarletteRequest
@@ -828,6 +821,12 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Robust CORS Implementation using asgi-cors (final wrapper)
+app = asgi_cors(
+    app,
+    allow_all=True,
+)
 
 if __name__ == "__main__":
     import uvicorn
