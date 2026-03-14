@@ -10,3 +10,5 @@ runtime/
 Internal/Engine/Xenia/
 src-tauri/target/
 src-tauri/resources/xenia/
+
+temp_cpvc/
