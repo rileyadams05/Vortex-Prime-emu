@@ -1282,6 +1282,8 @@
                     const scopes = 'identify email';
                     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(scopes)}`;
 
+                    alert('DEBUG — Redirect URI being sent:\n\n' + DISCORD_REDIRECT_URI + '\n\nMake sure this exact URL is in your Discord portal Redirects list.');
+
                     // Open Discord OAuth in a popup
                     const width = 500;
                     const height = 700;
