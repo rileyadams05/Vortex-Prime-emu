@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "identifier": "com.vortex.prime.emu",
     "build": {
-        "beforeDevCommand": "cd frontend \u0026\u0026 npm start",
-        "beforeBuildCommand": "cd frontend \u0026\u0026 npm run build",
+        "beforeDevCommand": "node start-dev-servers.js",
+        "beforeBuildCommand": "cd frontend && npm run build",
         "devUrl": "http://localhost:3005",
         "frontendDist": "../frontend/build"
     },
@@ -26,11 +26,11 @@
             }
         ],
         "security": {
-            "csp": "default-src \u0027self\u0027; script-src \u0027self\u0027 \u0027unsafe-inline\u0027; style-src \u0027self\u0027 \u0027unsafe-inline\u0027; img-src \u0027self\u0027 data: https:; connect-src \u0027self\u0027 https://xbl.io https://login.live.com https://customer-assets.emergentagent.com"
+            "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://localhost:3005 http://localhost:8000 https://xbl.io https://login.live.com https://customer-assets.emergentagent.com https://retroachievements.org"
         },
         "trayIcon": {
-            "iconPath": "../frontend/public/assets/App Icon/Windows.ico",
-            "iconAsTemplate": true,
+            "iconPath": "icons/icon.ico",
+            "iconAsTemplate": false,
             "menuOnLeftClick": false
         }
     },
@@ -41,7 +41,7 @@
             "nsis"
         ],
         "icon": [
-            "../frontend/public/assets/App Icon/Windows.ico"
+            "icons/icon.ico"
         ],
         "resources": [
             "resources/**/*",
@@ -61,6 +61,11 @@
     "plugins": {
         "fs": {
             "requireLiteralLeadingDot": false
+        },
+        "deep-link": {
+            "desktop": {
+                "schemes": ["vortexprime"]
+            }
         }
     }
 }
