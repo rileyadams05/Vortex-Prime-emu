@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GameInputService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+438df7c2540b9be0aac73d69b90ad7ddabff2d7c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a947b1844efc2bd258910ffbde380ac10aa06aee")]
 [assembly: System.Reflection.AssemblyProductAttribute("GameInputService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GameInputService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
