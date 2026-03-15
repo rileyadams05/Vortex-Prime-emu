@@ -1659,13 +1659,13 @@
                         Powered by Moonlight &amp; Sunshine
                     </div>
                     <h1>Stream Your <span style="background: linear-gradient(135deg, #818CF8, #6366F1); -webkit-background-clip: var(--bg-clip-text); background-clip: var(--bg-clip-text); -webkit-text-fill-color: transparent; color: transparent;">Entire Library</span></h1>
-                    <p>Play any emulator or PC game from any device. Connect your console, plug in your controller, and stream everything from your PC — zero configuration, plug and play.</p>
+                    <p>Play any emulator or PC game from any device. Moonlight and Sunshine are built directly into Vortex Prime — no separate installs, no configuration. Just plug in your controller and stream.</p>
                 </section>
 
                 <!-- Connect Widget -->
                 <div class="connect-widget">
                     <h3>Connect to Your PC</h3>
-                    <p>Enter your PC's IPv4 address below. No pairing code or passcode needed — just connect and play.</p>
+                    <p>Enter your PC's IPv4 address below. Moonlight and Sunshine are already built into the Vortex Prime app — no separate installs or pairing codes needed.</p>
                     <div class="ip-input-row">
                         <input type="text" class="ip-input" id="streamingIpInput" placeholder="192.168.1.100" maxlength="15" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
                         <button class="connect-btn" onclick="connectToHost()">
@@ -1679,12 +1679,12 @@
                     </button>
                     <div class="connect-status" id="connectStatus"></div>
                     <div class="streaming-fallback" id="streamingFallback">
-                        <strong>Moonlight not detected — follow these steps:</strong>
+                        <strong>Could not connect — try these steps:</strong>
                         <ol>
-                            <li>Install <a href="https://moonlight-stream.org" target="_blank" style="color: var(--color-accent);">Moonlight</a> on your device (console browser, phone, or TV)</li>
-                            <li>Install &amp; run <a href="https://app.lizardbyte.dev/Sunshine/" target="_blank" style="color: var(--color-accent);">Sunshine</a> on your gaming PC</li>
-                            <li>In Moonlight, tap <code>Add Host</code> and enter your PC's IP: <code id="fallbackIp">—</code></li>
-                            <li>Launch any game from Vortex Prime in Sunshine's app list</li>
+                            <li>Make sure Vortex Prime is running on your PC — Sunshine starts automatically in the background as the stream host</li>
+                            <li>Open Vortex Prime on your streaming device — Moonlight is built right in, no separate install</li>
+                            <li>Confirm both devices are on the same Wi-Fi network or LAN</li>
+                            <li>Re-enter your PC's IPv4: <code id="fallbackIp">&mdash;</code> and tap Connect again</li>
                         </ol>
                     </div>
                 </div>
@@ -1722,7 +1722,7 @@
                                 <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                             </div>
                             <h3>No Passcode Required</h3>
-                            <p>Connect by IPv4 — no PIN prompts, no complicated pairing flow. Vortex Prime keeps it as simple as possible.</p>
+                            <p>Moonlight and Sunshine are bundled inside Vortex Prime. No separate installs, no PIN prompts — just enter your IPv4 and go.</p>
                         </div>
                     </div>
                 </section>
@@ -1733,13 +1733,13 @@
                     <div class="steps">
                         <div class="step">
                             <div class="step-number">1</div>
-                            <h4>Install Sunshine on PC</h4>
-                            <p>Download &amp; run Sunshine on your gaming PC — it acts as the stream host</p>
+                            <h4>Run Vortex Prime on PC</h4>
+                            <p>Launch Vortex Prime on your gaming PC — Sunshine starts automatically as the stream host</p>
                         </div>
                         <div class="step">
                             <div class="step-number">2</div>
-                            <h4>Install Moonlight on Device</h4>
-                            <p>Install Moonlight on your console, phone, or any screen you want to play on</p>
+                            <h4>Open on Streaming Device</h4>
+                            <p>Open Vortex Prime on your console, phone, or TV — Moonlight is already built in, no extra install</p>
                         </div>
                         <div class="step">
                             <div class="step-number">3</div>
@@ -2180,7 +2180,7 @@
                     setTimeout(() => {
                         iframe.remove();
                         if (!launched) {
-                            showConnectStatus('Moonlight not detected. Follow the steps below to get started.', 'error');
+                            showConnectStatus('Could not connect. Make sure Vortex Prime is running on your PC and both devices are on the same network.', 'error');
                             document.getElementById('streamingFallback').style.display = 'block';
                         } else {
                             showConnectStatus('Moonlight launched! Connecting to ' + ip + '...', 'success');
