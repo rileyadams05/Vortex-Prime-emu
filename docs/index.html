@@ -1175,22 +1175,22 @@
                 <div class="page" id="page-store">
                     <section class="store-hero">
                         <h1>Store</h1>
-                        <p>Browse themes and copy the code. Paste it in the Vortex Prime app to install.</p>
+                        <p>Browse dashboards and copy the code. Paste it in the Vortex Prime app to install.</p>
 
                         <div class="store-tabs">
-                            <button class="store-tab active">All Themes</button>
+                            <button class="store-tab active">All Dashboards</button>
                             <button class="store-tab">Official</button>
                         </div>
                     </section>
 
                     <!-- How It Works -->
                     <div class="how-it-works">
-                        <h3>How to Install Themes</h3>
+                        <h3>How to Install Dashboards</h3>
                         <div class="steps">
                             <div class="step">
                                 <div class="step-number">1</div>
                                 <h4>Copy Code</h4>
-                                <p>Find a theme you like and copy its code</p>
+                                <p>Find a dashboard you like and copy its code</p>
                             </div>
                             <div class="step">
                                 <div class="step-number">2</div>
@@ -1204,7 +1204,7 @@
                             </div>
                             <div class="step">
                                 <div class="step-number">4</div>
-                                <h4>Enable Theme</h4>
+                                <h4>Enable Dashboard</h4>
                                 <p>Move from Disabled to Play to activate</p>
                             </div>
                         </div>
@@ -1377,22 +1377,12 @@
                         <form class="upload-form" id="uploadThemeForm" onsubmit="handleUploadSubmit(event)">
                             <div class="form-group">
                                 <label class="form-label" for="themeName">Dashboard Name</label>
-                                <input type="text" class="form-input" id="themeName" placeholder="My Awesome Dashboard" required maxlength="60">
+                                <input type="text" class="form-input" id="themeName" required maxlength="60">
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label" for="themeDescription">Description</label>
-                                <textarea class="form-textarea" id="themeDescription" placeholder="Describe your dashboard — what it looks like, what inspired it, what's included..." required maxlength="500"></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Preview Image</label>
-                                <div class="file-upload-area" id="previewUploadArea">
-                                    <input type="file" id="previewImageInput" accept="image/*" onchange="handleFileSelect(this, 'previewUploadArea', 'previewFileName')">
-                                    <svg class="file-upload-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                                    <div class="file-upload-text">Click to upload a preview image (PNG, JPG, GIF)</div>
-                                    <div class="file-upload-name" id="previewFileName" style="display:none;"></div>
-                                </div>
+                                <textarea class="form-textarea" id="themeDescription" required maxlength="500"></textarea>
                             </div>
 
                             <div class="form-group">
@@ -1400,7 +1390,7 @@
                                 <div class="file-upload-area" id="zipUploadArea">
                                     <input type="file" id="themeZipInput" accept=".zip" onchange="handleFileSelect(this, 'zipUploadArea', 'zipFileName')" required>
                                     <svg class="file-upload-icon" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-2 6h-2v2h2v2h-2v2h-2v-2h2v-2h-2v-2h2v-2h-2V8h2v2h2v2z"/></svg>
-                                    <div class="file-upload-text">Click to upload your dashboard ZIP file</div>
+                                    <div class="file-upload-text">One ZIP containing everything — layout, preview image, startup video, and assets</div>
                                     <div class="file-upload-name" id="zipFileName" style="display:none;"></div>
                                 </div>
                             </div>
@@ -1624,14 +1614,10 @@
                 function closeUploadModal() {
                     document.getElementById('uploadThemeModal').classList.remove('active');
                     document.getElementById('uploadThemeForm').reset();
-                    ['previewUploadArea', 'zipUploadArea'].forEach(id => {
-                        document.getElementById(id).classList.remove('has-file');
-                    });
-                    ['previewFileName', 'zipFileName'].forEach(id => {
-                        const el = document.getElementById(id);
-                        el.style.display = 'none';
-                        el.textContent = '';
-                    });
+                    document.getElementById('zipUploadArea').classList.remove('has-file');
+                    const zipName = document.getElementById('zipFileName');
+                    zipName.style.display = 'none';
+                    zipName.textContent = '';
                 }
 
                 function handleFileSelect(input, areaId, nameId) {
@@ -1659,8 +1645,6 @@
                     formData.append('discord_id', discordUser.discordId);
                     formData.append('author', discordUser.name);
                     formData.append('access_token', discordUser.accessToken || '');
-                    const previewFile = document.getElementById('previewImageInput').files[0];
-                    if (previewFile) formData.append('preview', previewFile);
                     const zipFile = document.getElementById('themeZipInput').files[0];
                     if (zipFile) formData.append('theme', zipFile);
 
