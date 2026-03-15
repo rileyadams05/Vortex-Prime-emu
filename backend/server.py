@@ -653,6 +653,7 @@ import app_settings_service
 import discord_webhook_service
 import store_service
 from fastapi import UploadFile, File, Form
+from fastapi.responses import FileResponse
 
 # App Settings API
 @api_router.get("/settings")
@@ -664,6 +665,41 @@ async def get_app_settings():
 async def save_app_settings(settings: dict):
     """Save general dashboard settings."""
     return app_settings_service.save_settings(settings)
+
+@api_router.get("/settings/browse-image")
+async def browse_background_image():
+    """Open a native file dialog to select a background image."""
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+
+        file_path = filedialog.askopenfilename(
+            parent=root,
+            title="Select Background Image",
+            filetypes=[
+                ("Image files", "*.png *.jpg *.jpeg *.webp *.bmp *.gif"),
+                ("All files", "*.*")
+            ]
+        )
+
+        root.destroy()
+
+        if file_path:
+            return {"path": file_path, "filename": os.path.basename(file_path)}
+        return {"path": None}
+    except Exception as e:
+        logger.error(f"Background image browse error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/settings/serve-background")
+async def serve_background_image():
+    """Stream the user's custom background image from its absolute local path."""
+    settings = app_settings_service.get_settings()
+    path = settings.get("background_image", "")
+    if not path or not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="No custom background image set")
+    return FileResponse(path)
 
 # SteamGridDB Asset Engine API
 @api_router.get("/steamgriddb/search/{term}")

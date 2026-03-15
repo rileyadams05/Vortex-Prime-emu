@@ -15,13 +15,15 @@ import UserProfileWidget from '../components/UserProfileWidget';
 import { loginDiscord, logout as logoutAuth } from '../services/authService';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
-import { coreConfigApi, externalApiConfig } from '../services/apiServices';
+import { coreConfigApi, externalApiConfig, settingsApi } from '../services/apiServices';
 import '../styles/XeniaDashboard.css';
 import '../styles/Marketplace.css';
 import '../styles/Xbox360Keyboard.css';
 import '../styles/CommunityHubModal.css';
 
 const API = '/api';
+
+const DEFAULT_BG = '/wallpapers/Play/default.png';
 
 const XeniaDashboard = () => {
   const [currentView, setCurrentView] = useState('home');
@@ -32,6 +34,27 @@ const XeniaDashboard = () => {
   const [gameCarouselIndex, setGameCarouselIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTestPanel, setShowTestPanel] = useState(false);
+
+  // Background image state
+  const [bgImage, setBgImage] = useState(DEFAULT_BG);
+
+  useEffect(() => {
+    settingsApi.get()
+      .then(s => { if (s.background_image) setBgImage(`${API}/settings/serve-background`); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const handleBgChange = (e) => {
+      if (e.detail.path) {
+        setBgImage(`${API}/settings/serve-background?t=${Date.now()}`);
+      } else {
+        setBgImage(DEFAULT_BG);
+      }
+    };
+    window.addEventListener('background-image-changed', handleBgChange);
+    return () => window.removeEventListener('background-image-changed', handleBgChange);
+  }, []);
 
   // Community Hub / Store state
   const [isCommunityHubOpen, setIsCommunityHubOpen] = useState(false);
@@ -1420,7 +1443,7 @@ const XeniaDashboard = () => {
       }}>
         <BladesOverlay currentView={currentView} setCurrentView={setCurrentView} />
 
-        <div className="xenia-background" style={{ backgroundImage: "url(/wallpapers/Play/default.png)" }}>
+        <div className="xenia-background" style={{ backgroundImage: `url(${bgImage})` }}>
           <div className="bg-overlay"></div>
         </div>
 

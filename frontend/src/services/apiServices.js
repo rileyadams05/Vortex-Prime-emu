@@ -131,6 +131,11 @@ export const settingsApi = {
       body: JSON.stringify(settings)
     });
     return r.json();
+  },
+  async browseImage() {
+    const r = await fetch(`${API}/settings/browse-image`);
+    if (!r.ok) throw new Error('Failed to open image browser');
+    return r.json();
   }
 };
 

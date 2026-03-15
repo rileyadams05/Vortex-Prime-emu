@@ -234,7 +234,9 @@
 
         .hero h1 span {
             background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent));
+            -webkit-background-clip: text; /* stylelint-disable-line */
             background-clip: text;
+            -webkit-text-fill-color: transparent;
             color: transparent;
         }
 
@@ -978,73 +980,6 @@
             text-align: center;
         }
 
-        .visibility-selector {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-
-        .visibility-option {
-            border: 2px solid var(--color-border);
-            border-radius: 10px;
-            padding: 0.875rem 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: var(--color-bg-dark);
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            user-select: none;
-        }
-
-        .visibility-option:hover { border-color: var(--color-text-muted); }
-
-        .visibility-option.selected-public {
-            border-color: var(--color-primary);
-            background: rgba(16, 185, 129, 0.06);
-        }
-
-        .visibility-option.selected-private {
-            border-color: var(--color-accent);
-            background: rgba(99, 102, 241, 0.06);
-        }
-
-        .visibility-option-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--color-text);
-        }
-
-        .visibility-option-desc {
-            font-size: 0.75rem;
-            color: var(--color-text-muted);
-            line-height: 1.4;
-        }
-
-        .private-code-display {
-            background: var(--color-bg-dark);
-            border: 1px solid var(--color-border);
-            border-radius: 10px;
-            padding: 1rem;
-            margin: 0.75rem 0;
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--color-primary-light);
-            letter-spacing: 0.2em;
-            text-align: center;
-        }
-
-        .private-code-warning {
-            font-size: 0.8rem;
-            color: var(--color-warning);
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
         .form-group { margin-bottom: 1.25rem; }
 
         .form-label {
@@ -1535,20 +1470,6 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">Visibility</label>
-                                    <div class="visibility-selector">
-                                        <div class="visibility-option selected-public" id="optPublic" onclick="selectVisibility('public')">
-                                            <span class="visibility-option-title">📢 Share to Store</span>
-                                            <span class="visibility-option-desc">Listed publicly after review. Anyone can install it.</span>
-                                        </div>
-                                        <div class="visibility-option" id="optPrivate" onclick="selectVisibility('private')">
-                                            <span class="visibility-option-title">🔒 Keep for Myself</span>
-                                            <span class="visibility-option-desc">Private code shown once. Not listed in the store.</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
                                     <label class="form-label">Dashboard ZIP File <span style="color: var(--color-warning);">*</span></label>
                                     <div class="file-upload-area" id="zipUploadArea">
                                         <input type="file" id="themeZipInput" accept=".zip" onchange="handleFileSelect(this, 'zipUploadArea', 'zipFileName')" required>
@@ -1587,23 +1508,7 @@
                             <p>Your dashboard has been submitted for review. You'll receive a unique code once it's approved and live in the store.</p>
                             <button class="modal-btn primary" onclick="closeUploadModal()" style="margin-top: 1rem; width: 100%;">Done</button>
                         </div>
-                        <div id="successPrivateView" style="display:none;">
-                            <div class="upload-success-icon" style="background: linear-gradient(135deg, var(--color-accent), #4f46e5);">
-                                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-                            </div>
-                            <h3>Your Private Code</h3>
-                            <p style="margin-bottom: 0.5rem;">Your dashboard is ready. Copy the code below to install it in Vortex Prime.</p>
-                            <div class="private-code-display" id="privateCodeDisplay">------</div>
-                            <p class="private-code-warning">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                                Copy this code now — it won't be shown again
-                            </p>
-                            <div style="display: flex; gap: 0.75rem; flex-direction: column;">
-                                <button class="modal-btn primary" id="copyPrivateCodeBtn" onclick="copyPrivateCode()">Copy Code</button>
-                                <button class="modal-btn secondary" onclick="closeUploadModal()">Close</button>
-                            </div>
                         </div>
-                    </div>
                 </div>
             </div>
 
@@ -1614,7 +1519,6 @@
 
                 let discordUser = null;
                 let pendingUploadAfterLogin = false;
-                let uploadVisibility = 'public';
 
                 // Check for Discord login on page load
                 function checkDiscordLogin() {
@@ -1817,10 +1721,8 @@
                     previewImg.style.display = 'none';
                     previewImg.src = '';
                     document.getElementById('previewPlaceholder').style.display = 'flex';
-                    selectVisibility('public');
-                    document.getElementById('successPublicView').style.display = 'block';
-                    document.getElementById('successPrivateView').style.display = 'none';
-                    document.getElementById('privateCodeDisplay').textContent = '------';
+                    document.getElementById('uploadSuccessView').style.display = 'none';
+                    document.getElementById('uploadFormView').style.display = 'block';
                 }
 
                 function handlePreviewSelect(input) {
@@ -1834,30 +1736,6 @@
                         };
                         reader.readAsDataURL(input.files[0]);
                     }
-                }
-
-                function selectVisibility(type) {
-                    uploadVisibility = type;
-                    document.getElementById('optPublic').className = 'visibility-option' + (type === 'public' ? ' selected-public' : '');
-                    document.getElementById('optPrivate').className = 'visibility-option' + (type === 'private' ? ' selected-private' : '');
-                }
-
-                function copyPrivateCode() {
-                    const code = document.getElementById('privateCodeDisplay').textContent;
-                    const btn = document.getElementById('copyPrivateCodeBtn');
-                    navigator.clipboard.writeText(code).then(() => {
-                        btn.textContent = 'Copied!';
-                        setTimeout(() => { btn.textContent = 'Copy Code'; }, 2000);
-                    }).catch(() => {
-                        const ta = document.createElement('textarea');
-                        ta.value = code;
-                        document.body.appendChild(ta);
-                        ta.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(ta);
-                        btn.textContent = 'Copied!';
-                        setTimeout(() => { btn.textContent = 'Copy Code'; }, 2000);
-                    });
                 }
 
                 function handleFileSelect(input, areaId, nameId) {
@@ -1885,7 +1763,6 @@
                     formData.append('discord_id', discordUser.discordId);
                     formData.append('author', discordUser.name);
                     formData.append('access_token', discordUser.accessToken || '');
-                    formData.append('is_private', uploadVisibility === 'private' ? 'true' : 'false');
                     const zipFile = document.getElementById('themeZipInput').files[0];
                     if (zipFile) formData.append('theme', zipFile);
                     const previewFile = document.getElementById('previewImageInput').files[0];
@@ -1899,14 +1776,9 @@
                         if (!res.ok) return res.json().then(d => Promise.reject(d.detail || 'Upload failed'));
                         return res.json();
                     })
-                    .then(data => {
+                    .then(() => {
                         document.getElementById('uploadFormView').style.display = 'none';
                         document.getElementById('uploadSuccessView').style.display = 'block';
-                        if (uploadVisibility === 'private') {
-                            document.getElementById('successPublicView').style.display = 'none';
-                            document.getElementById('successPrivateView').style.display = 'block';
-                            document.getElementById('privateCodeDisplay').textContent = data.code || '------';
-                        }
                     })
                     .catch(err => {
                         alert('Upload failed: ' + err);

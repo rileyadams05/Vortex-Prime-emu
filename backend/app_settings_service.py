@@ -8,6 +8,7 @@ SETTINGS_FILE = Path(__file__).parent.parent / "assets" / "app_settings.json"
 
 DEFAULT_SETTINGS = {
     "theme_color": "#107C10",
+    "background_image": "",
     "master_volume": 50,
     "music_volume": 50,
     "bgm": "None",

@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import { useTheme } from '../context/ThemeContext';
 import playSound from '../utils/soundManager';
-import { AlertCircle, Volume2, Globe, Palette, Cpu, Video, Wrench, User } from 'lucide-react';
+import { AlertCircle, Volume2, Globe, Palette, Cpu, Video, Wrench, User, Image } from 'lucide-react';
 import GamepadDiagnostic from './GamepadDiagnostic';
 import LanguageSettings from './LanguageSettings';
 import SoundSettings from './SoundSettings';
 import CoreSettings from './CoreSettings';
 import ColorSettings from './ColorSettings';
+import BackgroundSettings from './BackgroundSettings';
 import AccountSettings from './AccountSettings';
 import { invoke } from '@tauri-apps/api/core';
 import '../styles/NXESettings.css';
@@ -132,6 +133,7 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
     { id: 'sound', label: 'Sound Settings', icon: Volume2, description: 'Configure UI sound effects, navigation sounds, and background music volume. Enable or disable individual audio channels.' },
     { id: 'country', label: 'Country', icon: Globe, description: 'Change the display country/region for the dashboard interface.', badge: countryCode },
     { id: 'color', label: 'Hover Color', icon: Palette, description: 'Change the global accent color for the dashboard interface.' },
+    { id: 'background', label: 'Background', icon: Image, description: 'Set a custom wallpaper image for your dashboard.' },
   ];
 
   const handleSave = () => {
@@ -576,6 +578,14 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
                     isActive={activePanel === 'color'} 
                     onBack={() => { playSound('back'); setActivePanel(null); }}
                     onColorChange={() => setIsDirty(true)}
+                  />
+                )}
+                {dynamicSettingsItems[selectedIndex].id === 'background' && (
+                  <BackgroundSettings
+                    preview={true}
+                    isActive={activePanel === 'background'}
+                    onBack={() => { playSound('back'); setActivePanel(null); }}
+                    onDirty={() => setIsDirty(true)}
                   />
                 )}
                 {dynamicSettingsItems[selectedIndex].id === 'sunshine' && (
