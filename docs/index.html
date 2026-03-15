@@ -1294,15 +1294,15 @@
                         </div>
                     </div>
 
-                    <!-- Info about themes -->
+                    <!-- Info about dashboards -->
                     <div class="section-header" style="padding: 2rem;">
-                        <h2>Theme Contents</h2>
-                        <p>Each theme can include a custom startup video (MP4). When you download a theme, click on it in-app to access the startup video sub-tab.</p>
+                        <h2>Dashboard Contents</h2>
+                        <p>Each dashboard is fully customizable — layout, startup video (MP4), and more. Download one and make it your own, or build from scratch if you know what you're doing.</p>
                     </div>
 
                      <div class="store-cta">
                         <h3>Create & Share Your Own</h3>
-                        <p>Build custom themes and share them with the community. Upload via Discord login to get your own unique install code.</p>
+                        <p>Build fully customizable dashboards and share them with the community. Upload via Discord login to get your own unique install code.</p>
                         
                         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
                             <!-- Upload Button (disabled until Discord login) -->
@@ -1371,18 +1371,18 @@
                     <button class="modal-close" onclick="closeUploadModal()">×</button>
 
                     <div id="uploadFormView">
-                        <h3 style="margin-bottom: 0.25rem;">Upload Theme</h3>
-                        <p>Share your theme with the Vortex Prime community.</p>
+                        <h3 style="margin-bottom: 0.25rem;">Upload Dashboard</h3>
+                        <p>Share your custom dashboard with the Vortex Prime community.</p>
 
                         <form class="upload-form" id="uploadThemeForm" onsubmit="handleUploadSubmit(event)">
                             <div class="form-group">
-                                <label class="form-label" for="themeName">Theme Name</label>
-                                <input type="text" class="form-input" id="themeName" placeholder="My Awesome Theme" required maxlength="60">
+                                <label class="form-label" for="themeName">Dashboard Name</label>
+                                <input type="text" class="form-input" id="themeName" placeholder="My Awesome Dashboard" required maxlength="60">
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label" for="themeDescription">Description</label>
-                                <textarea class="form-textarea" id="themeDescription" placeholder="Describe your theme — what it looks like, what inspired it, what's included..." required maxlength="500"></textarea>
+                                <textarea class="form-textarea" id="themeDescription" placeholder="Describe your dashboard — what it looks like, what inspired it, what's included..." required maxlength="500"></textarea>
                             </div>
 
                             <div class="form-group">
@@ -1396,17 +1396,17 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Theme ZIP File <span style="color: var(--color-warning);">*</span></label>
+                                <label class="form-label">Dashboard ZIP File <span style="color: var(--color-warning);">*</span></label>
                                 <div class="file-upload-area" id="zipUploadArea">
                                     <input type="file" id="themeZipInput" accept=".zip" onchange="handleFileSelect(this, 'zipUploadArea', 'zipFileName')" required>
                                     <svg class="file-upload-icon" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-2 6h-2v2h2v2h-2v2h-2v-2h2v-2h-2v-2h2v-2h-2V8h2v2h2v2z"/></svg>
-                                    <div class="file-upload-text">Click to upload your theme ZIP file</div>
+                                    <div class="file-upload-text">Click to upload your dashboard ZIP file</div>
                                     <div class="file-upload-name" id="zipFileName" style="display:none;"></div>
                                 </div>
                             </div>
 
                             <div class="modal-actions">
-                                <button type="submit" class="modal-btn primary" id="uploadSubmitBtn">Upload Theme</button>
+                                <button type="submit" class="modal-btn primary" id="uploadSubmitBtn">Upload Dashboard</button>
                                 <button type="button" class="modal-btn secondary" onclick="closeUploadModal()">Cancel</button>
                             </div>
                         </form>
@@ -1416,8 +1416,8 @@
                         <div class="upload-success-icon">
                             <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                         </div>
-                        <h3>Theme Submitted!</h3>
-                        <p>Your theme has been submitted for review. You'll receive a unique code once it's approved and live in the store.</p>
+                        <h3>Dashboard Submitted!</h3>
+                        <p>Your dashboard has been submitted for review. You'll receive a unique code once it's approved and live in the store.</p>
                         <button class="modal-btn primary" onclick="closeUploadModal()" style="margin-top: 1rem; width: 100%;">Done</button>
                     </div>
                 </div>
@@ -1680,7 +1680,7 @@
                         alert('Upload failed: ' + err);
                     })
                     .finally(() => {
-                        btn.textContent = 'Upload Theme';
+                        btn.textContent = 'Upload Dashboard';
                         btn.disabled = false;
                     });
                 }
