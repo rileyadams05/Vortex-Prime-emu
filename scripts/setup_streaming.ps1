@@ -1,6 +1,7 @@
 # setup_streaming.ps1
-# Automated Installation & Configuration for Vortex Prime Web Streaming
-# Requires Administrator privileges
+# Automated Installation & Configuration for Vortex Prime Streaming
+# Runs silently in the background — no manual steps required for users
+# Admin privileges handled by the main application manifest.
 
 param(
     [switch]$AutoStart
@@ -10,125 +11,128 @@ function Write-Log($Message, $Color = "White") {
     Write-Host "[Vortex Streaming Setup] $Message" -ForegroundColor $Color
 }
 
-# Admin check is now handled by the main application manifest
-# Assert-Admin removed.
-
-
 $SunshinePath = "$env:ProgramFiles\Sunshine"
 $ConfigPath = "$SunshinePath\config\sunshine.conf"
+$CloudflaredPath = "$env:TEMP\cloudflared.exe"
+$TunnelUrlFile = "$env:TEMP\vortex_prime_tunnel_url.txt"
 
 Write-Log "Step 1: Checking Sunshine installation..." "Cyan"
 if (-not (Test-Path "$SunshinePath\sunshine.exe")) {
-    Write-Log "Sunshine is not installed. You must install Sunshine first." "Yellow"
-    Write-Log "Download the latest release from: https://github.com/LizardByte/Sunshine/releases" "Yellow"
-    # Note: Downloading the exe directly and running silently could be done, 
-    # but might trigger smartscreen or require reboot. For complete automation:
-    Write-Log "Attempting to download and install Sunshine..." "Green"
+    Write-Log "Sunshine not found — downloading silent installer..." "Yellow"
     $sunshineUrl = "https://github.com/LizardByte/Sunshine/releases/latest/download/sunshine-windows-installer.exe"
     $installerPath = "$env:TEMP\sunshine-installer.exe"
-    Invoke-WebRequest -Uri $sunshineUrl -OutFile $installerPath
-    Write-Log "Running Sunshine silent installer..." "Cyan"
-    Start-Process -FilePath $installerPath -ArgumentList "/S" -Wait
+    try {
+        Invoke-WebRequest -Uri $sunshineUrl -OutFile $installerPath -UseBasicParsing
+        Write-Log "Running Sunshine silent installer..." "Cyan"
+        Start-Process -FilePath $installerPath -ArgumentList "/S" -Wait
+        Write-Log "Sunshine installed." "Green"
+    } catch {
+        Write-Log "Could not download Sunshine: $_" "Red"
+    }
 }
 
-Write-Log "Step 2: Securing Sunshine Configuration (Zero Setup)" "Cyan"
+Write-Log "Step 2: Configuring Sunshine (zero-PIN + Cloudflare STUN)..." "Cyan"
 if (-not (Test-Path "$SunshinePath\config")) {
     New-Item -Path "$SunshinePath\config" -ItemType Directory -Force | Out-Null
 }
 
 $sunshineConfData = @"
+# Vortex Prime Auto-Configuration
 # Network and Security Settings
 lan_encryption_mode = none
 origin_web_ui_allowed = enabled
 origin_pin_allowed = enabled
 
-# Custom Domain Integration
-trusted_origins = https://Vortex-Prime-Emu-streaming
+# Cloudflare STUN for optimal NAT traversal and low latency
+stun_server = stun.cloudflare.com:3478
 
-# Performance for Xenia
+# Performance
 min_log_level = info
 "@
 
 Set-Content -Path $ConfigPath -Value $sunshineConfData
-Write-Log "Overwrote sunshine.conf with no-passcode zero-configuration payload." "Green"
+Write-Log "sunshine.conf written with Cloudflare STUN and zero-PIN config." "Green"
 
-Write-Log "Step 3: Setting up Moonlight-Web-Stream Web Gateway..." "Cyan"
-$WebStreamPath = "C:\Moonlight-Web-Stream"
-if (-not (Test-Path $WebStreamPath)) {
-    Write-Log "Downloading Moonlight-Web-Stream..." "Cyan"
-    # To properly set up moonlight-web-stream, we would clone the repo and install node deps.
-    # We will simulate the Node Setup assuming Node is installed.
-    # Since the exact zip structure varies, we'll download the source.
-    $repoUrl = "https://github.com/MrCreativ3001/moonlight-web-stream/archive/refs/heads/main.zip"
-    $zipPath = "$env:TEMP\moonlight-web.zip"
-    Invoke-WebRequest -Uri $repoUrl -OutFile $zipPath
-    Expand-Archive -Path $zipPath -DestinationPath $env:TEMP -Force
-    Move-Item -Path "$env:TEMP\moonlight-web-stream-main" -Destination $WebStreamPath -Force
-    Write-Log "Moonlight Web Stream extracted to $WebStreamPath." "Green"
-    
-    # Inject Trust Certificate Button for Xbox Edge Gamepad API
-    $IndexFilePath = "$WebStreamPath\public\index.html"
-    if (-not (Test-Path $IndexFilePath)) { $IndexFilePath = "$WebStreamPath\index.html" }
-    if (Test-Path $IndexFilePath) {
-        $Injection = '<button onclick="window.open(`''https://Vortex-Prime-Emu-streaming`'', `''_blank`'')" style="position:fixed;bottom:20px;right:20px;z-index:9999;background-color:#107C10;color:#ffffff;border:none;padding:12px 24px;font-size:16px;font-weight:bold;border-radius:8px;box-shadow:0 4px 15px rgba(16,124,16,0.6);cursor:pointer;">Trust Certificate (Gamepad Fix)</button>'
-        $HtmlContent = Get-Content $IndexFilePath -Raw
-        if ($HtmlContent -notmatch "Trust Certificate") {
-            $HtmlContent = $HtmlContent -replace '(<body[^>]*>)', "`$1`n    $Injection"
-            Set-Content -Path $IndexFilePath -Value $HtmlContent
-            Write-Log "Injected 'Trust Certificate' Gamepad Fix button into Portal UI." "Green"
-        }
-    }
-}
-
-Write-Log "Step 4: Real Domain & SSL Integration" "Cyan"
-Write-Log "Generating self-signed SSL certificates for https://Vortex-Prime-Emu-streaming" "Cyan"
-# Check if python is installed
-if (Get-Command -Name python -ErrorAction SilentlyContinue) {
-    Set-Location $WebStreamPath
-    if (Test-Path "generate_certificate.py") {
-        Write-Log "Running generate_certificate.py..." "Cyan"
-        # Since standard generate script might ask questions, we would pipe answers. 
-        # For full automation, passing non-interactive flags or generating via OpenSSL
-        Start-Process -FilePath "python" -ArgumentList "generate_certificate.py --domain Vortex-Prime-Emu-streaming" -Wait -NoNewWindow
-    } else {
-        Write-Log "generate_certificate.py not found in repo." "Yellow"
+Write-Log "Step 3: Downloading cloudflared (Cloudflare Tunnel)..." "Cyan"
+if (-not (Test-Path $CloudflaredPath)) {
+    try {
+        $cfUrl = "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe"
+        Invoke-WebRequest -Uri $cfUrl -OutFile $CloudflaredPath -UseBasicParsing
+        Write-Log "cloudflared downloaded." "Green"
+    } catch {
+        Write-Log "Could not download cloudflared: $_" "Red"
     }
 } else {
-    Write-Log "Python not found. Please generate the certificate manually or ensure Python is installed." "Yellow"
+    Write-Log "cloudflared already present." "Green"
 }
 
-# Add domain to hosts file mapping to localhost to fulfill standard DNS locally
-$HostsFile = "$env:windir\System32\drivers\etc\hosts"
-$HostEntry = "127.0.0.1 Vortex-Prime-Emu-streaming"
-if (-not (Select-String -Path $HostsFile -Pattern "Vortex-Prime-Emu-streaming" -Quiet)) {
-    Add-Content -Path $HostsFile -Value "`n$HostEntry"
-    Write-Log "Added Vortex-Prime-Emu-streaming to Windows hosts file." "Green"
-}
-
-Write-Log "Step 5: Network requirement - Enabling UPnP (UDP 47998-48000)" "Cyan"
-# Windows Firewall rules
-New-NetFirewallRule -DisplayName "Sunshine UPnP / Streaming UDP" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 47998-48000 -ErrorAction SilentlyContinue | Out-Null
-New-NetFirewallRule -DisplayName "Sunshine UPnP / Streaming TCP" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 47984-47989,48010 -ErrorAction SilentlyContinue | Out-Null
-Write-Log "Firewall rules for Sunshine streaming and Web UI added." "Green"
+Write-Log "Step 4: Opening firewall ports for Sunshine streaming..." "Cyan"
+New-NetFirewallRule -DisplayName "Vortex Prime Stream UDP" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 47998-48000 -ErrorAction SilentlyContinue | Out-Null
+New-NetFirewallRule -DisplayName "Vortex Prime Stream TCP" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 47984-47990,48010 -ErrorAction SilentlyContinue | Out-Null
+Write-Log "Firewall rules applied (UDP 47998-48000, TCP 47984-47990, 48010)." "Green"
 
 if ($AutoStart) {
-    Write-Log "Step 6: Launching Background Services in Silent Mode..." "Cyan"
-    
-    # Start Sunshine
-    Write-Log "Starting Sunshine..." "Cyan"
-    Start-Process -FilePath "$SunshinePath\sunshine.exe" -WindowStyle Hidden
-    
-    # Start Web Server
-    Write-Log "Starting Moonlight Web Stream Node server in zero-latency mode..." "Cyan"
-    Set-Location $WebStreamPath
-    if (Get-Command -Name npm -ErrorAction SilentlyContinue) {
-        Start-Process -FilePath "npm" -ArgumentList "install" -Wait -WindowStyle Hidden
-        Start-Process -FilePath "npm" -ArgumentList "start -- --video-codec h264 --low-latency" -WindowStyle Hidden
-        Write-Log "Moonlight Web Stream started on port 3000 with h264 low-latency profile." "Green"
+    Write-Log "Step 5: Starting Sunshine in background..." "Cyan"
+    if (Test-Path "$SunshinePath\sunshine.exe") {
+        $sunshineRunning = Get-Process -Name "sunshine" -ErrorAction SilentlyContinue
+        if (-not $sunshineRunning) {
+            Start-Process -FilePath "$SunshinePath\sunshine.exe" -WindowStyle Hidden
+            Write-Log "Sunshine started." "Green"
+        } else {
+            Write-Log "Sunshine already running." "Green"
+        }
+    }
+
+    Write-Log "Step 6: Starting Cloudflare Tunnel (Sunshine web UI → public HTTPS)..." "Cyan"
+    if (Test-Path $CloudflaredPath) {
+        # Kill any stale cloudflared tunnels for this purpose
+        Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+
+        # Launch cloudflared quick tunnel pointing at Sunshine's local web UI (port 47990)
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $CloudflaredPath
+        $psi.Arguments = "tunnel --url http://localhost:47990 --no-autoupdate"
+        $psi.UseShellExecute = $false
+        $psi.RedirectStandardError = $true
+        $psi.CreateNoWindow = $true
+
+        $proc = New-Object System.Diagnostics.Process
+        $proc.StartInfo = $psi
+        $proc.Start() | Out-Null
+
+        # Read cloudflared stderr until the trycloudflare.com URL appears (up to 30 s)
+        $deadline = [DateTime]::Now.AddSeconds(30)
+        $tunnelUrl = $null
+        while ([DateTime]::Now -lt $deadline -and -not $proc.StandardError.EndOfStream) {
+            $line = $proc.StandardError.ReadLine()
+            if ($line -match 'https://[a-z0-9\-]+\.trycloudflare\.com') {
+                $tunnelUrl = $matches[0]
+                break
+            }
+        }
+
+        if ($tunnelUrl) {
+            Set-Content -Path $TunnelUrlFile -Value $tunnelUrl -NoNewline
+            Write-Log "Cloudflare Tunnel active: $tunnelUrl" "Green"
+            Write-Log "Streaming portal is now reachable from any device at: $tunnelUrl" "Green"
+        } else {
+            Write-Log "cloudflared started but tunnel URL not yet captured — it will appear shortly." "Yellow"
+            # Keep reading in background via a job
+            Start-Job -ScriptBlock {
+                param($proc, $urlFile)
+                $deadline = [DateTime]::Now.AddSeconds(60)
+                while ([DateTime]::Now -lt $deadline -and -not $proc.StandardError.EndOfStream) {
+                    $line = $proc.StandardError.ReadLine()
+                    if ($line -match 'https://[a-z0-9\-]+\.trycloudflare\.com') {
+                        Set-Content -Path $urlFile -Value $matches[0] -NoNewline
+                        break
+                    }
+                }
+            } -ArgumentList $proc, $TunnelUrlFile | Out-Null
+        }
     } else {
-        Write-Log "npm not found. Could not start Web Server automatically." "Red"
+        Write-Log "cloudflared not found — skipping tunnel. Streaming portal will be LAN-only." "Yellow"
     }
 }
 
-Write-Log "Setup Complete! The Vortex Prime dashboard will now seamlessly integrate over Gamepad API." "Green"
-Write-Log "You can reach the portal directly at https://Vortex-Prime-Emu-streaming" "Green"
+Write-Log "Vortex Prime streaming setup complete." "Green"

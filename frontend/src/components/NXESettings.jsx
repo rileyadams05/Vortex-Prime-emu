@@ -54,6 +54,7 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
   const [magicLinkEmail, setMagicLinkEmail] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState('');
+  const [tunnelUrl, setTunnelUrl] = useState('');
   const listRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
   const { changeTheme } = useTheme();
@@ -67,6 +68,8 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
           if (window.__TAURI__) {
             const running = await invoke('check_sunshine_status');
             setIsSunshineRunning(running);
+            const url = await invoke('get_tunnel_url');
+            if (url) setTunnelUrl(url);
           }
         } catch (e) {
           console.error("Failed to check Sunshine status:", e);
@@ -92,7 +95,7 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
     
     try {
       if (window.__TAURI__) {
-        const result = await invoke('send_magic_link_email', { toEmail: magicLinkEmail });
+            const result = await invoke('send_magic_link_email', { toEmail: magicLinkEmail, portalUrl: tunnelUrl || 'http://localhost:47990' });
         setEmailStatus(result);
         setMagicLinkEmail('');
         setTimeout(() => setEmailStatus(''), 5000);
@@ -624,7 +627,7 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
                     <div style={{ flex: 1, position: 'relative', background: '#000', borderRadius: '12px', overflow: 'hidden', border: `2px solid ${isSunshineRunning ? 'rgba(144, 195, 29, 0.4)' : 'rgba(220, 20, 60, 0.4)'}`, transition: 'border-color 0.5s ease' }}>
                       {/* Embedded Secure Stream Viewer */}
                       <iframe 
-                        src="https://Vortex-Prime-Emu-streaming"
+                        src={tunnelUrl || 'http://localhost:47990'}
                         title="Vortex Prime Streaming Portal"
                         allow="gamepad; autoplay; fullscreen"
                         style={{ width: '100%', height: '100%', border: 'none' }}
@@ -640,7 +643,7 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
                         <p style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: 1.5, maxWidth: '400px' }}>
                           Ensure the background streaming services (Sunshine & Web Portal) are running. 
                           You can access your portal directly from any device at <br/>
-                          <code style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', marginTop: '12px', display: 'inline-block', color: '#90C31D' }}>https://Vortex-Prime-Emu-streaming</code>
+                          <code style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', marginTop: '12px', display: 'inline-block', color: '#90C31D' }}>{tunnelUrl || 'http://localhost:47990'}</code>
                         </p>
                       </div>
                     </div>
@@ -672,17 +675,16 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
                       </div>
                       
                       <button 
-                        onClick={() => window.open('https://Vortex-Prime-Emu-streaming', '_blank')}
+                        onClick={() => window.open(tunnelUrl || 'http://localhost:47990', '_blank')}
                         style={{ background: '#107C10', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: '24px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}
                       >
                         <Globe size={18} /> Open in Browser
                       </button>
-                      <button 
-                        onClick={() => window.open('https://Vortex-Prime-Emu-streaming/cert.pem', '_blank')}
-                        style={{ background: 'transparent', color: '#90C31D', border: '1px solid rgba(144, 195, 29, 0.4)', padding: '6px 16px', borderRadius: '16px', fontSize: '0.85rem', cursor: 'pointer' }}
-                      >
-                        Install/Trust SSL Certificate to Enable Gamepad
-                      </button>
+                      {!tunnelUrl && (
+                        <p style={{ fontSize: '0.78rem', color: '#888', textAlign: 'center', marginTop: '4px' }}>
+                          Cloudflare tunnel starting… check back in a few seconds.
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}

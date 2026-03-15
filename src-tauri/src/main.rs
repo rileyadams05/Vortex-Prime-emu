@@ -13,7 +13,6 @@ use std::time::Duration;
 use std::path::Path;
 use std::fs;
 use std::io::Write;
-use mdns_sd::{ServiceDaemon, ServiceInfo};
 use velopack::VelopackApp;
 use toml_edit;
 use sysinfo::System;
@@ -133,6 +132,7 @@ fn main() {
             get_audio_sessions,
             check_sunshine_status,
             send_magic_link_email,
+            get_tunnel_url,
             discord_auth::start_discord_auth
         ])
         .setup(|app| {
@@ -183,33 +183,7 @@ fn main() {
                 }
             });
 
-            // 3. The "First Link" Priority Logic: mDNS Broadcast
-            let mdns = ServiceDaemon::new().expect("Failed to create mDNS daemon");
-                
-                let service_type = "_http._tcp.local.";
-                let instance_name = "Vortex-Prime-Emu-streaming";
-                // Host PC name could be used, but we hardcode local for the domain
-                let host_name = "Vortex-Prime-Emu-streaming.local.";
-                let port = 3000;
-                let properties: Vec<(&str, &str)> = vec![("path", "/")];
-
-                let my_info = ServiceInfo::new(
-                    service_type,
-                    instance_name,
-                    host_name,
-                    "", // bind to all interfaces
-                    port,
-                    &properties[..],
-                ).expect("Valid mDNS service info");
-
-                if let Err(e) = mdns.register(my_info) {
-                    eprintln!("Failed to register mDNS service: {}", e);
-                } else {
-                    println!("Streaming Gateway Service: mDNS broadcast Active -> Vortex-Prime-Emu-streaming._http._tcp.local");
-                }
-
-            // 3. Automatic UPnP Refresh / Firewall Port check
-            // Every 5 minutes (handling sleep/wake cycle reconnects implicitly)
+            // 3. Periodic firewall rule refresh (handles sleep/wake cycles)
             thread::spawn(|| {
                 loop {
                     thread::sleep(Duration::from_secs(300));
@@ -331,29 +305,27 @@ fn get_gpu_info() -> GpuInfo {
 }
 
 #[tauri::command]
-fn send_magic_link_email(to_email: String) -> Result<String, String> {
+fn send_magic_link_email(to_email: String, portal_url: String) -> Result<String, String> {
+    let portal_link = if portal_url.is_empty() { "http://localhost:47990".to_string() } else { portal_url };
+    let email_body = format!(
+        r#"<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; padding: 40px; text-align: center; color: #ffffff;">
+            <h1 style="color: #107C10; margin-bottom: 20px;">Vortex Prime is Ready</h1>
+            <p style="font-size: 16px; color: #cccccc; margin-bottom: 30px;">
+                Your zero-latency streaming gateway is online. Tap below to connect from any device — no installs needed.
+            </p>
+            <a href="{portal_link}" style="display: inline-block; background-color: #107C10; color: #ffffff; text-decoration: none; font-size: 18px; font-weight: bold; padding: 15px 40px; border-radius: 30px; box-shadow: 0 4px 15px rgba(16, 124, 16, 0.4);">
+                Launch Streaming Portal
+            </a>
+            <p style="font-size: 12px; color: #888888; margin-top: 30px;">Powered by Cloudflare &amp; Sunshine — secured with HTTPS automatically.</p>
+        </div>"#,
+        portal_link = portal_link
+    );
     let _email = Message::builder()
         .from("Vortex Prime Emulator <olm.core.official@gmail.com>".parse().unwrap())
         .to(to_email.parse().map_err(|e| format!("Invalid email: {}", e))?)
         .subject("Your Vortex Prime Streaming Portal")
         .header(ContentType::TEXT_HTML)
-        .body(String::from(
-            r#"
-            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; padding: 40px; text-align: center; color: #ffffff;">
-                <img src="https://Vortex-Prime-Emu-streaming/assets/AppIcon/icon.png" alt="Vortex Prime Logo" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid #107C10; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(16, 124, 16, 0.4);" />
-                <h1 style="color: #107C10; margin-bottom: 20px;">Vortex Prime is Ready</h1>
-                <p style="font-size: 16px; color: #cccccc; margin-bottom: 30px;">
-                    Your zero-latency streaming gateway is online and waiting. Tap the button below to connect your console or device directly to your PC.
-                </p>
-                <a href="https://Vortex-Prime-Emu-streaming" style="display: inline-block; background-color: #107C10; color: #ffffff; text-decoration: none; font-size: 18px; font-weight: bold; padding: 15px 40px; border-radius: 30px; box-shadow: 0 4px 15px rgba(16, 124, 16, 0.4);">
-                    Launch Streaming Portal
-                </a>
-                <p style="font-size: 12px; color: #666666; margin-top: 40px;">
-                    If the portal doesn't load gamepad API correctly on the first launch, click the "Trust Certificate" button on the webpage.
-                </p>
-            </div>
-            "#,
-        ))
+        .body(email_body)
         .map_err(|e| format!("Could not build email: {}", e))?;
 
     // Typically, an SMTP service like SendGrid, Mailjet or an App Password for Gmail is used.
@@ -455,46 +427,56 @@ async fn copy_xenia_files(app_handle: tauri::AppHandle) -> Result<String, String
 /// Native provisioning for system-level streaming requirements.
 /// Requires Administrator privileges (forced via manifest).
 fn provision_streaming_environment() -> Result<(), String> {
-    // 1. Hosts File Mapping (The "First Link")
-    let hosts_path = r"C:\Windows\System32\drivers\etc\hosts";
-    let entry = "127.0.0.1 Vortex-Prime-Emu-streaming";
-    if let Ok(content) = fs::read_to_string(hosts_path) {
-        if !content.contains("Vortex-Prime-Emu-streaming") {
-             let mut file = fs::OpenOptions::new()
-                .append(true)
-                .open(hosts_path)
-                .map_err(|e| format!("System Check: Could not open hosts file for write. {}", e))?;
-             writeln!(file, "\n{}", entry).map_err(|e| format!("System Check: Failed to append host entry. {}", e))?;
-        }
-    }
-
-    // 2. Sunshine Configuration Automation (No-PIN Bypass)
+    // 1. Sunshine Configuration — Cloudflare STUN + zero-PIN setup
     let program_files = std::env::var("ProgramFiles").unwrap_or_else(|_| "C:\\Program Files".to_string());
     let sunshine_conf = Path::new(&program_files).join("Sunshine").join("config").join("sunshine.conf");
     if sunshine_conf.exists() {
         if let Ok(content) = fs::read_to_string(&sunshine_conf) {
-            if !content.contains("lan_encryption_mode = none") {
+            if !content.contains("# Vortex Prime Auto-Configuration") {
                 let mut new_config = content;
-                new_config.push_str("\n# Vortex Prime Auto-Configuration\nlan_encryption_mode = none\norigin_web_ui_allowed = enabled\norigin_pin_allowed = enabled\ntrusted_origins = https://Vortex-Prime-Emu-streaming\n");
-                fs::write(&sunshine_conf, new_config).map_err(|e| format!("Streaming Core: Failed to update sunshine.conf. {}", e))?;
+                new_config.push_str(
+                    "\n# Vortex Prime Auto-Configuration\n\
+                    lan_encryption_mode = none\n\
+                    origin_web_ui_allowed = enabled\n\
+                    origin_pin_allowed = enabled\n\
+                    stun_server = stun.cloudflare.com:3478\n"
+                );
+                fs::write(&sunshine_conf, new_config)
+                    .map_err(|e| format!("Streaming Core: Failed to update sunshine.conf. {}", e))?;
             }
         }
     }
 
-    // 3. Firewall Shield Punch
-    // Silently allow the streaming ports through Windows Firewall
+    // 2. Firewall — UDP streaming ports + TCP web UI / RTSP control
     let _ = std::process::Command::new("netsh")
-        .arg("advfirewall")
-        .arg("firewall")
-        .arg("add")
-        .arg("rule")
-        .arg("name=Vortex Prime Stream UDP")
-        .arg("dir=in")
-        .arg("action=allow")
-        .arg("protocol=UDP")
-        .arg("localport=47998-48000")
+        .args(["advfirewall", "firewall", "add", "rule",
+               "name=Vortex Prime Stream UDP",
+               "dir=in", "action=allow", "protocol=UDP",
+               "localport=47998-48000"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .spawn();
+
+    let _ = std::process::Command::new("netsh")
+        .args(["advfirewall", "firewall", "add", "rule",
+               "name=Vortex Prime Stream TCP",
+               "dir=in", "action=allow", "protocol=TCP",
+               "localport=47984-47990,48010"])
         .creation_flags(CREATE_NO_WINDOW)
         .spawn();
 
     Ok(())
+}
+
+/// Returns the active Cloudflare quick-tunnel URL written by setup_streaming.ps1.
+/// Falls back to None if cloudflared hasn't started yet.
+#[tauri::command]
+fn get_tunnel_url() -> Option<String> {
+    let url_file = std::env::temp_dir().join("vortex_prime_tunnel_url.txt");
+    if let Ok(url) = fs::read_to_string(&url_file) {
+        let trimmed = url.trim().to_string();
+        if trimmed.starts_with("https://") {
+            return Some(trimmed);
+        }
+    }
+    None
 }
