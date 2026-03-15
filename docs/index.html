@@ -895,9 +895,88 @@
         }
 
         /* Upload Form Styles */
-        .modal-content.wide { max-width: 560px; }
+        .modal-content.wide { max-width: 780px; }
+
+        .upload-layout {
+            display: grid;
+            grid-template-columns: 1fr 220px;
+            gap: 1.5rem;
+            text-align: left;
+        }
 
         .upload-form { text-align: left; }
+
+        .upload-preview-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .upload-preview-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+        }
+
+        .upload-preview-box {
+            position: relative;
+            flex: 1;
+            min-height: 200px;
+            border: 2px dashed var(--color-border);
+            border-radius: 12px;
+            background: var(--color-bg-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .upload-preview-box:hover {
+            border-color: var(--color-primary);
+            background: rgba(16, 185, 129, 0.04);
+        }
+
+        .upload-preview-box input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload-preview-box img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .upload-preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+
+        .upload-preview-placeholder svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--color-text-muted);
+            opacity: 0.5;
+        }
+
+        .upload-preview-placeholder span {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            text-align: center;
+        }
 
         .form-group { margin-bottom: 1.25rem; }
 
@@ -1001,6 +1080,8 @@
             .stats { flex-direction: column; gap: 2rem; }
             .footer-container { flex-direction: column; text-align: center; }
             .footer-links { flex-wrap: wrap; justify-content: center; }
+            .upload-layout { grid-template-columns: 1fr; }
+            .upload-preview-box { min-height: 160px; }
         }
 
         @keyframes fadeIn {
@@ -1372,34 +1453,48 @@
 
                     <div id="uploadFormView">
                         <h3 style="margin-bottom: 0.25rem;">Upload Dashboard</h3>
-                        <p>Share your custom dashboard with the Vortex Prime community.</p>
+                        <p style="color: var(--color-text-secondary); margin-bottom: 1.25rem;">Share your custom dashboard with the Vortex Prime community.</p>
 
-                        <form class="upload-form" id="uploadThemeForm" onsubmit="handleUploadSubmit(event)">
-                            <div class="form-group">
-                                <label class="form-label" for="themeName">Dashboard Name</label>
-                                <input type="text" class="form-input" id="themeName" required maxlength="60">
-                            </div>
+                        <div class="upload-layout">
+                            <form class="upload-form" id="uploadThemeForm" onsubmit="handleUploadSubmit(event)">
+                                <div class="form-group">
+                                    <label class="form-label" for="themeName">Dashboard Name</label>
+                                    <input type="text" class="form-input" id="themeName" required maxlength="60">
+                                </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="themeDescription">Description</label>
-                                <textarea class="form-textarea" id="themeDescription" required maxlength="500"></textarea>
-                            </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="themeDescription">Description</label>
+                                    <textarea class="form-textarea" id="themeDescription" required maxlength="500"></textarea>
+                                </div>
 
-                            <div class="form-group">
-                                <label class="form-label">Dashboard ZIP File <span style="color: var(--color-warning);">*</span></label>
-                                <div class="file-upload-area" id="zipUploadArea">
-                                    <input type="file" id="themeZipInput" accept=".zip" onchange="handleFileSelect(this, 'zipUploadArea', 'zipFileName')" required>
-                                    <svg class="file-upload-icon" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-2 6h-2v2h2v2h-2v2h-2v-2h2v-2h-2v-2h2v-2h-2V8h2v2h2v2z"/></svg>
-                                    <div class="file-upload-text">One ZIP containing everything — layout, preview image, startup video, and assets</div>
-                                    <div class="file-upload-name" id="zipFileName" style="display:none;"></div>
+                                <div class="form-group">
+                                    <label class="form-label">Dashboard ZIP File <span style="color: var(--color-warning);">*</span></label>
+                                    <div class="file-upload-area" id="zipUploadArea">
+                                        <input type="file" id="themeZipInput" accept=".zip" onchange="handleFileSelect(this, 'zipUploadArea', 'zipFileName')" required>
+                                        <svg class="file-upload-icon" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-2 6h-2v2h2v2h-2v2h-2v-2h2v-2h-2v-2h2v-2h-2V8h2v2h2v2z"/></svg>
+                                        <div class="file-upload-text">One ZIP containing everything — layout, startup video, and assets</div>
+                                        <div class="file-upload-name" id="zipFileName" style="display:none;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-actions">
+                                    <button type="submit" class="modal-btn primary" id="uploadSubmitBtn">Upload Dashboard</button>
+                                    <button type="button" class="modal-btn secondary" onclick="closeUploadModal()">Cancel</button>
+                                </div>
+                            </form>
+
+                            <div class="upload-preview-panel">
+                                <span class="upload-preview-label">Preview Image</span>
+                                <div class="upload-preview-box" id="previewBox">
+                                    <input type="file" id="previewImageInput" accept="image/*" onchange="handlePreviewSelect(this)">
+                                    <img id="previewImg" style="display:none;" alt="Preview">
+                                    <div class="upload-preview-placeholder" id="previewPlaceholder">
+                                        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                                        <span>Click to upload a preview image</span>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="modal-actions">
-                                <button type="submit" class="modal-btn primary" id="uploadSubmitBtn">Upload Dashboard</button>
-                                <button type="button" class="modal-btn secondary" onclick="closeUploadModal()">Cancel</button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
 
                     <div id="uploadSuccessView" style="display:none;" class="upload-success">
@@ -1618,6 +1713,23 @@
                     const zipName = document.getElementById('zipFileName');
                     zipName.style.display = 'none';
                     zipName.textContent = '';
+                    const previewImg = document.getElementById('previewImg');
+                    previewImg.style.display = 'none';
+                    previewImg.src = '';
+                    document.getElementById('previewPlaceholder').style.display = 'flex';
+                }
+
+                function handlePreviewSelect(input) {
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = document.getElementById('previewImg');
+                            img.src = e.target.result;
+                            img.style.display = 'block';
+                            document.getElementById('previewPlaceholder').style.display = 'none';
+                        };
+                        reader.readAsDataURL(input.files[0]);
+                    }
                 }
 
                 function handleFileSelect(input, areaId, nameId) {
@@ -1647,6 +1759,8 @@
                     formData.append('access_token', discordUser.accessToken || '');
                     const zipFile = document.getElementById('themeZipInput').files[0];
                     if (zipFile) formData.append('theme', zipFile);
+                    const previewFile = document.getElementById('previewImageInput').files[0];
+                    if (previewFile) formData.append('preview', previewFile);
 
                     fetch(STORE_API_BASE + '/api/store/upload', {
                         method: 'POST',
