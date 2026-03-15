@@ -1073,6 +1073,242 @@
 
         .upload-success-icon svg { width: 32px; height: 32px; fill: white; }
 
+        /* Streaming Page */
+        .streaming-hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem 2rem;
+            text-align: center;
+        }
+
+        .streaming-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .streaming-hero p {
+            color: var(--color-text-secondary);
+            max-width: 620px;
+            margin: 0 auto 2rem;
+        }
+
+        .streaming-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #818CF8;
+            margin-bottom: 1.5rem;
+        }
+
+        .streaming-badge svg { width: 16px; height: 16px; fill: currentColor; }
+
+        .connect-widget {
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .connect-widget h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .connect-widget > p {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ip-input-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .ip-input {
+            flex: 1;
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            color: var(--color-text);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .ip-input:focus { border-color: var(--color-accent); }
+        .ip-input::placeholder { color: var(--color-text-muted); font-family: inherit; }
+
+        .connect-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .connect-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+        .connect-btn:hover {
+            background: linear-gradient(135deg, #4F46E5, #4338CA);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        }
+
+        .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .connect-auto-btn {
+            width: 100%;
+            padding: 0.625rem;
+            background: transparent;
+            border: 1px dashed var(--color-border);
+            color: var(--color-text-secondary);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .connect-auto-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+        .connect-auto-btn:hover {
+            border-color: var(--color-accent);
+            color: var(--color-text);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .connect-status {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .connect-status.info {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #818CF8;
+            display: block;
+        }
+
+        .connect-status.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--color-primary-light);
+            display: block;
+        }
+
+        .connect-status.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #F87171;
+            display: block;
+        }
+
+        .connect-status.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--color-warning);
+            display: block;
+        }
+
+        .streaming-fallback {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            text-align: left;
+        }
+
+        .streaming-fallback strong {
+            color: var(--color-text);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .streaming-fallback ol { padding-left: 1.25rem; line-height: 2; }
+
+        .streaming-fallback code {
+            background: var(--color-bg-elevated);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            color: var(--color-primary-light);
+            font-size: 0.8rem;
+        }
+
+        .streaming-features {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 2rem 4rem;
+        }
+
+        .streaming-icon-wrap {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #6366F1, #4F46E5);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .streaming-icon-wrap svg { width: 28px; height: 28px; fill: white; }
+
+        .streaming-coming-soon {
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            padding: 2.5rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(16, 185, 129, 0.08));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .streaming-coming-soon h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .streaming-coming-soon p {
+            color: var(--color-text-secondary);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .nav-links { display: none; }
@@ -1112,6 +1348,7 @@
                     <div class="nav-links">
                         <a href="#" class="nav-link active" onclick="showPage('home')" id="nav-home">Home</a>
                          <a href="#" class="nav-link" onclick="handleStoreClick(event)" id="nav-store">Store</a>
+                         <a href="#" class="nav-link" onclick="handleStreamingClick(event)" id="nav-streaming">Streaming</a>
                          <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank">Docs</a>
                     </div>
                     <div id="discordUserProfile" style="display: none;" class="discord-user">
@@ -1413,6 +1650,116 @@
                         </p>
                     </div>
                 </div>
+
+            <!-- Streaming Page -->
+            <div class="page" id="page-streaming">
+                <section class="streaming-hero">
+                    <div class="streaming-badge">
+                        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                        Powered by Moonlight &amp; Sunshine
+                    </div>
+                    <h1>Stream Your <span style="background: linear-gradient(135deg, #818CF8, #6366F1); -webkit-background-clip: var(--bg-clip-text); background-clip: var(--bg-clip-text); -webkit-text-fill-color: transparent; color: transparent;">Entire Library</span></h1>
+                    <p>Play any emulator or PC game from any device. Connect your console, plug in your controller, and stream everything from your PC — zero configuration, plug and play.</p>
+                </section>
+
+                <!-- Connect Widget -->
+                <div class="connect-widget">
+                    <h3>Connect to Your PC</h3>
+                    <p>Enter your PC's IPv4 address below. No pairing code or passcode needed — just connect and play.</p>
+                    <div class="ip-input-row">
+                        <input type="text" class="ip-input" id="streamingIpInput" placeholder="192.168.1.100" maxlength="15" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
+                        <button class="connect-btn" onclick="connectToHost()">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            Connect
+                        </button>
+                    </div>
+                    <button class="connect-auto-btn" onclick="autoDetectHost()">
+                        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                        Auto-detect PC on network
+                    </button>
+                    <div class="connect-status" id="connectStatus"></div>
+                    <div class="streaming-fallback" id="streamingFallback">
+                        <strong>Moonlight not detected — follow these steps:</strong>
+                        <ol>
+                            <li>Install <a href="https://moonlight-stream.org" target="_blank" style="color: var(--color-accent);">Moonlight</a> on your device (console browser, phone, or TV)</li>
+                            <li>Install &amp; run <a href="https://app.lizardbyte.dev/Sunshine/" target="_blank" style="color: var(--color-accent);">Sunshine</a> on your gaming PC</li>
+                            <li>In Moonlight, tap <code>Add Host</code> and enter your PC's IP: <code id="fallbackIp">—</code></li>
+                            <li>Launch any game from Vortex Prime in Sunshine's app list</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Feature Cards -->
+                <section class="streaming-features">
+                    <div class="section-header">
+                        <h2>Why Stream with Vortex Prime?</h2>
+                        <p>No complicated setup. Your controller. Your games. Any screen.</p>
+                    </div>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="streaming-icon-wrap">
+                                <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                            </div>
+                            <h3>Controller Pass-Through</h3>
+                            <p>Your controller stays plugged into the console or device you're streaming to. No extra hardware needed on your PC side.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="streaming-icon-wrap">
+                                <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                            </div>
+                            <h3>Auto Network Discovery</h3>
+                            <p>On the same Wi-Fi or LAN, Moonlight finds your PC automatically. Just enter your IPv4 if it doesn't pop up right away.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="streaming-icon-wrap">
+                                <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                            </div>
+                            <h3>Your Full Game Library</h3>
+                            <p>Every emulator, every ROM, every PC EXE — all accessible through Vortex Prime and streamable to any device on your network.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="streaming-icon-wrap">
+                                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                            </div>
+                            <h3>No Passcode Required</h3>
+                            <p>Connect by IPv4 — no PIN prompts, no complicated pairing flow. Vortex Prime keeps it as simple as possible.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- How It Works -->
+                <div class="how-it-works">
+                    <h3>How to Set Up Streaming</h3>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <h4>Install Sunshine on PC</h4>
+                            <p>Download &amp; run Sunshine on your gaming PC — it acts as the stream host</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <h4>Install Moonlight on Device</h4>
+                            <p>Install Moonlight on your console, phone, or any screen you want to play on</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <h4>Connect Your Controller</h4>
+                            <p>Plug your controller into the device you're streaming to — input is passed through automatically</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <h4>Enter IP &amp; Play</h4>
+                            <p>Type your PC's IPv4 above and hit Connect — your full game library is ready to stream</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coming Soon Banner -->
+                <div class="streaming-coming-soon">
+                    <h3>&#x1F6A7;&nbsp; In-Browser Streaming Coming Soon</h3>
+                    <p>We're working on full WebRTC-based streaming so you can play directly in your browser — no Moonlight install needed at all.</p>
+                </div>
+            </div>
 
             <!-- Footer -->
             <footer>
@@ -1796,6 +2143,65 @@
                         document.querySelectorAll('.store-tab').forEach(t => t.classList.remove('active'));
                         tab.classList.add('active');
                     });
+                });
+
+                // Streaming Page
+                function handleStreamingClick(event) {
+                    event.preventDefault();
+                    showPage('streaming');
+                }
+
+                function connectToHost() {
+                    const ip = document.getElementById('streamingIpInput').value.trim();
+                    if (!ip) {
+                        showConnectStatus('Enter your PC\'s IPv4 address. Example: 192.168.1.100', 'warning');
+                        return;
+                    }
+                    if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
+                        showConnectStatus('Invalid IPv4 address. Example: 192.168.1.100', 'error');
+                        return;
+                    }
+                    const fallbackIpEl = document.getElementById('fallbackIp');
+                    if (fallbackIpEl) fallbackIpEl.textContent = ip;
+                    document.getElementById('streamingFallback').style.display = 'none';
+                    showConnectStatus('Connecting to ' + ip + '...', 'info');
+
+                    let launched = false;
+                    window.addEventListener('blur', function onBlur() {
+                        launched = true;
+                        window.removeEventListener('blur', onBlur);
+                    }, { once: true });
+
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+                    iframe.src = 'moonlight://connect?host=' + encodeURIComponent(ip);
+
+                    setTimeout(() => {
+                        iframe.remove();
+                        if (!launched) {
+                            showConnectStatus('Moonlight not detected. Follow the steps below to get started.', 'error');
+                            document.getElementById('streamingFallback').style.display = 'block';
+                        } else {
+                            showConnectStatus('Moonlight launched! Connecting to ' + ip + '...', 'success');
+                        }
+                    }, 2000);
+                }
+
+                function autoDetectHost() {
+                    showConnectStatus('Auto-detection is not available in the browser yet. To find your PC\'s IP: open Command Prompt on your PC and run ipconfig — use the IPv4 Address shown under your active network adapter.', 'warning');
+                    document.getElementById('streamingFallback').style.display = 'none';
+                }
+
+                function showConnectStatus(msg, type) {
+                    const el = document.getElementById('connectStatus');
+                    if (!el) return;
+                    el.textContent = msg;
+                    el.className = 'connect-status ' + type;
+                }
+
+                document.getElementById('streamingIpInput')?.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') connectToHost();
                 });
 
                 // Load community themes from the API
