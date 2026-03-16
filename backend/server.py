@@ -68,6 +68,13 @@ except Exception as e:
 # Create the main app without a prefix
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
@@ -857,12 +864,6 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
-
-# Robust CORS Implementation using asgi-cors (final wrapper)
-app = asgi_cors(
-    app,
-    allow_all=True,
-)
 
 if __name__ == "__main__":
     import uvicorn
