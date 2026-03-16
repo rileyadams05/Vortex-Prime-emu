@@ -1109,79 +1109,161 @@
 
         .streaming-badge svg { width: 16px; height: 16px; fill: currentColor; }
 
-        /* Tunnel connect widget */
-        .tunnel-connect {
-            max-width: 640px;
+        /* Discovery Widget */
+        .stream-discovery-wrap {
+            max-width: 600px;
             margin: 0 auto 3rem;
             padding: 0 2rem;
         }
 
-        .tunnel-connect-box {
+        .stream-discovery-card {
             background: var(--color-bg-card);
             border: 1px solid var(--color-border);
             border-radius: 16px;
-            padding: 1.75rem;
+            padding: 2rem;
+            text-align: center;
         }
 
-        .tunnel-connect-box h3 {
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .discovery-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .discovery-status-text {
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 0.375rem;
         }
 
-        .tunnel-connect-box p {
+        .discovery-status-sub {
             font-size: 0.85rem;
+            color: var(--color-text-muted);
+        }
+
+        .discovery-found-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .discovery-found-icon svg { width: 28px; height: 28px; fill: white; }
+
+        .discovery-host-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .discovery-host-ip {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
             color: var(--color-text-muted);
             margin-bottom: 1.25rem;
         }
 
-        .tunnel-input-row {
+        .stream-connect-btn {
+            padding: 0.875rem 2rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+
+        .stream-connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .stream-connect-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        .stream-retry-btn {
+            padding: 0.6rem 1.25rem;
+            background: var(--color-bg-elevated);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .stream-retry-btn:hover { background: var(--color-border); color: var(--color-text); }
+
+        .ip-connect-box {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--color-border);
+            text-align: left;
+        }
+
+        .ip-connect-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .ip-input-row {
             display: flex;
             gap: 0.625rem;
         }
 
-        .tunnel-url-input {
+        .ip-input {
             flex: 1;
             background: var(--color-bg-dark);
             border: 1px solid var(--color-border);
             border-radius: 8px;
             color: var(--color-text);
             font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 0.875rem;
-            padding: 0.65rem 1rem;
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
             outline: none;
             transition: border-color 0.2s;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
         }
 
-        .tunnel-url-input:focus { border-color: var(--color-accent); }
-        .tunnel-url-input::placeholder { color: var(--color-text-muted); font-family: inherit; letter-spacing: 0; }
+        .ip-input:focus { border-color: var(--color-primary); }
+        .ip-input::placeholder { color: var(--color-text-muted); font-family: inherit; letter-spacing: 0; }
 
-        .tunnel-stream-btn {
-            padding: 0.65rem 1.25rem;
-            background: linear-gradient(135deg, #6366F1, #4F46E5);
+        .ip-connect-btn {
+            padding: 0.75rem 1.25rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
 
-        .tunnel-stream-btn svg { width: 16px; height: 16px; fill: currentColor; }
+        .ip-connect-btn:hover { box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35); }
 
-        .tunnel-stream-btn:hover {
-            background: linear-gradient(135deg, #4F46E5, #4338CA);
-            box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
-        }
-
-        .tunnel-hint {
-            margin-top: 0.875rem;
+        .ip-hint {
+            margin-top: 0.625rem;
             font-size: 0.8rem;
             color: var(--color-text-muted);
             display: flex;
@@ -1189,7 +1271,7 @@
             gap: 0.4rem;
         }
 
-        .tunnel-hint svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+        .ip-hint svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
 
         .streaming-features {
             max-width: 1200px;
@@ -1646,25 +1728,49 @@
                         <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
                         Stream PC Games to Your Console
                     </div>
-                    <h1>Play PC Games <span style="background: linear-gradient(135deg, #818CF8, #6366F1); -webkit-background-clip: var(--bg-clip-text); background-clip: var(--bg-clip-text); -webkit-text-fill-color: transparent; color: transparent;">on Any Console</span></h1>
-                    <p>No homebrew. No modifications. Open this page on your console's built-in browser, paste the streaming URL from your Vortex Prime desktop app, and your full PC game library — mods included — streams straight to your TV.</p>
+                    <h1>Your Games. <span style="background: linear-gradient(135deg, #818CF8, #6366F1); -webkit-background-clip: var(--bg-clip-text); background-clip: var(--bg-clip-text); -webkit-text-fill-color: transparent; color: transparent;">Any Console.</span></h1>
+                    <p>Sunshine is installed automatically with Vortex Prime. Open this page on your console — it finds your PC on your home network. No URLs. No extra steps.</p>
                 </section>
 
-                <!-- Tunnel URL Connect Widget -->
-                <div class="tunnel-connect">
-                    <div class="tunnel-connect-box">
-                        <h3>Enter Your Streaming URL</h3>
-                        <p>Open Vortex Prime on your gaming PC — copy the streaming URL it shows you, then paste it below.</p>
-                        <div class="tunnel-input-row">
-                            <input class="tunnel-url-input" id="tunnelUrlInput" type="url" placeholder="https://xxxx.trycloudflare.com" onkeydown="if(event.key==='Enter') tunnelConnect()">
-                            <button class="tunnel-stream-btn" onclick="tunnelConnect()">
+                <!-- Discovery & Connect Widget -->
+                <div class="stream-discovery-wrap">
+                    <div class="stream-discovery-card">
+                        <!-- Searching -->
+                        <div id="discoverSearching">
+                            <div class="discovery-spinner"></div>
+                            <div class="discovery-status-text">Looking for your PC...</div>
+                            <div class="discovery-status-sub">Searching your local network for Vortex Prime</div>
+                        </div>
+                        <!-- Found -->
+                        <div id="discoverFound" style="display:none;">
+                            <div class="discovery-found-icon">
+                                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            </div>
+                            <div class="discovery-host-name" id="discoverHostName">Your Gaming PC</div>
+                            <div class="discovery-host-ip" id="discoverHostIp"></div>
+                            <button class="stream-connect-btn" onclick="connectToDiscovered()">
                                 <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                                Stream Now
+                                Connect &amp; Stream
                             </button>
                         </div>
-                        <div class="tunnel-hint" id="tunnelStatus">
-                            <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-                            Find your URL under the Streaming tab in the Vortex Prime desktop app
+                        <!-- Not found -->
+                        <div id="discoverNotFound" style="display:none;">
+                            <div style="font-size:2rem;margin-bottom:0.75rem;">⚡</div>
+                            <div class="discovery-status-text">PC not found automatically</div>
+                            <div class="discovery-status-sub" style="margin-bottom:1rem;">Make sure Vortex Prime is running on your gaming PC</div>
+                            <button class="stream-retry-btn" onclick="retryDiscovery()">↺ Try Again</button>
+                        </div>
+                        <!-- Manual IP (always visible) -->
+                        <div class="ip-connect-box">
+                            <label class="ip-connect-label">Enter your PC's IP address</label>
+                            <div class="ip-input-row">
+                                <input class="ip-input" id="manualIpInput" type="text" placeholder="192.168.1.100" onkeydown="if(event.key==='Enter') connectManual()">
+                                <button class="ip-connect-btn" onclick="connectManual()">Connect</button>
+                            </div>
+                            <div class="ip-hint">
+                                <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                                Find your IP in the Vortex Prime app → Streaming tab
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1694,8 +1800,8 @@
                             <div class="streaming-icon-wrap">
                                 <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
                             </div>
-                            <h3>Works Over Any Network</h3>
-                            <p>Powered by a secure Cloudflare tunnel — stream from your PC to any device with a browser, even over mobile data or a different Wi-Fi network.</p>
+                            <h3>Low Latency Local Streaming</h3>
+                            <p>Streams directly over your home network — no cloud, no relay, no added lag. Your PC and console talk directly for the fastest possible response time.</p>
                         </div>
                         <div class="feature-card">
                             <div class="streaming-icon-wrap">
@@ -1714,22 +1820,22 @@
                         <div class="step">
                             <div class="step-number">1</div>
                             <h4>Open Vortex Prime on PC</h4>
-                            <p>Launch the Vortex Prime app on your gaming PC — it automatically starts the streaming host in the background</p>
+                            <p>Launch the app — Sunshine starts automatically in the background. Set it up once the first time.</p>
                         </div>
                         <div class="step">
                             <div class="step-number">2</div>
-                            <h4>Copy Your Streaming URL</h4>
-                            <p>Go to the Streaming tab in the app and copy the URL — it looks like https://xxxx.trycloudflare.com</p>
+                            <h4>Open This Page on Console</h4>
+                            <p>On your PS5, Xbox, or any device open vortex-prime-emu.com in the built-in browser and go to Streaming</p>
                         </div>
                         <div class="step">
                             <div class="step-number">3</div>
-                            <h4>Open This Page on Console</h4>
-                            <p>On your PS5, Xbox, or any device, open vortex-prime-emu.com in the built-in browser and go to Streaming</p>
+                            <h4>Your PC Appears</h4>
+                            <p>The page finds your PC automatically. If not, enter the IP shown in Vortex Prime → Streaming tab</p>
                         </div>
                         <div class="step">
                             <div class="step-number">4</div>
-                            <h4>Paste URL &amp; Stream</h4>
-                            <p>Paste your URL into the box above and tap Stream Now — your full game library loads instantly</p>
+                            <h4>Connect &amp; Play</h4>
+                            <p>Press Connect — your full game library appears and streaming begins</p>
                         </div>
                     </div>
                 </div>
@@ -2133,30 +2239,87 @@
                     });
                 });
 
-                // Streaming — tunnel URL connector
-                function tunnelConnect() {
-                    const input = document.getElementById('tunnelUrlInput');
-                    const statusEl = document.getElementById('tunnelStatus');
-                    const url = input ? input.value.trim() : '';
-                    if (!url) {
-                        if (statusEl) {
-                            statusEl.style.color = '#F87171';
-                            statusEl.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;flex-shrink:0"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> Paste your streaming URL from the Vortex Prime app.';
+                // Streaming — local network discovery & connect
+                let discoveredHostIp = null;
+
+                async function discoverSunshine() {
+                    document.getElementById('discoverSearching').style.display = 'block';
+                    document.getElementById('discoverFound').style.display = 'none';
+                    document.getElementById('discoverNotFound').style.display = 'none';
+                    const subnet = await getLocalSubnet();
+                    if (subnet) {
+                        const found = await scanForSunshine(subnet);
+                        if (found) {
+                            discoveredHostIp = found.ip;
+                            document.getElementById('discoverHostName').textContent = found.hostname || 'Your Gaming PC';
+                            document.getElementById('discoverHostIp').textContent = found.ip;
+                            document.getElementById('discoverSearching').style.display = 'none';
+                            document.getElementById('discoverFound').style.display = 'block';
+                            return;
                         }
+                    }
+                    document.getElementById('discoverSearching').style.display = 'none';
+                    document.getElementById('discoverNotFound').style.display = 'block';
+                }
+
+                async function getLocalSubnet() {
+                    return new Promise(resolve => {
+                        try {
+                            const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+                            pc.createDataChannel('');
+                            pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => resolve(null));
+                            pc.onicecandidate = e => {
+                                if (!e || !e.candidate) return;
+                                const m = /(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d+/.exec(e.candidate.candidate);
+                                if (m && !m[1].startsWith('0.') && !m[1].startsWith('169.254')) {
+                                    pc.close();
+                                    resolve(m[1]);
+                                }
+                            };
+                            setTimeout(() => { try { pc.close(); } catch(e) {} resolve(null); }, 4000);
+                        } catch(e) { resolve(null); }
+                    });
+                }
+
+                async function scanForSunshine(subnet) {
+                    return new Promise(resolve => {
+                        let settled = 0, found = false;
+                        const total = 254;
+                        for (let i = 1; i <= total; i++) {
+                            const ip = `${subnet}.${i}`;
+                            const ctrl = new AbortController();
+                            const t = setTimeout(() => ctrl.abort(), 800);
+                            fetch(`https://${ip}:47990/serverinfo`, { signal: ctrl.signal, mode: 'no-cors' })
+                                .then(() => { clearTimeout(t); if (!found) { found = true; resolve({ ip, hostname: null }); } })
+                                .catch(() => { clearTimeout(t); if (++settled === total && !found) resolve(null); });
+                        }
+                        setTimeout(() => { if (!found) resolve(null); }, 8000);
+                    });
+                }
+
+                function retryDiscovery() { discoverSunshine(); }
+
+                function connectToDiscovered() {
+                    if (discoveredHostIp) connectToSunshine(discoveredHostIp);
+                }
+
+                function connectManual() {
+                    const input = document.getElementById('manualIpInput');
+                    const val = input ? input.value.trim() : '';
+                    if (!val) {
+                        if (input) { input.style.borderColor = '#F87171'; setTimeout(() => { input.style.borderColor = ''; }, 2000); }
                         return;
                     }
-                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                        if (statusEl) {
-                            statusEl.style.color = '#F87171';
-                            statusEl.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;flex-shrink:0"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> URL must start with https://';
-                        }
-                        return;
-                    }
+                    const ip = val.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+                    connectToSunshine(ip);
+                }
+
+                function connectToSunshine(ip) {
                     document.getElementById('streamingContent').style.display = 'none';
                     const container = document.getElementById('streamFrameContainer');
                     container.style.display = 'flex';
-                    document.getElementById('streamFrameUrl').textContent = url;
-                    document.getElementById('streamFrame').src = url;
+                    document.getElementById('streamFrameUrl').textContent = ip;
+                    document.getElementById('streamFrame').src = `https://${ip}:47990`;
                 }
 
                 function disconnectStream() {
@@ -2168,6 +2331,7 @@
                 function handleStreamingClick(event) {
                     event.preventDefault();
                     showPage('streaming');
+                    discoverSunshine();
                 }
 
                 // Load community themes from the API
