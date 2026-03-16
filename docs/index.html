@@ -1709,7 +1709,11 @@
                         Powered by Moonlight &amp; Sunshine
                     </div>
                     <h1>Stream Your <span style="background: linear-gradient(135deg, #818CF8, #6366F1); -webkit-background-clip: var(--bg-clip-text); background-clip: var(--bg-clip-text); -webkit-text-fill-color: transparent; color: transparent;">Entire Library</span></h1>
-                    <p>Play any emulator or PC game from any device. Moonlight and Sunshine are built directly into Vortex Prime — no separate installs, no configuration. Just plug in your controller and stream.</p>
+                    <p>Play any emulator or PC game from any device. Moonlight is built into Vortex Prime — just install Sunshine on your gaming PC once, then enter its IP to stream your full library to any device on your network.</p>
+                    <a href="https://lizardbyte.dev/Sunshine" target="_blank" class="btn btn-secondary" style="margin: 0 auto 0.5rem; display: inline-flex;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        Install Sunshine on Your Gaming PC
+                    </a>
                 </section>
 
                 <!-- Moonlight-style host discovery -->
@@ -1768,8 +1772,8 @@
                             <div class="streaming-icon-wrap">
                                 <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                             </div>
-                            <h3>No Passcode Required</h3>
-                            <p>Moonlight and Sunshine are bundled inside Vortex Prime. No separate installs, no PIN prompts — just enter your IPv4 and go.</p>
+                            <h3>Simple Setup</h3>
+                            <p>Install Sunshine once on your gaming PC. Moonlight is already inside Vortex Prime — just enter your PC's IP and you're streaming. No PIN prompts, no extra config.</p>
                         </div>
                     </div>
                 </section>
@@ -1780,8 +1784,8 @@
                     <div class="steps">
                         <div class="step">
                             <div class="step-number">1</div>
-                            <h4>Run Vortex Prime on PC</h4>
-                            <p>Launch Vortex Prime on your gaming PC — Sunshine starts automatically as the stream host</p>
+                            <h4>Install Sunshine on PC</h4>
+                            <p>Download and install Sunshine from LizardByte.dev on your gaming PC — it runs as the stream host in the background</p>
                         </div>
                         <div class="step">
                             <div class="step-number">2</div>
@@ -2224,6 +2228,25 @@
                     grid.insertBefore(card, addTile);
                 }
 
+                function mlGetLocalIP() {
+                    return new Promise(function(resolve) {
+                        try {
+                            var pc = new RTCPeerConnection({ iceServers: [] });
+                            pc.createDataChannel('');
+                            pc.createOffer().then(function(o) { pc.setLocalDescription(o); }).catch(function() { resolve(null); });
+                            pc.onicecandidate = function(e) {
+                                if (!e || !e.candidate) return;
+                                var m = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate || '');
+                                if (m && !m[1].startsWith('127.') && !m[1].startsWith('169.254.')) {
+                                    try { pc.close(); } catch(ex) {}
+                                    resolve(m[1]);
+                                }
+                            };
+                            setTimeout(function() { try { pc.close(); } catch(ex) {} resolve(null); }, 2500);
+                        } catch(e) { resolve(null); }
+                    });
+                }
+
                 function mlStartScan() {
                     const dot = document.getElementById('mlScanDot');
                     const label = document.getElementById('mlScanLabel');
@@ -2234,17 +2257,36 @@
                     const grid = document.getElementById('mlHostsGrid');
                     if (grid) grid.querySelectorAll('.ml-host-card').forEach(function(c) { c.remove(); });
                     mlGetSavedHosts().forEach(function(h) { mlAddHostCard(h.ip); });
-                    setTimeout(function() {
+
+                    mlGetLocalIP().then(function(localIp) {
                         dot.classList.remove('scanning');
-                        const count = mlGetSavedHosts().length;
-                        if (count > 0) {
+                        const saved = mlGetSavedHosts();
+                        if (saved.length > 0) {
                             dot.style.background = 'var(--color-primary)';
-                            label.textContent = count + ' computer' + (count !== 1 ? 's' : '') + ' found';
+                            label.textContent = saved.length + ' computer' + (saved.length !== 1 ? 's' : '') + ' found';
                         } else {
                             dot.style.background = 'var(--color-text-muted)';
-                            label.textContent = 'No computers found \u2014 add your PC below';
+                            label.textContent = 'No computers found \u2014 enter your PC\u2019s IP below';
+                            // Auto-open the add form so the user can connect immediately
+                            const form = document.getElementById('mlAddForm');
+                            if (form && form.style.display !== 'block') {
+                                form.style.display = 'block';
+                            }
                         }
-                    }, 3000);
+                        // Pre-fill IP input with detected local subnet prefix
+                        const input = document.getElementById('mlIpInput');
+                        if (input && localIp && !input.value) {
+                            const parts = localIp.split('.');
+                            const prefix = parts[0] + '.' + parts[1] + '.' + parts[2] + '.';
+                            input.value = prefix;
+                            input.placeholder = prefix + '___';
+                            // Move cursor to end so user types the last octet
+                            setTimeout(function() {
+                                input.setSelectionRange(input.value.length, input.value.length);
+                                input.focus();
+                            }, 100);
+                        }
+                    });
                 }
 
                 function mlToggleAddForm() {
