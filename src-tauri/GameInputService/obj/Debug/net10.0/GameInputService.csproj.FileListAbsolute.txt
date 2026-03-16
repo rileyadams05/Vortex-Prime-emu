@@ -1,6 +1,0 @@
-M:\my project\my-emu\Vortex-Prime-emu\src-tauri\GameInputService\obj\Debug\net10.0\GameInputService.csproj.AssemblyReference.cache
-M:\my project\my-emu\Vortex-Prime-emu\src-tauri\GameInputService\obj\Debug\net10.0\GameInputService.GeneratedMSBuildEditorConfig.editorconfig
-M:\my project\my-emu\Vortex-Prime-emu\src-tauri\GameInputService\obj\Debug\net10.0\GameInputService.AssemblyInfoInputs.cache
-M:\my project\my-emu\Vortex-Prime-emu\src-tauri\GameInputService\obj\Debug\net10.0\GameInputService.AssemblyInfo.cs
-M:\my project\my-emu\Vortex-Prime-emu\src-tauri\GameInputService\obj\Debug\net10.0\GameInputService.csproj.CoreCompileInputs.cache
-M:\my project\my-emu\Vortex-Prime-emu\src-tauri\GameInputService\obj\Debug\net10.0\GameInputService.sourcelink.json

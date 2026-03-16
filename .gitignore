@@ -5,6 +5,11 @@ bin/
 obj/
 *.log
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
 # Ignore massive bundled binaries and dependencies (GitHub 100MB limit)
 runtime/
 Internal/Engine/Xenia/
