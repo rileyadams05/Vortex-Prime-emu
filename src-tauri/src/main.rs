@@ -133,6 +133,7 @@ fn main() {
             check_sunshine_status,
             send_magic_link_email,
             get_tunnel_url,
+            register_streaming_host,
             discord_auth::start_discord_auth
         ])
         .setup(|app| {
@@ -162,6 +163,15 @@ fn main() {
             } else {
                 println!("Streaming Gateway Service: Zero-Configuration Provisioning Successful.");
             }
+
+            // Register this PC's local IP with the cloud rendezvous service so
+            // consoles can find it instantly without scanning the network.
+            tauri::async_runtime::spawn(async {
+                loop {
+                    do_register_host().await;
+                    tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                }
+            });
 
             // 2. Launch Silent Helpers (Script for downloads/start)
             thread::spawn(|| {
@@ -479,4 +489,38 @@ fn get_tunnel_url() -> Option<String> {
         }
     }
     None
+}
+
+/// Gets the PC's local network IP and POSTs it to the cloud rendezvous service
+/// so consoles on the same network can find this PC without scanning.
+async fn do_register_host() {
+    let local_ip = match std::net::UdpSocket::bind("0.0.0.0:0") {
+        Ok(socket) => {
+            if socket.connect("8.8.8.8:80").is_ok() {
+                socket.local_addr().ok().map(|a| a.ip().to_string())
+            } else {
+                None
+            }
+        }
+        Err(_) => None,
+    };
+    let Some(ip) = local_ip else { return; };
+    let hostname = std::env::var("COMPUTERNAME").unwrap_or_else(|_| "Gaming PC".to_string());
+    let tunnel_url = fs::read_to_string(std::env::temp_dir().join("vortex_prime_tunnel_url.txt"))
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| s.starts_with("https://"))
+        .unwrap_or_default();
+    let _ = reqwest::Client::new()
+        .post("https://discord.vortex-prime-emu.com/api/streaming/register")
+        .json(&serde_json::json!({ "ip": ip, "port": 47990, "hostname": hostname, "tunnel_url": tunnel_url }))
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await;
+}
+
+#[tauri::command]
+async fn register_streaming_host() -> Result<(), String> {
+    do_register_host().await;
+    Ok(())
 }

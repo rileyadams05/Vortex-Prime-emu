@@ -812,6 +812,37 @@ async def get_store_themes():
     return {"themes": themes}
 
 
+# ─── Streaming Rendezvous API ─────────────────────────────────────────────────
+
+class StreamingRegisterBody(BaseModel):
+    ip: str
+    port: int = 47990
+    hostname: str = ""
+    tunnel_url: str = ""
+
+@api_router.post("/streaming/register")
+async def register_streaming_host(body: StreamingRegisterBody):
+    """Register this PC's local IP and tunnel URL so consoles can discover it instantly."""
+    if not mongo_available:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    await db.streaming_hosts.update_one(
+        {"_id": "latest"},
+        {"$set": {"ip": body.ip, "port": body.port, "hostname": body.hostname, "tunnel_url": body.tunnel_url, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"status": "ok"}
+
+@api_router.get("/streaming/host")
+async def get_streaming_host():
+    """Return the most recently registered PC host for console-side auto-discovery."""
+    if not mongo_available:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    rec = await db.streaming_hosts.find_one({"_id": "latest"}, {"_id": 0})
+    if not rec:
+        raise HTTPException(status_code=404, detail="No host registered")
+    return rec
+
+
 # Include the router in the main app
 api_router.include_router(discord_webhook_service.router)
 app.include_router(api_router)
