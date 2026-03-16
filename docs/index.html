@@ -1232,6 +1232,70 @@
             margin: 0 auto;
         }
 
+        /* Stream Frame */
+        .stream-frame-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 110px);
+        }
+
+        .stream-frame-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.5rem;
+            background: var(--color-bg-card);
+            border-bottom: 1px solid var(--color-border);
+            flex-shrink: 0;
+            gap: 1rem;
+        }
+
+        .stream-frame-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .stream-frame-bar-left svg { width: 16px; height: 16px; fill: var(--color-primary); flex-shrink: 0; }
+
+        .stream-frame-url {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stream-disconnect-btn {
+            padding: 0.4rem 0.875rem;
+            background: var(--color-bg-elevated);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .stream-disconnect-btn:hover {
+            background: var(--color-border);
+            color: var(--color-text);
+        }
+
+        #streamFrameContainer iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .nav-links { display: none; }
@@ -1576,6 +1640,7 @@
 
             <!-- Streaming Page -->
             <div class="page" id="page-streaming">
+                <div id="streamingContent">
                 <section class="streaming-hero">
                     <div class="streaming-badge">
                         <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
@@ -1667,6 +1732,20 @@
                             <p>Paste your URL into the box above and tap Stream Now — your full game library loads instantly</p>
                         </div>
                     </div>
+                </div>
+                </div><!-- /#streamingContent -->
+
+                <!-- Stream Frame -->
+                <div id="streamFrameContainer" class="stream-frame-container" style="display:none;">
+                    <div class="stream-frame-bar">
+                        <div class="stream-frame-bar-left">
+                            <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                            <span>Connected to</span>
+                            <span class="stream-frame-url" id="streamFrameUrl"></span>
+                        </div>
+                        <button class="stream-disconnect-btn" onclick="disconnectStream()">✕ Disconnect</button>
+                    </div>
+                    <iframe id="streamFrame" src="" allowfullscreen allow="autoplay; fullscreen; microphone; camera"></iframe>
                 </div>
             </div>
 
@@ -2073,7 +2152,17 @@
                         }
                         return;
                     }
-                    window.open(url, '_blank');
+                    document.getElementById('streamingContent').style.display = 'none';
+                    const container = document.getElementById('streamFrameContainer');
+                    container.style.display = 'flex';
+                    document.getElementById('streamFrameUrl').textContent = url;
+                    document.getElementById('streamFrame').src = url;
+                }
+
+                function disconnectStream() {
+                    document.getElementById('streamFrameContainer').style.display = 'none';
+                    document.getElementById('streamFrame').src = '';
+                    document.getElementById('streamingContent').style.display = 'block';
                 }
 
                 function handleStreamingClick(event) {
