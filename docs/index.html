@@ -1653,7 +1653,7 @@
                                 class="store-search-input"
                                 id="storeSearchInput"
                                 type="text"
-                                placeholder="Search by code e.g. A1B2C3"
+                                placeholder="Enter code (numbers) or author name"
                                 oninput="handleStoreSearch(this.value)"
                                 autocomplete="off"
                                 spellcheck="false"
@@ -1705,8 +1705,8 @@
                                 <h3>Classic Green</h3>
                                 <p>The default Vortex Prime experience. Clean, minimal, powerful.</p>
                                 <div class="theme-code">
-                                    <code>A1B2C3</code>
-                                    <button class="theme-code-copy" onclick="copyCode(this, 'A1B2C3')">Copy</button>
+                                    <code>112233</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, '112233')">Copy</button>
                                 </div>
                                 <div class="theme-meta">
                                     <span class="theme-author">by Vortex Team</span>
@@ -1724,8 +1724,8 @@
                                 <h3>PlayStation Style</h3>
                                 <p>Inspired by the iconic PlayStation interface design.</p>
                                 <div class="theme-code">
-                                    <code>X7K9P2</code>
-                                    <button class="theme-code-copy" onclick="copyCode(this, 'X7K9P2')">Copy</button>
+                                    <code>796201</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, '796201')">Copy</button>
                                 </div>
                                 <div class="theme-meta">
                                     <span class="theme-author">by Vortex Team</span>
@@ -1743,8 +1743,8 @@
                                 <h3>Nintendo Style</h3>
                                 <p>Bright, playful, and family-friendly interface.</p>
                                 <div class="theme-code">
-                                    <code>N4M8Q1</code>
-                                    <button class="theme-code-copy" onclick="copyCode(this, 'N4M8Q1')">Copy</button>
+                                    <code>334411</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, '334411')">Copy</button>
                                 </div>
                                 <div class="theme-meta">
                                     <span class="theme-author">by Vortex Team</span>
@@ -1762,8 +1762,8 @@
                                 <h3>PC Master</h3>
                                 <p>Sleek desktop-focused design for keyboard & mouse.</p>
                                 <div class="theme-code">
-                                    <code>W3R6T9</code>
-                                    <button class="theme-code-copy" onclick="copyCode(this, 'W3R6T9')">Copy</button>
+                                    <code>882200</code>
+                                    <button class="theme-code-copy" onclick="copyCode(this, '882200')">Copy</button>
                                 </div>
                                 <div class="theme-meta">
                                     <span class="theme-author">by Vortex Team</span>
@@ -2442,17 +2442,21 @@
 
                 function applyStoreFilter(query, tab) {
                     const cards = document.querySelectorAll('#storeGrid .theme-card');
-                    const q = query.toUpperCase();
+                    const q = query.trim();
+                    const isNumeric = q !== '' && /^\d+$/.test(q);
                     let visible = 0;
 
                     cards.forEach(card => {
                         const code = (card.querySelector('code') || {}).textContent || '';
-                        const name = (card.querySelector('.theme-info h3') || {}).textContent || '';
                         const author = (card.querySelector('.theme-author') || {}).textContent || '';
                         const isOfficial = card.querySelector('.theme-badge-official') !== null;
 
                         const matchesTab = tab === 'all' || (tab === 'official' && isOfficial);
-                        const matchesQuery = q === '' || code.toUpperCase().includes(q) || name.toUpperCase().includes(q) || author.toUpperCase().includes(q);
+                        const matchesQuery = q === ''
+                            ? true
+                            : isNumeric
+                                ? code.includes(q)
+                                : author.toLowerCase().includes(q.toLowerCase());
 
                         const show = matchesTab && matchesQuery;
                         card.style.display = show ? '' : 'none';
@@ -2462,8 +2466,9 @@
                     const noResults = document.getElementById('storeNoResults');
                     noResults.style.display = visible === 0 ? 'block' : 'none';
                     if (visible === 0 && q !== '') {
-                        document.getElementById('storeNoResultsMsg').textContent =
-                            `No dashboard matched the code "${query}". Double-check and try again.`;
+                        document.getElementById('storeNoResultsMsg').textContent = isNumeric
+                            ? `No dashboard found with code "${q}". Double-check and try again.`
+                            : `No dashboard found by author "${q}".`;
                     } else if (visible === 0) {
                         document.getElementById('storeNoResultsMsg').textContent = 'No dashboards in this category yet.';
                     }

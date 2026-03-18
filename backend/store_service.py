@@ -20,8 +20,7 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
 def _generate_code(length: int = 6) -> str:
-    chars = string.ascii_uppercase + string.digits
-    return "".join(random.choices(chars, k=length))
+    return "".join(random.choices(string.digits, k=length))
 
 
 async def verify_discord_token(access_token: str) -> Optional[dict]:
