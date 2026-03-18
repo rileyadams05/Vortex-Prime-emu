@@ -550,10 +550,51 @@
         .store-grid {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 2rem 4rem;
+            padding: 0 2rem 1.5rem;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1.5rem;
+        }
+
+        .store-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0 2rem 2.5rem;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .store-page-btn {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 0.75rem;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .store-page-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-text);
+            background: var(--color-bg-elevated);
+        }
+
+        .store-page-btn.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
         }
 
         .theme-card {
@@ -1780,6 +1821,8 @@
                         </div>
                     </div>
 
+                    <div id="storePagination" class="store-pagination"></div>
+
                     <!-- Info about dashboards -->
                     <div class="section-header" style="padding: 2rem;">
                         <h2>Dashboard Contents</h2>
@@ -2416,12 +2459,14 @@
                 }
 
                 // Store search & tab filtering
+                const CARDS_PER_PAGE = 12;
                 let _storeActiveTab = 'all';
+                let _storePage = 1;
 
                 function handleStoreSearch(query) {
                     const clear = document.getElementById('storeSearchClear');
                     clear.style.display = query.length > 0 ? 'block' : 'none';
-                    applyStoreFilter(query.trim(), _storeActiveTab);
+                    applyStoreFilter(query.trim(), _storeActiveTab, 1);
                 }
 
                 function clearStoreSearch() {
@@ -2429,7 +2474,7 @@
                     input.value = '';
                     input.focus();
                     document.getElementById('storeSearchClear').style.display = 'none';
-                    applyStoreFilter('', _storeActiveTab);
+                    applyStoreFilter('', _storeActiveTab, 1);
                 }
 
                 function filterStoreTab(btn, tab) {
@@ -2437,40 +2482,60 @@
                     btn.classList.add('active');
                     _storeActiveTab = tab;
                     const query = (document.getElementById('storeSearchInput').value || '').trim();
-                    applyStoreFilter(query, tab);
+                    applyStoreFilter(query, tab, 1);
                 }
 
-                function applyStoreFilter(query, tab) {
-                    const cards = document.querySelectorAll('#storeGrid .theme-card');
+                function applyStoreFilter(query, tab, page) {
+                    page = page || 1;
+                    _storePage = page;
+                    const cards = Array.from(document.querySelectorAll('#storeGrid .theme-card'));
                     const q = query.trim();
                     const isNumeric = q !== '' && /^\d+$/.test(q);
-                    let visible = 0;
 
-                    cards.forEach(card => {
+                    const matching = cards.filter(card => {
                         const code = (card.querySelector('code') || {}).textContent || '';
                         const author = (card.querySelector('.theme-author') || {}).textContent || '';
                         const isOfficial = card.querySelector('.theme-badge-official') !== null;
-
                         const matchesTab = tab === 'all' || (tab === 'official' && isOfficial);
                         const matchesQuery = q === ''
                             ? true
                             : isNumeric
                                 ? code.includes(q)
                                 : author.toLowerCase().includes(q.toLowerCase());
-
-                        const show = matchesTab && matchesQuery;
-                        card.style.display = show ? '' : 'none';
-                        if (show) visible++;
+                        return matchesTab && matchesQuery;
                     });
 
+                    cards.forEach(c => c.style.display = 'none');
+                    const start = (page - 1) * CARDS_PER_PAGE;
+                    matching.slice(start, start + CARDS_PER_PAGE).forEach(c => c.style.display = '');
+
                     const noResults = document.getElementById('storeNoResults');
-                    noResults.style.display = visible === 0 ? 'block' : 'none';
-                    if (visible === 0 && q !== '') {
+                    noResults.style.display = matching.length === 0 ? 'block' : 'none';
+                    if (matching.length === 0 && q !== '') {
                         document.getElementById('storeNoResultsMsg').textContent = isNumeric
                             ? `No dashboard found with code "${q}". Double-check and try again.`
                             : `No dashboard found by author "${q}".`;
-                    } else if (visible === 0) {
+                    } else if (matching.length === 0) {
                         document.getElementById('storeNoResultsMsg').textContent = 'No dashboards in this category yet.';
+                    }
+
+                    renderPagination(Math.ceil(matching.length / CARDS_PER_PAGE), page);
+                }
+
+                function renderPagination(totalPages, currentPage) {
+                    const el = document.getElementById('storePagination');
+                    if (!el) return;
+                    el.innerHTML = '';
+                    if (totalPages <= 1) return;
+                    for (let i = 1; i <= totalPages; i++) {
+                        const btn = document.createElement('button');
+                        btn.className = 'store-page-btn' + (i === currentPage ? ' active' : '');
+                        btn.textContent = i;
+                        btn.addEventListener('click', () => {
+                            const q = (document.getElementById('storeSearchInput').value || '').trim();
+                            applyStoreFilter(q, _storeActiveTab, i);
+                        });
+                        el.appendChild(btn);
                     }
                 }
 
@@ -2812,6 +2877,8 @@
                                     </div>`;
                                 grid.appendChild(card);
                             });
+                            const q = (document.getElementById('storeSearchInput').value || '').trim();
+                            applyStoreFilter(q, _storeActiveTab, _storePage);
                         })
                         .catch(() => { clearTimeout(timeoutId); });
                 }
