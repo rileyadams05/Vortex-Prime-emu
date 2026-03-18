@@ -425,6 +425,91 @@
             text-align: center;
         }
 
+        .store-search-wrap {
+            max-width: 480px;
+            margin: 1.5rem auto 0;
+            position: relative;
+        }
+
+        .store-search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            fill: var(--color-text-muted);
+            pointer-events: none;
+            flex-shrink: 0;
+        }
+
+        .store-search-input {
+            width: 100%;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .store-search-input:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+        }
+
+        .store-search-input::placeholder {
+            color: var(--color-text-muted);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
+        }
+
+        .store-search-clear {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0.25rem 0.375rem;
+            border-radius: 4px;
+            line-height: 1;
+            display: none;
+            transition: color 0.2s;
+        }
+
+        .store-search-clear:hover { color: var(--color-text); }
+
+        .store-no-results {
+            display: none;
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .store-no-results-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .store-no-results h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.375rem;
+        }
+
+        .store-no-results p {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+        }
+
         .store-hero h1 {
             font-size: 2.5rem;
             font-weight: 700;
@@ -1558,8 +1643,22 @@
                         <p>Browse dashboards and copy the code. Paste it in the Vortex Prime app to install.</p>
 
                         <div class="store-tabs">
-                            <button class="store-tab active">All Dashboards</button>
-                            <button class="store-tab">Official</button>
+                            <button class="store-tab active" onclick="filterStoreTab(this, 'all')">All Dashboards</button>
+                            <button class="store-tab" onclick="filterStoreTab(this, 'official')">Official</button>
+                        </div>
+
+                        <div class="store-search-wrap">
+                            <svg class="store-search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                            <input
+                                class="store-search-input"
+                                id="storeSearchInput"
+                                type="text"
+                                placeholder="Search by code e.g. A1B2C3"
+                                oninput="handleStoreSearch(this.value)"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                            <button class="store-search-clear" id="storeSearchClear" onclick="clearStoreSearch()" title="Clear search">&times;</button>
                         </div>
                     </section>
 
@@ -1595,7 +1694,7 @@
                         </div>
                     </div>
 
-                    <div class="store-grid">
+                    <div class="store-grid" id="storeGrid">
                         <!-- Official Themes -->
                         <div class="theme-card">
                             <div class="theme-preview" style="background: linear-gradient(135deg, #1a472a, #2d5a3d);">
@@ -1671,6 +1770,13 @@
                                     <span class="theme-downloads">Coming Soon</span>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- No results state -->
+                        <div class="store-no-results" id="storeNoResults">
+                            <div class="store-no-results-icon">🔍</div>
+                            <h3>No dashboard found</h3>
+                            <p id="storeNoResultsMsg">No dashboard matched that code. Double-check and try again.</p>
                         </div>
                     </div>
 
@@ -2309,13 +2415,59 @@
                     });
                 }
 
-                // Store tabs (visual only for now)
-                document.querySelectorAll('.store-tab').forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        document.querySelectorAll('.store-tab').forEach(t => t.classList.remove('active'));
-                        tab.classList.add('active');
+                // Store search & tab filtering
+                let _storeActiveTab = 'all';
+
+                function handleStoreSearch(query) {
+                    const clear = document.getElementById('storeSearchClear');
+                    clear.style.display = query.length > 0 ? 'block' : 'none';
+                    applyStoreFilter(query.trim(), _storeActiveTab);
+                }
+
+                function clearStoreSearch() {
+                    const input = document.getElementById('storeSearchInput');
+                    input.value = '';
+                    input.focus();
+                    document.getElementById('storeSearchClear').style.display = 'none';
+                    applyStoreFilter('', _storeActiveTab);
+                }
+
+                function filterStoreTab(btn, tab) {
+                    document.querySelectorAll('.store-tab').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    _storeActiveTab = tab;
+                    const query = (document.getElementById('storeSearchInput').value || '').trim();
+                    applyStoreFilter(query, tab);
+                }
+
+                function applyStoreFilter(query, tab) {
+                    const cards = document.querySelectorAll('#storeGrid .theme-card');
+                    const q = query.toUpperCase();
+                    let visible = 0;
+
+                    cards.forEach(card => {
+                        const code = (card.querySelector('code') || {}).textContent || '';
+                        const name = (card.querySelector('.theme-info h3') || {}).textContent || '';
+                        const author = (card.querySelector('.theme-author') || {}).textContent || '';
+                        const isOfficial = card.querySelector('.theme-badge-official') !== null;
+
+                        const matchesTab = tab === 'all' || (tab === 'official' && isOfficial);
+                        const matchesQuery = q === '' || code.toUpperCase().includes(q) || name.toUpperCase().includes(q) || author.toUpperCase().includes(q);
+
+                        const show = matchesTab && matchesQuery;
+                        card.style.display = show ? '' : 'none';
+                        if (show) visible++;
                     });
-                });
+
+                    const noResults = document.getElementById('storeNoResults');
+                    noResults.style.display = visible === 0 ? 'block' : 'none';
+                    if (visible === 0 && q !== '') {
+                        document.getElementById('storeNoResultsMsg').textContent =
+                            `No dashboard matched the code "${query}". Double-check and try again.`;
+                    } else if (visible === 0) {
+                        document.getElementById('storeNoResultsMsg').textContent = 'No dashboards in this category yet.';
+                    }
+                }
 
                 // Streaming — auto-discovery with exponential backoff & connection monitoring
                 let discoveredHostIp = null;
