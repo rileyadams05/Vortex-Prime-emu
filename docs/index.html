@@ -1685,7 +1685,6 @@
 
                         <div class="store-tabs">
                             <button class="store-tab active" onclick="filterStoreTab(this, 'all')">All Dashboards</button>
-                            <button class="store-tab" onclick="filterStoreTab(this, 'official')">Official</button>
                         </div>
 
                         <div class="store-search-wrap">
@@ -1736,83 +1735,6 @@
                     </div>
 
                     <div class="store-grid" id="storeGrid">
-                        <!-- Official Themes -->
-                        <div class="theme-card">
-                            <div class="theme-preview" style="background: linear-gradient(135deg, #1a472a, #2d5a3d);">
-                                <span class="theme-preview-placeholder">🎮</span>
-                                <span class="theme-badge-official">Official</span>
-                            </div>
-                            <div class="theme-info">
-                                <h3>Classic Green</h3>
-                                <p>The default Vortex Prime experience. Clean, minimal, powerful.</p>
-                                <div class="theme-code">
-                                    <code>112233</code>
-                                    <button class="theme-code-copy" onclick="copyCode(this, '112233')">Copy</button>
-                                </div>
-                                <div class="theme-meta">
-                                    <span class="theme-author">by Vortex Team</span>
-                                    <span class="theme-downloads">Built-in</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="theme-card">
-                            <div class="theme-preview" style="background: linear-gradient(135deg, #1e3a5f, #2d5a8a);">
-                                <span class="theme-preview-placeholder">🎯</span>
-                                <span class="theme-badge-official">Official</span>
-                            </div>
-                            <div class="theme-info">
-                                <h3>PlayStation Style</h3>
-                                <p>Inspired by the iconic PlayStation interface design.</p>
-                                <div class="theme-code">
-                                    <code>796201</code>
-                                    <button class="theme-code-copy" onclick="copyCode(this, '796201')">Copy</button>
-                                </div>
-                                <div class="theme-meta">
-                                    <span class="theme-author">by Vortex Team</span>
-                                    <span class="theme-downloads">Coming Soon</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="theme-card">
-                            <div class="theme-preview" style="background: linear-gradient(135deg, #e60012, #8b0000);">
-                                <span class="theme-preview-placeholder">🍄</span>
-                                <span class="theme-badge-official">Official</span>
-                            </div>
-                            <div class="theme-info">
-                                <h3>Nintendo Style</h3>
-                                <p>Bright, playful, and family-friendly interface.</p>
-                                <div class="theme-code">
-                                    <code>334411</code>
-                                    <button class="theme-code-copy" onclick="copyCode(this, '334411')">Copy</button>
-                                </div>
-                                <div class="theme-meta">
-                                    <span class="theme-author">by Vortex Team</span>
-                                    <span class="theme-downloads">Coming Soon</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="theme-card">
-                            <div class="theme-preview" style="background: linear-gradient(135deg, #2a2a2a, #1a1a1a);">
-                                <span class="theme-preview-placeholder">💻</span>
-                                <span class="theme-badge-official">Official</span>
-                            </div>
-                            <div class="theme-info">
-                                <h3>PC Master</h3>
-                                <p>Sleek desktop-focused design for keyboard & mouse.</p>
-                                <div class="theme-code">
-                                    <code>882200</code>
-                                    <button class="theme-code-copy" onclick="copyCode(this, '882200')">Copy</button>
-                                </div>
-                                <div class="theme-meta">
-                                    <span class="theme-author">by Vortex Team</span>
-                                    <span class="theme-downloads">Coming Soon</span>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- No results state -->
                         <div class="store-no-results" id="storeNoResults">
                             <div class="store-no-results-icon">🔍</div>
@@ -2516,7 +2438,7 @@
                             ? `No dashboard found with code "${q}". Double-check and try again.`
                             : `No dashboard found by author "${q}".`;
                     } else if (matching.length === 0) {
-                        document.getElementById('storeNoResultsMsg').textContent = 'No dashboards in this category yet.';
+                        document.getElementById('storeNoResultsMsg').textContent = 'No dashboards have been uploaded yet. Be the first!';
                     }
 
                     renderPagination(Math.ceil(matching.length / CARDS_PER_PAGE), page);
@@ -2844,6 +2766,9 @@
                 const STORE_API_BASE = 'https://discord.vortex-prime-emu.com';
 
                 function loadCommunityThemes() {
+                    const noResults = document.getElementById('storeNoResults');
+                    if (noResults) noResults.style.display = 'none';
+
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
@@ -2852,7 +2777,6 @@
                         .then(data => {
                             const grid = document.querySelector('.store-grid');
                             const themes = data.themes || [];
-                            if (themes.length === 0) return;
                             themes.forEach(theme => {
                                 const card = document.createElement('div');
                                 card.className = 'theme-card';
@@ -2880,7 +2804,11 @@
                             const q = (document.getElementById('storeSearchInput').value || '').trim();
                             applyStoreFilter(q, _storeActiveTab, _storePage);
                         })
-                        .catch(() => { clearTimeout(timeoutId); });
+                        .catch(() => {
+                            clearTimeout(timeoutId);
+                            const q = (document.getElementById('storeSearchInput').value || '').trim();
+                            applyStoreFilter(q, _storeActiveTab, _storePage);
+                        });
                 }
 
                 function escapeHtml(str) {
