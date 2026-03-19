@@ -1442,7 +1442,7 @@ const XeniaDashboard = () => {
         transition: 'filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         filter: isGuideOpen ? 'brightness(0.7)' : 'none'
       }}>
-        <VortexBackground src={bgImage} />
+        <AnimatedBackground backgroundImage="/assets/wallpapers/Backround.png" />
 
         <BladesOverlay currentView={currentView} setCurrentView={setCurrentView} />
 
