@@ -20,7 +20,7 @@ import '../styles/XeniaDashboard.css';
 import '../styles/Marketplace.css';
 import '../styles/Xbox360Keyboard.css';
 import '../styles/CommunityHubModal.css';
-import VortexBackground from '../components/VortexBackground';
+import AnimatedBackground from '../components/AnimatedBackground';
 
 const API = '/api';
 
