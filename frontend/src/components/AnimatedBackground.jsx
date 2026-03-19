@@ -96,6 +96,65 @@ const AnimatedBackground = ({ backgroundImage }) => {
       });
     };
 
+    const drawCenterLogo = () => {
+      const centerX = canvas.width * 0.5;
+      const centerY = canvas.height * 0.5;
+      const radius = Math.min(canvas.width, canvas.height) * 0.25;
+
+      ctx.save();
+      
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius - (i * 15), 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, ${200 + i * 20}, 255, ${0.6 - i * 0.15})`;
+        ctx.lineWidth = 8 - i * 2;
+        ctx.stroke();
+      }
+
+      ctx.font = `bold ${radius * 0.35}px Arial`;
+      ctx.fillStyle = 'rgba(100, 255, 200, 0.9)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      ctx.fillText('VORTEX', centerX, centerY - radius * 0.15);
+      
+      ctx.font = `bold ${radius * 0.3}px Arial`;
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.9)';
+      ctx.fillText('PRIME', centerX, centerY + radius * 0.15);
+      
+      ctx.font = `${radius * 0.12}px Arial`;
+      ctx.fillStyle = 'rgba(150, 255, 200, 0.8)';
+      ctx.fillText('EMULATOR', centerX, centerY + radius * 0.4);
+
+      ctx.restore();
+    };
+
+    const drawCornerLogo = () => {
+      const x = canvas.width * 0.92;
+      const y = canvas.height * 0.88;
+      const size = Math.min(canvas.width, canvas.height) * 0.08;
+
+      ctx.save();
+      
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0, 220, 255, 0.7)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.font = `bold ${size * 0.4}px Arial`;
+      ctx.fillStyle = 'rgba(100, 255, 200, 0.9)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('VP', x, y - size * 0.1);
+      
+      ctx.font = `${size * 0.2}px Arial`;
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
+      ctx.fillText('PRIME', x, y + size * 0.25);
+
+      ctx.restore();
+    };
+
     const animate = () => {
       ctx.fillStyle = '#0a0a1a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -126,6 +185,9 @@ const AnimatedBackground = ({ backgroundImage }) => {
         drawPortal(portal.x, portal.y, portal.size, rotation * portal.speed, portal.reverse);
       });
 
+      drawCenterLogo();
+      drawCornerLogo();
+
       animationRef.current = requestAnimationFrame(animate);
     };
 
@@ -149,7 +211,6 @@ const AnimatedBackground = ({ backgroundImage }) => {
   return (
     <div className="animated-background-container">
       <canvas ref={canvasRef} className="background-canvas" />
-      <img src="/assets/wallpapers/vortex-prime-bg.jpg" className="logo-layer" alt="" />
     </div>
   );
 };
