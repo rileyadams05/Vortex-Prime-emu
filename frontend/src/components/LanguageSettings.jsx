@@ -1,27 +1,48 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useGamepad } from '../context/GamepadContext';
 import playSound from '../utils/soundManager';
-import { countries, getEmojiFlag } from 'countries-list';
 import '../styles/LanguageSettings.css';
+
+let countries, getEmojiFlag;
+try {
+  const countriesModule = require('countries-list');
+  countries = countriesModule.countries;
+  getEmojiFlag = countriesModule.getEmojiFlag;
+} catch (error) {
+  console.error('Failed to load countries-list:', error);
+  countries = {};
+  getEmojiFlag = () => '🌍';
+}
 
 const LanguageSettings = ({ isActive, onBack, onSelect, preview = false, activeCountry }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState(null);
   const listRef = useRef(null);
   const inputRef = useRef(null);
   const { onPress: onGamepadPress } = useGamepad();
 
   // 1. Core Data Memoization
   const allCountries = useMemo(() => {
-    return Object.entries(countries).map(([code, data]) => ({
-      code,
-      ...data,
-      flag: getEmojiFlag(code)
-    })).sort((a, b) => {
-      if (a.name === 'Australia') return -1;
-      if (b.name === 'Australia') return 1;
-      return a.name.localeCompare(b.name);
-    });
+    try {
+      if (!countries || Object.keys(countries).length === 0) {
+        setError('Country data not available');
+        return [];
+      }
+      return Object.entries(countries).map(([code, data]) => ({
+        code,
+        ...data,
+        flag: getEmojiFlag ? getEmojiFlag(code) : '🌍'
+      })).sort((a, b) => {
+        if (a.name === 'Australia') return -1;
+        if (b.name === 'Australia') return 1;
+        return a.name.localeCompare(b.name);
+      });
+    } catch (err) {
+      console.error('Error processing countries:', err);
+      setError('Failed to load countries');
+      return [];
+    }
   }, []);
 
   const filteredCountries = useMemo(() => {
