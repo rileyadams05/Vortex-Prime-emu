@@ -368,7 +368,7 @@ const Xbox360Dashboard = () => {
 
   return (
     <div className="xbox360-dashboard">
-      <AnimatedBackground backgroundImage="/assets/wallpapers/vortex-prime-bg.jpg" />
+      <AnimatedBackground backgroundImage="/assets/wallpapers/Backround.png" />
 
       {/* Blade Settings */}
       <BladeSettings 
