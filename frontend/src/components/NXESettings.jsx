@@ -688,10 +688,6 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
                     </div>
                   </div>
                 )}
-
-                {!activePanel && (
-                  <div className="nxe-enter-hint">Press A to enter & edit</div>
-                )}
               </div>
             </div>
           )}
