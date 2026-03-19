@@ -5,7 +5,7 @@
     "build": {
         "beforeDevCommand": "node start-dev-servers.js",
         "beforeBuildCommand": "cd frontend && npm run build",
-        "devUrl": "http://localhost:3005",
+        "devUrl": "http://localhost:3000",
         "frontendDist": "../frontend/build"
     },
     "app": {
@@ -26,7 +26,7 @@
             }
         ],
         "security": {
-            "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://localhost:3005 http://localhost:8000 https://xbl.io https://login.live.com https://customer-assets.emergentagent.com https://retroachievements.org"
+            "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://localhost:3000 http://localhost:3005 http://localhost:8000 https://xbl.io https://login.live.com https://customer-assets.emergentagent.com https://retroachievements.org"
         },
         "trayIcon": {
             "iconPath": "icons/icon.ico",
