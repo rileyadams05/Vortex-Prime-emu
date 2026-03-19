@@ -64,7 +64,6 @@ const BackgroundSettings = ({ isActive, preview = false, onBack, onDirty }) => {
   return (
     <div
       style={{
-        padding: '20px',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -73,105 +72,188 @@ const BackgroundSettings = ({ isActive, preview = false, onBack, onDirty }) => {
       }}
     >
       {!preview && (
-        <>
-          <h2 style={{ fontSize: '24px', marginBottom: '10px', color: '#fff' }}>Background</h2>
-          <p style={{ color: '#aaa', marginBottom: '30px' }}>Choose a custom image as your dashboard wallpaper.</p>
-        </>
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '28px', marginBottom: '8px', color: '#fff', fontWeight: '700' }}>Background</h2>
+          <p style={{ color: '#999', fontSize: '14px', lineHeight: '1.5' }}>Set a custom wallpaper image for your dashboard.</p>
+        </div>
       )}
 
-      {/* Preview Box */}
+      {/* Main Content Card */}
       <div
         style={{
+          background: 'rgba(0, 0, 0, 0.3)',
+          border: '2px solid #107C10',
+          borderRadius: '8px',
+          padding: '24px',
           flex: 1,
-          borderRadius: '12px',
-          border: '2px solid rgba(255,255,255,0.08)',
-          background: previewUrl
-            ? `url("${previewUrl}") center/cover no-repeat`
-            : 'rgba(0,0,0,0.4)',
-          minHeight: '180px',
-          maxHeight: '300px',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '20px',
+          flexDirection: 'column',
           position: 'relative',
-          overflow: 'hidden',
-          transition: 'background-image 0.4s ease',
         }}
       >
-        {!previewUrl && (
-          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', userSelect: 'none' }}>
-            <div style={{ fontSize: '40px', marginBottom: '8px' }}>🖼️</div>
-            <div style={{ fontSize: '13px' }}>No custom background set</div>
-            <div style={{ fontSize: '11px', marginTop: '4px' }}>Default wallpaper will be used</div>
-          </div>
-        )}
-        {previewUrl && (
-          <div style={{
-            position: 'absolute',
-            bottom: '8px',
-            right: '10px',
-            background: 'rgba(0,0,0,0.6)',
-            color: '#fff',
-            fontSize: '11px',
-            padding: '3px 8px',
-            borderRadius: '6px',
-          }}>
-            {currentPath.split(/[\\/]/).pop()}
-          </div>
-        )}
-      </div>
+        {/* Press B hint */}
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          right: '20px',
+          color: 'rgba(255, 255, 255, 0.5)',
+          fontSize: '12px',
+          fontStyle: 'italic',
+          userSelect: 'none',
+        }}>
+          Press B to return to list
+        </div>
 
-      {/* Buttons */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-        <button
-          onClick={handleBrowse}
-          disabled={isBrowsing || (!isActive && preview)}
+        {/* Preview Box */}
+        <div
           style={{
             flex: 1,
-            padding: '10px 16px',
-            background: '#107C10',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            opacity: isBrowsing ? 0.6 : 1,
-            transition: 'opacity 0.2s',
+            borderRadius: '6px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: previewUrl
+              ? `url("${previewUrl}") center/cover no-repeat`
+              : 'rgba(0, 0, 0, 0.5)',
+            minHeight: '200px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '24px',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.3)',
           }}
         >
-          {isBrowsing ? 'Opening...' : '📂 Browse Image'}
-        </button>
+          {!previewUrl && (
+            <div style={{ 
+              textAlign: 'center', 
+              color: 'rgba(255, 255, 255, 0.4)', 
+              userSelect: 'none',
+              padding: '20px',
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px', opacity: 0.6 }}>🖼️</div>
+              <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '6px' }}>No custom background set</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.3)' }}>Default wallpaper will be used</div>
+            </div>
+          )}
+          {previewUrl && (
+            <div style={{
+              position: 'absolute',
+              bottom: '12px',
+              right: '12px',
+              background: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(4px)',
+              color: '#fff',
+              fontSize: '11px',
+              padding: '6px 10px',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              maxWidth: '200px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {currentPath.split(/[\\/]/).pop()}
+            </div>
+          )}
+        </div>
 
-        {currentPath && (
+        {/* Buttons */}
+        <div style={{ display: 'flex', gap: '12px' }}>
           <button
-            onClick={handleClear}
-            disabled={!isActive && preview}
+            onClick={handleBrowse}
+            disabled={isBrowsing || (!isActive && preview)}
             style={{
-              padding: '10px 16px',
-              background: 'rgba(255,255,255,0.08)',
-              color: '#aaa',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
+              flex: 1,
+              padding: '14px 20px',
+              background: '#107C10',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '15px',
+              fontWeight: '700',
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              opacity: isBrowsing ? 0.6 : 1,
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(16, 124, 16, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+            onMouseEnter={(e) => {
+              if (!isBrowsing && isActive) {
+                e.target.style.background = '#0e6b0e';
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 4px 12px rgba(16, 124, 16, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#107C10';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 2px 8px rgba(16, 124, 16, 0.3)';
             }}
           >
-            ✕ Clear
+            <span style={{ fontSize: '16px' }}>📂</span>
+            {isBrowsing ? 'Opening...' : 'Browse Image'}
           </button>
+
+          {currentPath && (
+            <button
+              onClick={handleClear}
+              disabled={!isActive && preview}
+              style={{
+                padding: '14px 20px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: '#999',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (isActive) {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                  e.target.style.color = '#ccc';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                e.target.style.color = '#999';
+              }}
+            >
+              ✕ Clear
+            </button>
+          )}
+        </div>
+
+        {error && (
+          <div style={{ 
+            marginTop: '16px',
+            padding: '10px 14px',
+            background: 'rgba(248, 113, 113, 0.1)',
+            border: '1px solid rgba(248, 113, 113, 0.3)',
+            borderRadius: '4px',
+            color: '#f87171',
+            fontSize: '13px',
+          }}>
+            {error}
+          </div>
         )}
+
+        <p style={{ 
+          color: 'rgba(255, 255, 255, 0.3)', 
+          fontSize: '11px', 
+          marginTop: '16px',
+          textAlign: 'center',
+          lineHeight: '1.4',
+        }}>
+          Supported: PNG, JPG, JPEG, WEBP, BMP • Changes apply after Save &amp; Restart
+        </p>
       </div>
-
-      {error && (
-        <p style={{ color: '#f87171', fontSize: '12px', marginTop: '10px' }}>{error}</p>
-      )}
-
-      <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px', marginTop: '14px' }}>
-        Supported: PNG, JPG, JPEG, WEBP, BMP • Changes apply after Save &amp; Restart
-      </p>
     </div>
   );
 };
