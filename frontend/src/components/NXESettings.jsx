@@ -689,12 +689,7 @@ const NXESettings = ({ isActive, onBack, userProfile, isLoggedIn, onLogout }) =>
                   </div>
                 )}
 
-                {activePanel ? (
-                  <div className="nxe-enter-hint" style={{ color: '#fff' }}>
-                    Press B to return to list
-                    {activePanel === 'core' && ' | Press X to Save'}
-                  </div>
-                ) : (
+                {!activePanel && (
                   <div className="nxe-enter-hint">Press A to enter & edit</div>
                 )}
               </div>
