@@ -2,54 +2,154 @@ import React, { useEffect, useRef } from 'react';
 import '../styles/AnimatedBackground.css';
 
 const AnimatedBackground = ({ backgroundImage }) => {
-  const starsRef = useRef(null);
+  const canvasRef = useRef(null);
+  const animationRef = useRef(null);
 
   useEffect(() => {
-    if (starsRef.current) {
-      const container = starsRef.current;
-      container.innerHTML = '';
-      
-      const starCount = 200;
-      const sizes = ['star-tiny', 'star-small', 'star-medium', 'star-large'];
-      const weights = [0.5, 0.3, 0.15, 0.05];
-      
-      for (let i = 0; i < starCount; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        
-        const rand = Math.random();
-        let sizeClass;
-        if (rand < weights[0]) sizeClass = sizes[0];
-        else if (rand < weights[0] + weights[1]) sizeClass = sizes[1];
-        else if (rand < weights[0] + weights[1] + weights[2]) sizeClass = sizes[2];
-        else sizeClass = sizes[3];
-        
-        star.classList.add(sizeClass);
-        star.style.left = `${Math.random() * 100}%`;
-        star.style.top = `${Math.random() * 100}%`;
-        star.style.animationDelay = `${Math.random() * 3}s`;
-        
-        container.appendChild(star);
-      }
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const stars = [];
+    const starCount = 300;
+    
+    for (let i = 0; i < starCount; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2.5 + 0.5,
+        opacity: Math.random(),
+        twinkleSpeed: Math.random() * 0.02 + 0.005,
+        twinkleDirection: Math.random() > 0.5 ? 1 : -1
+      });
     }
+
+    const portals = [
+      { x: 0.5, y: 0.5, size: 180, speed: 0.3, reverse: false },
+      { x: 0.18, y: 0.15, size: 100, speed: 0.4, reverse: true },
+      { x: 0.82, y: 0.15, size: 100, speed: 0.35, reverse: false },
+      { x: 0.18, y: 0.85, size: 100, speed: 0.38, reverse: false },
+      { x: 0.82, y: 0.85, size: 100, speed: 0.42, reverse: true }
+    ];
+
+    let rotation = 0;
+
+    const drawPortal = (x, y, size, angle, reverse) => {
+      const centerX = x * canvas.width;
+      const centerY = y * canvas.height;
+      
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(reverse ? -angle : angle);
+
+      const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+      gradient.addColorStop(0, 'rgba(0, 255, 200, 0.4)');
+      gradient.addColorStop(0.3, 'rgba(0, 217, 255, 0.3)');
+      gradient.addColorStop(0.6, 'rgba(0, 150, 200, 0.2)');
+      gradient.addColorStop(1, 'rgba(0, 100, 150, 0)');
+
+      for (let i = 0; i < 8; i++) {
+        const spiralAngle = (Math.PI * 2 / 8) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        
+        for (let r = 0; r < size; r += 5) {
+          const angle = spiralAngle + (r / size) * Math.PI * 2;
+          const x = Math.cos(angle) * r;
+          const y = Math.sin(angle) * r;
+          ctx.lineTo(x, y);
+        }
+        
+        ctx.strokeStyle = `rgba(0, ${200 + Math.sin(spiralAngle) * 55}, 255, ${0.3 - (i * 0.03)})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.beginPath();
+      ctx.arc(0, 0, size, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.restore();
+    };
+
+    const drawNebula = () => {
+      const nebulaRegions = [
+        { x: 0.3, y: 0.3, size: 200, color: 'rgba(100, 0, 150, 0.15)' },
+        { x: 0.7, y: 0.4, size: 250, color: 'rgba(0, 100, 200, 0.15)' },
+        { x: 0.5, y: 0.7, size: 180, color: 'rgba(150, 0, 200, 0.12)' }
+      ];
+
+      nebulaRegions.forEach(region => {
+        const gradient = ctx.createRadialGradient(
+          region.x * canvas.width, region.y * canvas.height, 0,
+          region.x * canvas.width, region.y * canvas.height, region.size
+        );
+        gradient.addColorStop(0, region.color);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      });
+    };
+
+    const animate = () => {
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawNebula();
+
+      stars.forEach(star => {
+        star.opacity += star.twinkleSpeed * star.twinkleDirection;
+        if (star.opacity >= 1 || star.opacity <= 0.2) {
+          star.twinkleDirection *= -1;
+        }
+
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+        ctx.fill();
+
+        if (star.size > 1.5) {
+          ctx.shadowBlur = 4;
+          ctx.shadowColor = `rgba(255, 255, 255, ${star.opacity})`;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      });
+
+      rotation += 0.005;
+      portals.forEach(portal => {
+        drawPortal(portal.x, portal.y, portal.size, rotation * portal.speed, portal.reverse);
+      });
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, []);
 
   return (
     <div className="animated-background-container">
-      <div 
-        className="background-layer" 
-        style={{ backgroundImage: `url(${backgroundImage})` }}
-      />
-      
-      <div className="portal-effects">
-        <div className="portal-spin portal-center"></div>
-        <div className="portal-spin portal-top-left"></div>
-        <div className="portal-spin portal-top-right"></div>
-        <div className="portal-spin portal-bottom-left"></div>
-        <div className="portal-spin portal-bottom-right"></div>
-      </div>
-      
-      <div className="stars-overlay" ref={starsRef}></div>
+      <canvas ref={canvasRef} className="background-canvas" />
+      <img src="/assets/wallpapers/vortex-prime-bg.jpg" className="logo-layer" alt="" />
     </div>
   );
 };
