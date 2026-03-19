@@ -194,6 +194,20 @@ const LanguageSettings = ({ isActive, onBack, onSelect, preview = false, activeC
     }
   }, [selectedIndex]);
 
+  if (error) {
+    return (
+      <div className={`language-settings-container ${preview ? 'preview-mode' : ''}`} style={{ pointerEvents: (!isActive && preview) ? 'none' : 'auto', opacity: (!isActive && preview) ? 0.8 : 1 }}>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#f87171' }}>
+          <h3 style={{ marginBottom: '12px' }}>Error Loading Countries</h3>
+          <p style={{ color: '#999', fontSize: '14px' }}>{error}</p>
+          <p style={{ color: '#666', fontSize: '12px', marginTop: '16px' }}>
+            Please restart the application or contact support.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`language-settings-container ${preview ? 'preview-mode' : ''}`} style={{ pointerEvents: (!isActive && preview) ? 'none' : 'auto', opacity: (!isActive && preview) ? 0.8 : 1 }}>
       {!preview && (
