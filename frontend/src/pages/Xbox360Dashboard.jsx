@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { initializeMsal, loginAndFetchProfile, logout } from '../services/xboxAuthService';
 import BladeSettings from '../components/BladeSettings';
 import SetupWizard from '../components/SetupWizard';
+import AnimatedBackground from '../components/AnimatedBackground';
 import '../styles/Xbox360Dashboard.css';
 import '../styles/NXESettings.css';
 
@@ -367,9 +368,7 @@ const Xbox360Dashboard = () => {
 
   return (
     <div className="xbox360-dashboard">
-      <div className="xbox-background">
-        <div className="bg-gradient"></div>
-      </div>
+      <AnimatedBackground backgroundImage="/assets/wallpapers/vortex-prime-bg.jpg" />
 
       {/* Blade Settings */}
       <BladeSettings 
