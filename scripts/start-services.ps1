@@ -126,14 +126,12 @@ if (-not (Test-Path $CloudflaredQt)) {
     }
 }
 
-# 5. Tauri app — registers IP + tunnel URL with backend every 60 s ------------
+# 5. Tauri app — always launch via dev.ps1 (kills stale EXE, starts fresh)
 if ($NoTauri) {
     Write-Log "Skipping Tauri launch (-NoTauri flag set)"
-} elseif (-not (Test-Path $TauriExe)) {
-    Write-Log "WARNING: Vortex Prime exe not found at $TauriExe — skipping"
 } else {
-    Write-Log "Launching Vortex Prime..."
-    Start-Process -FilePath $TauriExe
+    Write-Log "Launching Vortex Prime via dev.ps1 (always latest build)..."
+    Start-Process pwsh -ArgumentList "-File", (Join-Path $ProjectRoot "dev.ps1") -WindowStyle Normal
 }
 
 Write-Log "Startup complete. Full log: $LogFile"

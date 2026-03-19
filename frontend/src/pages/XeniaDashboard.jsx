@@ -20,10 +20,11 @@ import '../styles/XeniaDashboard.css';
 import '../styles/Marketplace.css';
 import '../styles/Xbox360Keyboard.css';
 import '../styles/CommunityHubModal.css';
+import VortexBackground from '../components/VortexBackground';
 
 const API = '/api';
 
-const DEFAULT_BG = '/wallpapers/Play/default.png';
+const DEFAULT_BG = null;
 
 const XeniaDashboard = () => {
   const [currentView, setCurrentView] = useState('home');
@@ -1441,11 +1442,9 @@ const XeniaDashboard = () => {
         transition: 'filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         filter: isGuideOpen ? 'brightness(0.7)' : 'none'
       }}>
-        <BladesOverlay currentView={currentView} setCurrentView={setCurrentView} />
+        <VortexBackground src={bgImage} />
 
-        <div className="xenia-background" style={{ backgroundImage: `url(${bgImage})` }}>
-          <div className="bg-overlay"></div>
-        </div>
+        <BladesOverlay currentView={currentView} setCurrentView={setCurrentView} />
 
         {currentView === 'home' && (
           <div className="xenia-header">

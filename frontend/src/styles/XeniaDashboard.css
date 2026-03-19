@@ -1,9 +1,9 @@
 :root {
-  --xenia-primary: #107C10;
-  --xenia-primary-dark: #0A4D0A;
-  --xenia-primary-light: #16A816;
-  --xenia-bg-dark: #0a0c08;
-  --xenia-card-bg: rgba(30, 34, 28, 0.92);
+  --xenia-primary: #10B981;
+  --xenia-primary-dark: #059669;
+  --xenia-primary-light: #34D399;
+  --xenia-bg-dark: #06080c;
+  --xenia-card-bg: rgba(15, 20, 30, 0.92);
   --xenia-text-primary: #ffffff;
   --xenia-text-secondary: #aaaaaa;
   --blade-height: 40px;
@@ -14,7 +14,7 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: var(--xenia-bg-dark);
+  background-color: #1a2a1a;
   font-family: 'MC360', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   user-select: none;
 }
@@ -48,7 +48,7 @@ body {
   height: 100%;
   background-size: cover;
   background-position: center;
-  z-index: -1;
+  z-index: 0;
   transition: background-image 0.5s ease-in-out;
 }
 
@@ -58,10 +58,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background:
-    radial-gradient(ellipse at 30% 70%, rgba(16, 124, 16, 0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 40%, rgba(10, 80, 10, 0.2) 0%, transparent 45%),
-    radial-gradient(circle at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.75) 100%);
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.65) 100%);
 }
 
 /* --- Header --- */

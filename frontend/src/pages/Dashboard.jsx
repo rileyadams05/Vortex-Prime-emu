@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, User, Settings, Gamepad2, Film, Users, Wifi } from 'lucide-react';
 import { mockUserData, mockGames, mockMedia, mockFriends } from '../data/mockData';
+import AnimatedBackground from '../components/AnimatedBackground';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
@@ -174,10 +175,7 @@ const Dashboard = () => {
 
   return (
     <div className="xbox-dashboard">
-      <div className="dashboard-background">
-        <div className="aurora-effect"></div>
-        <div className="aurora-effect-2"></div>
-      </div>
+      <AnimatedBackground backgroundImage="/assets/wallpapers/vortex-prime-bg.jpg" />
 
       <div className="dashboard-header">
         <div className="header-left">

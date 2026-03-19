@@ -51,17 +51,6 @@ if not exist "frontend\node_modules\" (
     cd ..
 )
 
-REM Check if Xenia exists
-if not exist "src-tauri\resources\xenia\xenia-canary.exe" (
-    echo.
-    echo [WARNING] Xenia not found!
-    echo           Expected location: src-tauri\resources\xenia\xenia-canary.exe
-    echo           Download from: https://github.com/xenia-canary/xenia-canary/releases
-    echo.
-    echo Press any key to continue anyway...
-    pause >nul
-)
-
 echo.
 echo [INFO] Starting Vortex Prime...
 echo.

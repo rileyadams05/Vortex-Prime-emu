@@ -15,60 +15,7 @@
   color: #ffffff;
 }
 
-/* Background with aurora effects */
-.dashboard-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #0a4d0a 0%, #0f7b0f 50%, #107c10 100%);
-  z-index: 0;
-}
-
-.aurora-effect {
-  position: absolute;
-  top: -50%;
-  left: -10%;
-  width: 120%;
-  height: 200%;
-  background: radial-gradient(ellipse at center, rgba(100, 255, 100, 0.15) 0%, transparent 60%);
-  animation: aurora-drift 20s ease-in-out infinite;
-  filter: blur(60px);
-}
-
-.aurora-effect-2 {
-  position: absolute;
-  bottom: -50%;
-  right: -10%;
-  width: 100%;
-  height: 180%;
-  background: radial-gradient(ellipse at center, rgba(50, 200, 50, 0.12) 0%, transparent 60%);
-  animation: aurora-drift-2 25s ease-in-out infinite;
-  filter: blur(80px);
-}
-
-@keyframes aurora-drift {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.6;
-  }
-  50% {
-    transform: translate(10%, 5%) scale(1.1);
-    opacity: 0.8;
-  }
-}
-
-@keyframes aurora-drift-2 {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.5;
-  }
-  50% {
-    transform: translate(-8%, -3%) scale(1.15);
-    opacity: 0.7;
-  }
-}
+/* Background handled by AnimatedBackground component */
 
 /* Header */
 .dashboard-header {
