@@ -91,19 +91,6 @@ const BackgroundSettings = ({ isActive, preview = false, onBack, onDirty }) => {
           position: 'relative',
         }}
       >
-        {/* Press B hint */}
-        <div style={{
-          position: 'absolute',
-          top: '16px',
-          right: '20px',
-          color: 'rgba(255, 255, 255, 0.5)',
-          fontSize: '12px',
-          fontStyle: 'italic',
-          userSelect: 'none',
-        }}>
-          Press B to return to list
-        </div>
-
         {/* Preview Box */}
         <div
           style={{
@@ -130,9 +117,7 @@ const BackgroundSettings = ({ isActive, preview = false, onBack, onDirty }) => {
               userSelect: 'none',
               padding: '20px',
             }}>
-              <div style={{ fontSize: '48px', marginBottom: '12px', opacity: 0.6 }}>🖼️</div>
-              <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '6px' }}>No custom background set</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.3)' }}>Default wallpaper will be used</div>
+              <div style={{ fontSize: '15px', fontWeight: '600' }}>No custom background set</div>
             </div>
           )}
           {previewUrl && (
