@@ -326,6 +326,43 @@
             letter-spacing: 0.05em;
         }
 
+        /* Systems Showcase */
+        .systems-showcase {
+            margin-top: 3rem;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .systems-row {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 2rem 0;
+        }
+
+        .system-logo {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+            filter: brightness(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .system-logo:hover {
+            filter: brightness(1.2);
+            transform: scale(1.1);
+        }
+
+        .systems-more {
+            text-align: center;
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
         /* Features Grid */
         .features-section {
             max-width: 1200px;
@@ -1566,8 +1603,41 @@
                     <div class="stats">
                         <div class="stat">
                             <div class="stat-value">Platforms: 128</div>
-                            <div class="stat-label">NES • SNES • N64 • GameCube • Wii • Wii U • Switch • GB • GBA • DS • 3DS • PS1 • PS2 • PS3 • PSP • Vita • Genesis • Saturn • Dreamcast • Xbox • Xbox 360 • Atari 2600 • NeoGeo • PC Engine • Amiga • C64 • ZX Spectrum • MAME • ScummVM • and 100+ more</div>
                         </div>
+                    </div>
+
+                    <div class="systems-showcase">
+                        <div class="systems-row">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/nes/system.svg" alt="NES" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/snes/system.svg" alt="SNES" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/n64/system.svg" alt="N64" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/gc/system.svg" alt="GameCube" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/wii/system.svg" alt="Wii" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/WiiU.svg" alt="Wii U" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/gb/system.svg" alt="GB" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/gba/system.svg" alt="GBA" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/nds/system.svg" alt="DS" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/Nintendo_3DS_logo.svg" alt="3DS" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/psx/system.svg" alt="PS1" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/ps2/system.svg" alt="PS2" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/PlayStation_3_Logo.svg" alt="PS3" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/psp/system.svg" alt="PSP" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/PlayStation_Vita_logo.svg" alt="Vita" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/genesis/system.svg" alt="Genesis" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/saturn/system.svg" alt="Saturn" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/dreamcast/system.svg" alt="Dreamcast" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/Vectorial_Xbox_logo.svg" alt="Xbox" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/Xbox_360_logo.svg" alt="Xbox 360" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/atari2600/system.svg" alt="Atari 2600" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/neogeo/system.svg" alt="NeoGeo" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/pcengine/system.svg" alt="PC Engine" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/amiga/system.svg" alt="Amiga" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/c64/system.svg" alt="C64" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/zxspectrum/system.svg" alt="ZX Spectrum" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/mame/system.svg" alt="MAME" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/scummvm/system.svg" alt="ScummVM" class="system-logo">
+                        </div>
+                        <p class="systems-more">and 100+ more systems</p>
                     </div>
                 </section>
 
