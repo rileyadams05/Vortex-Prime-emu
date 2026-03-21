@@ -1,4 +1,4 @@
-# <img width="268" height="268" alt="icon" src="https://github.com/user-attachments/assets/0eefeb09-a3a2-4f5c-8043-3a5b38fdc67f" />
+
  Vortex Prime
 
 > **⚠️ WORK IN PROGRESS - NOT A FINISHED PRODUCT ⚠️**
