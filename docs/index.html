@@ -331,15 +331,29 @@
             margin-top: 3rem;
             width: 100%;
             overflow: hidden;
+            position: relative;
         }
 
         .systems-row {
             display: flex;
-            gap: 2rem;
+            gap: 3rem;
             align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
             padding: 2rem 0;
+            animation: scroll-systems 60s linear infinite;
+            width: max-content;
+        }
+
+        @keyframes scroll-systems {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .systems-row:hover {
+            animation-play-state: paused;
         }
 
         .system-logo {
@@ -347,7 +361,8 @@
             width: auto;
             object-fit: contain;
             filter: brightness(0.9);
-            transition: all 0.3s ease;
+            transition: filter 0.3s ease, transform 0.3s ease;
+            flex-shrink: 0;
         }
 
         .system-logo:hover {
@@ -1608,6 +1623,36 @@
 
                     <div class="systems-showcase">
                         <div class="systems-row">
+                            <!-- First set of logos -->
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/nes/system.svg" alt="NES" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/snes/system.svg" alt="SNES" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/n64/system.svg" alt="N64" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/gc/system.svg" alt="GameCube" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/wii/system.svg" alt="Wii" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/WiiU.svg" alt="Wii U" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/gb/system.svg" alt="GB" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/gba/system.svg" alt="GBA" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/nds/system.svg" alt="DS" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/Nintendo_3DS_logo.svg" alt="3DS" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/psx/system.svg" alt="PS1" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/ps2/system.svg" alt="PS2" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/PlayStation_3_Logo.svg" alt="PS3" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/psp/system.svg" alt="PSP" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/PlayStation_Vita_logo.svg" alt="Vita" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/genesis/system.svg" alt="Genesis" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/saturn/system.svg" alt="Saturn" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/dreamcast/system.svg" alt="Dreamcast" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/Vectorial_Xbox_logo.svg" alt="Xbox" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/assets/for-app/system%20logos/Xbox_360_logo.svg" alt="Xbox 360" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/atari2600/system.svg" alt="Atari 2600" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/neogeo/system.svg" alt="NeoGeo" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/pcengine/system.svg" alt="PC Engine" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/amiga/system.svg" alt="Amiga" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/c64/system.svg" alt="C64" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/zxspectrum/system.svg" alt="ZX Spectrum" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/mame/system.svg" alt="MAME" class="system-logo">
+                            <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/scummvm/system.svg" alt="ScummVM" class="system-logo">
+                            <!-- Duplicate set for seamless loop -->
                             <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/nes/system.svg" alt="NES" class="system-logo">
                             <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/snes/system.svg" alt="SNES" class="system-logo">
                             <img src="https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/frontend/public/es-theme-spare/n64/system.svg" alt="N64" class="system-logo">
