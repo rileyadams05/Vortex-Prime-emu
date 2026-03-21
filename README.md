@@ -33,9 +33,9 @@
 | Mobile Emulator Support | 🟢 Working |
 | URL-Based Emulator Downloads | 🟢 Working |
 | Community Emulator Registry | 🟢 Working |
-| Achievement System (Exophase) | � Working |
+| Achievement System (Exophase) | 🟢 Working |
 | Controller Support | 🟢 Working |
-| Streaming Features | � Working |
+| Streaming Features | 🟢 Working |
 
 ## 📋 What is Vortex Prime?
 
