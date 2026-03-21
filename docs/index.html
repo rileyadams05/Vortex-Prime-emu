@@ -1556,23 +1556,6 @@
                     <h1>One Frontend.<br><span>Every Platform.</span></h1>
 
                     <p class="hero-subtitle">
-                        The ultimate multi-platform emulation frontend. Unified achievements, 
-                        customizable themes, and a growing community of creators.
-                    </p>
-
-                    <div class="hero-buttons">
-                        <a href="vortexprime://launch" class="btn btn-primary" id="launchBtn">
-                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                            Launch App
-                        </a>
-                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu/releases" class="btn btn-secondary">
-                            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                            Download
-                        </a>
-                    </div>
-
-                    <p class="hero-hint">Available for Windows • macOS &amp; Linux coming soon</p>
-
                     <div class="stats">
                         <div class="stat">
                             <div class="stat-value">25+</div>
@@ -2241,38 +2224,11 @@
                 }
 
                 // Modal
-                const launchBtn = document.getElementById('launchBtn');
                 const modal = document.getElementById('installModal');
 
                 function closeModal() {
                     modal.classList.remove('active');
                 }
-
-                launchBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-
-                    let launched = false;
-                    const onBlur = () => { launched = true; };
-                    window.addEventListener('blur', onBlur);
-
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    document.body.appendChild(iframe);
-
-                    try {
-                        iframe.contentWindow.location.href = 'vortexprime://launch';
-                    } catch(err) {
-                        window.location.href = 'vortexprime://launch';
-                    }
-
-                    setTimeout(() => {
-                        window.removeEventListener('blur', onBlur);
-                        iframe.remove();
-                        if (!launched) {
-                            modal.classList.add('active');
-                        }
-                    }, 2000);
-                });
 
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
