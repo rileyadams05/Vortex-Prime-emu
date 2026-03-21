@@ -1,4 +1,5 @@
-# 🎮 Vortex Prime
+# <img width="268" height="268" alt="icon" src="https://github.com/user-attachments/assets/0eefeb09-a3a2-4f5c-8043-3a5b38fdc67f" />
+ Vortex Prime
 
 > **⚠️ WORK IN PROGRESS - NOT A FINISHED PRODUCT ⚠️**
 >
@@ -78,8 +79,7 @@ Vortex Prime is a **fully open-source, community-driven** multi-platform emulato
 4. Click **"Download & Install"**
 5. Launch from the dashboard!
 
-**Works with ANY emulator - Android, iOS, PS3, Xbox 360, Switch, etc.**
-
+**Works with ANY emulator - Android, iOS,, both Xboxs 360 & original all way up to PlayStation 3, all way up to Nintendo wiiU etc
 ## 🛠️ Development Setup
 
 This project uses:
