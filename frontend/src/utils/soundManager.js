@@ -1,15 +1,17 @@
 // Sound Manager - Uses exact sounds from ALHROOBIX/Xenia-Dashboard
 const audioCache = {};
+const PUBLIC_BASE = process.env.PUBLIC_URL || '';
+const withPublicPath = (path) => `${PUBLIC_BASE}${path}`;
 
 const SOUND_MAP = {
-  focus: '/assets/audio/focus.wav',
-  select: '/assets/audio/select.wav',
-  back: '/assets/audio/back.wav',
-  panelUnfold: '/assets/audio/panel-unfold.wav',
-  panelLeft: '/assets/audio/panel-left.wav',
-  panelRight: '/assets/audio/panel-right.wav',
-  channelUp: '/assets/audio/channel-up.wav',
-  channelDown: '/assets/audio/channel-down.wav',
+  focus: withPublicPath('/assets/audio/focus.wav'),
+  select: withPublicPath('/assets/audio/select.wav'),
+  back: withPublicPath('/assets/audio/back.wav'),
+  panelUnfold: withPublicPath('/assets/audio/panel-unfold.wav'),
+  panelLeft: withPublicPath('/assets/audio/panel-left.wav'),
+  panelRight: withPublicPath('/assets/audio/panel-right.wav'),
+  channelUp: withPublicPath('/assets/audio/channel-up.wav'),
+  channelDown: withPublicPath('/assets/audio/channel-down.wav'),
 };
 
 export const playSound = (soundName) => {

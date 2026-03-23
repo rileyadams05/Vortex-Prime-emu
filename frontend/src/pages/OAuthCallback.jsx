@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = BACKEND_URL ? `${BACKEND_URL.replace(/\/$/, '')}/api` : '';
+const PUBLIC_BASE = process.env.PUBLIC_URL || '';
 
 const OAuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -86,7 +87,7 @@ const OAuthCallback = () => {
                   localStorage.setItem('userProfile', JSON.stringify(profile));
                   setStatus('Authentication successful! Returning to app...');
                   setTimeout(() => {
-                      window.location.href = window.location.origin;
+                      window.location.href = `${window.location.origin}${PUBLIC_BASE}/`;
                   }, 1000);
                 }
             } catch (err) {
@@ -122,6 +123,9 @@ const OAuthCallback = () => {
       }
 
       try {
+        if (!API) {
+          throw new Error('Backend unavailable for code exchange');
+        }
         // Exchange code for profile data
         const response = await axios.post(`${API}/xbox/auth/callback`, { code });
         const profile = response.data;
