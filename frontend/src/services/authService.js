@@ -1,5 +1,9 @@
 import { discordAuthConfig } from '../authConfig';
 
+const isDesktopWrapper = () =>
+    navigator.userAgent.includes('Electron') ||
+    !!window.process?.versions?.electron;
+
 const buildDiscordAuthorizeUrl = () => {
     const params = new URLSearchParams({
         client_id: discordAuthConfig.clientId,
@@ -17,13 +21,18 @@ const loginViaPopup = () => {
     const popup = window.open(
         authUrl,
         'discord_oauth',
-        'width=520,height=720,menubar=no,toolbar=no,status=no,noopener,noreferrer'
+        'width=700,height=860,menubar=no,toolbar=no,status=no,resizable=yes,scrollbars=yes'
     );
 
     if (!popup) {
+        if (isDesktopWrapper()) {
+            throw new Error('Discord popup was blocked. Please allow popups and try again.');
+        }
         window.location.href = authUrl;
         return Promise.resolve(null);
     }
+
+    popup.focus();
 
     return new Promise((resolve, reject) => {
         const timeout = window.setTimeout(() => {
