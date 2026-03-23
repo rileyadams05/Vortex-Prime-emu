@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkfrontend=self.webpackChunkfrontend||[]).push([[190],{190(e,n,t){t.d(n,{exit:()=>s,relaunch:()=>a});var i=t(133);async function s(){let e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:0;await(0,i.invoke)("plugin:process|exit",{code:e})}async function a(){await(0,i.invoke)("plugin:process|restart")}}}]);
+//# sourceMappingURL=190.36b0123f.chunk.js.map

@@ -1,0 +1,78 @@
+/* PS5 Steam Achievement Notifier Skin Replication */
+.san-theme-ps5 {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(20, 20, 20, 0.95);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  min-width: 300px;
+  z-index: 10000;
+  animation: slideInPS5 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+             slideOutPS5 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) 5.5s forwards;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.san-theme-ps5 .san-popup-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.san-theme-ps5 .san-icon-container {
+  width: 50px;
+  height: 50px;
+  margin-right: 15px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #333;
+}
+
+.san-theme-ps5 .san-trophy-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.san-theme-ps5 .san-text-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.san-theme-ps5 .san-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.san-theme-ps5 .san-desc {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.san-theme-ps5 .san-rarity-flare {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-left: 10px;
+}
+
+.san-theme-ps5 .ps5-bronze { background: #cd7f32; }
+.san-theme-ps5 .ps5-silver { background: #c0c0c0; }
+.san-theme-ps5 .ps5-gold { background: #ffd700; }
+.san-theme-ps5 .ps5-platinum { background: #e5e4e2; box-shadow: 0 0 10px #e5e4e2; }
+
+@keyframes slideInPS5 {
+  0% { transform: translate(120%, 0); opacity: 0; }
+  100% { transform: translate(0, 0); opacity: 1; }
+}
+
+@keyframes slideOutPS5 {
+  0% { transform: translate(0, 0); opacity: 1; }
+  100% { transform: translate(120%, 0); opacity: 0; }
+}

@@ -1,0 +1,561 @@
+/* ===== NXE SETTINGS - Xbox 360 Two-Pane Layout ===== */
+.nxe-settings-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 50px 20px;
+  font-family: 'MC360', 'Segoe UI', sans-serif;
+  color: #ffffff;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 -1px 0 #000,
+    0 1px 0 #000,
+    -1px 0 0 #000,
+    1px 0 0 #000;
+  z-index: 5;
+}
+
+.nxe-settings-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+/* Body: two-pane layout */
+.nxe-settings-body {
+  display: flex;
+  flex: 1;
+  gap: 2px;
+  min-height: 0;
+}
+
+/* ===== SIDEBAR (Left Pane) ===== */
+.nxe-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nxe-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.nxe-sidebar-item:hover {
+  background: rgba(20, 20, 20, 0.9);
+  color: #ffffff;
+  border-color: #107C10;
+}
+
+/* Active: Xbox 360 theme outline highlight */
+.nxe-sidebar-item.active {
+  background: rgba(30, 30, 30, 0.7) !important;
+  color: #fff;
+  border: 4px solid #107C10 !important;
+  box-shadow: 0 0 16px rgba(16, 124, 16, 0.2);
+}
+
+.nxe-sidebar-item.active svg {
+  filter: brightness(2);
+}
+
+.nxe-sidebar-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+
+.nxe-sidebar-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.nxe-sidebar-item.active .nxe-sidebar-badge {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ===== CONTENT PANE (Right Pane) ===== */
+.nxe-content-pane {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 30px 36px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative; /* Lock absolute children like the overlay to this pane */
+}
+
+/* ===== MODAL POPUP (Overlay) ===== */
+.nxe-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.nxe-modal-content {
+  width: 90%;
+  max-width: 1000px;
+  height: 80%;
+  max-height: 700px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  animation: scaleIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Override Core Settings container when in modal */
+.nxe-modal-content .core-settings-container {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+.nxe-modal-content .core-interface-wrapper {
+  padding: 20px;
+}
+
+/* Override Sound Settings wrapper when in modal */
+.nxe-modal-content .sound-settings-wrapper {
+  padding: 20px;
+  height: 100%;
+}
+
+.nxe-content-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nxe-content-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+.nxe-content-desc {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  max-width: 480px;
+}
+
+.nxe-enter-hint {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.settings-preview-mount {
+  margin-top: 15px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.settings-preview-mount.deep-focus {
+  border-color: #107C10;
+  box-shadow: 0 0 20px rgba(16, 124, 16, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Moonlight sub-menu */
+.moonlight-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.moonlight-option {
+  padding: 14px 18px;
+  background: rgba(30, 30, 30, 0.6);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.moonlight-option:hover {
+  background: rgba(50, 50, 50, 0.7);
+}
+
+.moonlight-option.active {
+  background: rgba(10, 10, 10, 0.9) !important;
+  border: 4px solid #107C10 !important;
+  box-shadow: 0 0 12px rgba(16, 124, 16, 0.2);
+}
+
+.moonlight-option-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  display: block;
+  letter-spacing: 0.5px;
+}
+
+.moonlight-option-desc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.moonlight-option.active .moonlight-option-desc {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Entered sidebar state */
+.nxe-sidebar-item.entered {
+  border-color: #107C10;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nxe-diagnostic-embed {
+  flex: 1;
+}
+
+/* ===== FOOTER ===== */
+.nxe-footer {
+  display: flex;
+  gap: 20px;
+  padding: 14px 0 0;
+  margin-top: 12px;
+}
+
+.nxe-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.xbox-btn-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: "Segoe UI", Arial, sans-serif;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.6);
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.5), 
+    inset 0 -3px 6px rgba(0,0,0,0.4), 
+    0 2px 4px rgba(0,0,0,0.5);
+}
+
+.xbox-btn-circle::after {
+  content: '';
+  position: absolute;
+  top: 4%;
+  left: 15%;
+  width: 70%;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+  border-radius: 50% 50% 20% 20%;
+  pointer-events: none;
+}
+
+.xbox-btn-circle.green {
+  background: radial-gradient(circle at 50% 50%, #29c129 0%, #0d540d 100%);
+  color: #c4fbc4;
+  text-shadow: 0px 1px 1px rgba(0,0,0,0.9);
+}
+
+.xbox-btn-circle.red {
+  background: radial-gradient(circle at 50% 50%, #ee3532 0%, #8a1412 100%);
+  color: #ffcccc;
+  text-shadow: 0px 1px 1px rgba(0,0,0,0.9);
+}
+
+.xbox-btn-circle.blue {
+  background: radial-gradient(circle at 50% 50%, #2f94ee 0%, #093b6e 100%);
+  color: #cce8ff;
+  text-shadow: 0px 1px 1px rgba(0,0,0,0.9);
+}
+
+.xbox-btn-circle.yellow {
+  background: radial-gradient(circle at 50% 50%, #f7d21c 0%, #8c7200 100%);
+  color: #fffac2;
+  text-shadow: 0px 1px 1px rgba(0,0,0,0.9);
+}
+
+.xbox-btn-bumper {
+  width: 38px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  margin-right: 2px;
+}
+
+/* ===== LOADING OVERLAY ===== */
+.nxe-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.4s ease-out;
+}
+
+.nxe-dialog-box {
+  background: rgba(28, 28, 28, 0.95);
+  padding: 40px 60px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 500px;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.nxe-confirm-btn {
+  background: #107C10;
+  color: #fff;
+  border: none;
+  padding: 12px 40px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  margin-top: 10px;
+  outline: 3px solid transparent;
+}
+
+.nxe-confirm-btn:hover,
+.nxe-confirm-btn:focus {
+  background: #16A816;
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(16, 124, 16, 0.6);
+  outline: 3px solid #fff;
+}
+
+.nxe-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-left-color: #107C10;
+  border-radius: 50%;
+  animation: nxe-spin 1s linear infinite;
+  margin-bottom: 25px;
+}
+
+.nxe-saving-text {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.nxe-saving-subtext {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 10px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .nxe-settings-container {
+    padding: 16px 20px 12px;
+  }
+
+  .nxe-sidebar {
+    width: 200px;
+  }
+
+  .nxe-sidebar-item {
+    padding: 10px 12px;
+  }
+
+  .nxe-sidebar-label {
+    font-size: 0.75rem;
+  }
+
+  .nxe-content-pane {
+    padding: 20px 24px;
+  }
+}
+
+/* Sunshine Gateway Pulse Animation */
+@keyframes sunshine-pulse-anim {
+  0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)); opacity: 0.9; }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9)); opacity: 1; }
+  100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)); opacity: 0.9; }
+}
+
+.sunshine-pulse {
+  animation: sunshine-pulse-anim 3s ease-in-out infinite;
+}
+
+/* ===== HAZARD THEME (Warning Yellow) ===== */
+.hazard-border {
+  height: 8px;
+  width: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    #FFD700,
+    #FFD700 10px,
+    #000 10px,
+    #000 20px
+  );
+}
+
+.warning-yellow-pulse {
+  animation: warning-yellow-pulse-anim 3s ease-in-out infinite;
+}
+
+@keyframes warning-yellow-pulse-anim {
+  0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4)); opacity: 0.9; }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)); opacity: 1; }
+  100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4)); opacity: 0.9; }
+}
+
+.nxe-streaming-locked-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 10;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.nxe-locked-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.warning-header {
+  color: #FFD700;
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  text-shadow: 
+    -2px -2px 0 #000,  
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+     0 0 15px rgba(0,0,0,0.8);
+}
+
+.warning-description {
+  color: #ffffff; /* White interior */
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-bottom: 30px;
+  text-shadow: 
+    -1px -1px 4px #000, 
+     1px -1px 4px #000,
+    -1px  1px 4px #000,
+     1px  1px 4px #000; /* Black outside for readability */
+}

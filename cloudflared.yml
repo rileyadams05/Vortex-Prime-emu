@@ -1,0 +1,9 @@
+tunnel: 1fad916c-1f3f-4e41-ac61-2b088b1c3c4c
+credentials-file: C:\Users\Riley\.cloudflared\1fad916c-1f3f-4e41-ac61-2b088b1c3c4c.json
+
+ingress:
+  - hostname: discord.vortex-prime-emu.com
+    service: http://localhost:8000
+  - hostname: vortex-prime-emu.com
+    service: http://localhost:3005
+  - service: http_status:404

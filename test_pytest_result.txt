@@ -1,0 +1,190 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: M:\my project\my-emu
+plugins: anyio-4.12.1, langsmith-0.7.9
+collected 53 items
+
+backend\tests\test_dashboard_restructure.py .........                    [ 16%]
+backend\tests\test_engine_games_gpu.py ...........                       [ 37%]
+backend\tests\test_layout_themes_vibe.py .................               [ 69%]
+backend\tests\test_themes_steamgriddb.py F.FFsFF.......FF                [100%]
+
+================================== FAILURES ===================================
+______________________ TestThemeAPI.test_get_themes_list ______________________
+
+self = <test_themes_steamgriddb.TestThemeAPI object at 0x000001A58F202810>
+
+    def test_get_themes_list(self):
+        """GET /api/themes - should return active and disabled themes"""
+        response = requests.get(f"{BASE_URL}/api/themes")
+        assert response.status_code == 200
+    
+        data = response.json()
+        assert "active" in data
+        assert "disabled" in data
+        assert isinstance(data["active"], list)
+        assert isinstance(data["disabled"], list)
+    
+        # Should have at least one theme in total (seeded defaults)
+        total_themes = len(data["active"]) + len(data["disabled"])
+        assert total_themes >= 1, "Should have at least one seeded theme"
+    
+        # Verify theme structure
+        all_themes = data["active"] + data["disabled"]
+        for theme in all_themes:
+            assert "name" in theme
+>           assert "accent_color" in theme
+E           AssertionError: assert 'accent_color' in {'_status': 'disabled', 'assets': [], 'author': 'Local User', 'created_at': '2026-03-04T01:06:11.704706+00:00', ...}
+
+backend\tests\test_themes_steamgriddb.py:38: AssertionError
+_______________________ TestThemeAPI.test_create_theme ________________________
+
+self = <test_themes_steamgriddb.TestThemeAPI object at 0x000001A58F203110>
+
+    def test_create_theme(self):
+        """POST /api/themes/create - should create theme in Disabled folder"""
+        global created_theme_filenames
+    
+        payload = {
+            "name": "TEST_Theme_PyTest",
+            "description": "Created by pytest for testing",
+            "accent_color": "#ff5500",
+            "background_value": "#121212",
+            "background_type": "color"
+        }
+    
+        response = requests.post(
+            f"{BASE_URL}/api/themes/create",
+            json=payload,
+            headers={"Content-Type": "application/json"}
+        )
+        assert response.status_code == 200
+    
+        data = response.json()
+        assert data["name"] == payload["name"]
+        assert data["description"] == payload["description"]
+>       assert data["accent_color"] == payload["accent_color"]
+               ^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'accent_color'
+
+backend\tests\test_themes_steamgriddb.py:80: KeyError
+______________________ TestThemeAPI.test_activate_theme _______________________
+
+self = <test_themes_steamgriddb.TestThemeAPI object at 0x000001A58F203790>
+
+    def test_activate_theme(self):
+        """POST /api/themes/activate - should swap themes (only 1 active at a time)"""
+        # First get a disabled theme to activate
+        list_response = requests.get(f"{BASE_URL}/api/themes")
+        list_data = list_response.json()
+    
+        if not list_data["disabled"]:
+            pytest.skip("No disabled themes to activate")
+    
+        disabled_theme = list_data["disabled"][0]
+        old_active = list_data["active"][0] if list_data["active"] else None
+    
+>       payload = {"filename": disabled_theme["_filename"]}
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: '_filename'
+
+backend\tests\test_themes_steamgriddb.py:105: KeyError
+________________ TestThemeAPI.test_activate_nonexistent_theme _________________
+
+self = <test_themes_steamgriddb.TestThemeAPI object at 0x000001A58F204450>
+
+    def test_activate_nonexistent_theme(self):
+        """POST /api/themes/activate - should return 404 for nonexistent theme"""
+        payload = {"filename": "nonexistent_theme_12345.json"}
+        response = requests.post(
+            f"{BASE_URL}/api/themes/activate",
+            json=payload,
+            headers={"Content-Type": "application/json"}
+        )
+>       assert response.status_code == 404
+E       assert 422 == 404
+E        +  where 422 = <Response [422]>.status_code
+
+backend\tests\test_themes_steamgriddb.py:171: AssertionError
+_______________________ TestThemeAPI.test_delete_theme ________________________
+
+self = <test_themes_steamgriddb.TestThemeAPI object at 0x000001A58F204A90>
+
+    def test_delete_theme(self):
+        """DELETE /api/themes/{filename} - should remove theme"""
+        # Create a theme to delete
+        create_payload = {
+            "name": "TEST_ToDelete",
+            "description": "Will be deleted",
+            "accent_color": "#999999"
+        }
+        create_response = requests.post(
+            f"{BASE_URL}/api/themes/create",
+            json=create_payload,
+            headers={"Content-Type": "application/json"}
+        )
+        assert create_response.status_code == 200
+    
+>       filename = create_response.json()["_filename"]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: '_filename'
+
+backend\tests\test_themes_steamgriddb.py:188: KeyError
+___________ TestThemeSwapMechanism.test_swap_enforces_single_active ___________
+
+self = <test_themes_steamgriddb.TestThemeSwapMechanism object at 0x000001A58F206FD0>
+
+    def test_swap_enforces_single_active(self):
+        """Activating a theme should deactivate the current one"""
+        # Get themes
+        response = requests.get(f"{BASE_URL}/api/themes")
+        data = response.json()
+    
+        if len(data["disabled"]) < 1:
+            pytest.skip("Need at least 1 disabled theme for swap test")
+    
+        # Get initial state
+        initial_active_count = len(data["active"])
+    
+        # Activate a disabled theme
+        disabled_theme = data["disabled"][0]
+        activate_response = requests.post(
+            f"{BASE_URL}/api/themes/activate",
+>           json={"filename": disabled_theme["_filename"]},
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            headers={"Content-Type": "application/json"}
+        )
+E       KeyError: '_filename'
+
+backend\tests\test_themes_steamgriddb.py:324: KeyError
+_____ TestThemeSwapMechanism.test_multiple_activations_keep_single_active _____
+
+self = <test_themes_steamgriddb.TestThemeSwapMechanism object at 0x000001A58F207310>
+
+    def test_multiple_activations_keep_single_active(self):
+        """Multiple consecutive activations should always result in 1 active"""
+        response = requests.get(f"{BASE_URL}/api/themes")
+        data = response.json()
+    
+        if len(data["disabled"]) < 2:
+            pytest.skip("Need at least 2 disabled themes")
+    
+        # Activate first
+        requests.post(
+            f"{BASE_URL}/api/themes/activate",
+>           json={"filename": data["disabled"][0]["_filename"]},
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            headers={"Content-Type": "application/json"}
+        )
+E       KeyError: '_filename'
+
+backend\tests\test_themes_steamgriddb.py:346: KeyError
+=========================== short test summary info ===========================
+FAILED backend/tests/test_themes_steamgriddb.py::TestThemeAPI::test_get_themes_list
+FAILED backend/tests/test_themes_steamgriddb.py::TestThemeAPI::test_create_theme
+FAILED backend/tests/test_themes_steamgriddb.py::TestThemeAPI::test_activate_theme
+FAILED backend/tests/test_themes_steamgriddb.py::TestThemeAPI::test_activate_nonexistent_theme
+FAILED backend/tests/test_themes_steamgriddb.py::TestThemeAPI::test_delete_theme
+FAILED backend/tests/test_themes_steamgriddb.py::TestThemeSwapMechanism::test_swap_enforces_single_active
+FAILED backend/tests/test_themes_steamgriddb.py::TestThemeSwapMechanism::test_multiple_activations_keep_single_active
+============= 7 failed, 45 passed, 1 skipped in 146.28s (0:02:26) =============

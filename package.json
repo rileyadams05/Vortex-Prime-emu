@@ -1,0 +1,23 @@
+{
+  "name": "vortex-prime",
+  "version": "1.0.0",
+  "description": "Xbox 360-style dashboard for Xenia Emulator",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri",
+    "frontend:dev": "cd frontend && npm start",
+    "frontend:build": "cd frontend && npm run build",
+    "postinstall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\provision_java.ps1"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

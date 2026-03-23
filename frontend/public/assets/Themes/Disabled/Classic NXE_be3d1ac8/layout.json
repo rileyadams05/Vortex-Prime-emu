@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "name": "Classic NXE",
+  "author": "Local User",
+  "description": "The original Xbox 360 NXE dashboard layout \u2014 5 equal cards in a row",
+  "created_at": "2026-03-02T12:54:02.846098+00:00",
+  "source": "local",
+  "tiles": {
+    "main_cards": [
+      {
+        "id": "library",
+        "title": "GAMES",
+        "row": 0,
+        "col": 0,
+        "width": 1,
+        "height": 1
+      },
+      {
+        "id": "settings",
+        "title": "SYSTEM SETTINGS",
+        "row": 0,
+        "col": 1,
+        "width": 1,
+        "height": 1
+      },
+      {
+        "id": "achievements",
+        "title": "ACHIEVEMENTS",
+        "row": 0,
+        "col": 2,
+        "width": 1,
+        "height": 1
+      },
+      {
+        "id": "themes",
+        "title": "THEMES",
+        "row": 0,
+        "col": 3,
+        "width": 1,
+        "height": 1
+      },
+      {
+        "id": "startup",
+        "title": "STARTUP",
+        "row": 0,
+        "col": 4,
+        "width": 1,
+        "height": 1
+      }
+    ],
+    "recent_games": {
+      "visible": true,
+      "position": "bottom",
+      "max_items": 5,
+      "tile_size": "small"
+    },
+    "grid_columns": 5,
+    "grid_rows": 2,
+    "layout_mode": "default"
+  }
+}

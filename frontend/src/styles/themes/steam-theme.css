@@ -1,0 +1,70 @@
+/* Steam Achievement Notifier Skin Replication */
+.san-theme-steam {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(to right, #171a21, #1b2838);
+  color: #c6d4df;
+  border-radius: 2px;
+  border: 1px solid #111;
+  box-shadow: 0 0 10px rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  min-width: 320px;
+  z-index: 10000;
+  animation: slideInSteam 0.5s ease-out forwards,
+             slideOutSteam 0.5s ease-in 5.5s forwards;
+  font-family: 'Motiva Sans', Arial, Helvetica, sans-serif;
+}
+
+.san-theme-steam .san-popup-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.san-theme-steam .san-icon-container {
+  width: 64px;
+  height: 64px;
+  margin-right: 15px;
+  background: #000;
+  border: 1px solid #222;
+}
+
+.san-theme-steam .san-trophy-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.san-theme-steam .san-text-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.san-theme-steam .san-title {
+  font-size: 14px;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.san-theme-steam .san-desc {
+  font-size: 12px;
+  color: #8f98a0;
+}
+
+.san-theme-steam .san-rarity-flare {
+  display: none; /* Steam usually doesn't show rarity flare in the toast */
+}
+
+@keyframes slideInSteam {
+  0% { transform: translateY(120%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideOutSteam {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(120%); opacity: 0; }
+}

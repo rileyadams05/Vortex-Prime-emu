@@ -1,0 +1,189 @@
+.blade-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: flex-end; /* Align to right like NXE/Kinect era sidebar */
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.settings-blade {
+  width: 400px;
+  height: 100%;
+  /* NXE/Kinect Era: Smoked Glass Effect (Charcoal/Black @ ~80% opacity) */
+  background: rgba(20, 20, 20, 0.85); 
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.8);
+  
+  /* Glass Edge: 1px white inner border on the left */
+  border-left: 1px solid rgba(255, 255, 255, 0.3); 
+  
+  /* Shape: Top/Bottom corners radius */
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  
+  transform: translateX(100%);
+  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  
+  /* Perspective tilt */
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+/* Header */
+.blade-header {
+  padding: 50px 40px 30px 40px;
+  display: flex;
+  align-items: center;
+  /* Removed border-bottom for cleaner look, or keep subtle */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.blade-header h2.header-title {
+  font-family: 'Segoe UI', 'Ubuntu', sans-serif;
+  font-weight: 300; /* Light weight */
+  font-size: 32px;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 0.5px;
+}
+
+/* Content List */
+.blade-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 0; /* Padding handled by items for full-width pills */
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Slight gap, but pills often stack closely */
+}
+
+/* Menu Items */
+.blade-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 40px; /* Indented content */
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease-out;
+  height: 50px;
+}
+
+/* Unselected State */
+.blade-item-label {
+  font-family: 'Segoe UI', 'Ubuntu', sans-serif;
+  font-weight: 300; /* Light weight */
+  font-size: 20px;
+  color: #a0a0a0; /* Soft light-grey */
+  transition: color 0.2s;
+  z-index: 2; /* Above the pill background */
+}
+
+/* Selected State (The "Pill") */
+.blade-item.selected {
+  /* No transform/scale to keep list stable, just background change */
+}
+
+/* The Green Pill Background */
+.blade-item.selected::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 0; /* Spans width */
+  top: 2px;
+  bottom: 2px;
+  
+  /* Pill Shape */
+  border-top-left-radius: 25px;
+  border-bottom-left-radius: 25px;
+  
+  /* Vibrant Xbox Green Gradient */
+  background: linear-gradient(to bottom, #2ecc2e 0%, #107c10 50%, #0a520a 100%);
+  
+  /* Soft Outer Glow (Xbox Green) */
+  box-shadow: 0 0 15px rgba(16, 124, 16, 0.8);
+  
+  z-index: 1;
+}
+
+/* Glossy Overlay on Pill */
+.blade-item.selected::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 0;
+  top: 2px;
+  height: 23px; /* Top 50% */
+  
+  /* White-to-transparent gradient */
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 100%);
+  
+  border-top-left-radius: 25px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.blade-item.selected .blade-item-label {
+  color: #fff; /* Pure white */
+  font-weight: 600; /* Slightly bolded */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  padding-left: 10px; /* Slight shift to right */
+}
+
+/* Footer */
+.blade-footer {
+  padding: 30px 40px;
+  /* border-top: 1px solid rgba(255, 255, 255, 0.1); */
+  display: flex;
+  gap: 30px;
+  /* background: rgba(0,0,0,0.2); */
+}
+
+.button-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.xbox-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+}
+
+.xbox-button.green {
+  background: linear-gradient(180deg, #5dc21e 0%, #368505 100%);
+}
+
+.xbox-button.red {
+  background: linear-gradient(180deg, #ff4d4d 0%, #cc0000 100%);
+}
+
+@keyframes slideIn {
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}

@@ -1,0 +1,18 @@
+{
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-17",
+            "path": "M:\\my project\\my-emu\\runtime\\java_env",
+            "default": true
+        }
+    ],
+    "java.jdt.ls.java.home": "M:\\my project\\my-emu\\runtime\\java_env",
+    "java.server.launchMode": "LightWeight",
+    "java.autobuild.enabled": false,
+    "java.refactoring.extract.interface.replace": false,
+    "files.exclude": {
+        "**/*.java": true,
+        "**/runtime/java_env/**": true,
+        "**/Internal/Engine/Xenia/**/*.java": true
+    }
+}
