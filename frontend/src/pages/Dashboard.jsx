@@ -153,6 +153,15 @@ const Dashboard = () => {
   const [raData, setRaData] = useState(null);
   const [isLoadingRA, setIsLoadingRA] = useState(false);
 
+  const unlockedAchievementCount = useMemo(() => {
+    if (!Array.isArray(raData?.RecentlyPlayed)) return 0;
+
+    return raData.RecentlyPlayed.reduce((total, game) => {
+      const earned = Number(game?.NumAchieved || 0);
+      return total + (Number.isFinite(earned) && earned > 0 ? earned : 0);
+    }, 0);
+  }, [raData]);
+
   // Xbox 360 Keyboard state
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [keyboardCallback, setKeyboardCallback] = useState(null);
@@ -2132,6 +2141,7 @@ const Dashboard = () => {
             <UserProfileWidget 
               username={userProfile?.name}
               avatarUrl={userProfile?.profilePicture}
+              achievementCount={unlockedAchievementCount}
               isLoggedIn={isLoggedIn}
               onLogin={handleDiscordLogin}
               onLogout={handleLogout}

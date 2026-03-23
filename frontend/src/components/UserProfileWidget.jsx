@@ -1,6 +1,10 @@
 import React from 'react';
 
-const UserProfileWidget = ({ username, avatarUrl, isLoggedIn, onLogin, onLogout, dropzoneRootProps, dropzoneInputProps }) => {
+const UserProfileWidget = ({ username, avatarUrl, isLoggedIn, onLogin, onLogout, dropzoneRootProps, dropzoneInputProps, achievementCount = 0 }) => {
+  const parsedAchievementCount = Number(achievementCount);
+  const unlockedAchievements = Number.isFinite(parsedAchievementCount) ? parsedAchievementCount : 0;
+  const hasUnlockedAchievements = unlockedAchievements > 0;
+
   return (
     <div 
       className="user-profile" 
@@ -21,26 +25,41 @@ const UserProfileWidget = ({ username, avatarUrl, isLoggedIn, onLogin, onLogout,
             {username || 'Loading...'}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-             <svg viewBox="0 0 24 24" fill="#9ECE6A" width="14" height="14" style={{ filter: 'drop-shadow(0 0 2px rgba(158, 206, 106, 0.5))' }}>
-               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-             </svg>
-             <span style={{ 
-               fontSize: '12px', 
-               fontWeight: '800', 
-               color: '#9ECE6A', 
-               fontFamily: 'monospace' 
-             }}>
-               --
-             </span>
-             <span style={{ 
-               fontSize: '9px', 
-               fontWeight: '600', 
-               color: 'rgba(255,255,255,0.4)', 
-               textTransform: 'uppercase',
-               letterSpacing: '1px'
-             }}>
-               G
-             </span>
+            <svg viewBox="0 0 24 24" fill="#FFD700" width="14" height="14" style={{ filter: 'drop-shadow(0 0 2px rgba(255, 215, 0, 0.45))' }}>
+              <path d="M7 2h10v2h2a1 1 0 011 1v2a4 4 0 01-4 4h-.17A5 5 0 0113 14.9V17h3v2H8v-2h3v-2.1A5 5 0 018.17 11H8a4 4 0 01-4-4V5a1 1 0 011-1h2V2zm0 4H6v1a2 2 0 002 2h.03A5.03 5.03 0 017 6zm10 0a5.03 5.03 0 01-1.03 3H16a2 2 0 002-2V6h-1z" />
+            </svg>
+
+            {hasUnlockedAchievements ? (
+              <>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  color: '#FFD700',
+                  fontFamily: 'monospace'
+                }}>
+                  {unlockedAchievements}
+                </span>
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: '600',
+                  color: 'rgba(255,255,255,0.55)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}>
+                  Achievements
+                </span>
+              </>
+            ) : (
+              <span style={{
+                fontSize: '10px',
+                fontWeight: '600',
+                color: 'rgba(255,255,255,0.55)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px'
+              }}>
+                No achievements yet
+              </span>
+            )}
           </div>
         </div>
       ) : (
