@@ -16,12 +16,33 @@ const buildDiscordAuthorizeUrl = () => {
     return `https://discord.com/oauth2/authorize?${params.toString()}`;
 };
 
+const buildPopupFeatures = () => {
+    const minWidth = 980;
+    const minHeight = 820;
+    const width = Math.max(minWidth, Math.floor(window.screen.availWidth * 0.72));
+    const height = Math.max(minHeight, Math.floor(window.screen.availHeight * 0.88));
+    const left = Math.max(0, Math.floor((window.screen.availWidth - width) / 2));
+    const top = Math.max(0, Math.floor((window.screen.availHeight - height) / 2));
+
+    return [
+        `width=${width}`,
+        `height=${height}`,
+        `left=${left}`,
+        `top=${top}`,
+        'menubar=no',
+        'toolbar=no',
+        'status=no',
+        'resizable=yes',
+        'scrollbars=yes'
+    ].join(',');
+};
+
 const loginViaPopup = () => {
     const authUrl = buildDiscordAuthorizeUrl();
     const popup = window.open(
         authUrl,
         'discord_oauth',
-        'width=700,height=860,menubar=no,toolbar=no,status=no,resizable=yes,scrollbars=yes'
+        buildPopupFeatures()
     );
 
     if (!popup) {
@@ -33,6 +54,10 @@ const loginViaPopup = () => {
     }
 
     popup.focus();
+    try {
+        popup.resizeTo(Math.max(popup.outerWidth || 0, 980), Math.max(popup.outerHeight || 0, 820));
+    } catch (_e) {
+    }
 
     return new Promise((resolve, reject) => {
         const timeout = window.setTimeout(() => {
