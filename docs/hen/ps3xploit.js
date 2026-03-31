@@ -1,4 +1,5 @@
 var debug=false;
+var previewMode=false;
 
 var ua = navigator.userAgent;
 var fwVersion = ua.substring(ua.indexOf("5.0 (") + 19, ua.indexOf(") Apple"));
@@ -2775,13 +2776,34 @@ function fill_by_16bytes(nbytes,hex_val)
 	while(iterator<nbytes/16){stemp+=tmp.repeat(8);iterator++;}
 	return stemp;
 }
-//########################## End ROP Framework functions by bguerville(under development) #########################
 function ps3chk(){
 
 	var fwCompat = ["4.00","4.10","4.11","4.20","4.21","4.25","4.30","4.31","4.40","4.41","4.45","4.46","4.50","4.53","4.55","4.60","4.65","4.66","4.70","4.75","4.76","4.78","4.80","4.81","4.82","4.83","4.84","4.85","4.86","4.87","4.88","4.89","4.90","4.91","4.92"];
-	var ua = navigator.userAgent;
-	var uaStringCheck = ua.substring(ua.indexOf("5.0 (") + 5, ua.indexOf(") Apple") - 7);
-	var fwVersion = ua.substring(ua.indexOf("5.0 (") + 19, ua.indexOf(") Apple"));
+	var ua = navigator.userAgent || "";
+	var uaUpper = ua.toUpperCase();
+	var isPlayStationBrowser = uaUpper.indexOf("PLAYSTATION 3") !== -1 || uaUpper.indexOf("PLAYSTATION3") !== -1;
+	var previewBanner;
+	var uaStringCheck;
+	var fwVersion;
+	var defaultPreviewFw = fwCompat[fwCompat.length-1];
+	var hasPs3Markers = ua.indexOf("5.0 (") !== -1 && ua.indexOf(") Apple") !== -1;
+
+	if(!isPlayStationBrowser){
+		previewMode=true;
+		previewBanner = document.getElementById('result');
+		if(previewBanner){
+			previewBanner.innerHTML = hr+"<h2 style='color:#000000;'>Desktop Preview Mode</h2><p style='color:#000000;'>You are viewing the HEN page on a desktop browser. Exploit actions are simulated for UI testing.</p>";
+		}
+		console.info('PS3Xploit preview mode: non-PlayStation browser detected – simulating PS3 environment');
+	}
+
+	if(previewMode){
+		uaStringCheck = "PLAYSTATION";
+		fwVersion = defaultPreviewFw;
+	} else {
+		uaStringCheck = hasPs3Markers ? ua.substring(ua.indexOf("5.0 (") + 5, ua.indexOf(") Apple") - 7) : "PLAYSTATION";
+		fwVersion = hasPs3Markers ? ua.substring(ua.indexOf("5.0 (") + 19, ua.indexOf(") Apple")) : defaultPreviewFw;
+	}
 	var msgHFW = "ATTENTION!\n\nYour firmware version requires 4.83 - 4.91 HFW (Hybrid Firmware) to be installed, containing exploitable modules.";
 	var msgCongrats = "Congratulations! We've detected your PlayStation 3 is running FW " + fwVersion + ", which is compatible with ps3hen! Enjoy!";
 	switch (uaStringCheck) {
