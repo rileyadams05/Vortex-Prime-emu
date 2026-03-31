@@ -1570,6 +1570,24 @@
         }
 
         .animate-in { animation: fadeIn 0.6s ease forwards; }
+        @media (max-width: 1280px) {
+            .hero { padding: 3rem 1rem 2rem; }
+            .nav-container { height: 80px; padding: 0 1rem; }
+            .systems-showcase { overflow: visible; }
+            .systems-row { animation: none; flex-wrap: wrap; justify-content: center; gap: 12px; width: auto; }
+            .system-logo { height: 44px; flex: 0 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); }
+            .hero-buttons { flex-direction: column; align-items: center; }
+            .btn { width: 100%; max-width: 420px; font-size: 1.15rem; padding: 1.1rem 1.5rem; justify-content: center; }
+        }
+        .ps3 body { background: #0b0b0d !important; }
+        .ps3 .bg-grid, .ps3 .bg-glow, .ps3 .bg-glow-accent { display: none !important; }
+        .ps3 .systems-showcase { overflow: visible; }
+        .ps3 .systems-row { animation: none !important; flex-wrap: wrap; justify-content: center; gap: 12px; width: auto; }
+        .ps3 .system-logo { height: 44px; flex: 0 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); transform: none !important; }
+        .ps3 .system-logo:hover { transform: none; }
+        .ps3 .hero-buttons .btn { width: 100%; max-width: 540px; font-size: 1.25rem; padding: 1.25rem 1.75rem; }
+        .ps3 .features-section, .ps3 .store-cta, .ps3 .stats { display: none !important; }
+        .ps3 .nav-links { flex-wrap: wrap; gap: 0.25rem; }
             </style>
         </head>
         <body>
@@ -1577,6 +1595,7 @@
             <div class="bg-glow"></div>
             <div class="bg-glow-accent"></div>
 
+            <script>(function(){var ua=navigator.userAgent||'';var isPS3=/PlayStation 3|PLAYSTATION 3|NetFront|SonyCE|PS3/i.test(ua);if(isPS3){document.documentElement.className+=' ps3';function setHen(){var hen=document.getElementById('nav-hen');if(hen)hen.setAttribute('href','hen/index.html');}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setHen);}else{setHen();}}})();</script>
             <!-- Navigation -->
             <nav>
                 <div class="nav-container">
