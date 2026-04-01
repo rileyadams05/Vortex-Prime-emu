@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PS3QuickTool.MainWindow"
+        Title="PS3 Quick Tool"
+        Width="720" Height="780"
+        Background="#000000">
+  <Window.Styles>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#10B981"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="BorderBrush" Value="#10B981"/>
+    </Style>
+  </Window.Styles>
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Margin="16">
+    <!-- Drive Properties -->
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto" Grid.Row="0">
+      <TextBlock Text="Device:" Foreground="#e6e6e6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <ComboBox x:Name="DriveCombo" Grid.Column="1" MinWidth="360"/>
+    </Grid>
+
+    <!-- Format Options (read-only indicators) -->
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16">
+      <CheckBox Content="FAT32 (File system)" IsChecked="True" IsEnabled="False" Foreground="#e6e6e6"/>
+      <CheckBox Content="MBR (Partition scheme)" IsChecked="True" IsEnabled="False" Foreground="#e6e6e6"/>
+    </StackPanel>
+
+    <!-- Firmware Source URL -->
+    <Grid Grid.Row="2" ColumnDefinitions="Auto,*" RowDefinitions="Auto">
+      <TextBlock Text="Firmware Source:" Foreground="#e6e6e6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <TextBox x:Name="UrlInput" Grid.Column="1" Watermark="Paste Hybrid Firmware (HFW) Direct URL" MinWidth="360"/>
+    </Grid>
+
+    <!-- Start + Progress -->
+    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="12">
+      <Button x:Name="StartBtn" Content="START" Classes="primary" Width="140" Height="36" Click="OnStartClick"/>
+      <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="100" Height="12" VerticalAlignment="Center"/>
+    </StackPanel>
+
+    <!-- Log -->
+    <TextBox x:Name="LogText" Grid.Row="4" AcceptsReturn="True" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+  </Grid>
+</Window>
