@@ -1,14 +1,11 @@
 backend:
-  name: github
-  repo: rileyadams05/Vortex-Prime-emu
+  name: git-gateway
   branch: main
 
 publish_mode: editorial_workflow
 
 media_folder: docs/uploads
 public_folder: /uploads
-
-local_backend: false
 
 collections:
   - name: store

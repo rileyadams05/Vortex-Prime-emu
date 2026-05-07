@@ -1,0 +1,26 @@
+[build]
+  command   = "echo \"Static docs deploy\""
+  publish   = "docs"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Netlify Identity – allow the widget to work from any page
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+
+# Required: serve the Netlify Identity callback correctly
+[[redirects]]
+  from   = "/admin/"
+  to     = "/admin/index.html"
+  status = 200
+
+# SPA-style fallback so deep links inside /admin/* don't 404
+[[redirects]]
+  from   = "/admin/*"
+  to     = "/admin/index.html"
+  status = 200
