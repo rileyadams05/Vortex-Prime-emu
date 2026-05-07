@@ -95,22 +95,12 @@
 </header>
 
 <main>
-  <div class="notice">
-    <strong>How to publish a package</strong>
-    <ol>
-      <li>Click <strong>+ Add ZIP</strong> and fill in the package details below.</li>
-      <li>Enter the store code, title, description, creator, and any download link.</li>
-      <li>Click <strong>Save Package File</strong> when you are done editing.</li>
-      <li>Commit the saved file to GitHub — the store updates within ~60 seconds.</li>
-    </ol>
-    <div style="margin-top:.75rem;font-size:.75rem;color:rgba(110,231,183,.5);">Advanced: the saved file is <code>docs/store/themes.json</code> in the repository.</div>
-  </div>
-
-  <button class="add-btn" onclick="addPackage()">+ Add ZIP</button>
-
   <div class="toolbar">
     <h2>Packages</h2>
-    <span class="count-badge" id="countBadge">0 packages</span>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <span class="count-badge" id="countBadge">0 packages</span>
+      <button class="btn-primary" onclick="addPackage(true)" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">+ Add Package</button>
+    </div>
   </div>
 
   <div id="packageList"></div>
@@ -172,17 +162,12 @@
   function render() {
     const list = document.getElementById('packageList');
     const badge = document.getElementById('countBadge');
-    badge.textContent = packages.length + ' package' + (packages.length !== 1 ? 's' : '');
-
+    
     if (packages.length === 0) {
-      list.innerHTML = `<div class="empty-state">
-        <svg viewBox="0 0 24 24"><path d="M20.54 5.23l-7-3a1 1 0 00-.76 0l-7 3A1 1 0 005 6v6.78a5 5 0 002.64 4.39l4 2.06a1 1 0 00.92 0l4-2.06A5 5 0 0019 12.78V6a1 1 0 00-.46-.77zM12 4.12L17.06 6 12 7.88 6.94 6zm3 14.37l-3 1.54-3-1.54A3 3 0 017 12.78V7.62l4.54 1.82a1 1 0 00.72 0L17 7.62v5.16a3 3 0 01-2 2.71z"/></svg>
-        <h3>No ZIP packages uploaded yet</h3>
-        <p>Click <strong>+ Add ZIP</strong> to create your first store package.</p>
-      </div>`;
-      return;
+      addPackage(false); // Automatically add one if empty
     }
 
+    badge.textContent = packages.length + ' package' + (packages.length !== 1 ? 's' : '');
     list.innerHTML = packages.map((pkg, i) => buildCard(pkg, i)).join('');
     attachTagListeners();
   }
@@ -342,17 +327,20 @@
     }
   };
 
-  window.addPackage = function() {
-    collectAll();
+  window.addPackage = function(isUserAction = true) {
+    if (isUserAction) collectAll();
     packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', updated: '' });
-    markDirty();
+    if (isUserAction) markDirty();
     render();
-    const newCard = document.getElementById('pkg-' + (packages.length - 1));
+    const newIdx = packages.length - 1;
+    const newCard = document.getElementById('pkg-' + newIdx);
     if (newCard) {
       newCard.classList.add('open');
-      newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const first = newCard.querySelector('input[data-field="name"]');
-      if (first) setTimeout(() => first.focus(), 100);
+      if (isUserAction) {
+        newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const first = newCard.querySelector('input[data-field="name"]');
+        if (first) setTimeout(() => first.focus(), 100);
+      }
     }
   };
 
