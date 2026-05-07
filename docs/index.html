@@ -518,6 +518,78 @@
             pointer-events: none;
         }
 
+        .store-search-clear:hover {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-text);
+        }
+
+        /* Filter Button & Dropdown */
+        .store-filter-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            border-left: 1px solid var(--color-border);
+            transition: all 0.2s ease;
+            z-index: 2;
+        }
+        .store-filter-btn:hover { color: var(--color-primary-light); }
+        .store-filter-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        .store-filter-dropdown {
+            position: absolute;
+            top: calc(100% + 0.75rem);
+            right: 0;
+            width: 220px;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            padding: 0.5rem;
+        }
+        .store-filter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+        .store-filter-option {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .store-filter-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--color-text);
+        }
+        .store-filter-option.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-primary-light);
+        }
+        .store-filter-option.active::after {
+            content: '✓';
+            font-size: 0.8rem;
+        }
+
         .store-search-input {
             width: 100%;
             background: transparent;
@@ -525,36 +597,8 @@
             color: var(--color-text);
             font-family: inherit;
             font-size: 0.95rem;
-            padding: 0.85rem 3.2rem 0.85rem 2.75rem;
+            padding: 0.85rem 6.5rem 0.85rem 2.75rem;
             outline: none;
-        }
-
-        .store-search-input::placeholder {
-            color: rgba(161, 161, 170, 0.7);
-            font-size: 0.9rem;
-            letter-spacing: 0.02em;
-        }
-
-        .store-search-clear {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(63, 63, 70, 0.6);
-            border: none;
-            color: var(--color-text-secondary);
-            font-size: 1rem;
-            cursor: pointer;
-            padding: 0.3rem 0.55rem;
-            border-radius: 999px;
-            line-height: 1;
-            display: none;
-            transition: background 0.2s ease, color 0.2s ease;
-        }
-
-        .store-search-clear:hover {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--color-text);
         }
 
         .store-search-hint {
@@ -1815,7 +1859,6 @@
                             <img src="system-logos/3ds.svg" alt="3DS" class="system-logo">
                             <img src="system-logos/virtualboy.svg" alt="Virtual Boy" class="system-logo">
                             <img src="system-logos/psx.svg" alt="PlayStation" class="system-logo">
-                            <img src="system-logos/ps2.svg" alt="PS2" class="system-logo">
                             <img src="system-logos/ps3.svg" alt="PS3" class="system-logo">
                             <img src="system-logos/psp.svg" alt="PSP" class="system-logo">
                             <img src="system-logos/psvita.svg" alt="PS Vita" class="system-logo">
@@ -1866,7 +1909,6 @@
                             <img src="system-logos/3ds.svg" alt="3DS" class="system-logo">
                             <img src="system-logos/virtualboy.svg" alt="Virtual Boy" class="system-logo">
                             <img src="system-logos/psx.svg" alt="PlayStation" class="system-logo">
-                            <img src="system-logos/ps2.svg" alt="PS2" class="system-logo">
                             <img src="system-logos/ps3.svg" alt="PS3" class="system-logo">
                             <img src="system-logos/psp.svg" alt="PSP" class="system-logo">
                             <img src="system-logos/psvita.svg" alt="PS Vita" class="system-logo">
@@ -1959,17 +2001,20 @@
                                     autocomplete="off"
                                     spellcheck="false"
                                 >
-                                <button class="store-search-clear" id="storeSearchClear" onclick="clearStoreSearch()" title="Clear search">&times;</button>
+                                <button class="store-search-clear" id="storeSearchClear" onclick="clearStoreSearch()" title="Clear search" style="right: 3.5rem;">&times;</button>
+                                <button class="store-filter-btn" id="storeFilterBtn" onclick="toggleFilterDropdown()" title="Filter by Platform">
+                                    <svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                                </button>
+                                <div class="store-filter-dropdown" id="storeFilterDropdown">
+                                    <div class="store-filter-option active" data-platform="All" onclick="setStorePlatform('All')">All Platforms</div>
+                                    <div class="store-filter-option" data-platform="PS5" onclick="setStorePlatform('PS5')">PS5</div>
+                                    <div class="store-filter-option" data-platform="PS4" onclick="setStorePlatform('PS4')">PS4</div>
+                                    <div class="store-filter-option" data-platform="PS3" onclick="setStorePlatform('PS3')">PS3</div>
+                                    <div class="store-filter-option" data-platform="PS Vita" onclick="setStorePlatform('PS Vita')">PS Vita</div>
+                                    <div class="store-filter-option" data-platform="PSP" onclick="setStorePlatform('PSP')">PSP</div>
+                                </div>
                             </div>
                             <div class="store-search-hint">Search across store packages by title, code, creator, or tag.</div>
-                        </div>
-
-                        <div class="store-tabs" id="storePlatformTabs">
-                            <button class="store-tab active" onclick="setStorePlatform('PS4')">PS4</button>
-                            <button class="store-tab" onclick="setStorePlatform('PS3')">PS3</button>
-                            <button class="store-tab" onclick="setStorePlatform('PS2')">PS2</button>
-                            <button class="store-tab" onclick="setStorePlatform('PS Vita')">PS Vita</button>
-                            <button class="store-tab" onclick="setStorePlatform('PSP')">PSP</button>
                         </div>
                     </section>
 
@@ -2093,7 +2138,7 @@
                     let storeItems = [];
                     let filteredItems = [];
                     let currentQuery = '';
-                    let currentPlatform = 'PS4';
+                    let currentPlatform = 'All';
                     let currentPage = 1;
 
                     function showPage(pageId) {
@@ -2266,7 +2311,11 @@
                             const button = document.createElement('button');
                             button.className = 'store-page-btn' + (i === page ? ' active' : '');
                             button.textContent = String(i);
-                            button.addEventListener('click', () => applyFilters(currentQuery, i));
+                            button.addEventListener('click', () => {
+                                currentPage = i;
+                                renderStore(filteredItems, currentPage);
+                                renderPagination(filteredItems.length, currentPage);
+                            });
                             pagination.appendChild(button);
                         }
                     }
@@ -2289,67 +2338,70 @@
                         }
                     }
 
-                    function applyFilters(query, platform, page = 1) {
-                        currentQuery = query.trim();
-                        currentPlatform = platform;
-                        currentPage = page;
-                        
-                        const needle = currentQuery.toLowerCase();
-                        filteredItems = storeItems.filter((theme) => {
-                            // First, filter by platform
-                            if (theme.platform !== currentPlatform) return false;
-                            
-                            // Then, filter by query
-                            if (!needle) return true;
-                            const code = String(theme.code || '').toLowerCase();
-                            const name = String(theme.name || '').toLowerCase();
-                            const creator = String((theme.creator ?? theme.author) || '').toLowerCase();
-                            const tags = Array.isArray(theme.tags) ? theme.tags.map((t) => String(t).toLowerCase()) : [];
+                    window.toggleFilterDropdown = function() {
+                        document.getElementById('storeFilterDropdown').classList.toggle('open');
+                    };
 
-                            if (/^\d+$/.test(needle)) {
-                                return code.includes(needle);
-                            }
-
-                            return (
-                                name.includes(needle) ||
-                                creator.includes(needle) ||
-                                code.includes(needle) ||
-                                tags.some((tag) => tag.includes(needle))
-                            );
-                        });
-
-                        renderStore(filteredItems, currentPage);
-                        renderPagination(filteredItems.length, currentPage);
-                        updateNoResults(currentQuery, filteredItems.length > 0);
-                    }
-
-                    function setStorePlatform(platform) {
-                        currentPlatform = platform;
-                        
-                        // Update active tab UI
-                        const tabs = document.querySelectorAll('.store-tab');
-                        tabs.forEach(tab => {
-                            if (tab.textContent === platform) tab.classList.add('active');
-                            else tab.classList.remove('active');
-                        });
-                        
-                        applyFilters(currentQuery, currentPlatform, 1);
-                    }
-
-                    function handleStoreSearch(query) {
-                        if (clearButton) {
-                            clearButton.style.display = query ? 'inline-flex' : 'none';
+                    // Close dropdown on click outside
+                    document.addEventListener('click', (e) => {
+                        const dropdown = document.getElementById('storeFilterDropdown');
+                        const btn = document.getElementById('storeFilterBtn');
+                        if (dropdown && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+                            dropdown.classList.remove('open');
                         }
-                        applyFilters(query, currentPlatform, 1);
-                    }
+                    });
 
-                    function clearStoreSearch() {
+                    window.setStorePlatform = function (platform) {
+                        currentPlatform = platform;
+                        
+                        // Update UI
+                        document.querySelectorAll('.store-filter-option').forEach(opt => {
+                            opt.classList.toggle('active', opt.getAttribute('data-platform') === platform);
+                        });
+                        document.getElementById('storeFilterDropdown').classList.remove('open');
+                        
+                        currentPage = 1;
+                        applyFilters();
+                    };
+
+                    window.handleStoreSearch = function (query) {
+                        currentQuery = query.toLowerCase().trim();
+                        if (clearButton) {
+                            clearButton.style.display = currentQuery ? 'inline-flex' : 'none';
+                        }
+                        currentPage = 1;
+                        applyFilters();
+                    };
+
+                    window.clearStoreSearch = function () {
                         if (searchInput) {
                             searchInput.value = '';
                             searchInput.focus();
                         }
+                        currentQuery = '';
                         if (clearButton) clearButton.style.display = 'none';
-                        applyFilters('', currentPlatform, 1);
+                        currentPage = 1;
+                        applyFilters();
+                    };
+
+                    function applyFilters() {
+                        const needle = currentQuery.toLowerCase();
+                        filteredItems = storeItems.filter((item) => {
+                            const platformMatch = currentPlatform === 'All' || item.platform === currentPlatform;
+                            
+                            const queryMatch = !needle || 
+                                (item.name || '').toLowerCase().includes(needle) ||
+                                (item.code || '').toLowerCase().includes(needle) ||
+                                (item.creator || '').toLowerCase().includes(needle) ||
+                                (Array.isArray(item.tags) && item.tags.some(t => String(t).toLowerCase().includes(needle)));
+                                
+                            return platformMatch && queryMatch;
+                        });
+
+                        currentPage = 1;
+                        renderStore(filteredItems, currentPage);
+                        renderPagination(filteredItems.length, currentPage);
+                        updateNoResults(currentQuery, filteredItems.length > 0);
                     }
 
                     async function loadStoreCatalog() {
