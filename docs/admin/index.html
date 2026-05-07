@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Vortex Prime · Store Package Uploader</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.css"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --vp-primary: #10b981;
+        --vp-primary-dark: #047857;
+        --vp-bg: radial-gradient(circle at top, rgba(16, 185, 129, 0.18), rgba(15, 23, 42, 0.95) 60%);
+        --vp-panel: rgba(17, 24, 39, 0.82);
+        --vp-border: rgba(148, 163, 184, 0.22);
+        --vp-text: #f9fafb;
+        --vp-text-muted: #9ca3af;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #020617;
+        color: var(--vp-text);
+      }
+
+      body {
+        background-image: var(--vp-bg);
+        background-attachment: fixed;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .admin-shell {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: clamp(1.5rem, 2vw, 2.75rem);
+        gap: clamp(1.5rem, 2vw, 2.5rem);
+      }
+
+      .admin-header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-width: 960px;
+      }
+
+      .admin-logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .admin-logo img {
+        width: clamp(52px, 6vw, 72px);
+        height: clamp(52px, 6vw, 72px);
+      }
+
+      .admin-heading h1 {
+        font-size: clamp(1.8rem, 3.5vw, 3rem);
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      .admin-heading p {
+        margin: 0.25rem 0 0;
+        color: var(--vp-text-muted);
+        max-width: 720px;
+        line-height: 1.6;
+      }
+
+      .admin-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+        gap: clamp(1.5rem, 3vw, 3rem);
+        align-items: flex-start;
+      }
+
+      .admin-info-card {
+        background: var(--vp-panel);
+        border: 1px solid var(--vp-border);
+        border-radius: 22px;
+        padding: clamp(1.25rem, 2vw, 2rem);
+        box-shadow: 0 40px 90px rgba(2, 6, 23, 0.45);
+        backdrop-filter: blur(24px);
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+
+      .admin-info-card h2 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 600;
+      }
+
+      .admin-steps {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.9rem;
+      }
+
+      .admin-step {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.85rem;
+        align-items: start;
+      }
+
+      .admin-step-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--vp-primary);
+      }
+
+      .admin-step h3 {
+        margin: 0 0 0.2rem;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .admin-step p {
+        margin: 0;
+        color: var(--vp-text-muted);
+        font-size: 0.9rem;
+      }
+
+      .admin-alert {
+        padding: 1rem;
+        border-radius: 14px;
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        background: rgba(153, 27, 27, 0.1);
+        color: #fca5a5;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .admin-cms-panel {
+        position: relative;
+        background: rgba(15, 23, 42, 0.88);
+        border-radius: 24px;
+        border: 1px solid rgba(100, 116, 139, 0.25);
+        overflow: hidden;
+        min-height: 640px;
+        box-shadow: 0 40px 100px rgba(2, 6, 23, 0.55);
+        display: flex;
+        flex-direction: column;
+      }
+
+      #nc-root {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+        background: transparent;
+      }
+
+      /* Decap theme overrides */
+      .nc-app {
+        background: transparent;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .nc-app-header,
+      .nc-app-sidebar-header {
+        display: none !important;
+      }
+
+      .nc-app-main {
+        background: transparent;
+      }
+
+      .nc-panel {
+        background: rgba(15, 23, 42, 0.92) !important;
+        border-color: rgba(148, 163, 184, 0.18) !important;
+        color: inherit;
+      }
+
+      .nc-entryList-sidebar,
+      .nc-entry-editor-sidebar {
+        background: rgba(12, 18, 32, 0.85) !important;
+        border-right: 1px solid rgba(148, 163, 184, 0.14) !important;
+      }
+
+      .nc-entry-editor .nc-entryEditor-PreviewPane {
+        background: rgba(2, 6, 23, 0.55) !important;
+      }
+
+      .nc-entryCard, .nc-entryListingCard {
+        background: rgba(15, 23, 42, 0.8) !important;
+        border-radius: 18px !important;
+        border-color: rgba(148, 163, 184, 0.14) !important;
+      }
+
+      .nc-entryEditor-Toolbar {
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+      }
+
+      .nc-entryEditor-Toolbar button {
+        border-radius: 10px !important;
+        background: rgba(15, 23, 42, 0.65) !important;
+        border: 1px solid rgba(148, 163, 184, 0.18) !important;
+        color: var(--vp-text) !important;
+      }
+
+      .nc-entryEditor-Toolbar button[disabled] {
+        opacity: 0.4;
+      }
+
+      .nc-widget .nc-controlPane-controlLabel {
+        color: var(--vp-text);
+        font-weight: 600;
+      }
+
+      .nc-widget .nc-controlPane-controlDescription {
+        color: var(--vp-text-muted);
+      }
+
+      .nc-controlPane .nc-fieldWrapper > * {
+        border-radius: 12px !important;
+      }
+
+      .nc-controlPane input,
+      .nc-controlPane textarea,
+      .nc-controlPane select {
+        background: rgba(15, 23, 42, 0.75) !important;
+        border: 1px solid rgba(148, 163, 184, 0.2) !important;
+        color: var(--vp-text) !important;
+        border-radius: 12px !important;
+      }
+
+      .nc-controlPane input:focus,
+      .nc-controlPane textarea:focus,
+      .nc-controlPane select:focus {
+        border-color: rgba(16, 185, 129, 0.45) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+      }
+
+      .nc-entryEditor-backLink span {
+        color: var(--vp-text-muted) !important;
+      }
+
+      .nc-authPage {
+        background: rgba(2, 6, 23, 0.92) !important;
+      }
+
+      .nc-authPage-card {
+        background: rgba(15, 23, 42, 0.9) !important;
+        border-radius: 18px !important;
+        border-color: rgba(148, 163, 184, 0.18) !important;
+      }
+
+      .admin-footer-note {
+        font-size: 0.85rem;
+        color: rgba(226, 232, 240, 0.65);
+        margin-top: auto;
+      }
+
+      @media (max-width: 1180px) {
+        .admin-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .admin-cms-panel {
+          min-height: 720px;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .admin-shell {
+          padding: 1.25rem;
+        }
+
+        .admin-header {
+          gap: 1.25rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <header class="admin-header">
+        <div class="admin-logo">
+          <img src="../icon.svg" alt="Vortex Prime" />
+          <div class="admin-heading">
+            <h1>Upload Store Packages</h1>
+            <p>
+              Authenticate with GitHub to publish new Vortex Prime store packages.
+              Each submission updates the public store catalogue automatically after the commit lands on main.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div class="admin-grid">
+        <aside class="admin-info-card">
+          <h2>Before you publish</h2>
+          <ul class="admin-steps">
+            <li class="admin-step">
+              <span class="admin-step-number">1</span>
+              <div>
+                <h3>Collect your assets</h3>
+                <p>Have the icon, preview image, and either a ZIP package or an external download link ready.</p>
+              </div>
+            </li>
+            <li class="admin-step">
+              <span class="admin-step-number">2</span>
+              <div>
+                <h3>Complete the fields</h3>
+                <p>Fill in the package title, description, creator credit, tags, and store code used by the app.</p>
+              </div>
+            </li>
+            <li class="admin-step">
+              <span class="admin-step-number">3</span>
+              <div>
+                <h3>Review the preview card</h3>
+                <p>Use the live preview to confirm how the package appears on the public store before publishing.</p>
+              </div>
+            </li>
+          </ul>
+
+          <div class="admin-alert">
+            Provide <strong>either</strong> a ZIP upload <strong>or</strong> an external download link. Packages without a download source cannot be published.
+          </div>
+
+          <p class="admin-footer-note">Changes are committed to <code>main</code> via Decap CMS – no credentials are stored in the browser.</p>
+        </aside>
+
+        <section class="admin-cms-panel">
+          <div id="nc-root"></div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      window.CMS_MANUAL_INIT = true;
+    </script>
+    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <script>
+      (function () {
+        const { CMS, createClass, h } = window;
+
+        if (!CMS) {
+          return;
+        }
+
+        const previewStyles = `
+          :root { color-scheme: dark; }
+          body { margin: 0; font-family: 'Inter', sans-serif; background: #020617; color: #f8fafc; }
+          .vp-preview-card { max-width: 380px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(148,163,184,0.22); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 70px rgba(2,6,23,0.55); display: flex; flex-direction: column; }
+          .vp-preview-media { position: relative; height: 220px; background: linear-gradient(135deg, rgba(30,64,175,0.45), rgba(15,118,110,0.55)); display: flex; align-items: center; justify-content: center; }
+          .vp-preview-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+          .vp-preview-icon { position: absolute; bottom: -32px; left: 24px; width: 64px; height: 64px; border-radius: 18px; border: 2px solid rgba(248,250,252,0.85); overflow: hidden; background: rgba(15,23,42,0.8); display: flex; align-items: center; justify-content: center; }
+          .vp-preview-icon img { width: 100%; height: 100%; object-fit: cover; }
+          .vp-preview-body { padding: 48px 24px 24px; display: flex; flex-direction: column; gap: 1rem; }
+          .vp-preview-title { display: flex; flex-direction: column; gap: 0.35rem; }
+          .vp-preview-title h3 { margin: 0; font-size: 1.3rem; font-weight: 600; letter-spacing: -0.01em; }
+          .vp-preview-title span { color: rgba(226,232,240,0.68); font-size: 0.95rem; }
+          .vp-preview-description { color: rgba(226,232,240,0.78); font-size: 0.95rem; line-height: 1.55; margin: 0; }
+          .vp-preview-tags { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+          .vp-preview-tag { padding: 0.25rem 0.6rem; border-radius: 999px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: rgba(110,231,183,0.95); font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; }
+          .vp-preview-meta { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem; color: rgba(148,163,184,0.85); }
+          .vp-preview-code { display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148,163,184,0.18); border-radius: 14px; padding: 0.65rem 0.85rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; color: rgba(16,185,129,0.9); }
+          .vp-preview-download { font-size: 0.85rem; color: rgba(226,232,240,0.78); }
+        `;
+
+        CMS.registerPreviewStyle(previewStyles, { raw: true });
+
+        const StorePreview = createClass({
+          render() {
+            const data = this.props.entry.getIn(['data']) || CMS.List();
+            const getAsset = this.props.getAsset;
+            const icon = data.get('icon') ? getAsset(data.get('icon')) : null;
+            const preview = data.get('preview') ? getAsset(data.get('preview')) : null;
+            const tags = data.get('tags') ? data.get('tags').toArray().filter(Boolean) : [];
+            const downloadUrl = data.get('download_url');
+            const zipFile = data.get('zip_file');
+            const downloadLabel = downloadUrl ? 'External download link' : zipFile ? 'ZIP stored in repository' : 'Download source missing';
+
+            return h(
+              'div',
+              { className: 'vp-preview-card' },
+              [
+                h(
+                  'div',
+                  { className: 'vp-preview-media' },
+                  preview ? [h('img', { src: preview.toString(), alt: 'Package preview' })] : []
+                ),
+                h(
+                  'div',
+                  { className: 'vp-preview-icon' },
+                  icon ? [h('img', { src: icon.toString(), alt: 'Package icon' })] : [h('span', null, 'VP')]
+                ),
+                h('div', { className: 'vp-preview-body' }, [
+                  h('div', { className: 'vp-preview-title' }, [
+                    h('h3', null, data.get('name') || 'Package title'),
+                    h('span', null, data.get('creator') ? `Created by ${data.get('creator')}` : 'Creator credit')
+                  ]),
+                  h('p', { className: 'vp-preview-description' }, data.get('description') || 'Describe what this package brings to the Vortex Prime experience.'),
+                  tags.length
+                    ? h('div', { className: 'vp-preview-tags' }, tags.map((tag) => h('span', { className: 'vp-preview-tag', key: tag }, tag)))
+                    : null,
+                  h('div', { className: 'vp-preview-meta' }, [
+                    h('div', { className: 'vp-preview-code' }, [
+                      h('span', null, 'Store Code'),
+                      h('span', null, data.get('code') || '—')
+                    ]),
+                    h('div', { className: 'vp-preview-download' }, downloadLabel)
+                  ])
+                ])
+              ]
+            );
+          }
+        });
+
+        CMS.init();
+        CMS.registerPreviewTemplate('store', StorePreview);
+
+        CMS.registerEventListener({
+          name: 'preSave',
+          handler: ({ entry }) => {
+            const data = entry.getIn(['data']);
+            if (!data) return;
+            const hasZip = data.get('zip_file');
+            const hasLink = data.get('download_url');
+            if (!hasZip && !hasLink) {
+              throw new Error('Add either a ZIP file upload or an external download link before publishing.');
+            }
+          }
+        });
+
+        const observer = new MutationObserver(() => {
+          const app = document.querySelector('.nc-app');
+          if (app) {
+            document.body.classList.add('cms-mounted');
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      })();
+    </script>
+  </body>
+</html>
