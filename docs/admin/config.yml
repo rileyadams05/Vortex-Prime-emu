@@ -6,6 +6,8 @@ backend:
   app_id: Ov23lifTnZWjG47H2r8j
   base_url: https://rileyadams05.github.io/Vortex-Prime-emu
   site_domain: rileyadams05.github.io
+  open_authoring: true
+  use_graphql: true
 
 publish_mode: editorial_workflow
 

@@ -319,10 +319,10 @@
         <div class="admin-logo">
           <img src="../icon.svg" alt="Vortex Prime" />
           <div class="admin-heading">
-            <h1>Upload Store Packages</h1>
+            <h1>Publish Store Packages</h1>
             <p>
-              Authenticate with GitHub to publish new Vortex Prime store packages.
-              Each submission updates the public store catalogue automatically after the commit lands on main.
+              Sign in with GitHub (public or admin) to create pull requests that add new packages to the Vortex Prime store.
+              Maintainers review and merge submissions so the catalogue stays secure while remaining open source.
             </p>
           </div>
         </div>
@@ -330,7 +330,11 @@
 
       <div class="admin-grid">
         <aside class="admin-info-card">
-          <h2>Before you publish</h2>
+          <div class="admin-alert" style="background: rgba(14,116,144,0.14); border-color: rgba(13,148,136,0.45); color: #5eead4;">
+            <strong>Open community uploads.</strong> Anyone with a GitHub account can submit packages. Your changes will enter review before going live.
+          </div>
+
+          <h2>Before you submit</h2>
           <ul class="admin-steps">
             <li class="admin-step">
               <span class="admin-step-number">1</span>
@@ -343,7 +347,7 @@
               <span class="admin-step-number">2</span>
               <div>
                 <h3>Complete the fields</h3>
-                <p>Fill in the package title, description, creator credit, tags, and store code used by the app.</p>
+                <p>Provide the package title, description, creator credit, tags, and store code used by the app.</p>
               </div>
             </li>
             <li class="admin-step">
@@ -359,7 +363,7 @@
             Provide <strong>either</strong> a ZIP upload <strong>or</strong> an external download link. Packages without a download source cannot be published.
           </div>
 
-          <p class="admin-footer-note">Changes are committed to <code>main</code> via Decap CMS – no credentials are stored in the browser.</p>
+          <p class="admin-footer-note">Community submissions land in a GitHub pull request for maintainer approval. No credentials are stored in the browser.</p>
         </aside>
 
         <section class="admin-cms-panel">
