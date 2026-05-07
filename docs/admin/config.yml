@@ -2,30 +2,33 @@ backend:
   name: github
   repo: rileyadams05/Vortex-Prime-emu
   branch: main
-  auth_type: implicit
-  app_id: Ov23lifTnZWjG47H2r8j
-  
 
 publish_mode: editorial_workflow
+
 media_folder: docs/uploads
 public_folder: /uploads
+
 local_backend: false
 
 collections:
   - name: store
     label: Store Catalogue
     label_singular: Package
+
     files:
       - name: store
         label: Store Catalogue
         file: docs/store/themes.json
         format: json
+
         fields:
           - name: dashboards
             label: Store Items
             label_singular: Package
             widget: list
+
             summary: "{{name}} (#{{code}})"
+
             fields:
               - name: name
                 label: Package Title
@@ -45,7 +48,11 @@ collections:
               - name: code
                 label: Store Code
                 widget: string
-                pattern: ["^[0-9A-Za-z_.-]{2,32}$", "Codes should be 2-32 characters and may include letters, numbers, dashes, underscores, or dots."]
+
+                pattern:
+                  - "^[0-9A-Za-z_.-]{2,32}$"
+                  - "Codes should be 2-32 characters and may include letters, numbers, dashes, underscores, or dots."
+
                 hint: "Code players enter inside Vortex Prime to install the package."
 
               - name: tags
@@ -54,31 +61,38 @@ collections:
                 allow_add: true
                 default: []
                 required: false
+
                 hint: "Optional keywords that help with search (e.g. genre, platform, style)."
 
               - name: icon
                 label: Icon Image
                 widget: image
+                required: false
+
                 hint: "Square icon shown next to the package title."
 
               - name: preview
                 label: Preview Image
                 widget: image
                 required: false
+
                 hint: "Optional wide preview shown at the top of the package card."
 
               - name: zip_file
                 label: ZIP Upload
                 widget: file
                 required: false
+
                 media_library:
                   allow_multiple: false
+
                 hint: "Upload a ZIP archive that will be hosted with the site."
 
               - name: download_url
                 label: External Download Link
                 widget: string
                 required: false
+
                 hint: "Optional URL for packages hosted elsewhere."
 
               - name: updated
@@ -87,4 +101,5 @@ collections:
                 required: false
                 picker_utc: true
                 time_format: HH:mm
+
                 hint: "Optional timestamp shown on the public package card."
