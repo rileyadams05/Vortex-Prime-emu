@@ -50,7 +50,7 @@ collections:
             label: Store Code
             widget: string
             pattern:
-              - '^[0-9A-Za-z._-]{2,32}$'
+              - "^[0-9A-Za-z_.-]{2,32}$"
               - "Codes should be 2-32 characters and may include letters, numbers, dashes, underscores, or dots."
             hint: "Code players enter inside Vortex Prime to install the package."
 
