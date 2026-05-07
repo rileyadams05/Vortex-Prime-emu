@@ -1963,6 +1963,14 @@
                             </div>
                             <div class="store-search-hint">Search across store packages by title, code, creator, or tag.</div>
                         </div>
+
+                        <div class="store-tabs" id="storePlatformTabs">
+                            <button class="store-tab active" onclick="setStorePlatform('PS4')">PS4</button>
+                            <button class="store-tab" onclick="setStorePlatform('PS3')">PS3</button>
+                            <button class="store-tab" onclick="setStorePlatform('PS2')">PS2</button>
+                            <button class="store-tab" onclick="setStorePlatform('PS Vita')">PS Vita</button>
+                            <button class="store-tab" onclick="setStorePlatform('PSP')">PSP</button>
+                        </div>
                     </section>
 
                     <!-- How It Works -->
@@ -2085,6 +2093,7 @@
                     let storeItems = [];
                     let filteredItems = [];
                     let currentQuery = '';
+                    let currentPlatform = 'PS4';
                     let currentPage = 1;
 
                     function showPage(pageId) {
@@ -2162,6 +2171,9 @@
                         const tagsMarkup = tags.length > 0
                             ? `<div class="theme-tags">${tags.map((tag) => `<span class="theme-tag">${escapeHtml(tag)}</span>`).join('')}</div>`
                             : '';
+                        
+                        const platform = (theme.platform || 'PS4');
+                        const platformBadge = `<span class="theme-badge" style="background: var(--color-accent); left: auto; right: 0.75rem;">${escapeHtml(platform)}</span>`;
 
                         const creatorRaw = ((theme.creator ?? theme.author) || '').toString().trim();
                         const updatedLabel = formatUpdated(theme.updated);
@@ -2206,6 +2218,7 @@
                             <div class="theme-preview" style="${previewStyle}">
                                 ${preview ? '' : '<span class="theme-preview-placeholder">🎨</span>'}
                                 ${primaryTag}
+                                ${platformBadge}
                             </div>
                             ${iconMarkup}
                             <div class="theme-info">
@@ -2276,12 +2289,17 @@
                         }
                     }
 
-                    function applyFilters(query, page = 1) {
+                    function applyFilters(query, platform, page = 1) {
                         currentQuery = query.trim();
+                        currentPlatform = platform;
                         currentPage = page;
-
+                        
                         const needle = currentQuery.toLowerCase();
                         filteredItems = storeItems.filter((theme) => {
+                            // First, filter by platform
+                            if (theme.platform !== currentPlatform) return false;
+                            
+                            // Then, filter by query
                             if (!needle) return true;
                             const code = String(theme.code || '').toLowerCase();
                             const name = String(theme.name || '').toLowerCase();
@@ -2305,11 +2323,24 @@
                         updateNoResults(currentQuery, filteredItems.length > 0);
                     }
 
+                    function setStorePlatform(platform) {
+                        currentPlatform = platform;
+                        
+                        // Update active tab UI
+                        const tabs = document.querySelectorAll('.store-tab');
+                        tabs.forEach(tab => {
+                            if (tab.textContent === platform) tab.classList.add('active');
+                            else tab.classList.remove('active');
+                        });
+                        
+                        applyFilters(currentQuery, currentPlatform, 1);
+                    }
+
                     function handleStoreSearch(query) {
                         if (clearButton) {
                             clearButton.style.display = query ? 'inline-flex' : 'none';
                         }
-                        applyFilters(query, 1);
+                        applyFilters(query, currentPlatform, 1);
                     }
 
                     function clearStoreSearch() {
@@ -2318,7 +2349,7 @@
                             searchInput.focus();
                         }
                         if (clearButton) clearButton.style.display = 'none';
-                        applyFilters('', 1);
+                        applyFilters('', currentPlatform, 1);
                     }
 
                     async function loadStoreCatalog() {
@@ -2332,7 +2363,7 @@
                             storeItems = [];
                         }
 
-                        applyFilters(currentQuery, 1);
+                        applyFilters(currentQuery, currentPlatform, 1);
                     }
 
                     if (document.readyState === 'loading') {
@@ -2350,6 +2381,7 @@
                     window.showPage = showPage;
                     window.handleStoreClick = handleStoreClick;
                     window.handleStoreSearch = handleStoreSearch;
+                    window.setStorePlatform = setStorePlatform;
                     window.clearStoreSearch = clearStoreSearch;
                     window.copyCode = copyCode;
                     window.closeModal = closeModal;

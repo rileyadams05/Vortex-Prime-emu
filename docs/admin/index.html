@@ -162,6 +162,7 @@
         preview: g('preview'),
         zip_file: g('zip_file'),
         download_url: g('download_url'),
+        platform: g('platform') || 'PS4',
         updated: g('updated') || undefined,
       };
     });
@@ -223,6 +224,16 @@
           <div class="field">
             <label>Last Updated</label>
             <input type="datetime-local" data-field="updated" value="${esc(pkg.updated ? pkg.updated.replace('Z','') : '')}" oninput="onFieldInput(${i},'updated',this.value)">
+          </div>
+          <div class="field">
+            <label>Platform *</label>
+            <select data-field="platform" onchange="onFieldInput(${i},'platform',this.value)" style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; width: 100%;">
+              <option value="PS4" ${pkg.platform==='PS4'?'selected':''}>PlayStation 4</option>
+              <option value="PS3" ${pkg.platform==='PS3'?'selected':''}>PlayStation 3</option>
+              <option value="PS2" ${pkg.platform==='PS2'?'selected':''}>PlayStation 2</option>
+              <option value="PS Vita" ${pkg.platform==='PS Vita'?'selected':''}>PS Vita</option>
+              <option value="PSP" ${pkg.platform==='PSP'?'selected':''}>PSP / PlayStation Portable</option>
+            </select>
           </div>
           <div class="field full">
             <label>Tags (press Enter or comma to add)</label>
@@ -333,7 +344,7 @@
 
   window.addPackage = function() {
     collectAll();
-    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', updated: '' });
+    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', updated: '' });
     markDirty();
     render();
     const newCard = document.getElementById('pkg-' + (packages.length - 1));

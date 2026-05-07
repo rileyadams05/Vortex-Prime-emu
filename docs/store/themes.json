@@ -1,3 +1,28 @@
 {
-  "dashboards": []
+  "dashboards": [
+    {
+      "name": "PS4 Neo Theme",
+      "description": "A high-performance dark theme for the PS4 dashboard.",
+      "creator": "Vortex Team",
+      "code": "PS4-NEO-01",
+      "tags": ["theme", "dark", "neon"],
+      "platform": "PS4",
+      "icon": "https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/docs/icon.svg",
+      "preview": "https://vortex-prime-emu.com/system-logos/pc.svg",
+      "zip_file": "/uploads/ps4-neo.zip",
+      "updated": "2025-03-31T14:00:00Z"
+    },
+    {
+      "name": "PS3 Classic Retro",
+      "description": "Classic XMB inspired layout for the PS3 experience.",
+      "creator": "RetroFan",
+      "code": "PS3-CLASSIC-02",
+      "tags": ["retro", "xmb", "classic"],
+      "platform": "PS3",
+      "icon": "https://raw.githubusercontent.com/rileyadams05/Vortex-Prime-emu/main/docs/icon.svg",
+      "preview": "https://vortex-prime-emu.com/system-logos/pc.svg",
+      "zip_file": "/uploads/ps3-classic.zip",
+      "updated": "2025-03-30T10:00:00Z"
+    }
+  ]
 }
