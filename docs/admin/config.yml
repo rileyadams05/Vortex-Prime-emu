@@ -1,0 +1,68 @@
+backend:
+  name: github
+  repo: rileyadams05/Vortex-Prime-emu
+  branch: main
+  auth_type: implicit
+  app_id: Ov23lifTnZWjG47H2r8j
+  base_url: https://rileyadams05.github.io/Vortex-Prime-emu
+  site_domain: rileyadams05.github.io
+
+publish_mode: editorial_workflow
+
+media_folder: docs/uploads
+public_folder: /uploads
+
+local_backend: false
+
+collections:
+  - name: store
+    label: Store Catalogue
+    label_singular: Dashboard
+    format: json
+    file: docs/store/themes.json
+
+    fields:
+      - name: dashboards
+        label: Dashboards
+        label_singular: Dashboard
+        widget: list
+        summary: "{{fields.name}} (#{{fields.code}})"
+
+        fields:
+          - name: name
+            label: Dashboard Name
+            widget: string
+
+          - name: code
+            label: Install Code
+            widget: string
+            hint: "Code users enter inside Vortex Prime."
+
+          - name: author
+            label: Author
+            widget: string
+
+          - name: description
+            label: Description
+            widget: text
+
+          - name: download_url
+            label: Download URL
+            widget: string
+
+          - name: preview
+            label: Preview Image
+            widget: image
+            required: false
+
+          - name: tags
+            label: Tags
+            widget: list
+            allow_add: true
+            default: []
+            required: false
+
+          - name: updated
+            label: Last Updated
+            widget: datetime
+            required: false

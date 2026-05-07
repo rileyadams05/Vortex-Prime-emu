@@ -1,0 +1,14 @@
+{
+  "dashboards": [
+    {
+      "code": "1000",
+      "name": "Vortex Prime Classic",
+      "author": "Vortex Prime Team",
+      "description": "Starter dashboard that mirrors the default in-app experience. Perfect baseline for new creators.",
+      "download_url": "https://github.com/rileyadams05/Vortex-Prime-emu/releases/latest/download/vortex-prime-classic.zip",
+      "preview": "/icon.svg",
+      "tags": ["featured", "starter"],
+      "updated": "2026-05-07T00:00:00.000Z"
+    }
+  ]
+}
