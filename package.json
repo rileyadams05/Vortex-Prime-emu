@@ -9,7 +9,7 @@
     "tauri": "tauri",
     "frontend:dev": "cd frontend && npm start",
     "frontend:build": "cd frontend && npm run build",
-    "postinstall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\provision_java.ps1"
+    "postinstall": "node -e \"if (process.platform === 'win32') { require('child_process').spawnSync('powershell', ['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts\\\\provision_java.ps1'], { stdio: 'inherit' }); } else { console.log('Skipping Windows-only postinstall on non-Windows platform'); }\""
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0"
