@@ -2005,7 +2005,7 @@
                             </div>
                             <h3>No store packages yet</h3>
                             <p id="storeNoResultsMsg">Store content will appear here soon.</p>
-                            <div class="store-no-results-sub" id="storeNoResultsSub">Add packages through the Decap CMS uploader to populate this feed.</div>
+                            <div class="store-no-results-sub" id="storeNoResultsSub">Add packages through the Store Admin editor to populate this feed.</div>
                         </div>
                     </div>
 
@@ -2018,11 +2018,11 @@
                     </div>
 
                      <div class="store-cta">
-                        <h3>Contribute to the Store</h3>
-                        <p>Anyone with a GitHub account can submit packages through Decap CMS. Submissions land in a pull request for maintainers to review and merge.</p>
+                        <h3>Manage the Store</h3>
+                        <p>Use the local Store Admin editor to add, edit, and remove packages. Your changes are committed directly to the repository and go live automatically via GitHub Pages.</p>
 
                         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
-                            <a class="btn" href="/admin/" style="background: #10B981; color: white; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600;">
+                            <a class="btn" href="admin/" style="background: #10B981; color: white; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600;">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v4h4v2h-4v4h-2v-4H7v-2h4V7h2z"/></svg>
                                 Open Store Admin
                             </a>
@@ -2266,7 +2266,7 @@
                         const isNumeric = query !== '' && /^\d+$/.test(query);
                         if (!query) {
                             noResultsMsg.textContent = 'Store content will appear here soon.';
-                            if (noResultsSub) noResultsSub.textContent = 'Add packages through the Decap CMS uploader to populate this feed.';
+                            if (noResultsSub) noResultsSub.textContent = 'Add packages through the Store Admin editor to populate this feed.';
                         } else if (isNumeric) {
                             noResultsMsg.textContent = `No store package found with code "${query}".`;
                             if (noResultsSub) noResultsSub.textContent = 'Try another code or clear the search to see every package released so far.';

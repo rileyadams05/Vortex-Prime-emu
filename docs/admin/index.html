@@ -1,495 +1,442 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>Vortex Prime · Store Package Uploader</title>
-    <link
-      rel="preconnect"
-      href="https://fonts.googleapis.com"
-    />
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Netlify Identity Widget – must load before Decap CMS -->
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.css"
-    />
-    <style>
-      :root {
-        color-scheme: dark;
-        --vp-primary: #10b981;
-        --vp-primary-dark: #047857;
-        --vp-bg: radial-gradient(circle at top, rgba(16, 185, 129, 0.18), rgba(15, 23, 42, 0.95) 60%);
-        --vp-panel: rgba(17, 24, 39, 0.82);
-        --vp-border: rgba(148, 163, 184, 0.22);
-        --vp-text: #f9fafb;
-        --vp-text-muted: #9ca3af;
-      }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Vortex Prime · Store Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --surface: #18181b;
+      --elevated: #27272a;
+      --border: #3f3f46;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    header { background: rgba(9,9,11,.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; z-index: 50; }
+    header img { width: 40px; height: 40px; }
+    header h1 { font-size: 1.1rem; font-weight: 700; }
+    header p { font-size: .8rem; color: var(--muted); }
+    .header-right { margin-left: auto; display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+    .notice { background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.3); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 2rem; font-size: .875rem; color: #6ee7b7; line-height: 1.6; }
+    .notice strong { color: var(--primary); }
+    .notice ol { padding-left: 1.25rem; margin-top: .5rem; }
+    .notice ol li { margin-top: .25rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem; }
+    .card-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: .75rem; cursor: pointer; user-select: none; transition: background .15s; }
+    .card-header:hover { background: var(--elevated); }
+    .card-header .pkg-name { font-weight: 600; flex: 1; }
+    .card-header .pkg-code { font-family: monospace; font-size: .8rem; color: var(--primary); background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); padding: .2rem .55rem; border-radius: 6px; }
+    .card-header .chevron { transition: transform .2s; color: var(--muted); font-size: .9rem; }
+    .card.open .chevron { transform: rotate(180deg); }
+    .card-body { display: none; padding: 1.25rem; border-top: 1px solid var(--border); }
+    .card.open .card-body { display: block; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: .4rem; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: .8rem; font-weight: 500; color: var(--muted); }
+    input, textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; transition: border-color .2s; width: 100%; }
+    input:focus, textarea:focus { border-color: var(--primary); }
+    textarea { resize: vertical; min-height: 80px; }
+    .tags-input { display: flex; flex-wrap: wrap; gap: .4rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: .5rem .75rem; min-height: 42px; cursor: text; }
+    .tags-input.focused { border-color: var(--primary); }
+    .tag-chip { display: flex; align-items: center; gap: .35rem; background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3); border-radius: 999px; padding: .15rem .55rem; font-size: .75rem; color: #6ee7b7; }
+    .tag-chip button { background: none; border: none; color: inherit; cursor: pointer; padding: 0; line-height: 1; font-size: .9rem; }
+    .tags-input input { background: transparent; border: none; outline: none; padding: 0; min-width: 80px; flex: 1; font-size: .85rem; }
+    .card-actions { margin-top: 1.25rem; display: flex; gap: .75rem; justify-content: flex-end; flex-wrap: wrap; }
+    button { font-family: inherit; cursor: pointer; border: none; border-radius: 8px; font-size: .875rem; font-weight: 500; padding: .55rem 1.1rem; transition: all .2s; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid rgba(239,68,68,.3); }
+    .btn-danger:hover { background: rgba(239,68,68,.2); }
+    .btn-secondary { background: var(--elevated); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--primary); }
+    .btn-success { background: #16a34a; color: #fff; }
+    .btn-success:hover { background: #15803d; }
+    .add-btn { width: 100%; padding: 1rem; background: rgba(16,185,129,.05); border: 2px dashed rgba(16,185,129,.3); color: var(--primary); border-radius: 12px; font-size: .95rem; font-weight: 600; transition: all .2s; margin-bottom: 1.5rem; }
+    .add-btn:hover { background: rgba(16,185,129,.1); border-color: var(--primary); }
+    .toolbar { display: flex; gap: .75rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .toolbar h2 { font-size: 1.1rem; font-weight: 700; flex: 1; }
+    .count-badge { background: var(--elevated); border: 1px solid var(--border); border-radius: 999px; padding: .2rem .7rem; font-size: .8rem; color: var(--muted); }
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .empty-state svg { width: 48px; height: 48px; fill: rgba(16,185,129,.5); margin-bottom: 1rem; }
+    .empty-state h3 { color: var(--text); margin-bottom: .5rem; }
+    .toast { position: fixed; bottom: 2rem; right: 2rem; background: #1c1c1f; border: 1px solid var(--border); border-radius: 12px; padding: .875rem 1.25rem; font-size: .875rem; z-index: 9999; transform: translateY(8px); opacity: 0; transition: all .3s; pointer-events: none; max-width: 320px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(16,185,129,.5); color: #6ee7b7; }
+    .toast.error { border-color: rgba(239,68,68,.4); color: #fca5a5; }
+    #saveBar { position: sticky; bottom: 0; background: rgba(9,9,11,.95); backdrop-filter: blur(16px); border-top: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; z-index: 40; }
+    .save-hint { font-size: .8rem; color: var(--muted); flex: 1; }
+    .dirty-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warning); margin-right: .4rem; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+  </style>
+</head>
+<body>
+<header>
+  <img src="../icon.svg" alt="Vortex Prime">
+  <div>
+    <h1>Store Admin</h1>
+    <p>Local package editor — no login required</p>
+  </div>
+  <div class="header-right">
+    <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none;">← Back to Store</a>
+  </div>
+</header>
 
-      * {
-        box-sizing: border-box;
-      }
+<main>
+  <div class="notice">
+    <strong>How this works (GitHub Pages workflow)</strong>
+    <ol>
+      <li>Add or edit packages below — all changes happen in your browser.</li>
+      <li>Click <strong>Download themes.json</strong> to save the file.</li>
+      <li>Replace <code>docs/store/themes.json</code> in the repository with the downloaded file.</li>
+      <li>Commit and push to <code>main</code> — GitHub Pages will publish within ~60 seconds.</li>
+    </ol>
+  </div>
 
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        min-height: 100%;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        background: #020617;
-        color: var(--vp-text);
-      }
+  <div class="toolbar">
+    <h2>Packages</h2>
+    <span class="count-badge" id="countBadge">0 packages</span>
+  </div>
 
-      body {
-        background-image: var(--vp-bg);
-        background-attachment: fixed;
-        display: flex;
-        flex-direction: column;
-      }
+  <div id="packageList"></div>
 
-      .admin-shell {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        padding: clamp(1.5rem, 2vw, 2.75rem);
-        gap: clamp(1.5rem, 2vw, 2.5rem);
-      }
+  <button class="add-btn" onclick="addPackage()">+ Add New Package</button>
+</main>
 
-      .admin-header {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        max-width: 960px;
-      }
+<div id="saveBar">
+  <span class="save-hint" id="saveHint">Load or edit packages above, then download the updated JSON.</span>
+  <button class="btn-secondary" onclick="loadFromFile()">Load themes.json</button>
+  <button class="btn-success" onclick="downloadJSON()">⬇ Download themes.json</button>
+</div>
 
-      .admin-logo {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
+<div class="toast" id="toast"></div>
 
-      .admin-logo img {
-        width: clamp(52px, 6vw, 72px);
-        height: clamp(52px, 6vw, 72px);
-      }
+<script>
+(function () {
+  let packages = [];
+  let dirty = false;
 
-      .admin-heading h1 {
-        font-size: clamp(1.8rem, 3.5vw, 3rem);
-        font-weight: 700;
-        margin: 0;
-        letter-spacing: -0.02em;
-      }
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + type;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 3200);
+  }
 
-      .admin-heading p {
-        margin: 0.25rem 0 0;
-        color: var(--vp-text-muted);
-        max-width: 720px;
-        line-height: 1.6;
-      }
+  // ── Dirty state ───────────────────────────────────────────────────────────
+  function markDirty() {
+    dirty = true;
+    const hint = document.getElementById('saveHint');
+    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes — download to save.';
+  }
 
-      .admin-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
-        gap: clamp(1.5rem, 3vw, 3rem);
-        align-items: flex-start;
-      }
+  // ── Collect current field values into packages array ──────────────────────
+  function collectAll() {
+    const cards = document.querySelectorAll('.pkg-card');
+    packages = Array.from(cards).map(card => {
+      const idx = card.dataset.idx;
+      const g = (name) => (card.querySelector(`[data-field="${name}"]`) || {}).value || '';
+      const tagChips = card.querySelectorAll('.tag-chip');
+      const tags = Array.from(tagChips).map(c => c.dataset.tag).filter(Boolean);
+      return {
+        name: g('name'),
+        description: g('description'),
+        creator: g('creator'),
+        code: g('code'),
+        tags,
+        icon: g('icon'),
+        preview: g('preview'),
+        zip_file: g('zip_file'),
+        download_url: g('download_url'),
+        updated: g('updated') || undefined,
+      };
+    });
+  }
 
-      .admin-info-card {
-        background: var(--vp-panel);
-        border: 1px solid var(--vp-border);
-        border-radius: 22px;
-        padding: clamp(1.25rem, 2vw, 2rem);
-        box-shadow: 0 40px 90px rgba(2, 6, 23, 0.45);
-        backdrop-filter: blur(24px);
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
-      }
+  // ── Render all cards ──────────────────────────────────────────────────────
+  function render() {
+    const list = document.getElementById('packageList');
+    const badge = document.getElementById('countBadge');
+    badge.textContent = packages.length + ' package' + (packages.length !== 1 ? 's' : '');
 
-      .admin-info-card h2 {
-        margin: 0;
-        font-size: 1.35rem;
-        font-weight: 600;
-      }
+    if (packages.length === 0) {
+      list.innerHTML = `<div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M20.54 5.23l-7-3a1 1 0 00-.76 0l-7 3A1 1 0 005 6v6.78a5 5 0 002.64 4.39l4 2.06a1 1 0 00.92 0l4-2.06A5 5 0 0019 12.78V6a1 1 0 00-.46-.77zM12 4.12L17.06 6 12 7.88 6.94 6zm3 14.37l-3 1.54-3-1.54A3 3 0 017 12.78V7.62l4.54 1.82a1 1 0 00.72 0L17 7.62v5.16a3 3 0 01-2 2.71z"/></svg>
+        <h3>No packages yet</h3>
+        <p>Click "Add New Package" to create the first one.</p>
+      </div>`;
+      return;
+    }
 
-      .admin-steps {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: 0.9rem;
-      }
+    list.innerHTML = packages.map((pkg, i) => buildCard(pkg, i)).join('');
+    attachTagListeners();
+  }
 
-      .admin-step {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 0.85rem;
-        align-items: start;
-      }
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 
-      .admin-step-number {
-        width: 36px;
-        height: 36px;
-        border-radius: 12px;
-        background: rgba(16, 185, 129, 0.15);
-        border: 1px solid rgba(16, 185, 129, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        color: var(--vp-primary);
-      }
+  function buildCard(pkg, i) {
+    const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
+    const tagChipsHtml = tags.map(t =>
+      `<span class="tag-chip" data-tag="${esc(t)}">${esc(t)}<button type="button" onclick="removeTag(this)" title="Remove tag">×</button></span>`
+    ).join('');
 
-      .admin-step h3 {
-        margin: 0 0 0.2rem;
-        font-size: 1rem;
-        font-weight: 600;
-      }
-
-      .admin-step p {
-        margin: 0;
-        color: var(--vp-text-muted);
-        font-size: 0.9rem;
-      }
-
-      .admin-alert {
-        padding: 1rem;
-        border-radius: 14px;
-        border: 1px solid rgba(248, 113, 113, 0.35);
-        background: rgba(153, 27, 27, 0.1);
-        color: #fca5a5;
-        font-size: 0.9rem;
-        line-height: 1.5;
-      }
-
-      .admin-cms-panel {
-        position: relative;
-        background: rgba(15, 23, 42, 0.88);
-        border-radius: 24px;
-        border: 1px solid rgba(100, 116, 139, 0.25);
-        overflow: hidden;
-        min-height: 640px;
-        box-shadow: 0 40px 100px rgba(2, 6, 23, 0.55);
-        display: flex;
-        flex-direction: column;
-      }
-
-      #nc-root {
-        flex: 1;
-        display: flex;
-        min-height: 0;
-        background: transparent;
-      }
-
-      /* Decap theme overrides */
-      .nc-app {
-        background: transparent;
-        color: inherit;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .nc-app-header,
-      .nc-app-sidebar-header {
-        display: none !important;
-      }
-
-      .nc-app-main {
-        background: transparent;
-      }
-
-      .nc-panel {
-        background: rgba(15, 23, 42, 0.92) !important;
-        border-color: rgba(148, 163, 184, 0.18) !important;
-        color: inherit;
-      }
-
-      .nc-entryList-sidebar,
-      .nc-entry-editor-sidebar {
-        background: rgba(12, 18, 32, 0.85) !important;
-        border-right: 1px solid rgba(148, 163, 184, 0.14) !important;
-      }
-
-      .nc-entry-editor .nc-entryEditor-PreviewPane {
-        background: rgba(2, 6, 23, 0.55) !important;
-      }
-
-      .nc-entryCard, .nc-entryListingCard {
-        background: rgba(15, 23, 42, 0.8) !important;
-        border-radius: 18px !important;
-        border-color: rgba(148, 163, 184, 0.14) !important;
-      }
-
-      .nc-entryEditor-Toolbar {
-        border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
-      }
-
-      .nc-entryEditor-Toolbar button {
-        border-radius: 10px !important;
-        background: rgba(15, 23, 42, 0.65) !important;
-        border: 1px solid rgba(148, 163, 184, 0.18) !important;
-        color: var(--vp-text) !important;
-      }
-
-      .nc-entryEditor-Toolbar button[disabled] {
-        opacity: 0.4;
-      }
-
-      .nc-widget .nc-controlPane-controlLabel {
-        color: var(--vp-text);
-        font-weight: 600;
-      }
-
-      .nc-widget .nc-controlPane-controlDescription {
-        color: var(--vp-text-muted);
-      }
-
-      .nc-controlPane .nc-fieldWrapper > * {
-        border-radius: 12px !important;
-      }
-
-      .nc-controlPane input,
-      .nc-controlPane textarea,
-      .nc-controlPane select {
-        background: rgba(15, 23, 42, 0.75) !important;
-        border: 1px solid rgba(148, 163, 184, 0.2) !important;
-        color: var(--vp-text) !important;
-        border-radius: 12px !important;
-      }
-
-      .nc-controlPane input:focus,
-      .nc-controlPane textarea:focus,
-      .nc-controlPane select:focus {
-        border-color: rgba(16, 185, 129, 0.45) !important;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
-      }
-
-      .nc-entryEditor-backLink span {
-        color: var(--vp-text-muted) !important;
-      }
-
-      .nc-authPage {
-        background: rgba(2, 6, 23, 0.92) !important;
-      }
-
-      .nc-authPage-card {
-        background: rgba(15, 23, 42, 0.9) !important;
-        border-radius: 18px !important;
-        border-color: rgba(148, 163, 184, 0.18) !important;
-      }
-
-      .admin-footer-note {
-        font-size: 0.85rem;
-        color: rgba(226, 232, 240, 0.65);
-        margin-top: auto;
-      }
-
-      @media (max-width: 1180px) {
-        .admin-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .admin-cms-panel {
-          min-height: 720px;
-        }
-      }
-
-      @media (max-width: 720px) {
-        .admin-shell {
-          padding: 1.25rem;
-        }
-
-        .admin-header {
-          gap: 1.25rem;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="admin-shell">
-      <header class="admin-header">
-        <div class="admin-logo">
-          <img src="../icon.svg" alt="Vortex Prime" />
-          <div class="admin-heading">
-            <h1>Publish Store Packages</h1>
-            <p>
-              Sign in with GitHub (public or admin) to create pull requests that add new packages to the Vortex Prime store.
-              Maintainers review and merge submissions so the catalogue stays secure while remaining open source.
-            </p>
+    return `<div class="card pkg-card" data-idx="${i}" id="pkg-${i}">
+      <div class="card-header" onclick="toggleCard(${i})">
+        <span class="pkg-name">${esc(pkg.name) || '<em style="color:var(--muted)">Untitled Package</em>'}</span>
+        ${pkg.code ? `<span class="pkg-code">${esc(pkg.code)}</span>` : ''}
+        <span class="chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="field">
+            <label>Package Title *</label>
+            <input type="text" data-field="name" value="${esc(pkg.name)}" placeholder="e.g. Dark Neon Theme" oninput="onFieldInput(${i},'name',this.value)">
+          </div>
+          <div class="field">
+            <label>Store Code *</label>
+            <input type="text" data-field="code" value="${esc(pkg.code)}" placeholder="e.g. DARK-NEON-01" oninput="onFieldInput(${i},'code',this.value)">
+          </div>
+          <div class="field full">
+            <label>Description</label>
+            <textarea data-field="description" placeholder="Short overview of the package..." oninput="onFieldInput(${i},'description',this.value)">${esc(pkg.description)}</textarea>
+          </div>
+          <div class="field">
+            <label>Original Creator</label>
+            <input type="text" data-field="creator" value="${esc(pkg.creator)}" placeholder="Author or team name" oninput="onFieldInput(${i},'creator',this.value)">
+          </div>
+          <div class="field">
+            <label>Last Updated</label>
+            <input type="datetime-local" data-field="updated" value="${esc(pkg.updated ? pkg.updated.replace('Z','') : '')}" oninput="onFieldInput(${i},'updated',this.value)">
+          </div>
+          <div class="field full">
+            <label>Tags (press Enter or comma to add)</label>
+            <div class="tags-input" id="tags-wrap-${i}" onclick="focusTagInput(${i})">
+              ${tagChipsHtml}
+              <input type="text" id="tag-input-${i}" placeholder="${tags.length ? '' : 'e.g. theme, retro, dark'}" style="border:none;background:transparent;outline:none;min-width:100px;flex:1;font-size:.85rem;color:var(--text)">
+            </div>
+          </div>
+          <div class="field">
+            <label>Icon Image URL</label>
+            <input type="text" data-field="icon" value="${esc(pkg.icon)}" placeholder="/uploads/icon.png or https://..." oninput="onFieldInput(${i},'icon',this.value)">
+          </div>
+          <div class="field">
+            <label>Preview Image URL</label>
+            <input type="text" data-field="preview" value="${esc(pkg.preview)}" placeholder="/uploads/preview.png or https://..." oninput="onFieldInput(${i},'preview',this.value)">
+          </div>
+          <div class="field">
+            <label>ZIP File Path</label>
+            <input type="text" data-field="zip_file" value="${esc(pkg.zip_file)}" placeholder="/uploads/package.zip" oninput="onFieldInput(${i},'zip_file',this.value)">
+          </div>
+          <div class="field">
+            <label>External Download URL</label>
+            <input type="text" data-field="download_url" value="${esc(pkg.download_url)}" placeholder="https://example.com/package.zip" oninput="onFieldInput(${i},'download_url',this.value)">
           </div>
         </div>
-      </header>
-
-      <div class="admin-grid">
-        <aside class="admin-info-card">
-          <div class="admin-alert" style="background: rgba(14,116,144,0.14); border-color: rgba(13,148,136,0.45); color: #5eead4;">
-            <strong>Open community uploads.</strong> Anyone with a GitHub account can submit packages. Your changes will enter review before going live.
-          </div>
-
-          <h2>Before you submit</h2>
-          <ul class="admin-steps">
-            <li class="admin-step">
-              <span class="admin-step-number">1</span>
-              <div>
-                <h3>Collect your assets</h3>
-                <p>Have the icon, preview image, and either a ZIP package or an external download link ready.</p>
-              </div>
-            </li>
-            <li class="admin-step">
-              <span class="admin-step-number">2</span>
-              <div>
-                <h3>Complete the fields</h3>
-                <p>Provide the package title, description, creator credit, tags, and store code used by the app.</p>
-              </div>
-            </li>
-            <li class="admin-step">
-              <span class="admin-step-number">3</span>
-              <div>
-                <h3>Review the preview card</h3>
-                <p>Use the live preview to confirm how the package appears on the public store before publishing.</p>
-              </div>
-            </li>
-          </ul>
-
-          <div class="admin-alert">
-            Provide <strong>either</strong> a ZIP upload <strong>or</strong> an external download link. Packages without a download source cannot be published.
-          </div>
-
-          <p class="admin-footer-note">Community submissions land in a GitHub pull request for maintainer approval. No credentials are stored in the browser.</p>
-        </aside>
-
-        <section class="admin-cms-panel">
-          <div id="nc-root"></div>
-        </section>
+        <div class="card-actions">
+          <button class="btn-danger" onclick="removePackage(${i})">🗑 Remove Package</button>
+          <button class="btn-secondary" onclick="movePackage(${i},-1)" ${i===0?'disabled':''}>↑ Move Up</button>
+          <button class="btn-secondary" onclick="movePackage(${i},1)" ${i===packages.length-1?'disabled':''}>↓ Move Down</button>
+        </div>
       </div>
-    </div>
+    </div>`;
+  }
 
-    <script>
-      window.CMS_MANUAL_INIT = true;
-      // Netlify Identity: redirect confirmation/invite links to /admin/
-      if (window.netlifyIdentity) {
-        window.netlifyIdentity.on('init', function (user) {
-          if (!user) {
-            window.netlifyIdentity.on('login', function () {
-              document.location.href = '/admin/';
-            });
-          }
-        });
-      }
-    </script>
-    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-    <script>
-      (function () {
-        const { CMS, createClass, h } = window;
-
-        if (!CMS) {
-          return;
+  // ── Tag logic ─────────────────────────────────────────────────────────────
+  function attachTagListeners() {
+    packages.forEach((_, i) => {
+      const input = document.getElementById('tag-input-' + i);
+      if (!input) return;
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const val = input.value.trim().replace(/,/g, '');
+          if (val) addTag(i, val);
+          input.value = '';
+        } else if (e.key === 'Backspace' && !input.value) {
+          const chips = document.querySelectorAll(`#tags-wrap-${i} .tag-chip`);
+          if (chips.length) chips[chips.length - 1].querySelector('button').click();
         }
+      });
+    });
+  }
 
-        const previewStyles = `
-          :root { color-scheme: dark; }
-          body { margin: 0; font-family: 'Inter', sans-serif; background: #020617; color: #f8fafc; }
-          .vp-preview-card { max-width: 380px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(148,163,184,0.22); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 70px rgba(2,6,23,0.55); display: flex; flex-direction: column; }
-          .vp-preview-media { position: relative; height: 220px; background: linear-gradient(135deg, rgba(30,64,175,0.45), rgba(15,118,110,0.55)); display: flex; align-items: center; justify-content: center; }
-          .vp-preview-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-          .vp-preview-icon { position: absolute; bottom: -32px; left: 24px; width: 64px; height: 64px; border-radius: 18px; border: 2px solid rgba(248,250,252,0.85); overflow: hidden; background: rgba(15,23,42,0.8); display: flex; align-items: center; justify-content: center; }
-          .vp-preview-icon img { width: 100%; height: 100%; object-fit: cover; }
-          .vp-preview-body { padding: 48px 24px 24px; display: flex; flex-direction: column; gap: 1rem; }
-          .vp-preview-title { display: flex; flex-direction: column; gap: 0.35rem; }
-          .vp-preview-title h3 { margin: 0; font-size: 1.3rem; font-weight: 600; letter-spacing: -0.01em; }
-          .vp-preview-title span { color: rgba(226,232,240,0.68); font-size: 0.95rem; }
-          .vp-preview-description { color: rgba(226,232,240,0.78); font-size: 0.95rem; line-height: 1.55; margin: 0; }
-          .vp-preview-tags { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-          .vp-preview-tag { padding: 0.25rem 0.6rem; border-radius: 999px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: rgba(110,231,183,0.95); font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; }
-          .vp-preview-meta { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem; color: rgba(148,163,184,0.85); }
-          .vp-preview-code { display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148,163,184,0.18); border-radius: 14px; padding: 0.65rem 0.85rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; color: rgba(16,185,129,0.9); }
-          .vp-preview-download { font-size: 0.85rem; color: rgba(226,232,240,0.78); }
-        `;
+  window.focusTagInput = function(i) {
+    const el = document.getElementById('tag-input-' + i);
+    if (el) el.focus();
+  };
 
-        CMS.registerPreviewStyle(previewStyles, { raw: true });
+  window.addTag = function(i, val) {
+    collectAll();
+    if (!packages[i].tags) packages[i].tags = [];
+    if (!packages[i].tags.includes(val)) {
+      packages[i].tags.push(val);
+      markDirty();
+      render();
+      const card = document.getElementById('pkg-' + i);
+      if (card && !card.classList.contains('open')) card.classList.add('open');
+    }
+  };
 
-        const StorePreview = createClass({
-          render() {
-            const data = this.props.entry.getIn(['data']) || CMS.List();
-            const getAsset = this.props.getAsset;
-            const icon = data.get('icon') ? getAsset(data.get('icon')) : null;
-            const preview = data.get('preview') ? getAsset(data.get('preview')) : null;
-            const tags = data.get('tags') ? data.get('tags').toArray().filter(Boolean) : [];
-            const downloadUrl = data.get('download_url');
-            const zipFile = data.get('zip_file');
-            const downloadLabel = downloadUrl ? 'External download link' : zipFile ? 'ZIP stored in repository' : 'Download source missing';
+  window.removeTag = function(btn) {
+    collectAll();
+    const chip = btn.closest('.tag-chip');
+    const tag = chip.dataset.tag;
+    const card = btn.closest('.pkg-card');
+    const i = parseInt(card.dataset.idx, 10);
+    packages[i].tags = (packages[i].tags || []).filter(t => t !== tag);
+    markDirty();
+    render();
+    const newCard = document.getElementById('pkg-' + i);
+    if (newCard) newCard.classList.add('open');
+  };
 
-            return h(
-              'div',
-              { className: 'vp-preview-card' },
-              [
-                h(
-                  'div',
-                  { className: 'vp-preview-media' },
-                  preview ? [h('img', { src: preview.toString(), alt: 'Package preview' })] : []
-                ),
-                h(
-                  'div',
-                  { className: 'vp-preview-icon' },
-                  icon ? [h('img', { src: icon.toString(), alt: 'Package icon' })] : [h('span', null, 'VP')]
-                ),
-                h('div', { className: 'vp-preview-body' }, [
-                  h('div', { className: 'vp-preview-title' }, [
-                    h('h3', null, data.get('name') || 'Package title'),
-                    h('span', null, data.get('creator') ? `Created by ${data.get('creator')}` : 'Creator credit')
-                  ]),
-                  h('p', { className: 'vp-preview-description' }, data.get('description') || 'Describe what this package brings to the Vortex Prime experience.'),
-                  tags.length
-                    ? h('div', { className: 'vp-preview-tags' }, tags.map((tag) => h('span', { className: 'vp-preview-tag', key: tag }, tag)))
-                    : null,
-                  h('div', { className: 'vp-preview-meta' }, [
-                    h('div', { className: 'vp-preview-code' }, [
-                      h('span', null, 'Store Code'),
-                      h('span', null, data.get('code') || '—')
-                    ]),
-                    h('div', { className: 'vp-preview-download' }, downloadLabel)
-                  ])
-                ])
-              ]
-            );
-          }
-        });
+  // ── Card interactions ─────────────────────────────────────────────────────
+  window.toggleCard = function(i) {
+    const card = document.getElementById('pkg-' + i);
+    if (card) card.classList.toggle('open');
+  };
 
-        CMS.init();
-        CMS.registerPreviewTemplate('store', StorePreview);
+  window.onFieldInput = function(i, field, value) {
+    packages[i][field] = value;
+    markDirty();
+    // Update header live
+    if (field === 'name' || field === 'code') {
+      const card = document.getElementById('pkg-' + i);
+      if (card) {
+        const nameEl = card.querySelector('.pkg-name');
+        const codeEl = card.querySelector('.pkg-code');
+        if (nameEl) nameEl.innerHTML = esc(packages[i].name) || '<em style="color:var(--muted)">Untitled Package</em>';
+        if (field === 'code') {
+          if (value && codeEl) codeEl.textContent = value;
+          else if (value && !codeEl) nameEl.insertAdjacentHTML('afterend', `<span class="pkg-code">${esc(value)}</span>`);
+          else if (!value && codeEl) codeEl.remove();
+        }
+      }
+    }
+  };
 
-        CMS.registerEventListener({
-          name: 'preSave',
-          handler: ({ entry }) => {
-            const data = entry.getIn(['data']);
-            if (!data) return;
-            const hasZip = data.get('zip_file');
-            const hasLink = data.get('download_url');
-            if (!hasZip && !hasLink) {
-              throw new Error('Add either a ZIP file upload or an external download link before publishing.');
-            }
-          }
-        });
+  window.addPackage = function() {
+    collectAll();
+    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', updated: '' });
+    markDirty();
+    render();
+    const newCard = document.getElementById('pkg-' + (packages.length - 1));
+    if (newCard) {
+      newCard.classList.add('open');
+      newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const first = newCard.querySelector('input[data-field="name"]');
+      if (first) setTimeout(() => first.focus(), 100);
+    }
+  };
 
-        const observer = new MutationObserver(() => {
-          const app = document.querySelector('.nc-app');
-          if (app) {
-            document.body.classList.add('cms-mounted');
-            observer.disconnect();
-          }
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-      })();
-    </script>
-  </body>
+  window.removePackage = function(i) {
+    if (!confirm(`Remove package "${packages[i].name || 'Untitled'}"?`)) return;
+    collectAll();
+    packages.splice(i, 1);
+    markDirty();
+    render();
+    toast('Package removed. Download JSON to save.', 'success');
+  };
+
+  window.movePackage = function(i, dir) {
+    collectAll();
+    const j = i + dir;
+    if (j < 0 || j >= packages.length) return;
+    [packages[i], packages[j]] = [packages[j], packages[i]];
+    markDirty();
+    render();
+    const card = document.getElementById('pkg-' + j);
+    if (card) card.classList.add('open');
+  };
+
+  // ── Load from file ────────────────────────────────────────────────────────
+  window.loadFromFile = function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = () => {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+          dirty = false;
+          document.getElementById('saveHint').textContent = `Loaded ${packages.length} package(s) from ${file.name}`;
+          render();
+          toast(`Loaded ${packages.length} package(s).`);
+        } catch {
+          toast('Invalid JSON file.', 'error');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  // ── Download JSON ─────────────────────────────────────────────────────────
+  window.downloadJSON = function() {
+    collectAll();
+    const clean = packages.map(pkg => {
+      const out = {};
+      if (pkg.name) out.name = pkg.name;
+      if (pkg.description) out.description = pkg.description;
+      if (pkg.creator) out.creator = pkg.creator;
+      if (pkg.code) out.code = pkg.code;
+      out.tags = Array.isArray(pkg.tags) ? pkg.tags.filter(Boolean) : [];
+      if (pkg.icon) out.icon = pkg.icon;
+      if (pkg.preview) out.preview = pkg.preview;
+      if (pkg.zip_file) out.zip_file = pkg.zip_file;
+      if (pkg.download_url) out.download_url = pkg.download_url;
+      if (pkg.updated) out.updated = pkg.updated.includes('T') && !pkg.updated.endsWith('Z') ? pkg.updated + 'Z' : pkg.updated;
+      return out;
+    });
+
+    const json = JSON.stringify({ dashboards: clean }, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'themes.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    dirty = false;
+    document.getElementById('saveHint').textContent = 'Downloaded! Replace docs/store/themes.json and push to GitHub.';
+    toast('themes.json downloaded — commit it to go live.');
+  };
+
+  // ── Auto-load live themes.json ─────────────────────────────────────────────
+  fetch('../store/themes.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+      document.getElementById('saveHint').textContent =
+        `Loaded ${packages.length} package(s) from live store. Edit below, then download to save.`;
+      render();
+    })
+    .catch(() => {
+      render();
+      document.getElementById('saveHint').textContent = 'Could not load themes.json automatically. Use "Load themes.json" button.';
+    });
+
+})();
+</script>
+</body>
 </html>
