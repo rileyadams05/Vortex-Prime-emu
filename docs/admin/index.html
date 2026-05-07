@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Vortex Prime · Store Admin</title>
+  <title>Vortex Prime · Store Upload Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -86,8 +86,8 @@
 <header>
   <img src="../icon.svg" alt="Vortex Prime">
   <div>
-    <h1>Store Admin</h1>
-    <p>Local package editor — no login required</p>
+    <h1>Store Upload Portal</h1>
+    <p>Add ZIP packages for Vortex Prime</p>
   </div>
   <div class="header-right">
     <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none;">← Back to Store</a>
@@ -96,13 +96,14 @@
 
 <main>
   <div class="notice">
-    <strong>How this works (GitHub Pages workflow)</strong>
+    <strong>How to publish a package</strong>
     <ol>
-      <li>Add or edit packages below — all changes happen in your browser.</li>
-      <li>Click <strong>Download themes.json</strong> to save the file.</li>
-      <li>Replace <code>docs/store/themes.json</code> in the repository with the downloaded file.</li>
-      <li>Commit and push to <code>main</code> — GitHub Pages will publish within ~60 seconds.</li>
+      <li>Click <strong>+ Add ZIP</strong> and fill in the package details below.</li>
+      <li>Enter the store code, title, description, creator, and any download link.</li>
+      <li>Click <strong>Save Package File</strong> when you are done editing.</li>
+      <li>Commit the saved file to GitHub — the store updates within ~60 seconds.</li>
     </ol>
+    <div style="margin-top:.75rem;font-size:.75rem;color:rgba(110,231,183,.5);">Advanced: the saved file is <code>docs/store/themes.json</code> in the repository.</div>
   </div>
 
   <div class="toolbar">
@@ -112,13 +113,13 @@
 
   <div id="packageList"></div>
 
-  <button class="add-btn" onclick="addPackage()">+ Add New Package</button>
+  <button class="add-btn" onclick="addPackage()">+ Add ZIP</button>
 </main>
 
 <div id="saveBar">
-  <span class="save-hint" id="saveHint">Load or edit packages above, then download the updated JSON.</span>
-  <button class="btn-secondary" onclick="loadFromFile()">Load themes.json</button>
-  <button class="btn-success" onclick="downloadJSON()">⬇ Download themes.json</button>
+  <span class="save-hint" id="saveHint">Add or edit packages above, then save when ready.</span>
+  <button class="btn-secondary" style="font-size:.8rem;opacity:.7;" onclick="loadFromFile()">Import file…</button>
+  <button class="btn-success" onclick="downloadJSON()">💾 Save Package File</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -141,7 +142,7 @@
   function markDirty() {
     dirty = true;
     const hint = document.getElementById('saveHint');
-    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes — download to save.';
+    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes — click Save Package File when ready.';
   }
 
   // ── Collect current field values into packages array ──────────────────────
@@ -176,8 +177,8 @@
     if (packages.length === 0) {
       list.innerHTML = `<div class="empty-state">
         <svg viewBox="0 0 24 24"><path d="M20.54 5.23l-7-3a1 1 0 00-.76 0l-7 3A1 1 0 005 6v6.78a5 5 0 002.64 4.39l4 2.06a1 1 0 00.92 0l4-2.06A5 5 0 0019 12.78V6a1 1 0 00-.46-.77zM12 4.12L17.06 6 12 7.88 6.94 6zm3 14.37l-3 1.54-3-1.54A3 3 0 017 12.78V7.62l4.54 1.82a1 1 0 00.72 0L17 7.62v5.16a3 3 0 01-2 2.71z"/></svg>
-        <h3>No packages yet</h3>
-        <p>Click "Add New Package" to create the first one.</p>
+        <h3>No ZIP packages uploaded yet</h3>
+        <p>Click <strong>+ Add ZIP</strong> to create your first store package.</p>
       </div>`;
       return;
     }
@@ -351,7 +352,7 @@
     packages.splice(i, 1);
     markDirty();
     render();
-    toast('Package removed. Download JSON to save.', 'success');
+    toast('Package removed. Click Save Package File to apply.', 'success');
   };
 
   window.movePackage = function(i, dir) {
@@ -379,7 +380,7 @@
           const data = JSON.parse(e.target.result);
           packages = Array.isArray(data.dashboards) ? data.dashboards : [];
           dirty = false;
-          document.getElementById('saveHint').textContent = `Loaded ${packages.length} package(s) from ${file.name}`;
+          document.getElementById('saveHint').textContent = `Loaded ${packages.length} package(s) from ${file.name} — click Save Package File when done.`;
           render();
           toast(`Loaded ${packages.length} package(s).`);
         } catch {
@@ -418,8 +419,8 @@
     a.click();
     URL.revokeObjectURL(url);
     dirty = false;
-    document.getElementById('saveHint').textContent = 'Downloaded! Replace docs/store/themes.json and push to GitHub.';
-    toast('themes.json downloaded — commit it to go live.');
+    document.getElementById('saveHint').textContent = 'File saved! Replace docs/store/themes.json in the repo and push to publish.';
+    toast('Package file saved — commit it to go live.');
   };
 
   // ── Auto-load live themes.json ─────────────────────────────────────────────
@@ -428,12 +429,12 @@
     .then(data => {
       packages = Array.isArray(data.dashboards) ? data.dashboards : [];
       document.getElementById('saveHint').textContent =
-        `Loaded ${packages.length} package(s) from live store. Edit below, then download to save.`;
+        `Loaded ${packages.length} package(s) from the live store. Edit below, then click Save Package File.`;
       render();
     })
     .catch(() => {
       render();
-      document.getElementById('saveHint').textContent = 'Could not load themes.json automatically. Use "Load themes.json" button.';
+      document.getElementById('saveHint').textContent = 'Could not auto-load existing packages. Click Import file… to load manually.';
     });
 
 })();
