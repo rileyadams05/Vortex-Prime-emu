@@ -106,19 +106,18 @@
     <div style="margin-top:.75rem;font-size:.75rem;color:rgba(110,231,183,.5);">Advanced: the saved file is <code>docs/store/themes.json</code> in the repository.</div>
   </div>
 
+  <button class="add-btn" onclick="addPackage()">+ Add ZIP</button>
+
   <div class="toolbar">
     <h2>Packages</h2>
     <span class="count-badge" id="countBadge">0 packages</span>
   </div>
 
   <div id="packageList"></div>
-
-  <button class="add-btn" onclick="addPackage()">+ Add ZIP</button>
 </main>
 
 <div id="saveBar">
   <span class="save-hint" id="saveHint">Add or edit packages above, then save when ready.</span>
-  <button class="btn-secondary" style="font-size:.8rem;opacity:.7;" onclick="loadFromFile()">Import file…</button>
   <button class="btn-success" onclick="downloadJSON()">💾 Save Package File</button>
 </div>
 
