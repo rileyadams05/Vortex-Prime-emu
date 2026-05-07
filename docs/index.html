@@ -2190,11 +2190,11 @@
                             : '<button class="theme-code-copy" disabled>Copy</button>';
 
                         const downloadLink = hasDownload
-                            ? `<a class="theme-download" href="${safeDownload}" target="_blank" rel="noopener">${downloadUrl ? 'Download Package' : 'Download ZIP'}</a>`
+                            ? `<a class="theme-download" href="${safeDownload}" target="_blank" rel="noopener">${downloadUrl ? 'Redirect to Download' : 'Download ZIP'}</a>`
                             : '<a class="theme-download disabled" href="#" tabindex="-1" aria-disabled="true" onclick="return false;">Download unavailable</a>';
 
                         const downloadStatusText = downloadUrl
-                            ? 'External download link provided'
+                            ? 'External source (Redirecting...)'
                             : zipFile
                                 ? 'ZIP package hosted by Vortex Prime'
                                 : 'Download source not yet available';

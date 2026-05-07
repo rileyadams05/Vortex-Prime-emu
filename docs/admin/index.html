@@ -137,8 +137,8 @@
 </main>
 
 <div id="saveBar">
-  <span class="save-hint" id="saveHint">Add or edit packages above, then save when ready.</span>
-  <button class="btn-success" onclick="downloadJSON()">💾 Save Package File</button>
+  <span class="save-hint" id="saveHint">Add or edit packages above, then upload when ready.</span>
+  <button class="btn-success" onclick="downloadJSON()">🚀 Upload to Store</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -161,7 +161,7 @@
   function markDirty() {
     dirty = true;
     const hint = document.getElementById('saveHint');
-    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes — click Save Package File when ready.';
+    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes — click Upload to Store when ready.';
   }
 
   // ── Collect current field values into packages array ──────────────────────
@@ -290,8 +290,9 @@
             </div>
           </div>
           <div class="field">
-            <label>External Download URL (Optional)</label>
+            <label>External Download Redirect URL</label>
             <input type="text" data-field="download_url" value="${esc(pkg.download_url)}" placeholder="https://..." oninput="onFieldInput(${i},'download_url',this.value)">
+            <span class="upload-hint-box">Optional. Use this to redirect downloads to an external file or source page instead of hosting the ZIP here.</span>
           </div>
         </div>
         <div class="card-actions">
@@ -512,8 +513,8 @@
     a.click();
     URL.revokeObjectURL(url);
     dirty = false;
-    document.getElementById('saveHint').textContent = 'File saved! Replace docs/store/themes.json in the repo and push to publish.';
-    toast('Package file saved — commit it to go live.');
+    document.getElementById('saveHint').textContent = 'Package file ready! Replace docs/store/themes.json in the repo and push to publish.';
+    toast('Upload file prepared — commit it to go live.');
   };
 
   // ── Auto-load live themes.json ─────────────────────────────────────────────
@@ -522,7 +523,7 @@
     .then(data => {
       packages = Array.isArray(data.dashboards) ? data.dashboards : [];
       document.getElementById('saveHint').textContent =
-        `Loaded ${packages.length} package(s) from the live store. Edit below, then click Save Package File.`;
+        `Loaded ${packages.length} package(s) from the live store. Edit below, then click Upload to Store.`;
       render();
     })
     .catch(() => {
