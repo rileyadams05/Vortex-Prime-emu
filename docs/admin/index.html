@@ -76,10 +76,40 @@
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.success { border-color: rgba(16,185,129,.5); color: #6ee7b7; }
     .toast.error { border-color: rgba(239,68,68,.4); color: #fca5a5; }
+    .toast.error { border-color: rgba(239,68,68,.4); color: #fca5a5; }
     #saveBar { position: sticky; bottom: 0; background: rgba(9,9,11,.95); backdrop-filter: blur(16px); border-top: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; z-index: 40; }
     .save-hint { font-size: .8rem; color: var(--muted); flex: 1; }
     .dirty-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warning); margin-right: .4rem; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+    /* Upload Zone Styling */
+    .upload-zone { 
+      background: var(--bg); 
+      border: 2px dashed var(--border); 
+      border-radius: 12px; 
+      padding: 1.5rem; 
+      text-align: center; 
+      cursor: pointer; 
+      transition: all .2s; 
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 100px;
+      justify-content: center;
+    }
+    .upload-zone:hover, .upload-zone.dragover { 
+      border-color: var(--primary); 
+      background: rgba(16,185,129,.05); 
+    }
+    .upload-zone svg { width: 24px; height: 24px; fill: var(--muted); margin-bottom: 4px; }
+    .upload-zone span { font-size: 0.75rem; color: var(--muted); }
+    .upload-zone .file-name { font-weight: 600; color: var(--primary); font-size: 0.85rem; word-break: break-all; }
+    .preview-wrap { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .preview-thumb { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .preview-large { width: 100%; height: 140px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); margin-bottom: 0.5rem; }
+    .upload-hint-box { font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem; }
   </style>
 </head>
 <body>
@@ -228,20 +258,40 @@
             </div>
           </div>
           <div class="field">
-            <label>Icon Image URL</label>
-            <input type="text" data-field="icon" value="${esc(pkg.icon)}" placeholder="/uploads/icon.png or https://..." oninput="onFieldInput(${i},'icon',this.value)">
+            <label>Icon Image (PNG, JPG, WEBP)</label>
+            <div class="upload-zone" onclick="document.getElementById('icon-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'icon')">
+              <div class="preview-wrap" id="icon-preview-wrap-${i}">
+                ${pkg.icon ? `<img src="${esc(pkg.icon)}" class="preview-thumb">` : `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>`}
+                <span class="file-name">${pkg.icon ? esc(pkg.icon.split('/').pop()) : 'Click or drop icon'}</span>
+              </div>
+              <input type="file" id="icon-file-${i}" accept="image/*" style="display:none" onchange="handleFileSelect(${i}, 'icon', this)">
+              <input type="hidden" data-field="icon" value="${esc(pkg.icon)}">
+            </div>
           </div>
           <div class="field">
-            <label>Preview Image URL</label>
-            <input type="text" data-field="preview" value="${esc(pkg.preview)}" placeholder="/uploads/preview.png or https://..." oninput="onFieldInput(${i},'preview',this.value)">
+            <label>Preview Image (PNG, JPG, WEBP)</label>
+            <div class="upload-zone" onclick="document.getElementById('preview-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'preview')">
+              <div class="preview-wrap" id="preview-preview-wrap-${i}">
+                ${pkg.preview ? `<img src="${esc(pkg.preview)}" class="preview-large">` : `<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`}
+                <span class="file-name">${pkg.preview ? esc(pkg.preview.split('/').pop()) : 'Click or drop preview image'}</span>
+              </div>
+              <input type="file" id="preview-file-${i}" accept="image/*" style="display:none" onchange="handleFileSelect(${i}, 'preview', this)">
+              <input type="hidden" data-field="preview" value="${esc(pkg.preview)}">
+            </div>
           </div>
           <div class="field">
-            <label>ZIP File Path</label>
-            <input type="text" data-field="zip_file" value="${esc(pkg.zip_file)}" placeholder="/uploads/package.zip" oninput="onFieldInput(${i},'zip_file',this.value)">
+            <label>ZIP Package</label>
+            <div class="upload-zone" onclick="document.getElementById('zip-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'zip_file')">
+              <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+              <span class="file-name" id="zip-name-${i}">${pkg.zip_file ? esc(pkg.zip_file.split('/').pop()) : 'Click or drop ZIP file'}</span>
+              <span class="upload-hint-box">Files should be moved to docs/uploads/</span>
+              <input type="file" id="zip-file-${i}" accept=".zip,.rar,.7z" style="display:none" onchange="handleFileSelect(${i}, 'zip_file', this)">
+              <input type="hidden" data-field="zip_file" value="${esc(pkg.zip_file)}">
+            </div>
           </div>
           <div class="field">
-            <label>External Download URL</label>
-            <input type="text" data-field="download_url" value="${esc(pkg.download_url)}" placeholder="https://example.com/package.zip" oninput="onFieldInput(${i},'download_url',this.value)">
+            <label>External Download URL (Optional)</label>
+            <input type="text" data-field="download_url" value="${esc(pkg.download_url)}" placeholder="https://..." oninput="onFieldInput(${i},'download_url',this.value)">
           </div>
         </div>
         <div class="card-actions">
@@ -326,6 +376,51 @@
       }
     }
   };
+
+  // ── Modern Upload Logic ──────────────────────────────────────────────────
+  window.handleFileSelect = function(i, field, input) {
+    const file = input.files[0];
+    if (!file) return;
+    processFile(i, field, file);
+  };
+
+  window.handleDrop = function(e, i, field) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    processFile(i, field, file);
+  };
+
+  function processFile(i, field, file) {
+    const filename = file.name;
+    const path = '/uploads/' + filename;
+    
+    // Update internal data
+    packages[i][field] = path;
+    markDirty();
+
+    // Update hidden field
+    const card = document.getElementById('pkg-' + i);
+    const hidden = card.querySelector(`input[data-field="${field}"]`);
+    if (hidden) hidden.value = path;
+
+    // Visual feedback
+    if (field === 'icon' || field === 'preview') {
+      const wrap = document.getElementById(`${field}-preview-wrap-${i}`);
+      const reader = new FileReader();
+      reader.onload = e => {
+        const imgClass = field === 'icon' ? 'preview-thumb' : 'preview-large';
+        wrap.innerHTML = `<img src="${e.target.result}" class="${imgClass}"><span class="file-name">${esc(filename)}</span>`;
+      };
+      reader.readAsDataURL(file);
+    } else if (field === 'zip_file') {
+      const nameEl = document.getElementById(`zip-name-${i}`);
+      if (nameEl) nameEl.textContent = filename;
+    }
+
+    toast(`Selected ${filename}. Remember to place it in docs/uploads/`);
+  }
 
   window.addPackage = function(isUserAction = true) {
     if (isUserAction) collectAll();
