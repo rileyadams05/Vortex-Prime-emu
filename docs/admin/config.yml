@@ -30,7 +30,7 @@ collections:
             label: Store Items
             label_singular: Package
             widget: list
-            summary: "{{fields.name}} (#{{fields.code}})"
+            summary: "{{name}} (#{{code}})"
 
             fields:
               - name: name
