@@ -4,16 +4,12 @@ backend:
   branch: main
   auth_type: implicit
   app_id: Ov23lifTnZWjG47H2r8j
-  base_url: https://rileyadams05.github.io/Vortex-Prime-emu
-  site_domain: rileyadams05.github.io
   open_authoring: true
   use_graphql: true
 
 publish_mode: editorial_workflow
-
 media_folder: docs/uploads
 public_folder: /uploads
-
 local_backend: false
 
 collections:
@@ -31,7 +27,6 @@ collections:
             label_singular: Package
             widget: list
             summary: "{{name}} (#{{code}})"
-
             fields:
               - name: name
                 label: Package Title
@@ -51,9 +46,7 @@ collections:
               - name: code
                 label: Store Code
                 widget: string
-                pattern:
-                  - "^[0-9A-Za-z_.-]{2,32}$"
-                  - "Codes should be 2-32 characters and may include letters, numbers, dashes, underscores, or dots."
+                pattern: ["^[0-9A-Za-z_.-]{2,32}$", "Codes should be 2-32 characters and may include letters, numbers, dashes, underscores, or dots."]
                 hint: "Code players enter inside Vortex Prime to install the package."
 
               - name: tags
@@ -81,13 +74,13 @@ collections:
                 required: false
                 media_library:
                   allow_multiple: false
-                hint: "Upload a ZIP archive that will be hosted with the site. Leave blank if you provide an external download link instead."
+                hint: "Upload a ZIP archive that will be hosted with the site."
 
               - name: download_url
                 label: External Download Link
                 widget: string
                 required: false
-                hint: "Optional URL for packages hosted elsewhere. Overrides the ZIP upload when present."
+                hint: "Optional URL for packages hosted elsewhere."
 
               - name: updated
                 label: Last Updated
