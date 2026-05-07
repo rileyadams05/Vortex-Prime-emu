@@ -20,77 +20,79 @@ collections:
   - name: store
     label: Store Catalogue
     label_singular: Package
-    format: json
-    file: docs/store/themes.json
-
-    fields:
-      - name: dashboards
-        label: Store Items
-        label_singular: Package
-        widget: list
-        summary: "{{fields.name}} (#{{fields.code}})"
-
+    files:
+      - name: store
+        label: Store Catalogue
+        file: docs/store/themes.json
+        format: json
         fields:
-          - name: name
-            label: Package Title
-            widget: string
-            hint: "Display name shown on the public store."
-
-          - name: description
-            label: Package Description
-            widget: text
-            hint: "Short overview that explains what this package installs."
-
-          - name: creator
-            label: Original Creator
-            widget: string
-            hint: "Credit the author or team responsible for this package."
-
-          - name: code
-            label: Store Code
-            widget: string
-            pattern:
-              - "^[0-9A-Za-z_.-]{2,32}$"
-              - "Codes should be 2-32 characters and may include letters, numbers, dashes, underscores, or dots."
-            hint: "Code players enter inside Vortex Prime to install the package."
-
-          - name: tags
-            label: Tags
+          - name: dashboards
+            label: Store Items
+            label_singular: Package
             widget: list
-            allow_add: true
-            default: []
-            required: false
-            hint: "Optional keywords that help with search (e.g. genre, platform, style)."
+            summary: "{{fields.name}} (#{{fields.code}})"
 
-          - name: icon
-            label: Icon Image
-            widget: image
-            hint: "Square icon shown next to the package title."
+            fields:
+              - name: name
+                label: Package Title
+                widget: string
+                hint: "Display name shown on the public store."
 
-          - name: preview
-            label: Preview Image
-            widget: image
-            required: false
-            hint: "Optional wide preview shown at the top of the package card."
+              - name: description
+                label: Package Description
+                widget: text
+                hint: "Short overview that explains what this package installs."
 
-          - name: zip_file
-            label: ZIP Upload
-            widget: file
-            required: false
-            media_library:
-              allow_multiple: false
-            hint: "Upload a ZIP archive that will be hosted with the site. Leave blank if you provide an external download link instead."
+              - name: creator
+                label: Original Creator
+                widget: string
+                hint: "Credit the author or team responsible for this package."
 
-          - name: download_url
-            label: External Download Link
-            widget: string
-            required: false
-            hint: "Optional URL for packages hosted elsewhere. Overrides the ZIP upload when present."
+              - name: code
+                label: Store Code
+                widget: string
+                pattern:
+                  - "^[0-9A-Za-z_.-]{2,32}$"
+                  - "Codes should be 2-32 characters and may include letters, numbers, dashes, underscores, or dots."
+                hint: "Code players enter inside Vortex Prime to install the package."
 
-          - name: updated
-            label: Last Updated
-            widget: datetime
-            required: false
-            picker_utc: true
-            time_format: HH:mm
-            hint: "Optional timestamp shown on the public package card."
+              - name: tags
+                label: Tags
+                widget: list
+                allow_add: true
+                default: []
+                required: false
+                hint: "Optional keywords that help with search (e.g. genre, platform, style)."
+
+              - name: icon
+                label: Icon Image
+                widget: image
+                hint: "Square icon shown next to the package title."
+
+              - name: preview
+                label: Preview Image
+                widget: image
+                required: false
+                hint: "Optional wide preview shown at the top of the package card."
+
+              - name: zip_file
+                label: ZIP Upload
+                widget: file
+                required: false
+                media_library:
+                  allow_multiple: false
+                hint: "Upload a ZIP archive that will be hosted with the site. Leave blank if you provide an external download link instead."
+
+              - name: download_url
+                label: External Download Link
+                widget: string
+                required: false
+                hint: "Optional URL for packages hosted elsewhere. Overrides the ZIP upload when present."
+
+              - name: updated
+                label: Last Updated
+                widget: datetime
+                required: false
+                picker_utc: true
+                time_format: HH:mm
+                hint: "Optional timestamp shown on the public package card."
