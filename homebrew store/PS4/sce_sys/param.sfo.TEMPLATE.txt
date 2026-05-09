@@ -1,0 +1,15 @@
+PARAM.SFO TEMPLATE (replace with real file before packaging)
+
+TITLE           = Homebrew Store/PS4
+CATEGORY        = HG
+CONTENT_ID      = VP0000-HOMBRW000_00_VPSTOREPS4TEST
+APP_VER         = 01.00
+SYSTEM_VER      = 05.050.000
+ATTRIBUTE       = 0
+PARENTAL_LEVEL  = 1
+
+Instructions:
+- Generate a proper PARAM.SFO using your PS4 SFO tool (TrueAncestor / orbis-sfo / etc.).
+- Ensure TITLE is exactly: Homebrew Store/PS4
+- Place the generated binary file at: sce_sys/param.sfo
+- Remove this TEMPLATE file when done.
