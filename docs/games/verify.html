@@ -36,20 +36,35 @@
       </div>
       <div class="note" id="statusNote" aria-live="polite"></div>
       <div class="actions">
-        <a class="btn" href="../" aria-label="Back to Games">Back</a>
+        <a class="btn" href="/" aria-label="Back to Games">Back</a>
       </div>
     </div>
   </div>
   <script>
     const REDDIT_URL = 'https://www.reddit.com/r/ps4piracy/comments/1cw34vw/can_someone_tell_me_the_proper_way_to_download/';
-    function onTurnstileSuccess(token){
+    // Configure your Cloudflare Worker/API route to verify Turnstile server-side
+    const VERIFY_ENDPOINT = 'https://vortex-prime-emu.com/api/turnstile-verify';
+
+    async function onTurnstileSuccess(token){
+      const note = document.getElementById('statusNote');
       try {
-        window.open(REDDIT_URL, '_blank', 'noopener,noreferrer');
-        const note = document.getElementById('statusNote');
-        if (note) note.textContent = 'Verified. The discussion has been opened in a new tab.';
+        if (note) note.textContent = 'Verifying…';
+        const res = await fetch(VERIFY_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+          mode: 'cors',
+          credentials: 'omit'
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data && data.success) {
+          window.open(REDDIT_URL, '_blank', 'noopener,noreferrer');
+          if (note) note.textContent = 'Verified. The discussion has been opened in a new tab.';
+        } else {
+          if (note) note.textContent = 'Verification failed. Please refresh and try again.';
+        }
       } catch (e) {
-        const note = document.getElementById('statusNote');
-        if (note) note.textContent = 'Verified, but failed to open a new tab. Please allow pop-ups or click here: ' + REDDIT_URL;
+        if (note) note.textContent = 'Verification service is unavailable. Please try again later.';
       }
     }
   </script>
