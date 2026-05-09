@@ -1459,18 +1459,29 @@
 
             <div class="page" id="page-games">
                 <section style="padding: 2rem 0; text-align: center;">
-                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; align-items: flex-start;">
+                        <!-- Keep Internet Archive as-is, add external icon -->
                         <a class="btn" href="https://archive.org/" target="_blank" rel="noopener noreferrer" 
                            style="background: transparent; color: var(--color-text); border: 1px solid var(--color-border); text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
                             Internet Archive
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5z"/></svg>
                         </a>
-                        <a class="btn" href="https://www.reddit.com/r/ps4piracy/comments/1cw34vw/can_someone_tell_me_the_proper_way_to_download/" target="_blank" rel="noopener noreferrer" 
-                           style="background: transparent; color: var(--color-text); border: 1px solid var(--color-border); text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
-                            Community Game Discussion
-                        </a>
+
+                        <!-- Reddit Discussion button + description stacked -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap: .5rem; max-width: 420px;">
+                            <a class="btn" href="https://www.reddit.com/r/ps4piracy/comments/1cw34vw/can_someone_tell_me_the_proper_way_to_download/" target="_blank" rel="noopener noreferrer" 
+                               style="background: transparent; color: var(--color-text); border: 1px solid var(--color-border); text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
+                                Reddit Discussion
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5z"/></svg>
+                            </a>
+                            <div style="color: var(--color-text-secondary); font-size: .9rem; line-height: 1.5; padding: 0 .5rem;">
+                                Open external Reddit community discussions and preservation resources.
+                            </div>
+                        </div>
                     </div>
-                    <p style="margin-top: 1rem; color: var(--color-text-secondary); max-width: 800px; padding: 0 1rem; margin-left: auto; margin-right: auto; line-height: 1.6;">
-                        Vortex Prime does not host commercial game files. These links open external community resources. Users are responsible for following the laws in their region and only using content they have the legal right to access.
+
+                    <p style="margin-top: 1rem; color: var(--color-text-secondary); max-width: 900px; padding: 0 1rem; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                        Vortex Prime does not host, mirror, or distribute copyrighted commercial game files. External links are provided for community discussion, preservation context, and legal user-owned backups only. Users are responsible for following applicable laws in their region.
                     </p>
                 </section>
             </div>
