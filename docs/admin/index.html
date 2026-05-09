@@ -27,6 +27,10 @@
     header h1 { font-size: 1.1rem; font-weight: 700; }
     header p { font-size: .8rem; color: var(--muted); }
     .header-right { margin-left: auto; display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+    .user-badge { display: none; align-items: center; gap: .5rem; background: var(--elevated); border: 1px solid var(--border); padding: .25rem .6rem; border-radius: 999px; }
+    .user-badge img { width: 22px; height: 22px; border-radius: 999px; display: block; }
+    .user-badge .name { font-size: .8rem; color: var(--text); }
+    .user-badge button { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: .2rem .5rem; border-radius: 6px; font-size: .75rem; }
     main { max-width: 960px; margin: 0 auto; padding: 2rem; }
     .notice { background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.3); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 2rem; font-size: .875rem; color: #6ee7b7; line-height: 1.6; }
     .notice strong { color: var(--primary); }
@@ -129,6 +133,11 @@
   </div>
   <div class="header-right">
     <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none;">&larr; Back to Store</a>
+    <div id="userBadge" class="user-badge">
+      <img id="userAvatar" alt="" src=""/>
+      <span class="name" id="userName"></span>
+      <button id="logoutBtn" title="Sign out">Sign out</button>
+    </div>
   </div>
 </header>
 
@@ -140,7 +149,7 @@
     <div class="auth-title" id="authTitle">Admin access locked</div>
     <div class="auth-desc">This portal is disabled until you sign in with GitHub. Please sign in or create a GitHub account to continue.</div>
     <div class="auth-actions">
-      <a class="primary" href="https://github.com/login" target="_blank" rel="noopener noreferrer">Sign in with GitHub</a>
+      <a class="primary" href="/api/github/login">Sign in with GitHub</a>
       <a href="https://github.com/signup" target="_blank" rel="noopener noreferrer">Create GitHub Account</a>
     </div>
     <div class="auth-note">All editing actions are disabled while locked.</div>
@@ -174,6 +183,44 @@
 (function () {
   let packages = [];
   let dirty = false;
+
+  // Auth: check session and update UI
+  async function checkAuth() {
+    try {
+      const res = await fetch('/api/github/me', { credentials: 'include' });
+      const data = await res.json();
+      const gate = document.getElementById('authGate');
+      const badge = document.getElementById('userBadge');
+      if (data && data.authenticated) {
+        if (gate) gate.style.display = 'none';
+        if (badge) {
+          badge.style.display = 'inline-flex';
+          document.getElementById('userName').textContent = data.user.login;
+          // Optionally fetch avatar via html_url later; keep minimal now
+          fetch('https://api.github.com/users/' + encodeURIComponent(data.user.login))
+            .then(r => r.ok ? r.json() : null)
+            .then(u => { if (u && u.avatar_url) document.getElementById('userAvatar').src = u.avatar_url; });
+        }
+      } else {
+        if (gate) gate.style.display = 'flex';
+        if (badge) badge.style.display = 'none';
+      }
+    } catch (_) {
+      // Keep locked on error
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t && t.id === 'logoutBtn') {
+      e.preventDefault();
+      fetch('/api/github/logout', { method: 'POST', credentials: 'include' })
+        .then(() => { location.reload(); });
+    }
+  });
+
+  // Run on load
+  checkAuth();
 
   // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function toast(msg, type = 'success') {
