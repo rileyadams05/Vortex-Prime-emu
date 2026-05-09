@@ -7,7 +7,7 @@ export default {
 
     const origin = request.headers.get('Origin') || '';
     const corsHeaders = (okOrigin) => ({
-      'Access-Control-Allow-Origin': okOrigin,
+      'Access-Control-Allow-Origin': okOrigin || '',
       'Vary': 'Origin',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'content-type',
@@ -22,7 +22,7 @@ export default {
 
     // Only POST supported
     if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ success: false }), {
+      return new Response(JSON.stringify({ success: false, error: 'method-not-allowed' }), {
         status: 405,
         headers: { 'content-type': 'application/json', ...(allowedOrigins.has(origin) ? corsHeaders(origin) : {}) }
       });
@@ -35,7 +35,7 @@ export default {
     } catch (_) {}
 
     if (!token) {
-      return new Response(JSON.stringify({ success: false }), {
+      return new Response(JSON.stringify({ success: false, error: 'missing-input-response' }), {
         status: 400,
         headers: { 'content-type': 'application/json', ...(allowedOrigins.has(origin) ? corsHeaders(origin) : {}) }
       });
@@ -56,12 +56,17 @@ export default {
       const data = await verifyRes.json();
 
       const ok = !!data?.success;
-      return new Response(JSON.stringify({ success: ok }), {
+      const debug = {
+        'error_codes': data?.['error-codes'] || [],
+        'hostname': data?.hostname || null,
+        'challenge_ts': data?.challenge_ts || null
+      };
+      return new Response(JSON.stringify({ success: ok, ...(!ok ? debug : {}) }), {
         status: ok ? 200 : 403,
         headers: { 'content-type': 'application/json', ...(allowedOrigins.has(origin) ? corsHeaders(origin) : {}) }
       });
     } catch (err) {
-      return new Response(JSON.stringify({ success: false }), {
+      return new Response(JSON.stringify({ success: false, error: 'internal-error' }), {
         status: 500,
         headers: { 'content-type': 'application/json', ...(allowedOrigins.has(origin) ? corsHeaders(origin) : {}) }
       });
