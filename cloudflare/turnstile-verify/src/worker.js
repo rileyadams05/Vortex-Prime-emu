@@ -81,10 +81,9 @@ export default {
     if (pathname.endsWith('/api/github/login')) {
       const state = await randomState();
       const clientId = env.GITHUB_CLIENT_ID;
-      const redirectUri = `https://vortex-prime-emu.com/oauth-callback.html`;
       const authorize = new URL('https://github.com/login/oauth/authorize');
       authorize.searchParams.set('client_id', clientId);
-      authorize.searchParams.set('redirect_uri', redirectUri);
+      // Do not set redirect_uri; rely on the app-configured callback
       authorize.searchParams.set('scope', 'read:user user:email');
       authorize.searchParams.set('state', state);
       // set state cookie
@@ -107,7 +106,7 @@ export default {
       tokenParams.set('client_id', env.GITHUB_CLIENT_ID);
       tokenParams.set('client_secret', env.GITHUB_CLIENT_SECRET);
       tokenParams.set('code', code);
-      tokenParams.set('redirect_uri', `https://vortex-prime-emu.com/oauth-callback.html`);
+      // Do not send redirect_uri; must match configured callback
 
       const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
