@@ -23,12 +23,14 @@ Key requirements for this PS4 test build:
 - The site content MUST live under app0/Homebrew Store/PS4/
 - The packaged app must open app0/Homebrew Store/PS4/index.html at launch (via your eboot/template).
 - Ensure TrueAncestor (or your packer) uses "homebrew store/PS4" as the PKG root so it picks up both app0 and sce_sys.
+ - Application icon: place your PNG at homebrew store/PS4/icon.png. The sync script will copy it to sce_sys/icon0.png automatically.
 
 How to sync site content into the packaging tree:
 - Run PowerShell in this folder and execute:
     ./sync-content.ps1
   This mirrors docs/ into app0/Homebrew Store/PS4/ for packaging.
   Then place your eboot at: app0/eboot.bin and your PARAM.SFO at: sce_sys/param.sfo
+  If homebrew store/PS4/icon.png exists, it will be copied to sce_sys/icon0.png for the PS4 home screen icon.
 
 Notes:
 - This folder is NOT served on the website and is only for local PKG builds.
