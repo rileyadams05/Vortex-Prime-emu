@@ -30,7 +30,7 @@
   <div class="wrap">
     <div class="card" role="main" aria-labelledby="v-title">
       <h1 id="v-title">Human check</h1>
-      <p>Complete the verification to continue to the external Reddit discussion in a new tab.</p>
+      <p>Complete the verification to continue to the external Reddit discussion.</p>
       <div class="center">
         <div class="cf-turnstile" data-sitekey="0x4AAAAAADMDGaAx-NMsil-r" data-theme="dark" data-callback="onTurnstileSuccess"></div>
       </div>
@@ -58,8 +58,8 @@
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data && data.success) {
-          window.open(REDDIT_URL, '_blank', 'noopener,noreferrer');
-          if (note) note.textContent = 'Verified. The discussion has been opened in a new tab.';
+          if (note) note.textContent = 'Verified. Redirecting…';
+          window.location.href = REDDIT_URL;
         } else {
           if (note) note.textContent = 'Verification failed. Please refresh and try again.';
         }
