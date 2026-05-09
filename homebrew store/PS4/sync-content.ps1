@@ -23,5 +23,6 @@ if (Test-Path $robocopy) {
 }
 
 Write-Host "Synced docs/ to app0\\Homebrew Store\\PS4\\"
-Write-Host "Now place your eboot.bin at: $($root)\eboot.bin"
-Write-Host "And a real PARAM.SFO at:     $($root)\sce_sys\param.sfo"
+Write-Host "Place your eboot.bin at:    $($root)\app0\eboot.bin"
+Write-Host "Place your PARAM.SFO at:    $($root)\sce_sys\param.sfo"
+Write-Host "PKG root for TrueAncestor:  $($root)"
