@@ -186,7 +186,6 @@
         download_url: g('download_url'),
         platform: g('platform') || 'PS4',
         updated: g('updated') || undefined,
-        discord_id: g('discord_id') || pkg.discord_id || '',
       };
     });
   }
@@ -245,10 +244,7 @@
             <label>Original Creator / Author Name *</label>
             <input type="text" data-field="creator" value="${esc(pkg.creator || pkg.author)}" placeholder="Your name or team" oninput="onFieldInput(${i},'creator',this.value)">
           </div>
-          <div class="field">
-            <label>Discord ID (for management/deletion)</label>
-            <input type="text" data-field="discord_id" value="${esc(pkg.discord_id)}" placeholder="Your Discord Snowflake ID" oninput="onFieldInput(${i},'discord_id',this.value)">
-          </div>
+          
           <div class="field">
             <label>Platform *</label>
             <select data-field="platform" onchange="onFieldInput(${i},'platform',this.value)" style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; width: 100%;">
@@ -450,7 +446,6 @@
       const fd = new FormData();
       fd.append('name', pkg.name);
       fd.append('description', pkg.description);
-      fd.append('discord_id', pkg.discord_id || 'anonymous');
       fd.append('author', pkg.creator || pkg.author || 'Community');
       fd.append('platform', pkg.platform);
       fd.append('tags', JSON.stringify(pkg.tags));
@@ -486,14 +481,12 @@
   window.deleteFromServer = async function(i) {
     const pkg = packages[i];
     if (!pkg.id) return toast('This package is not yet on the server.', 'error');
-    const discord_id = prompt('Enter your Discord ID to confirm deletion:');
-    if (!discord_id) return;
 
     try {
-      const res = await fetch(`${API_BASE}/store/themes/${pkg.id}?discord_id=${discord_id}`, {
+      const res = await fetch(`${API_BASE}/store/themes/${pkg.id}`, {
         method: 'DELETE'
       });
-      if (!res.ok) throw new Error('Deletion failed (check your Discord ID)');
+      if (!res.ok) throw new Error('Deletion failed');
       toast('Package removed from store.');
       location.reload();
     } catch (err) {
