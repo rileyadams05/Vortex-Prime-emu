@@ -186,6 +186,7 @@
         download_url: g('download_url'),
         platform: g('platform') || 'PS4',
         updated: g('updated') || undefined,
+        category: g('category') || 'Homebrew Apps',
       };
     });
   }
@@ -253,7 +254,14 @@
               <option value="PS3" ${pkg.platform==='PS3'?'selected':''}>PlayStation 3</option>
               <option value="PS Vita" ${pkg.platform==='PS Vita'?'selected':''}>PS Vita</option>
               <option value="PSP" ${pkg.platform==='PSP'?'selected':''}>PSP / PlayStation Portable</option>
-              <option value="PC Tools" ${pkg.platform==='PC Tools'?'selected':''}>PC Tools</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Category *</label>
+            <select data-field="category" onchange="onFieldInput(${i},'category',this.value)" style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; width: 100%;">
+              <option value="PC Tools" ${pkg.category==='PC Tools'?'selected':''}>PC Tools</option>
+              <option value="Console Apps" ${pkg.category==='Console Apps'?'selected':''}>Console Apps</option>
+              <option value="Homebrew Apps" ${pkg.category==='Homebrew Apps'?'selected':''}>Homebrew Apps</option>
             </select>
           </div>
           <div class="field">
@@ -448,6 +456,7 @@
       fd.append('description', pkg.description);
       fd.append('author', pkg.creator || pkg.author || 'Community');
       fd.append('platform', pkg.platform);
+      if (pkg.category) fd.append('category', pkg.category);
       fd.append('tags', JSON.stringify(pkg.tags));
       fd.append('download_url', pkg.download_url);
       if (pkg.code) fd.append('code', pkg.code);
@@ -516,7 +525,7 @@
   window.addPackage = function(isUserAction = true) {
     if (isUserAction) collectAll();
     const now = new Date().toISOString();
-    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', updated: now });
+    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', category: 'Homebrew Apps', updated: now });
     if (isUserAction) markDirty();
     render();
     const newIdx = packages.length - 1;
@@ -588,6 +597,7 @@
       if (pkg.preview) out.preview = pkg.preview;
       if (pkg.zip_file) out.zip_file = pkg.zip_file;
       if (pkg.download_url) out.download_url = pkg.download_url;
+      if (pkg.category) out.category = pkg.category;
       if (pkg.updated) out.updated = pkg.updated.includes('T') && !pkg.updated.endsWith('Z') ? pkg.updated + 'Z' : pkg.updated;
       return out;
     });
