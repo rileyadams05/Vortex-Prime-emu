@@ -116,7 +116,7 @@
     <p>Professional management for Vortex Prime packages</p>
   </div>
   <div class="header-right">
-    <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none;">â† Back to Store</a>
+    <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none;">&larr; Back to Store</a>
   </div>
 </header>
 
@@ -136,7 +136,7 @@
   <span class="save-hint" id="saveHint">Your changes are saved locally as you work. Ready to publish?</span>
   <div style="display: flex; gap: 0.75rem;">
     <button class="btn-secondary" onclick="exportBackup()">Backup JSON</button>
-    <button class="btn-success" onclick="submitAll()" id="submitAllBtn">ðŸš€ Upload All to Store</button>
+    <button class="btn-success" onclick="submitAll()" id="submitAllBtn">Upload All to Store</button>
   </div>
 </div>
 
@@ -160,7 +160,7 @@
   function markDirty() {
     dirty = true;
     const hint = document.getElementById('saveHint');
-    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes â€” click Upload to Store when ready.';
+    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes &mdash; click Upload to Store when ready.';
   }
 
   // â”€â”€ Collect current field values into packages array â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -257,6 +257,7 @@
               <option value="PS3" ${pkg.platform==='PS3'?'selected':''}>PlayStation 3</option>
               <option value="PS Vita" ${pkg.platform==='PS Vita'?'selected':''}>PS Vita</option>
               <option value="PSP" ${pkg.platform==='PSP'?'selected':''}>PSP / PlayStation Portable</option>
+              <option value="PC Tools" ${pkg.platform==='PC Tools'?'selected':''}>PC Tools</option>
             </select>
           </div>
           <div class="field">
@@ -309,8 +310,8 @@
           </div>
         </div>
         <div class="card-actions">
-          <button class="btn-danger" style="margin-right:auto;" onclick="deleteFromServer(${i})">ðŸ—‘ Delete from Server</button>
-          <button class="btn-primary" onclick="submitToStore(${i}, this)">ðŸš€ Upload this Package</button>
+          <button class="btn-danger" style="margin-right:auto;" onclick="deleteFromServer(${i})">Delete from Server</button>
+          <button class="btn-primary" onclick="submitToStore(${i}, this)">Upload this Package</button>
         </div>
       </div>
     </div>`;
