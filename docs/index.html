@@ -1614,6 +1614,18 @@
                     let currentCategory = 'All';
                     let currentPage = 1;
 
+                    const BUILD_PROFILE = 'PS4';
+                    const INSTALL_PATH = 'Homebrew Store/PS4';
+
+                    if (BUILD_PROFILE === 'PS4') {
+                        currentPlatform = 'PS4';
+                        const opts = document.querySelectorAll('#platformDropdown .store-filter-option');
+                        opts.forEach(opt => {
+                            const v = opt.getAttribute('data-platform');
+                            opt.classList.toggle('active', v === 'PS4');
+                        });
+                    }
+
                     function showPage(pageId) {
                         document.querySelectorAll('.page').forEach((page) => page.classList.remove('active'));
                         document.querySelectorAll('.nav-link').forEach((link) => link.classList.remove('active'));
