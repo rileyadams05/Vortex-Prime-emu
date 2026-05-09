@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Vortex Prime is the ultimate multi-platform emulator and achievement system for PS3, PC, and consoles.">
+    <meta name="description" content="Vortex Prime Store — The official community marketplace for homebrew packages and custom dashboards.">
     <meta name="theme-color" content="#107C10">
-    <meta name="keywords" content="emulator, frontend, retro gaming, achievements, multi-platform, PC, PlayStation, Xbox, Nintendo">
-    <meta property="og:title" content="Vortex Prime - Multi-Platform Emulation Frontend">
-    <meta property="og:description" content="One frontend for all your games. Unified achievements, customizable themes, community store.">
+    <meta property="og:title" content="Vortex Prime Store — Homebrew Marketplace">
+    <meta property="og:description" content="Discover, upload, and manage homebrew packages for Vortex Prime.">
     <meta property="og:type" content="website">
-    <meta name="msvalidate.01" content="153AC4BC4E5B6AB2D35B85FBA2F6151A" />
+
     
     <!-- Cache-Busting: Nuke local browser cache for HTML -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -19,7 +18,7 @@
     <!-- Version timestamp for cache busting -->
     <meta name="version" content="2025-03-31-14-38">
     
-    <title>Vortex Prime - Multi-Platform Emulator & Achievement System</title>
+    <title>Vortex Prime Store — Homebrew Marketplace</title>
     
     <!-- Service Worker Nuclear Option: Kill stale service workers and clear cache storage -->
     <script>
@@ -303,84 +302,7 @@
             color: var(--color-text-muted);
         }
 
-        /* Stats */
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 4rem;
-            margin-top: 4rem;
-            padding-top: 4rem;
-            border-top: 1px solid var(--color-border);
-        }
 
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--color-text);
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--color-text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        /* Systems Showcase */
-        .systems-showcase {
-            margin-top: 3rem;
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .systems-row {
-            display: flex;
-            gap: 3rem;
-            align-items: center;
-            padding: 2rem 0;
-            animation: scroll-systems 60s linear infinite;
-            width: max-content;
-        }
-
-        @keyframes scroll-systems {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-
-        .systems-row:hover {
-            animation-play-state: paused;
-        }
-
-        .system-logo {
-            height: 60px;
-            width: auto;
-            object-fit: contain;
-            filter: brightness(0.9);
-            transition: filter 0.3s ease, transform 0.3s ease;
-            flex-shrink: 0;
-        }
-
-        .system-logo:hover {
-            filter: brightness(1.2);
-            transform: scale(1.1);
-        }
-
-        .systems-more {
-            text-align: center;
-            font-size: 1rem;
-            color: var(--color-text-secondary);
-            margin-top: 1rem;
-            font-weight: 500;
-        }
 
         /* Features Grid */
         .features-section {
@@ -446,44 +368,19 @@
             font-size: 0.9rem;
         }
 
-        /* Platforms Section */
-        .platforms-section {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 4rem 2rem;
-        }
 
-        .platforms-grid {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .platform-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 1.5rem;
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 12px;
-            font-weight: 500;
-        }
-
-        .platform-badge svg { width: 24px; height: 24px; fill: var(--color-text-secondary); }
 
         /* Store Page */
         .store-hero {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 4rem 2rem 2rem;
+            padding: 2rem 2rem 1.5rem;
             text-align: center;
         }
 
         .store-search-wrap {
-            max-width: 640px;
-            margin: 2rem auto 0;
+            max-width: 720px;
+            margin: 1.5rem auto 0;
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
@@ -493,18 +390,21 @@
             position: relative;
             display: flex;
             align-items: center;
-            background: linear-gradient(135deg, rgba(39, 39, 42, 0.9), rgba(15, 23, 42, 0.9));
-            border: 1px solid rgba(63, 63, 70, 0.85);
-            border-radius: 14px;
-            padding: 0.35rem 0.75rem;
-            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            background: rgba(39, 39, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 0.5rem 0.75rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
         }
 
         .store-search-field:focus-within {
-            border-color: rgba(16, 185, 129, 0.7);
-            box-shadow: 0 22px 56px rgba(16, 185, 129, 0.18);
-            transform: translateY(-1px);
+            background: rgba(39, 39, 42, 0.8);
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 12px 48px rgba(16, 185, 129, 0.15);
+            transform: translateY(-2px);
         }
 
         .store-search-icon {
@@ -688,12 +588,12 @@
         }
 
         .store-grid {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 0 2rem 1.5rem;
+            padding: 0 2rem 2rem;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 2rem;
         }
 
         .store-pagination {
@@ -703,7 +603,7 @@
             gap: 0.5rem;
             padding: 0 2rem 2.5rem;
             flex-wrap: wrap;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -752,7 +652,7 @@
         }
 
         .theme-preview {
-            height: 180px;
+            height: 220px;
             background: linear-gradient(135deg, var(--color-bg-elevated), var(--color-bg-dark));
             display: flex;
             align-items: center;
@@ -986,74 +886,7 @@
             pointer-events: none;
         }
 
-        /* How it works section */
-        .how-it-works {
-            max-width: 900px;
-            margin: 0 auto 3rem;
-            padding: 2rem;
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 16px;
-        }
 
-        .how-it-works h3 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            font-size: 1.25rem;
-        }
-
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .step {
-            text-align: center;
-        }
-
-        .step-number {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: var(--color-primary);
-            margin: 0 auto 0.75rem;
-        }
-
-        .step h4 {
-            font-size: 0.95rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .step p {
-            font-size: 0.8rem;
-            color: var(--color-text-muted);
-        }
-
-        .keyboard-hint {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background: var(--color-bg-elevated);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            color: var(--color-text-secondary);
-        }
-
-        .kbd {
-            background: var(--color-bg-dark);
-            border: 1px solid var(--color-border);
-            padding: 0.125rem 0.5rem;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.75rem;
-        }
 
         .store-cta {
             max-width: 800px;
@@ -1450,306 +1283,7 @@
 
         .upload-success-icon svg { width: 32px; height: 32px; fill: var(--color-primary); }
 
-        /* Streaming Page */
-        .streaming-hero {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 4rem 2rem 2rem;
-            text-align: center;
-        }
 
-        .streaming-hero h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-        }
-
-        .streaming-hero p {
-            color: var(--color-text-secondary);
-            max-width: 620px;
-            margin: 0 auto 2rem;
-        }
-
-        .streaming-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: rgba(99, 102, 241, 0.15);
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            border-radius: 100px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #818CF8;
-            margin-bottom: 1.5rem;
-        }
-
-        .streaming-badge svg { width: 16px; height: 16px; fill: currentColor; }
-
-        /* Discovery Widget */
-        .stream-discovery-wrap {
-            max-width: 600px;
-            margin: 0 auto 3rem;
-            padding: 0 2rem;
-        }
-
-        .stream-discovery-card {
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .discovery-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--color-border);
-            border-top-color: var(--color-primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        .discovery-status-text {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.375rem;
-        }
-
-        .discovery-status-sub {
-            font-size: 0.85rem;
-            color: var(--color-text-muted);
-        }
-
-        .discovery-found-icon {
-            width: 56px;
-            height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-        }
-
-        .discovery-found-icon svg { width: 28px; height: 28px; fill: var(--color-primary); }
-
-        .discovery-host-name {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .discovery-host-ip {
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 0.9rem;
-            color: var(--color-text-muted);
-            margin-bottom: 1.25rem;
-        }
-
-        .stream-connect-btn {
-            padding: 0.875rem 2rem;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-        }
-
-        .stream-connect-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        .stream-connect-btn svg { width: 20px; height: 20px; fill: currentColor; }
-
-        .stream-retry-btn {
-            padding: 0.6rem 1.25rem;
-            background: var(--color-bg-elevated);
-            color: var(--color-text-secondary);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .stream-retry-btn:hover { background: var(--color-border); color: var(--color-text); }
-
-        .ip-connect-box {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--color-border);
-            text-align: left;
-        }
-
-        .ip-connect-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--color-text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .ip-input-row {
-            display: flex;
-            gap: 0.625rem;
-        }
-
-        .ip-input {
-            flex: 1;
-            background: var(--color-bg-dark);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            color: var(--color-text);
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 1rem;
-            padding: 0.75rem 1rem;
-            outline: none;
-            transition: border-color 0.2s;
-            letter-spacing: 0.5px;
-        }
-
-        .ip-input:focus { border-color: var(--color-primary); }
-        .ip-input::placeholder { color: var(--color-text-muted); font-family: inherit; letter-spacing: 0; }
-
-        .ip-connect-btn {
-            padding: 0.75rem 1.25rem;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .ip-connect-btn:hover { box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35); }
-
-        .ip-hint {
-            margin-top: 0.625rem;
-            font-size: 0.8rem;
-            color: var(--color-text-muted);
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .ip-hint svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
-
-        .streaming-features {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 2rem 4rem;
-        }
-
-        .streaming-icon-wrap {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.25rem;
-        }
-
-        .streaming-icon-wrap svg { width: 28px; height: 28px; fill: #6366F1; }
-
-        .streaming-coming-soon {
-            max-width: 800px;
-            margin: 0 auto 4rem;
-            padding: 2.5rem;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(16, 185, 129, 0.08));
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 20px;
-            text-align: center;
-        }
-
-        .streaming-coming-soon h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .streaming-coming-soon p {
-            color: var(--color-text-secondary);
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        /* Stream Frame */
-        .stream-frame-container {
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 110px);
-        }
-
-        .stream-frame-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1.5rem;
-            background: var(--color-bg-card);
-            border-bottom: 1px solid var(--color-border);
-            flex-shrink: 0;
-            gap: 1rem;
-        }
-
-        .stream-frame-bar-left {
-            display: flex;
-            align-items: center;
-            gap: 0.625rem;
-            font-size: 0.875rem;
-            color: var(--color-text-secondary);
-            overflow: hidden;
-            min-width: 0;
-        }
-
-        .stream-frame-bar-left svg { width: 16px; height: 16px; fill: var(--color-primary); flex-shrink: 0; }
-
-        .stream-frame-url {
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 0.8rem;
-            color: var(--color-text-muted);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .stream-disconnect-btn {
-            padding: 0.4rem 0.875rem;
-            background: var(--color-bg-elevated);
-            border: 1px solid var(--color-border);
-            color: var(--color-text-secondary);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .stream-disconnect-btn:hover {
-            background: var(--color-border);
-            color: var(--color-text);
-        }
-
-        #streamFrameContainer iframe {
-            flex: 1;
-            width: 100%;
-            border: none;
-        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -1784,12 +1318,8 @@
         }
         .ps3 body { background: #0b0b0d !important; }
         .ps3 .bg-grid, .ps3 .bg-glow, .ps3 .bg-glow-accent { display: none !important; }
-        .ps3 .systems-showcase { overflow: visible; }
-        .ps3 .systems-row { animation: none !important; flex-wrap: wrap; justify-content: center; gap: 12px; width: auto; }
-        .ps3 .system-logo { height: 44px; flex: 0 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); transform: none !important; }
-        .ps3 .system-logo:hover { transform: none; }
         .ps3 .hero-buttons .btn { width: 100%; max-width: 540px; font-size: 1.25rem; padding: 1.25rem 1.75rem; }
-        .ps3 .features-section, .ps3 .store-cta, .ps3 .stats { display: none !important; }
+        .ps3 .features-section, .ps3 .store-cta { display: none !important; }
         .ps3 .nav-links { flex-wrap: wrap; gap: 0.25rem; }
             </style>
         </head>
@@ -1802,14 +1332,15 @@
             <!-- Navigation -->
             <nav>
                 <div class="nav-container">
-                    <a href="#" class="nav-brand" onclick="showPage('store')">
+                    <a href="#" class="nav-brand" onclick="showPage('home'); return false;">
                         <div class="nav-logo">
                             <img src="icon.svg" alt="Vortex Prime">
                         </div>
                         <span class="nav-brand-text">Vortex Prime</span>
                     </a>
                     <div class="nav-links">
-                        <a href="#" class="nav-link active" onclick="handleStoreClick(event)" id="nav-store">Store</a>
+                        <a href="#" class="nav-link active" onclick="showPage('home'); return false;" id="nav-home">Home</a>
+                        <a href="#" class="nav-link" onclick="showPage('store'); return false;" id="nav-store">Store</a>
                         <a href="hen/index.html" class="nav-link" id="nav-hen">PS3 HEN Installer</a>
                         <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank">Docs</a>
                         <a href="https://discord.gg/PVFJ64QA" class="nav-link" target="_blank">Help</a>
@@ -1818,173 +1349,113 @@
             </nav>
 
             <!-- Home Page -->
-            <div class="page" id="page-home">
+            <div class="page active" id="page-home">
                 <section class="hero">
                     <div class="hero-badge">
                         <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
                         <span>Work in Progress — Active Development</span>
                     </div>
 
-                    <h1>One Frontend.<br><span>All Your Favourite Engines.</span></h1>
+                    <h1>Vortex Prime Store</h1>
+                    <p class="hero-hint" style="font-size: 1.1rem; max-width: 600px; margin: 1rem auto 2rem; color: var(--color-text-secondary);">Browse, upload, and manage community packages for Vortex Prime.</p>
 
-                    <div class="hero-buttons">
-                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu/releases" class="btn btn-secondary">
-                            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                            Download Latest Release
-                        </a>
-                    </div>
+                    <!-- Manage the Store CTA -->
+                    <div class="store-cta" style="margin: 2rem auto 4rem auto; background: var(--color-bg-elevated); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--color-border); max-width: 800px;">
+                        <h3 style="text-align: center; margin-bottom: 1rem; font-size: 1.5rem;">Manage the Store</h3>
+                        <p style="text-align: center; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 2rem auto; line-height: 1.6;">Use the Store Creator Portal to add, edit, and remove packages. Your changes go live instantly.</p>
+ 
+                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                            <a class="btn" href="admin/" style="background: #10B981; color: white; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v4h4v2h-4v4h-2v-4H7v-2h4V7h2z"/></svg>
+                                Store Creator Portal
+                            </a>
+                            <a href="#" onclick="showPage('store'); return false;" class="btn" style="background: transparent; color: var(--color-text); border: 1px solid var(--color-border); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                                Store
+                            </a>
+                        </div>
 
-                    <p class="hero-hint">Available for Windows • macOS &amp; Linux coming soon</p>
+                        <div style="margin-top: 3rem; display: flex; flex-direction: column; gap: 1.5rem;">
+                            <!-- PlayStation Section -->
+                            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; text-align: left;">
+                                <h4 style="font-size: 1.25rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M21.58 16.09l-1.09-7.66C20.18 6.05 18.23 4 15.82 4H8.18C5.77 4 3.82 6.05 3.51 8.43l-1.09 7.66C2.2 17.65 3.39 19 4.94 19h14.12c1.55 0 2.74-1.35 2.52-2.91zM7.5 14h-2v-2h2v2zm0-4h-2V8h2v2zm4 4h-2v-2h2v2zm0-4h-2V8h2v2zm4 4h-2v-2h2v2zm0-4h-2V8h2v2z"/></svg>
+                                    PlayStation Ecosystem
+                                </h4>
+                                <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">PlayStation support is actively in development and testing. Current testing is focused on PS3 and PS4 hardware, while broader PlayStation compatibility is expected across supported PKG-based systems.</p>
+                                
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                                    <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">PS3</span>
+                                    <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">PS4</span>
+                                    <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">PS5</span>
+                                    <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">PS Vita</span>
+                                    <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">PSP</span>
+                                </div>
+                                
+                                <a href="download-playstation.html" class="btn" style="background: #00439C; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0, 67, 156, 0.3);">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                                    Download Vortex Prime PlayStation Homebrew Store.pkg
+                                </a>
+                            </div>
 
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-value">Platforms: 47</div>
+                            <!-- Xbox Section -->
+                            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; text-align: left;">
+                                <h4 style="font-size: 1.25rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                                    Xbox Ecosystem
+                                </h4>
+                                <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">Xbox support is currently experimental. Community testing is needed for Xbox 360 and Original Xbox compatibility.</p>
+                                
+                                <a href="download-xbox.html" class="btn" style="background: transparent; border: 1px solid #107C10; color: #107C10; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                                    Download Vortex Prime Xbox Homebrew Store Package
+                                </a>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="systems-showcase">
-                        <div class="systems-row">
-                            <!-- Exactly 47 systems from Dashboard.jsx -->
-                            <img src="system-logos/nes.svg" alt="NES" class="system-logo">
-                            <img src="system-logos/snes.svg" alt="SNES" class="system-logo">
-                            <img src="system-logos/n64.svg" alt="N64" class="system-logo">
-                            <img src="system-logos/gc.svg" alt="GameCube" class="system-logo">
-                            <img src="system-logos/wii.svg" alt="Wii" class="system-logo">
-                            <img src="system-logos/wiiu.svg" alt="Wii U" class="system-logo">
-                            <img src="system-logos/fds.svg" alt="FDS" class="system-logo">
-                            <img src="system-logos/gb.svg" alt="Game Boy" class="system-logo">
-                            <img src="system-logos/gbc.svg" alt="Game Boy Color" class="system-logo">
-                            <img src="system-logos/gba.svg" alt="Game Boy Advance" class="system-logo">
-                            <img src="system-logos/nds.svg" alt="Nintendo DS" class="system-logo">
-                            <img src="system-logos/3ds.svg" alt="3DS" class="system-logo">
-                            <img src="system-logos/virtualboy.svg" alt="Virtual Boy" class="system-logo">
-                            <img src="system-logos/psx.svg" alt="PlayStation" class="system-logo">
-                            <img src="system-logos/ps3.svg" alt="PS3" class="system-logo">
-                            <img src="system-logos/psp.svg" alt="PSP" class="system-logo">
-                            <img src="system-logos/psvita.svg" alt="PS Vita" class="system-logo">
-                            <img src="system-logos/genesis.svg" alt="Genesis" class="system-logo">
-                            <img src="system-logos/megadrive.svg" alt="Mega Drive" class="system-logo">
-                            <img src="system-logos/mastersystem.svg" alt="Master System" class="system-logo">
-                            <img src="system-logos/gamegear.svg" alt="Game Gear" class="system-logo">
-                            <img src="system-logos/saturn.svg" alt="Saturn" class="system-logo">
-                            <img src="system-logos/dreamcast.svg" alt="Dreamcast" class="system-logo">
-                            <img src="system-logos/segacd.svg" alt="Sega CD" class="system-logo">
-                            <img src="system-logos/sega32x.svg" alt="32X" class="system-logo">
-                            <img src="system-logos/sg-1000.svg" alt="SG-1000" class="system-logo">
-                            <img src="system-logos/xbox.svg" alt="Xbox" class="system-logo">
-                            <img src="system-logos/xbox360.svg" alt="Xbox 360" class="system-logo">
-                            <img src="system-logos/atari2600.svg" alt="Atari 2600" class="system-logo">
-                            <img src="system-logos/atari5200.svg" alt="Atari 5200" class="system-logo">
-                            <img src="system-logos/atari7800.svg" alt="Atari 7800" class="system-logo">
-                            <img src="system-logos/atari800.svg" alt="Atari 800" class="system-logo">
-                            <img src="system-logos/atarijaguar.svg" alt="Atari Jaguar" class="system-logo">
-                            <img src="system-logos/atarilynx.svg" alt="Atari Lynx" class="system-logo">
-                            <img src="system-logos/atarist.svg" alt="Atari ST" class="system-logo">
-                            <img src="system-logos/3do.svg" alt="3DO" class="system-logo">
-                            <img src="system-logos/neogeo.svg" alt="Neo Geo" class="system-logo">
-                            <img src="system-logos/ngp.svg" alt="Neo Geo Pocket" class="system-logo">
-                            <img src="system-logos/colecovision.svg" alt="ColecoVision" class="system-logo">
-                            <img src="system-logos/intellivision.svg" alt="Intellivision" class="system-logo">
-                            <img src="system-logos/vectrex.svg" alt="Vectrex" class="system-logo">
-                            <img src="system-logos/amiga.svg" alt="Amiga" class="system-logo">
-                            <img src="system-logos/c64.svg" alt="C64" class="system-logo">
-                            <img src="system-logos/zxspectrum.svg" alt="ZX Spectrum" class="system-logo">
-                            <img src="system-logos/pc.svg" alt="PC" class="system-logo">
-                            <img src="system-logos/mame.svg" alt="MAME" class="system-logo">
-                            <img src="system-logos/fba.svg" alt="FBA" class="system-logo">
-                            <img src="system-logos/scummvm.svg" alt="ScummVM" class="system-logo">
-                            <img src="system-logos/ports.svg" alt="Ports" class="system-logo">
-                            <!-- Duplicate for seamless loop -->
-                            <img src="system-logos/nes.svg" alt="NES" class="system-logo">
-                            <img src="system-logos/snes.svg" alt="SNES" class="system-logo">
-                            <img src="system-logos/n64.svg" alt="N64" class="system-logo">
-                            <img src="system-logos/gc.svg" alt="GameCube" class="system-logo">
-                            <img src="system-logos/wii.svg" alt="Wii" class="system-logo">
-                            <img src="system-logos/wiiu.svg" alt="Wii U" class="system-logo">
-                            <img src="system-logos/fds.svg" alt="FDS" class="system-logo">
-                            <img src="system-logos/gb.svg" alt="Game Boy" class="system-logo">
-                            <img src="system-logos/gbc.svg" alt="Game Boy Color" class="system-logo">
-                            <img src="system-logos/gba.svg" alt="Game Boy Advance" class="system-logo">
-                            <img src="system-logos/nds.svg" alt="Nintendo DS" class="system-logo">
-                            <img src="system-logos/3ds.svg" alt="3DS" class="system-logo">
-                            <img src="system-logos/virtualboy.svg" alt="Virtual Boy" class="system-logo">
-                            <img src="system-logos/psx.svg" alt="PlayStation" class="system-logo">
-                            <img src="system-logos/ps3.svg" alt="PS3" class="system-logo">
-                            <img src="system-logos/psp.svg" alt="PSP" class="system-logo">
-                            <img src="system-logos/psvita.svg" alt="PS Vita" class="system-logo">
-                            <img src="system-logos/genesis.svg" alt="Genesis" class="system-logo">
-                            <img src="system-logos/megadrive.svg" alt="Mega Drive" class="system-logo">
-                            <img src="system-logos/mastersystem.svg" alt="Master System" class="system-logo">
-                            <img src="system-logos/gamegear.svg" alt="Game Gear" class="system-logo">
-                            <img src="system-logos/saturn.svg" alt="Saturn" class="system-logo">
-                            <img src="system-logos/dreamcast.svg" alt="Dreamcast" class="system-logo">
-                            <img src="system-logos/segacd.svg" alt="Sega CD" class="system-logo">
-                            <img src="system-logos/sega32x.svg" alt="32X" class="system-logo">
-                            <img src="system-logos/sg-1000.svg" alt="SG-1000" class="system-logo">
-                            <img src="system-logos/xbox.svg" alt="Xbox" class="system-logo">
-                            <img src="system-logos/xbox360.svg" alt="Xbox 360" class="system-logo">
-                            <img src="system-logos/atari2600.svg" alt="Atari 2600" class="system-logo">
-                            <img src="system-logos/atari5200.svg" alt="Atari 5200" class="system-logo">
-                            <img src="system-logos/atari7800.svg" alt="Atari 7800" class="system-logo">
-                            <img src="system-logos/atari800.svg" alt="Atari 800" class="system-logo">
-                            <img src="system-logos/atarijaguar.svg" alt="Atari Jaguar" class="system-logo">
-                            <img src="system-logos/atarilynx.svg" alt="Atari Lynx" class="system-logo">
-                            <img src="system-logos/atarist.svg" alt="Atari ST" class="system-logo">
-                            <img src="system-logos/3do.svg" alt="3DO" class="system-logo">
-                            <img src="system-logos/neogeo.svg" alt="Neo Geo" class="system-logo">
-                            <img src="system-logos/ngp.svg" alt="Neo Geo Pocket" class="system-logo">
-                            <img src="system-logos/colecovision.svg" alt="ColecoVision" class="system-logo">
-                            <img src="system-logos/intellivision.svg" alt="Intellivision" class="system-logo">
-                            <img src="system-logos/vectrex.svg" alt="Vectrex" class="system-logo">
-                            <img src="system-logos/amiga.svg" alt="Amiga" class="system-logo">
-                            <img src="system-logos/c64.svg" alt="C64" class="system-logo">
-                            <img src="system-logos/zxspectrum.svg" alt="ZX Spectrum" class="system-logo">
-                            <img src="system-logos/pc.svg" alt="PC" class="system-logo">
-                            <img src="system-logos/mame.svg" alt="MAME" class="system-logo">
-                            <img src="system-logos/fba.svg" alt="FBA" class="system-logo">
-                            <img src="system-logos/scummvm.svg" alt="ScummVM" class="system-logo">
-                            <img src="system-logos/ports.svg" alt="Ports" class="system-logo">
-                        </div>
-                    </div>
+
                 </section>
 
                 <section class="features-section">
                     <div class="section-header">
                         <h2>Built for the Community</h2>
-                        <p>Everything you need to organize, play, and achieve.</p>
+                        <p>Everything you need to discover and share content.</p>
                     </div>
 
                     <div class="features-grid">
                         <div class="feature-card">
                             <div class="feature-icon">
-                                <svg viewBox="0 0 512 640" fill="currentColor"><path d="M506.8,137.16a7.5,7.5,0,0,0-8.39,2.76c-.29.4-27.45,37.71-74.91,68.1V144.5A27.54,27.54,0,0,0,396,117H116a27.54,27.54,0,0,0-27.5,27.5V208c-47.34-30.33-74.62-67.7-74.91-68.1A7.5,7.5,0,0,0,0,144.3V263.71c0,37.78,19.21,72.84,50.14,91.5,22.09,13.34,49.19,23.42,80.55,30,.65,1.22,1.31,2.43,2,3.64,29,52.36,70.34,94.62,119.67,122.19a7.53,7.53,0,0,0,7.32,0c49.33-27.57,90.72-69.83,119.67-122.19.67-1.21,1.33-2.42,2-3.64,31.36-6.59,58.46-16.67,80.55-30,30.93-18.66,50.14-53.72,50.14-91.5V144.3A7.5,7.5,0,0,0,506.8,137.16ZM15,165.13a323.23,323.23,0,0,0,73.66,60.62,366.17,366.17,0,0,0,5.18,51.91C56.67,264.17,30.2,244.74,15,219.8ZM57.89,342.37C31.43,326.4,15,296.26,15,263.71V244.93C33.91,266.3,61.44,283,97.19,294.68A354.92,354.92,0,0,0,122,367.84C97.27,361.69,75.75,353.15,57.89,342.37ZM256,495.87c-94.18-54.5-152.5-161.64-152.5-280.71V144.5A12.52,12.52,0,0,1,116,132H396a12.52,12.52,0,0,1,12.5,12.5v70.66C408.5,334.23,350.18,441.37,256,495.87ZM497,263.71c0,32.55-16.43,62.69-42.89,78.66-17.86,10.78-39.38,19.32-64.09,25.47a354.92,354.92,0,0,0,24.79-73.16C450.56,283,478.09,266.3,497,244.93Zm0-43.91c-15.2,24.94-41.67,44.37-78.84,57.86a366.17,366.17,0,0,0,5.18-51.91A323.23,323.23,0,0,0,497,165.13Z"/><path d="M184.54,89a7.5,7.5,0,0,0,7.35,6H320.11a7.5,7.5,0,0,0,7.35-6L343.35,9.38a7.5,7.5,0,0,0-12.7-6.73L296.2,37.75,261.35,2.25a7.49,7.49,0,0,0-10.7,0L215.8,37.75,181.35,2.65a7.5,7.5,0,0,0-12.7,6.73Zm25.91-35.26a7.51,7.51,0,0,0,10.7,0L256,18.21l34.85,35.5a7.51,7.51,0,0,0,10.7,0l22.16-22.58L314,80H198l-9.75-48.87Z"/><path d="M326,213.5H186A37.54,37.54,0,0,0,148.5,251v40a47.5,47.5,0,0,0,94.41,7.5h26.18A47.5,47.5,0,0,0,363.5,291V251A37.54,37.54,0,0,0,326,213.5Zm-115,60h-7.5V281a7.5,7.5,0,0,1-15,0v-7.5H181a7.5,7.5,0,0,1,0-15h7.5V251a7.5,7.5,0,0,1,15,0v7.5H211a7.5,7.5,0,0,1,0,15Zm122.8-.3a7.5,7.5,0,1,1-10.6,10.6l-7.2-7.19-7.2,7.19a7.5,7.5,0,0,1-10.6-10.6l7.19-7.2-7.19-7.2a7.5,7.5,0,0,1,10.6-10.6l7.2,7.19,7.2-7.19a7.5,7.5,0,1,1,10.6,10.6L326,266l7.19,7.2Z"/></svg>
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
                             </div>
-                            <h3>Achievements</h3>
-                            <p>Track achievements across all platforms with RetroAchievements and Exophase integration.</p>
+                            <h3>Upload Packages</h3>
+                            <p>Share your custom themes, dashboards, and plugins with the community instantly via the Creator Portal.</p>
                         </div>
 
                         <div class="feature-card">
                             <div class="feature-icon">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                             </div>
-                            <h3>Discord Integration</h3>
-                            <p>Login with Discord. Message friends, party chat, and voice calls — all built-in.</p>
+                            <h3>Discover Content</h3>
+                            <p>Browse a growing marketplace of community creations. Find new content and install it directly to Vortex Prime.</p>
                         </div>
 
-                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu" target="_blank" rel="noopener noreferrer" class="feature-card" style="text-decoration: none; color: inherit; cursor: pointer;">
+                        <div class="feature-card">
                             <div class="feature-icon">
                                 <svg viewBox="0 0 16 16" fill="#ffffff"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                             </div>
-                            <h3>Open Source</h3>
-                            <p>Open source and free to use. Edit and modify as you wish. Free projects require credit. Commercial use requires contacting us via Discord for revenue sharing.</p>
-                        </a>
+                            <h3>Open Platform</h3>
+                            <p>Vortex Prime is completely open. Anyone can build, share, and manage store packages without gatekeeping.</p>
+                        </div>
                     </div>
                 </section>
+
+
 
             </div>
 
             <!-- Store Page -->
-                <div class="page active" id="page-store">
+                <div class="page" id="page-store">
                     <section class="store-hero">
                         <h1>Store</h1>
                         <p>Discover community-built store packages. Filter by code, creator, or tag and copy the store code to bring new content into Vortex Prime.</p>
@@ -2001,9 +1472,9 @@
                                     autocomplete="off"
                                     spellcheck="false"
                                 >
-                                <button class="store-search-clear" id="storeSearchClear" onclick="clearStoreSearch()" title="Clear search" style="right: 3.5rem;">&times;</button>
+
                                 <button class="store-filter-btn" id="storeFilterBtn" onclick="toggleFilterDropdown()" title="Filter by Platform">
-                                    <svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                                    <svg viewBox="0 0 24 24"><path d="M3 4h18v2l-7 8v7h-4v-7L3 6V4z"/></svg>
                                 </button>
                                 <div class="store-filter-dropdown" id="storeFilterDropdown">
                                     <div class="store-filter-option active" data-platform="All" onclick="setStorePlatform('All')">All Platforms</div>
@@ -2018,37 +1489,7 @@
                         </div>
                     </section>
 
-                    <!-- How It Works -->
-                    <div class="how-it-works">
-                        <h3>How to Use the Store</h3>
-                        <div class="steps">
-                            <div class="step">
-                                <div class="step-number">1</div>
-                                <h4>Browse the Store</h4>
-                                <p>Explore community packages and curated drops.</p>
-                            </div>
-                            <div class="step">
-                                <div class="step-number">2</div>
-                                <h4>Copy the Store Code</h4>
-                                <p>Select the package you want and copy its code.</p>
-                            </div>
-                            <div class="step">
-                                <div class="step-number">3</div>
-                                <h4>Open Vortex Prime</h4>
-                                <p>Launch the app and head to the Store section.</p>
-                            </div>
-                            <div class="step">
-                                <div class="step-number">4</div>
-                                <h4>Paste the Code</h4>
-                                <p>Paste the store code into Vortex Prime and confirm.</p>
-                            </div>
-                            <div class="step">
-                                <div class="step-number">5</div>
-                                <h4>Download & Activate</h4>
-                                <p>Let Vortex Prime install the package and enable it.</p>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <div class="store-grid" id="storeGrid">
                         <!-- No results state -->
@@ -2064,27 +1505,12 @@
 
                     <div id="storePagination" class="store-pagination"></div>
 
-                    <!-- Info about store -->
-                    <div class="section-header" style="padding: 2rem;">
-                        <h2>Premium Store Content</h2>
-                        <p>Packages can include tailored layouts, media, plugins, and more. Customize them or build your own drops to share with the community.</p>
+                    <!-- Infinite Grid Footer Hint -->
+                    <div class="section-header" style="padding: 4rem 2rem; border-top: 1px solid var(--color-border); margin-top: 2rem;">
+                        <h2>Community Driven</h2>
+                        <p>Vortex Prime Store is powered by the community. Upload your own packages to share them instantly with everyone.</p>
                     </div>
-
-                     <div class="store-cta">
-                        <h3>Manage the Store</h3>
-                        <p>Use the Store Upload portal to add, edit, and remove packages. Your changes are saved and go live automatically via GitHub Pages.</p>
-
-                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
-                            <a class="btn" href="admin/" style="background: #10B981; color: white; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600;">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v4h4v2h-4v4h-2v-4H7v-2h4V7h2z"/></svg>
-                                Store Upload
-                            </a>
-                            <a href="https://github.com/rileyadams05/Vortex-Prime-emu" target="_blank" class="btn" style="background: transparent; color: var(--color-text); border: 1px solid var(--color-border); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600;">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.230 3.285-1.230.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-                                View Repository
-                            </a>
-                        </div>
-                    </div>
+</div>
                 </div>
 
             <!-- HEN experience now lives at /hen/index.html -->
@@ -2123,8 +1549,11 @@
             </div>
             <script>
                 (function () {
-                    const STORE_DATA_URL = 'store/themes.json';
-                    const CARDS_PER_PAGE = 12;
+                    const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                        ? 'http://localhost:8000/api' 
+                        : 'https://vortex-prime-emu.com/api';
+                    const STORE_DATA_URL = API_BASE + '/store/themes';
+                    const CARDS_PER_PAGE = 10;
 
                     const storeGrid = document.getElementById('storeGrid');
                     const noResults = document.getElementById('storeNoResults');
@@ -2149,6 +1578,16 @@
                         const nav = document.getElementById('nav-' + pageId);
                         if (page) page.classList.add('active');
                         if (nav) nav.classList.add('active');
+                        
+                        // Update hash without jumping
+                        if (pageId === 'home') {
+                            if (window.location.hash) {
+                                history.replaceState(null, null, ' ');
+                            }
+                        } else {
+                            history.replaceState(null, null, '#' + pageId);
+                        }
+                        
                         window.scrollTo(0, 0);
                     }
 
@@ -2202,7 +1641,7 @@
                         return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
                     }
 
-                    function createCard(theme) {
+                    function createCard(theme, positionNumber) {
                         const card = document.createElement('div');
                         card.className = 'theme-card';
 
@@ -2261,6 +1700,7 @@
 
                         card.innerHTML = `
                             <div class="theme-preview" style="${previewStyle}">
+                                <div style="position: absolute; top: 0.75rem; left: 0.75rem; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1); z-index: 10;">#${positionNumber}</div>
                                 ${preview ? '' : '<span class="theme-preview-placeholder">🎨</span>'}
                                 ${primaryTag}
                                 ${platformBadge}
@@ -2291,26 +1731,73 @@
                         return card;
                     }
 
+                    function createEmptyCard(positionNumber) {
+                        const card = document.createElement('div');
+                        card.className = 'theme-card empty-slot';
+                        card.style.border = '1px dashed rgba(255,255,255,0.1)';
+                        card.style.background = 'transparent';
+                        card.style.opacity = '0.35';
+                        card.style.boxShadow = 'none';
+                        card.style.cursor = 'default';
+                        card.innerHTML = `
+                            <div class="theme-preview" style="background: rgba(255,255,255,0.01); display: flex; align-items: center; justify-content: center; position: relative; height: 220px;">
+                                <div style="position: absolute; top: 0.75rem; left: 0.75rem; background: rgba(0,0,0,0.3); color: rgba(255,255,255,0.7); padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.05);">#${positionNumber}</div>
+                                <svg viewBox="0 0 24 24" width="48" height="48" style="opacity: 0.15; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-dasharray: 4 4;"><rect width="18" height="18" x="3" y="3" rx="4"/></svg>
+                            </div>
+                            <div class="theme-info" style="text-align: center; display: flex; flex-direction: column; justify-content: center; height: 100%; min-height: 150px;">
+                                <h3 style="color: var(--color-text-muted); margin-bottom: 0.5rem; font-weight: 500;">Empty Slot</h3>
+                                <p style="font-size: 0.85rem; color: rgba(113, 113, 122, 0.7);">Upload a package via the Store Creator Portal to fill this space.</p>
+                            </div>
+                        `;
+                        return card;
+                    }
+
                     function renderStore(items, page) {
                         if (!storeGrid) return;
                         storeGrid.innerHTML = '';
                         const start = (page - 1) * CARDS_PER_PAGE;
                         const slice = items.slice(start, start + CARDS_PER_PAGE);
-                        slice.forEach((theme) => {
-                            storeGrid.appendChild(createCard(theme));
+                        
+                        // Render actual packages
+                        slice.forEach((theme, index) => {
+                            storeGrid.appendChild(createCard(theme, start + index + 1));
                         });
+
+                        // Render empty slots to always show 10
+                        for (let i = slice.length; i < CARDS_PER_PAGE; i++) {
+                            storeGrid.appendChild(createEmptyCard(start + i + 1));
+                        }
                     }
 
                     function renderPagination(totalItems, page) {
                         if (!pagination) return;
                         pagination.innerHTML = '';
-                        const totalPages = Math.ceil(totalItems / CARDS_PER_PAGE);
+                        
+                        // Always guarantee at least one empty page is created when current fills up
+                        let totalPages = Math.floor(totalItems / CARDS_PER_PAGE) + 1;
                         if (totalPages <= 1) return;
 
+                        // Previous Button
+                        const prevBtn = document.createElement('button');
+                        prevBtn.className = 'store-page-btn';
+                        prevBtn.textContent = 'Previous';
+                        prevBtn.disabled = page === 1;
+                        if (page === 1) prevBtn.style.opacity = '0.5';
+                        prevBtn.addEventListener('click', () => {
+                            if (currentPage > 1) {
+                                currentPage--;
+                                renderStore(filteredItems, currentPage);
+                                renderPagination(filteredItems.length, currentPage);
+                            }
+                        });
+                        pagination.appendChild(prevBtn);
+
+                        // Page Numbers
                         for (let i = 1; i <= totalPages; i++) {
                             const button = document.createElement('button');
                             button.className = 'store-page-btn' + (i === page ? ' active' : '');
-                            button.textContent = String(i);
+                            button.textContent = `Page ${i}`;
+                            button.style.minWidth = '4rem';
                             button.addEventListener('click', () => {
                                 currentPage = i;
                                 renderStore(filteredItems, currentPage);
@@ -2318,18 +1805,40 @@
                             });
                             pagination.appendChild(button);
                         }
+
+                        // Next Button
+                        const nextBtn = document.createElement('button');
+                        nextBtn.className = 'store-page-btn';
+                        nextBtn.textContent = 'Next';
+                        nextBtn.disabled = page === totalPages;
+                        if (page === totalPages) nextBtn.style.opacity = '0.5';
+                        nextBtn.addEventListener('click', () => {
+                            if (currentPage < totalPages) {
+                                currentPage++;
+                                renderStore(filteredItems, currentPage);
+                                renderPagination(filteredItems.length, currentPage);
+                            }
+                        });
+                        pagination.appendChild(nextBtn);
                     }
 
                     function updateNoResults(query, hasResults) {
                         if (!noResults) return;
+                        
+                        // If no query and 0 items, we still want to show the grid (which will be empty slots)
+                        if (!query && !hasResults) {
+                            noResults.style.display = 'none';
+                            storeGrid.style.display = 'grid';
+                            return;
+                        }
+
                         noResults.style.display = hasResults ? 'none' : 'block';
+                        storeGrid.style.display = hasResults ? 'grid' : 'none';
+                        
                         if (hasResults) return;
 
                         const isNumeric = query !== '' && /^\d+$/.test(query);
-                        if (!query) {
-                            noResultsMsg.textContent = 'Store content will appear here soon.';
-                            if (noResultsSub) noResultsSub.textContent = 'Add packages through the Store Admin editor to populate this feed.';
-                        } else if (isNumeric) {
+                        if (isNumeric) {
                             noResultsMsg.textContent = `No store package found with code "${query}".`;
                             if (noResultsSub) noResultsSub.textContent = 'Try another code or clear the search to see every package released so far.';
                         } else {
@@ -2409,13 +1918,20 @@
                             const response = await fetch(STORE_DATA_URL, { cache: 'no-store' });
                             if (!response.ok) throw new Error('Failed to fetch store catalogue');
                             const data = await response.json();
-                            storeItems = Array.isArray(data.dashboards) ? data.dashboards : [];
+                            // API returns {themes: [...]} or {dashboards: [...]}
+                            storeItems = Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []);
                         } catch (error) {
-                            console.warn('Store catalogue load failed:', error);
-                            storeItems = [];
+                            console.warn('Store catalogue dynamic load failed, trying static fallback:', error);
+                            try {
+                                const fb = await fetch('store/themes.json', { cache: 'no-store' });
+                                if (fb.ok) {
+                                    const data = await fb.json();
+                                    storeItems = Array.isArray(data.dashboards) ? data.dashboards : [];
+                                }
+                            } catch (e) {}
                         }
 
-                        applyFilters(currentQuery, currentPlatform, 1);
+                        applyFilters();
                     }
 
                     if (document.readyState === 'loading') {
@@ -2430,13 +1946,29 @@
                         }
                     });
 
-                    window.showPage = showPage;
+                     window.showPage = showPage;
                     window.handleStoreClick = handleStoreClick;
                     window.handleStoreSearch = handleStoreSearch;
                     window.setStorePlatform = setStorePlatform;
                     window.clearStoreSearch = clearStoreSearch;
                     window.copyCode = copyCode;
                     window.closeModal = closeModal;
+
+                    // Initialize routing
+                    function initRouting() {
+                        const hash = window.location.hash.replace('#', '');
+                        // Clean up hashes like '/' or empty strings to default to 'home'
+                        const cleanHash = hash.replace(/^\/+/, '');
+                        
+                        if (['home', 'store'].includes(cleanHash)) {
+                            showPage(cleanHash);
+                        } else {
+                            showPage('home');
+                        }
+                    }
+
+                    window.addEventListener('popstate', initRouting);
+                    initRouting();
                 })();
             </script>
         </body>

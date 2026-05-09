@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Vortex Prime · Store Upload Portal</title>
+  <title>Vortex Prime Store Creator Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -33,14 +33,11 @@
     .notice ol { padding-left: 1.25rem; margin-top: .5rem; }
     .notice ol li { margin-top: .25rem; }
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem; }
-    .card-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: .75rem; cursor: pointer; user-select: none; transition: background .15s; }
-    .card-header:hover { background: var(--elevated); }
-    .card-header .pkg-name { font-weight: 600; flex: 1; }
-    .card-header .pkg-code { font-family: monospace; font-size: .8rem; color: var(--primary); background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); padding: .2rem .55rem; border-radius: 6px; }
-    .card-header .chevron { transition: transform .2s; color: var(--muted); font-size: .9rem; }
-    .card.open .chevron { transform: rotate(180deg); }
-    .card-body { display: none; padding: 1.25rem; border-top: 1px solid var(--border); }
-    .card.open .card-body { display: block; }
+    .card-header { padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: .75rem; border-bottom: 1px solid var(--border); }
+    .card-header .pkg-name { font-weight: 700; font-size: 1.1rem; flex: 1; }
+    .card-header .pkg-code { font-family: monospace; font-size: .85rem; color: var(--primary); background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); padding: .25rem .75rem; border-radius: 8px; }
+    .card-header .chevron { display: none; }
+    .card-body { display: block; padding: 1.5rem; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
     .field { display: flex; flex-direction: column; gap: .4rem; }
@@ -116,11 +113,11 @@
 <header>
   <img src="../icon.svg" alt="Vortex Prime">
   <div>
-    <h1>Store Upload Portal</h1>
-    <p>Add ZIP packages for Vortex Prime</p>
+    <h1>Store Creator Portal</h1>
+    <p>Professional management for Vortex Prime packages</p>
   </div>
   <div class="header-right">
-    <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none;">← Back to Store</a>
+    <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none;">â† Back to Store</a>
   </div>
 </header>
 
@@ -137,8 +134,11 @@
 </main>
 
 <div id="saveBar">
-  <span class="save-hint" id="saveHint">Add or edit packages above, then upload when ready.</span>
-  <button class="btn-success" onclick="downloadJSON()">🚀 Upload to Store</button>
+  <span class="save-hint" id="saveHint">Your changes are saved locally as you work. Ready to publish?</span>
+  <div style="display: flex; gap: 0.75rem;">
+    <button class="btn-secondary" onclick="exportBackup()">Backup JSON</button>
+    <button class="btn-success" onclick="submitAll()" id="submitAllBtn">ðŸš€ Upload All to Store</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -148,7 +148,7 @@
   let packages = [];
   let dirty = false;
 
-  // ── Toast ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function toast(msg, type = 'success') {
     const el = document.getElementById('toast');
     el.textContent = msg;
@@ -157,14 +157,14 @@
     el._t = setTimeout(() => el.classList.remove('show'), 3200);
   }
 
-  // ── Dirty state ───────────────────────────────────────────────────────────
+  // â”€â”€ Dirty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function markDirty() {
     dirty = true;
     const hint = document.getElementById('saveHint');
-    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes — click Upload to Store when ready.';
+    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes â€” click Upload to Store when ready.';
   }
 
-  // ── Collect current field values into packages array ──────────────────────
+  // â”€â”€ Collect current field values into packages array â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function collectAll() {
     const cards = document.querySelectorAll('.pkg-card');
     packages = Array.from(cards).map(card => {
@@ -172,7 +172,10 @@
       const g = (name) => (card.querySelector(`[data-field="${name}"]`) || {}).value || '';
       const tagChips = card.querySelectorAll('.tag-chip');
       const tags = Array.from(tagChips).map(c => c.dataset.tag).filter(Boolean);
+      const pkg = packages[idx] || {};
       return {
+        ...pkg,
+        id: card.dataset.id || pkg.id,
         name: g('name'),
         description: g('description'),
         creator: g('creator'),
@@ -184,15 +187,23 @@
         download_url: g('download_url'),
         platform: g('platform') || 'PS4',
         updated: g('updated') || undefined,
+        discord_id: g('discord_id') || pkg.discord_id || '',
       };
     });
   }
 
-  // ── Render all cards ──────────────────────────────────────────────────────
+  // â”€â”€ Render all cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function render() {
     const list = document.getElementById('packageList');
     const badge = document.getElementById('countBadge');
     
+    // Sort packages by updated date descending (newest first)
+    packages.sort((a, b) => {
+      const dateA = new Date(a.updated || 0);
+      const dateB = new Date(b.updated || 0);
+      return dateB - dateA;
+    });
+
     if (packages.length === 0) {
       addPackage(false); // Automatically add one if empty
     }
@@ -209,14 +220,13 @@
   function buildCard(pkg, i) {
     const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
     const tagChipsHtml = tags.map(t =>
-      `<span class="tag-chip" data-tag="${esc(t)}">${esc(t)}<button type="button" onclick="removeTag(this)" title="Remove tag">×</button></span>`
+      `<span class="tag-chip" data-tag="${esc(t)}">${esc(t)}<button type="button" onclick="removeTag(this)" title="Remove tag">Ã—</button></span>`
     ).join('');
 
-    return `<div class="card pkg-card" data-idx="${i}" id="pkg-${i}">
-      <div class="card-header" onclick="toggleCard(${i})">
-        <span class="pkg-name">${esc(pkg.name) || '<em style="color:var(--muted)">Untitled Package</em>'}</span>
+    return `<div class="card pkg-card" data-idx="${i}" id="pkg-${i}" data-id="${pkg.id || ''}">
+      <div class="card-header">
+        <span class="pkg-name">${esc(pkg.name) || '<em style="color:var(--muted)">New Package</em>'}</span>
         ${pkg.code ? `<span class="pkg-code">${esc(pkg.code)}</span>` : ''}
-        <span class="chevron">▼</span>
       </div>
       <div class="card-body">
         <div class="form-grid">
@@ -233,12 +243,12 @@
             <textarea data-field="description" placeholder="Short overview of the package..." oninput="onFieldInput(${i},'description',this.value)">${esc(pkg.description)}</textarea>
           </div>
           <div class="field">
-            <label>Original Creator</label>
-            <input type="text" data-field="creator" value="${esc(pkg.creator)}" placeholder="Author or team name" oninput="onFieldInput(${i},'creator',this.value)">
+            <label>Original Creator / Author Name *</label>
+            <input type="text" data-field="creator" value="${esc(pkg.creator || pkg.author)}" placeholder="Your name or team" oninput="onFieldInput(${i},'creator',this.value)">
           </div>
           <div class="field">
-            <label>Last Updated</label>
-            <input type="datetime-local" data-field="updated" value="${esc(pkg.updated ? pkg.updated.replace('Z','') : '')}" oninput="onFieldInput(${i},'updated',this.value)">
+            <label>Discord ID (for management/deletion)</label>
+            <input type="text" data-field="discord_id" value="${esc(pkg.discord_id)}" placeholder="Your Discord Snowflake ID" oninput="onFieldInput(${i},'discord_id',this.value)">
           </div>
           <div class="field">
             <label>Platform *</label>
@@ -249,6 +259,10 @@
               <option value="PS Vita" ${pkg.platform==='PS Vita'?'selected':''}>PS Vita</option>
               <option value="PSP" ${pkg.platform==='PSP'?'selected':''}>PSP / PlayStation Portable</option>
             </select>
+          </div>
+          <div class="field">
+            <label>Last Updated</label>
+            <input type="datetime-local" data-field="updated" value="${esc(pkg.updated ? pkg.updated.replace('Z','') : '')}" oninput="onFieldInput(${i},'updated',this.value)">
           </div>
           <div class="field full">
             <label>Tags (press Enter or comma to add)</label>
@@ -262,7 +276,7 @@
             <div class="upload-zone" onclick="document.getElementById('icon-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'icon')">
               <div class="preview-wrap" id="icon-preview-wrap-${i}">
                 ${pkg.icon ? `<img src="${esc(pkg.icon)}" class="preview-thumb">` : `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>`}
-                <span class="file-name">${pkg.icon ? esc(pkg.icon.split('/').pop()) : 'Click or drop icon'}</span>
+                <span class="file-name">${pkg.icon ? (pkg.icon.startsWith('data:') ? 'Image uploaded' : esc(pkg.icon.split('/').pop())) : 'Click or drop icon'}</span>
               </div>
               <input type="file" id="icon-file-${i}" accept="image/*" style="display:none" onchange="handleFileSelect(${i}, 'icon', this)">
               <input type="hidden" data-field="icon" value="${esc(pkg.icon)}">
@@ -273,7 +287,7 @@
             <div class="upload-zone" onclick="document.getElementById('preview-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'preview')">
               <div class="preview-wrap" id="preview-preview-wrap-${i}">
                 ${pkg.preview ? `<img src="${esc(pkg.preview)}" class="preview-large">` : `<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`}
-                <span class="file-name">${pkg.preview ? esc(pkg.preview.split('/').pop()) : 'Click or drop preview image'}</span>
+                <span class="file-name">${pkg.preview ? (pkg.preview.startsWith('data:') ? 'Image uploaded' : esc(pkg.preview.split('/').pop())) : 'Click or drop preview image'}</span>
               </div>
               <input type="file" id="preview-file-${i}" accept="image/*" style="display:none" onchange="handleFileSelect(${i}, 'preview', this)">
               <input type="hidden" data-field="preview" value="${esc(pkg.preview)}">
@@ -283,8 +297,8 @@
             <label>ZIP Package</label>
             <div class="upload-zone" onclick="document.getElementById('zip-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'zip_file')">
               <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
-              <span class="file-name" id="zip-name-${i}">${pkg.zip_file ? esc(pkg.zip_file.split('/').pop()) : 'Click or drop ZIP file'}</span>
-              <span class="upload-hint-box">Files should be moved to docs/uploads/</span>
+              <span class="file-name" id="zip-name-${i}">${pkg.zip_file ? (pkg.zip_file.startsWith('blob:') ? 'File ready' : esc(pkg.zip_file.split('/').pop())) : 'Click or drop ZIP file'}</span>
+              <span class="upload-hint-box">No GitHub knowledge required. Files are hosted on Vortex Prime servers.</span>
               <input type="file" id="zip-file-${i}" accept=".zip,.rar,.7z" style="display:none" onchange="handleFileSelect(${i}, 'zip_file', this)">
               <input type="hidden" data-field="zip_file" value="${esc(pkg.zip_file)}">
             </div>
@@ -292,19 +306,18 @@
           <div class="field">
             <label>External Download Redirect URL</label>
             <input type="text" data-field="download_url" value="${esc(pkg.download_url)}" placeholder="https://..." oninput="onFieldInput(${i},'download_url',this.value)">
-            <span class="upload-hint-box">Optional. Use this to redirect downloads to an external file or source page instead of hosting the ZIP here.</span>
+            <span class="upload-hint-box">Optional. Use this to redirect downloads to an external file or source page instead.</span>
           </div>
         </div>
         <div class="card-actions">
-          <button class="btn-danger" onclick="removePackage(${i})">🗑 Remove Package</button>
-          <button class="btn-secondary" onclick="movePackage(${i},-1)" ${i===0?'disabled':''}>↑ Move Up</button>
-          <button class="btn-secondary" onclick="movePackage(${i},1)" ${i===packages.length-1?'disabled':''}>↓ Move Down</button>
+          <button class="btn-danger" style="margin-right:auto;" onclick="deleteFromServer(${i})">ðŸ—‘ Delete from Server</button>
+          <button class="btn-primary" onclick="submitToStore(${i}, this)">ðŸš€ Upload this Package</button>
         </div>
       </div>
     </div>`;
   }
 
-  // ── Tag logic ─────────────────────────────────────────────────────────────
+  // â”€â”€ Tag logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function attachTagListeners() {
     packages.forEach((_, i) => {
       const input = document.getElementById('tag-input-' + i);
@@ -353,7 +366,7 @@
     if (newCard) newCard.classList.add('open');
   };
 
-  // ── Card interactions ─────────────────────────────────────────────────────
+  // â”€â”€ Card interactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.toggleCard = function(i) {
     const card = document.getElementById('pkg-' + i);
     if (card) card.classList.toggle('open');
@@ -378,7 +391,7 @@
     }
   };
 
-  // ── Modern Upload Logic ──────────────────────────────────────────────────
+  // â”€â”€ Modern Upload Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.handleFileSelect = function(i, field, input) {
     const file = input.files[0];
     if (!file) return;
@@ -399,12 +412,9 @@
     
     // Update internal data
     packages[i][field] = path;
+    packages[i][field + '_file'] = file;
+    
     markDirty();
-
-    // Update hidden field
-    const card = document.getElementById('pkg-' + i);
-    const hidden = card.querySelector(`input[data-field="${field}"]`);
-    if (hidden) hidden.value = path;
 
     // Visual feedback
     if (field === 'icon' || field === 'preview') {
@@ -420,12 +430,100 @@
       if (nameEl) nameEl.textContent = filename;
     }
 
-    toast(`Selected ${filename}. Remember to place it in docs/uploads/`);
+    toast(`File ${filename} selected.`);
   }
+
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:8000/api' 
+    : 'https://vortex-prime-emu.com/api';
+
+  window.submitToStore = async function(i, btn) {
+    collectAll();
+    const pkg = packages[i];
+    if (!pkg.name || !pkg.code) return toast('Name and Store Code are required.', 'error');
+    
+    const oldText = btn.textContent;
+    btn.textContent = 'Uploading...';
+    btn.disabled = true;
+
+    try {
+      const fd = new FormData();
+      fd.append('name', pkg.name);
+      fd.append('description', pkg.description);
+      fd.append('discord_id', pkg.discord_id || 'anonymous');
+      fd.append('author', pkg.creator || pkg.author || 'Community');
+      fd.append('platform', pkg.platform);
+      fd.append('tags', JSON.stringify(pkg.tags));
+      fd.append('download_url', pkg.download_url);
+      if (pkg.code) fd.append('code', pkg.code);
+      
+      if (pkg.zip_file_file) fd.append('theme', pkg.zip_file_file);
+      if (pkg.icon_file_file) fd.append('icon', pkg.icon_file_file);
+      if (pkg.preview_file_file) fd.append('preview', pkg.preview_file_file);
+
+      const res = await fetch(`${API_BASE}/store/upload`, {
+        method: 'POST',
+        body: fd
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Upload failed');
+      }
+
+      toast(`Successfully uploaded ${pkg.name}!`);
+      markDirty(false);
+      // Reload to get new IDs/States
+      setTimeout(() => location.reload(), 1500);
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      btn.textContent = oldText;
+      btn.disabled = false;
+    }
+  };
+
+  window.deleteFromServer = async function(i) {
+    const pkg = packages[i];
+    if (!pkg.id) return toast('This package is not yet on the server.', 'error');
+    const discord_id = prompt('Enter your Discord ID to confirm deletion:');
+    if (!discord_id) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/store/themes/${pkg.id}?discord_id=${discord_id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Deletion failed (check your Discord ID)');
+      toast('Package removed from store.');
+      location.reload();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  };
+
+  window.submitAll = async function() {
+    collectAll();
+    const btn = document.getElementById('submitAllBtn');
+    for (let i = 0; i < packages.length; i++) {
+      await submitToStore(i, btn);
+    }
+  };
+
+  window.exportBackup = function() {
+    collectAll();
+    const json = JSON.stringify({ dashboards: packages }, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'themes-backup.json';
+    a.click();
+  };
 
   window.addPackage = function(isUserAction = true) {
     if (isUserAction) collectAll();
-    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', updated: '' });
+    const now = new Date().toISOString();
+    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', updated: now });
     if (isUserAction) markDirty();
     render();
     const newIdx = packages.length - 1;
@@ -449,18 +547,9 @@
     toast('Package removed. Click Save Package File to apply.', 'success');
   };
 
-  window.movePackage = function(i, dir) {
-    collectAll();
-    const j = i + dir;
-    if (j < 0 || j >= packages.length) return;
-    [packages[i], packages[j]] = [packages[j], packages[i]];
-    markDirty();
-    render();
-    const card = document.getElementById('pkg-' + j);
-    if (card) card.classList.add('open');
-  };
+  // â”€â”€ Sorting and Ordering is now automatic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  // ── Load from file ────────────────────────────────────────────────────────
+  // â”€â”€ Load from file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.loadFromFile = function() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -474,7 +563,7 @@
           const data = JSON.parse(e.target.result);
           packages = Array.isArray(data.dashboards) ? data.dashboards : [];
           dirty = false;
-          document.getElementById('saveHint').textContent = `Loaded ${packages.length} package(s) from ${file.name} — click Save Package File when done.`;
+          document.getElementById('saveHint').textContent = `Loaded ${packages.length} package(s) from ${file.name} â€” click Save Package File when done.`;
           render();
           toast(`Loaded ${packages.length} package(s).`);
         } catch {
@@ -486,10 +575,16 @@
     input.click();
   };
 
-  // ── Download JSON ─────────────────────────────────────────────────────────
+  // â”€â”€ Download JSON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.downloadJSON = function() {
     collectAll();
-    const clean = packages.map(pkg => {
+    const sorted = [...packages].sort((a, b) => {
+      const dateA = new Date(a.updated || 0);
+      const dateB = new Date(b.updated || 0);
+      return dateB - dateA;
+    });
+
+    const clean = sorted.map(pkg => {
       const out = {};
       if (pkg.name) out.name = pkg.name;
       if (pkg.description) out.description = pkg.description;
@@ -514,21 +609,27 @@
     URL.revokeObjectURL(url);
     dirty = false;
     document.getElementById('saveHint').textContent = 'Package file ready! Replace docs/store/themes.json in the repo and push to publish.';
-    toast('Upload file prepared — commit it to go live.');
+    toast('Upload file prepared â€” commit it to go live.');
   };
 
-  // ── Auto-load live themes.json ─────────────────────────────────────────────
-  fetch('../store/themes.json', { cache: 'no-store' })
+  // â”€â”€ Auto-load live themes from API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  fetch(`${API_BASE}/store/themes`, { cache: 'no-store' })
     .then(r => r.ok ? r.json() : Promise.reject())
     .then(data => {
-      packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+      packages = Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []);
       document.getElementById('saveHint').textContent =
-        `Loaded ${packages.length} package(s) from the live store. Edit below, then click Upload to Store.`;
+        `Connected to live store. Total ${packages.length} package(s) available.`;
       render();
     })
     .catch(() => {
-      render();
-      document.getElementById('saveHint').textContent = 'Could not auto-load existing packages. Click Import file… to load manually.';
+      // Fallback to static if API down
+      fetch('../store/themes.json', { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+          render();
+        })
+        .catch(() => render());
     });
 
 })();

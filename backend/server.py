@@ -764,11 +764,16 @@ async def upload_store_theme(
     description: str = Form(...),
     discord_id: str = Form(...),
     author: str = Form(...),
+    platform: str = Form("PS4"),
+    tags: str = Form(""),
+    download_url: str = Form(""),
+    code: str = Form(None),
     access_token: str = Form(""),
     theme: UploadFile = File(...),
+    icon: UploadFile = File(None),
     preview: UploadFile = File(None),
 ):
-    """Accept a community theme submission from the website."""
+    """Accept a community package submission from the website."""
     # Verify Discord token when provided
     if access_token:
         user_info = await store_service.verify_discord_token(access_token)
@@ -776,20 +781,32 @@ async def upload_store_theme(
             raise HTTPException(status_code=401, detail="Discord token invalid or mismatched")
 
     # Validate ZIP
-    if not theme.filename.lower().endswith(".zip"):
-        raise HTTPException(status_code=400, detail="Theme file must be a ZIP archive")
+    if not theme.filename.lower().endswith((".zip", ".rar", ".7z")):
+        raise HTTPException(status_code=400, detail="Package file must be an archive (ZIP/RAR/7Z)")
     zip_bytes = await theme.read()
     if len(zip_bytes) > store_service.MAX_ZIP_SIZE:
-        raise HTTPException(status_code=413, detail="ZIP file exceeds 50 MB limit")
+        raise HTTPException(status_code=413, detail="File exceeds 50 MB limit")
 
-    # Read optional preview image
+    # Read optional images
+    icon_bytes = None
+    icon_ext = None
+    if icon and icon.filename:
+        icon_bytes = await icon.read()
+        icon_ext = Path(icon.filename).suffix
+        
     preview_bytes = None
     preview_ext = None
     if preview and preview.filename:
         preview_bytes = await preview.read()
-        if len(preview_bytes) > store_service.MAX_IMAGE_SIZE:
-            raise HTTPException(status_code=413, detail="Preview image exceeds 5 MB limit")
         preview_ext = Path(preview.filename).suffix
+
+    # Parse tags
+    tag_list = []
+    if tags:
+        try:
+            tag_list = json.loads(tags)
+        except:
+            tag_list = [t.strip() for t in tags.split(",") if t.strip()]
 
     result = await store_service.save_submission(
         name=name,
@@ -798,8 +815,14 @@ async def upload_store_theme(
         author=author,
         zip_bytes=zip_bytes,
         zip_filename=theme.filename,
+        platform=platform,
+        tags=tag_list,
+        icon_bytes=icon_bytes,
+        icon_ext=icon_ext,
         preview_bytes=preview_bytes,
         preview_ext=preview_ext,
+        download_url=download_url,
+        code=code,
         db=db if mongo_available else None,
     )
     return result
@@ -807,9 +830,18 @@ async def upload_store_theme(
 
 @api_router.get("/store/themes")
 async def get_store_themes():
-    """Return all approved community themes for the website store."""
+    """Return all approved community packages for the website store."""
     themes = await store_service.get_approved_themes(db=db if mongo_available else None)
-    return {"themes": themes}
+    return {"themes": themes, "dashboards": themes} # Support both keys for compatibility
+
+
+@api_router.delete("/store/themes/{submission_id}")
+async def delete_store_theme(submission_id: str, discord_id: str):
+    """Allow an uploader to remove their own package."""
+    ok = await store_service.delete_submission(submission_id, discord_id, db=db if mongo_available else None)
+    if not ok:
+        raise HTTPException(status_code=403, detail="Unauthorized or package not found")
+    return {"status": "deleted"}
 
 
 # ─── Streaming Rendezvous API ─────────────────────────────────────────────────

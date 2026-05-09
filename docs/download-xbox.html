@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xbox Downloads - Vortex Prime</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #10B981;
+            --color-primary-light: #34D399;
+            --color-bg-dark: #09090B;
+            --color-bg-card: #18181B;
+            --color-bg-elevated: #27272A;
+            --color-border: #3F3F46;
+            --color-text: #FAFAFA;
+            --color-text-secondary: #A1A1AA;
+            --color-text-muted: #71717A;
+            --color-xbox-green: #107C10;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--color-bg-dark);
+            color: var(--color-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(16, 76, 16, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 76, 16, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: -1;
+        }
+
+        nav {
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 700;
+        }
+
+        .nav-logo img { width: 32px; height: 32px; }
+
+        .download-hero {
+            padding: 4rem 0 2rem;
+            text-align: center;
+        }
+
+        .download-hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, var(--color-xbox-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .download-hero p {
+            font-size: 1.1rem;
+            color: var(--color-text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .download-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .download-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--color-xbox-green);
+        }
+
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .platform-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-testing { background: rgba(245, 158, 11, 0.1); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.2); }
+
+        .file-info {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .comp-note {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-xbox {
+            background: transparent;
+            border: 1px solid var(--color-xbox-green);
+            color: var(--color-xbox-green);
+        }
+
+        .btn-xbox:hover {
+            background: var(--color-xbox-green);
+            color: white;
+        }
+
+        .btn-disabled {
+            background: var(--color-bg-elevated);
+            color: var(--color-text-muted);
+            cursor: not-allowed;
+            border-color: var(--color-border);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .back-link:hover { color: var(--color-text); }
+
+        @media (max-width: 768px) {
+            .download-hero h1 { font-size: 2.25rem; }
+            .download-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <nav>
+        <div class="container nav-container">
+            <a href="index.html" class="nav-brand">
+                <div class="nav-logo">
+                    <img src="icon.svg" alt="Vortex Prime">
+                </div>
+                <span class="nav-brand-text">Vortex Prime</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="download-hero">
+            <a href="index.html" class="back-link">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                Back to Home
+            </a>
+            <h1>Xbox Downloads</h1>
+            <p>Xbox support is currently experimental. Community testing and validation are needed to ensure compatibility across legacy Xbox hardware. This is a professional early-access effort.</p>
+        </div>
+
+        <div class="download-grid">
+            <!-- Xbox 360 -->
+            <div class="download-card">
+                <div class="platform-header">
+                    <span class="platform-name">Xbox 360</span>
+                    <span class="badge badge-testing">Community Testing Needed</span>
+                </div>
+                <p class="file-info">File format: .xex / GOD</p>
+                <p class="comp-note">Requires an RGH/JTAG modified console. Testing is needed to validate dashboard integration and network functionality.</p>
+                <button class="btn btn-disabled" onclick="alert('Experimental build not uploaded yet. Join Discord to help test!')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    Download Package
+                </button>
+            </div>
+
+            <!-- Original Xbox -->
+            <div class="download-card">
+                <div class="platform-header">
+                    <span class="platform-name">Original Xbox</span>
+                    <span class="badge badge-testing">Community Testing Needed</span>
+                </div>
+                <p class="file-info">File format: .xbe</p>
+                <p class="comp-note">Experimental support for the classic Xbox. Community validation is required for performance and UI scaling.</p>
+                <button class="btn btn-disabled" onclick="alert('Experimental build not uploaded yet. Join Discord to help test!')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    Download .xbe
+                </button>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
