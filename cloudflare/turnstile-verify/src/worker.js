@@ -81,9 +81,10 @@ export default {
     if (pathname.endsWith('/api/github/login')) {
       const state = await randomState();
       const clientId = env.GITHUB_CLIENT_ID;
+      const redirectUri = `${url.origin}/oauth-callback`;
       const authorize = new URL('https://github.com/login/oauth/authorize');
       authorize.searchParams.set('client_id', clientId);
-      // Do not set redirect_uri; rely on the app-configured callback
+      authorize.searchParams.set('redirect_uri', redirectUri);
       authorize.searchParams.set('scope', 'read:user user:email');
       authorize.searchParams.set('state', state);
       // set state cookie
@@ -102,11 +103,12 @@ export default {
         return new Response('Invalid OAuth state.', { status: 400 });
       }
 
+      const redirectUri = `${url.origin}/oauth-callback`;
       const tokenParams = new URLSearchParams();
       tokenParams.set('client_id', env.GITHUB_CLIENT_ID);
       tokenParams.set('client_secret', env.GITHUB_CLIENT_SECRET);
       tokenParams.set('code', code);
-      // Do not send redirect_uri; must match configured callback
+      tokenParams.set('redirect_uri', redirectUri);
 
       const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
