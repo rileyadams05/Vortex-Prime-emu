@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vortex-prime",
+  "compatibility_date": "2026-05-09",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "docs"
+  },
+  "routes": [
+    { "pattern": "vortex-prime-emu.com/api/github/*", "zone_name": "vortex-prime-emu.com" },
+    { "pattern": "www.vortex-prime-emu.com/api/github/*", "zone_name": "vortex-prime-emu.com" },
+    { "pattern": "vortex-prime-emu.com/api/turnstile-verify", "zone_name": "vortex-prime-emu.com" },
+    { "pattern": "www.vortex-prime-emu.com/api/turnstile-verify", "zone_name": "vortex-prime-emu.com" }
+  ],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
