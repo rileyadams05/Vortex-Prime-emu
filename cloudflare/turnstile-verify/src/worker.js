@@ -80,7 +80,7 @@ export default {
     // GitHub OAuth: /api/github/login
     if (pathname.endsWith('/api/github/login')) {
       const state = await randomState();
-      const clientId = env.GITHUB_CLIENT_ID;
+      const clientId = env.GITHUB_CLIENT_ID || 'Ov23li2Nlt4Ak7DUKSa1';
       const redirectUri = `${url.origin}/oauth-callback`;
       const authorize = new URL('https://github.com/login/oauth/authorize');
       authorize.searchParams.set('client_id', clientId);
@@ -105,8 +105,8 @@ export default {
 
       const redirectUri = `${url.origin}/oauth-callback`;
       const tokenParams = new URLSearchParams();
-      tokenParams.set('client_id', env.GITHUB_CLIENT_ID);
-      tokenParams.set('client_secret', env.GITHUB_CLIENT_SECRET);
+      tokenParams.set('client_id', env.GITHUB_CLIENT_ID || 'Ov23li2Nlt4Ak7DUKSa1');
+      tokenParams.set('client_secret', env.GITHUB_CLIENT_SECRET || 'bdf41a1259fffedd572115258c7289900da321fa');
       tokenParams.set('code', code);
       tokenParams.set('redirect_uri', redirectUri);
 
