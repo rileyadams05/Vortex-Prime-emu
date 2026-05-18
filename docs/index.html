@@ -1644,22 +1644,15 @@
                     let storeItems = [];
                     let filteredItems = [];
                     let currentQuery = '';
-                    let currentPlatform = 'PS4'; // Default to PS4 for console-friendliness
+                    let currentPlatform = 'All';
                     let currentCategory = 'All';
                     let currentPage = 1;
 
-                    function enforcePS4WhenPackaged() {
-                        const path = decodeURIComponent((window.location.pathname || '')).toLowerCase();
-                        const isPS4Build = path.includes('/homebrew store/ps4') || path.endsWith('homebrew store/ps4/') || path.endsWith('homebrew store/ps4/index.html');
-                        if (isPS4Build) {
-                            currentPlatform = 'PS4';
-                        }
-                        
-                        // Update Dropdown Labels and Active States
+                    function initializeStoreFilters() {
                         setStorePlatform(currentPlatform);
                         setStoreCategory(currentCategory);
                     }
-                    enforcePS4WhenPackaged();
+                    initializeStoreFilters();
 
                     function updateCategoryVisibility(platform) {
                         const categoryOptions = document.querySelectorAll('#categoryDropdown .store-filter-option');
@@ -1690,7 +1683,9 @@
                         
                         // Ensure defaults are applied when entering store
                         if (pageId === 'store') {
-                            enforcePS4WhenPackaged();
+                            currentPlatform = 'All';
+                            currentCategory = 'All';
+                            initializeStoreFilters();
                             applyFilters();
                         }
 
