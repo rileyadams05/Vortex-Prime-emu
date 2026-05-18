@@ -16,8 +16,6 @@
     <meta property="og:description" content="Discover, upload, and manage homebrew packages for Vortex Prime.">
     <meta property="og:type" content="website">
 
-    
-    <!-- Cache-Busting: Nuke local browser cache for HTML -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -26,21 +24,6 @@
     <meta name="version" content="2025-03-31-14-38">
     
     <title>Vortex Prime Store — Homebrew Marketplace</title>
-    
-    <!-- Service Worker Nuclear Option: Kill stale service workers and clear cache storage -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for (let registration of registrations) { registration.unregister(); }
-            });
-        }
-        if ('caches' in window) {
-            caches.keys().then(function(names) {
-                for (let name of names) caches.delete(name);
-            });
-        }
-    </script>
-
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1416,6 +1399,10 @@
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                                 Store
                             </a>
+                            <button type="button" class="btn" id="installAppButton" style="display: none; background: transparent; color: var(--color-text); border: 1px solid var(--color-border); align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+                                Install App
+                            </button>
                         </div>
 
                         <div style="margin-top: 3rem; display: flex; flex-direction: column; gap: 1.5rem;">
@@ -1634,6 +1621,42 @@
             </div>
             <script>
                 (function () {
+                    let deferredInstallPrompt = null;
+                    const installAppButton = document.getElementById('installAppButton');
+
+                    if ('serviceWorker' in navigator) {
+                        window.addEventListener('load', () => {
+                            navigator.serviceWorker.register('/app-sw.js').catch((error) => {
+                                console.warn('App install service worker registration failed:', error);
+                            });
+                        });
+                    }
+
+                    window.addEventListener('beforeinstallprompt', (event) => {
+                        event.preventDefault();
+                        deferredInstallPrompt = event;
+                        if (installAppButton) {
+                            installAppButton.style.display = 'flex';
+                        }
+                    });
+
+                    window.addEventListener('appinstalled', () => {
+                        deferredInstallPrompt = null;
+                        if (installAppButton) {
+                            installAppButton.style.display = 'none';
+                        }
+                    });
+
+                    if (installAppButton) {
+                        installAppButton.addEventListener('click', async () => {
+                            if (!deferredInstallPrompt) return;
+                            deferredInstallPrompt.prompt();
+                            await deferredInstallPrompt.userChoice;
+                            deferredInstallPrompt = null;
+                            installAppButton.style.display = 'none';
+                        });
+                    }
+
                     const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                     const API_BASE = IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '';
                     const STORE_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/themes` : 'store/themes.json';
