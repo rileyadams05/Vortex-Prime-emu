@@ -7,6 +7,7 @@
   <title>Vortex Prime Store Creator Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --bg: #09090b;
@@ -122,7 +123,9 @@
     .auth-actions { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
     .auth-actions a { text-decoration: none; display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1rem; border-radius: 8px; border: 1px solid var(--border); color: var(--text); background: var(--elevated); }
     .auth-actions a.primary { background: #171717; border-color: var(--primary); color: #fff; }
-    .auth-note { margin-top: .75rem; color: var(--muted); font-size: .85rem; }
+    .auth-note { margin-top: .75rem; color: var(--muted); font-size: .85rem; transition: color .2s ease; }
+    .auth-note.error { color: #fca5a5; }
+    .auth-note.success { color: #6ee7b7; }
   </style>
 </head>
 <body>
@@ -149,10 +152,10 @@
     <div class="auth-title" id="authTitle">Admin access locked</div>
     <div class="auth-desc">This portal is disabled until you sign in with Google. Please sign in or create a Google account to continue.</div>
     <div class="auth-actions">
-      <a class="primary" href="/api/google/login">Sign in with Google</a>
+      <button id="googleSignInBtn" class="primary" type="button">Continue with Google</button>
       <a href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">Create Google Account</a>
     </div>
-    <div class="auth-note">All editing actions are disabled while locked.</div>
+    <div class="auth-note" id="authStatus">All editing actions are disabled while locked.</div>
   </div>
   
 </div>
@@ -184,52 +187,149 @@
   let packages = [];
   let dirty = false;
 
-  // Auth: check session and update UI
-  async function checkAuth() {
+  const GOOGLE_CLIENT_ID = '1031854944297-5fnr5ag53nnviq0av9htnctq733uae0k.apps.googleusercontent.com';
+  const USER_STORAGE_KEY = 'vpGoogleAuthUser';
+
+  let googleTokenClient = null;
+  let currentUser = null;
+
+  const authGate = document.getElementById('authGate');
+  const userBadge = document.getElementById('userBadge');
+  const userNameEl = document.getElementById('userName');
+  const userAvatarEl = document.getElementById('userAvatar');
+  const signInBtn = document.getElementById('googleSignInBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const authStatus = document.getElementById('authStatus');
+
+  function setStatus(message, variant = '') {
+    if (!authStatus) return;
+    authStatus.textContent = message;
+    authStatus.classList.remove('error', 'success');
+    if (variant) authStatus.classList.add(variant);
+  }
+
+  function loadStoredUser() {
     try {
-      const res = await fetch('/api/google/me', { credentials: 'include' });
-      const data = await res.json();
-      const gate = document.getElementById('authGate');
-      const badge = document.getElementById('userBadge');
-      if (data && data.authenticated) {
-        if (gate) gate.style.display = 'none';
-        if (badge) {
-          badge.style.display = 'inline-flex';
-          document.getElementById('userName').textContent = data.user.name;
-          const avatar = document.getElementById('userAvatar');
-          if (data.user.picture) {
-            avatar.style.display = 'block';
-            avatar.src = data.user.picture;
-          } else {
-            avatar.style.display = 'none';
-            avatar.removeAttribute('src');
-          }
-          if (data.user.email) {
-            badge.title = data.user.email;
-          } else {
-            badge.removeAttribute('title');
-          }
-        }
-      } else {
-        if (gate) gate.style.display = 'flex';
-        if (badge) badge.style.display = 'none';
-      }
-    } catch (_) {
-      // Keep locked on error
+      return JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+    } catch (error) {
+      return null;
     }
   }
 
-  document.addEventListener('click', (e) => {
-    const t = e.target;
-    if (t && t.id === 'logoutBtn') {
-      e.preventDefault();
-      fetch('/api/google/logout', { method: 'POST', credentials: 'include' })
-        .then(() => { location.reload(); });
+  function persistUser(user) {
+    if (!user) {
+      localStorage.removeItem(USER_STORAGE_KEY);
+      return;
     }
-  });
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  }
 
-  // Run on load
-  checkAuth();
+  function applyUser(user) {
+    currentUser = user || null;
+    if (user && authGate) {
+      authGate.style.display = 'none';
+      if (userBadge) {
+        userBadge.style.display = 'inline-flex';
+        if (userNameEl) userNameEl.textContent = user.name || user.email || 'Google User';
+        if (userAvatarEl) {
+          if (user.picture) {
+            userAvatarEl.style.display = 'block';
+            userAvatarEl.src = user.picture;
+          } else {
+            userAvatarEl.style.display = 'none';
+            userAvatarEl.removeAttribute('src');
+          }
+        }
+        if (userBadge && user.email) {
+          userBadge.title = user.email;
+        } else if (userBadge) {
+          userBadge.removeAttribute('title');
+        }
+      }
+      setStatus(`Signed in as ${user.email || user.name || 'Google User'}.`, 'success');
+    } else {
+      if (authGate) authGate.style.display = 'flex';
+      if (userBadge) userBadge.style.display = 'none';
+      setStatus('All editing actions are disabled while locked.');
+    }
+  }
+
+  function ensureTokenClient() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      setStatus('Google sign-in is still loading. Please try again in a moment.', 'error');
+      return null;
+    }
+    if (!googleTokenClient) {
+      googleTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        ux_mode: 'popup',
+        callback: () => {}
+      });
+    }
+    return googleTokenClient;
+  }
+
+  async function fetchGoogleProfile(accessToken) {
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to verify Google account');
+    }
+    const profile = await response.json();
+    return {
+      sub: profile.sub,
+      name: profile.name || profile.given_name || profile.email || 'Google User',
+      email: profile.email || null,
+      picture: profile.picture || ''
+    };
+  }
+
+  function startGoogleSignIn() {
+    const client = ensureTokenClient();
+    if (!client) return;
+    setStatus('Opening Google sign-in…');
+    client.callback = async (tokenResponse) => {
+      try {
+        if (!tokenResponse || !tokenResponse.access_token) {
+          throw new Error('Google did not return an access token');
+        }
+        const profile = await fetchGoogleProfile(tokenResponse.access_token);
+        persistUser(profile);
+        applyUser(profile);
+      } catch (error) {
+        console.error(error);
+        setStatus('Unable to complete Google sign-in. Please try again.', 'error');
+      }
+    };
+    client.requestAccessToken({ prompt: currentUser ? '' : 'consent' });
+  }
+
+  function signOut() {
+    if (currentUser && window.google && google.accounts && google.accounts.oauth2 && typeof google.accounts.oauth2.revoke === 'function') {
+      const hint = currentUser.email || currentUser.sub || undefined;
+      if (hint) google.accounts.oauth2.revoke(hint, () => {});
+    }
+    persistUser(null);
+    applyUser(null);
+  }
+
+  if (signInBtn) {
+    signInBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      startGoogleSignIn();
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      signOut();
+    });
+  }
+
+  applyUser(loadStoredUser());
 
   // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function toast(msg, type = 'success') {
