@@ -9,13 +9,16 @@
     "tauri": "tauri",
     "frontend:dev": "cd frontend && npm start",
     "frontend:build": "cd frontend && npm run build",
-    "postinstall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\provision_java.ps1"
+    "postinstall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\provision_java.ps1",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.10.0"
+    "@tauri-apps/cli": "^2.10.0",
+    "wrangler": "^4.90.0"
   },
   "engines": {
     "node": ">=18.0.0"

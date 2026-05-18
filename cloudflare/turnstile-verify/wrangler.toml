@@ -5,14 +5,8 @@ compatibility_date = "2024-11-01"
 routes = [
   { pattern = "vortex-prime-emu.com/api/turnstile-verify", zone_name = "vortex-prime-emu.com" },
   { pattern = "www.vortex-prime-emu.com/api/turnstile-verify", zone_name = "vortex-prime-emu.com" },
-  { pattern = "vortex-prime-emu.com/api/github/login", zone_name = "vortex-prime-emu.com" },
-  { pattern = "www.vortex-prime-emu.com/api/github/login", zone_name = "vortex-prime-emu.com" },
-  { pattern = "vortex-prime-emu.com/api/github/callback", zone_name = "vortex-prime-emu.com" },
-  { pattern = "www.vortex-prime-emu.com/api/github/callback", zone_name = "vortex-prime-emu.com" },
-  { pattern = "vortex-prime-emu.com/api/github/me", zone_name = "vortex-prime-emu.com" },
-  { pattern = "www.vortex-prime-emu.com/api/github/me", zone_name = "vortex-prime-emu.com" },
-  { pattern = "vortex-prime-emu.com/api/github/logout", zone_name = "vortex-prime-emu.com" },
-  { pattern = "www.vortex-prime-emu.com/api/github/logout", zone_name = "vortex-prime-emu.com" }
+  { pattern = "vortex-prime-emu.com/api/github/*", zone_name = "vortex-prime-emu.com" },
+  { pattern = "www.vortex-prime-emu.com/api/github/*", zone_name = "vortex-prime-emu.com" }
 ]
 
 [vars]

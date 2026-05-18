@@ -81,7 +81,7 @@ export default {
     if (pathname.endsWith('/api/github/login')) {
       const state = await randomState();
       const clientId = env.GITHUB_CLIENT_ID || 'Ov23li2Nlt4Ak7DUKSa1';
-      const redirectUri = `${url.origin}/oauth-callback`;
+      const redirectUri = `https://vortex-prime-emu.com/api/github/callback`;
       const authorize = new URL('https://github.com/login/oauth/authorize');
       authorize.searchParams.set('client_id', clientId);
       authorize.searchParams.set('redirect_uri', redirectUri);
@@ -103,7 +103,7 @@ export default {
         return new Response('Invalid OAuth state.', { status: 400 });
       }
 
-      const redirectUri = `${url.origin}/oauth-callback`;
+      const redirectUri = `https://vortex-prime-emu.com/api/github/callback`;
       const tokenParams = new URLSearchParams();
       tokenParams.set('client_id', env.GITHUB_CLIENT_ID || 'Ov23li2Nlt4Ak7DUKSa1');
       tokenParams.set('client_secret', env.GITHUB_CLIENT_SECRET || 'bdf41a1259fffedd572115258c7289900da321fa');
