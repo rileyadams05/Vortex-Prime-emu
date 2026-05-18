@@ -58,6 +58,24 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
+        /* Console/Keyboard Focus States */
+        :focus {
+            outline: none;
+        }
+
+        :focus-visible {
+            outline: 4px solid var(--color-primary-light) !important;
+            outline-offset: 4px !important;
+            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.25) !important;
+            z-index: 50;
+        }
+
+        /* PS4-friendly click targets */
+        button, .btn, .nav-link, .store-filter-option, .store-page-btn, .theme-download {
+            cursor: pointer;
+            min-height: 44px; /* Apple/Android/Console standard for touch/pointer */
+        }
+
         html { scroll-behavior: smooth; }
 
         body {
@@ -402,8 +420,8 @@
 
         .store-search-field:focus-within {
             background: rgba(39, 39, 42, 0.8);
-            border-color: rgba(16, 185, 129, 0.5);
-            box-shadow: 0 12px 48px rgba(16, 185, 129, 0.15);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
             transform: translateY(-2px);
         }
 
@@ -484,6 +502,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            outline: none;
+        }
+        .store-filter-option:focus-visible {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-text);
         }
         .store-filter-option:hover {
             background: rgba(255, 255, 255, 0.05);
@@ -496,6 +519,9 @@
         .store-filter-option.active::after {
             content: '✓';
             font-size: 0.8rem;
+        }
+        .store-filter-option.hidden {
+            display: none !important;
         }
 
         .store-search-input {
@@ -654,9 +680,14 @@
             transition: all 0.3s;
         }
 
-        .theme-card:hover {
+        .theme-card:hover, .theme-card:focus-within {
             border-color: var(--color-primary);
             transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        }
+        .theme-card:focus-within {
+            outline: 4px solid var(--color-primary-light);
+            outline-offset: 4px;
         }
 
         .theme-preview {
@@ -795,6 +826,39 @@
             padding: 0.5rem 0.75rem;
             margin-bottom: 1rem;
             flex-wrap: wrap;
+        }
+
+        /* TV Optimized Layout Overrides */
+        @media (min-width: 1700px) {
+            :root {
+                --tv-font-scale: 1.15;
+            }
+            body { font-size: calc(1rem * var(--tv-font-scale)); }
+            .nav-container { height: 140px; }
+            .nav-logo, .nav-logo img { width: 110px; height: 110px; }
+            .store-search-wrap { max-width: 900px; }
+            .store-search-input { font-size: 1.25rem; padding: 1.25rem 8rem 1.25rem 3.5rem; }
+            .store-grid { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 3rem; }
+            .theme-info h3 { font-size: 1.4rem; }
+            .theme-info p { font-size: 1.1rem; }
+        }
+
+        /* Ensure search clear button is reachable */
+        .store-search-clear {
+            position: absolute;
+            right: 4.5rem; /* Space for the filter button if present, but here it's 1.5rem + gap */
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--color-text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
         }
 
         .theme-code-body {
@@ -1383,9 +1447,9 @@
                             <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; text-align: left;">
                                 <h4 style="font-size: 1.25rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
                                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M21.58 16.09l-1.09-7.66C20.18 6.05 18.23 4 15.82 4H8.18C5.77 4 3.82 6.05 3.51 8.43l-1.09 7.66C2.2 17.65 3.39 19 4.94 19h14.12c1.55 0 2.74-1.35 2.52-2.91zM7.5 14h-2v-2h2v2zm0-4h-2V8h2v2zm4 4h-2v-2h2v2zm0-4h-2V8h2v2zm4 4h-2v-2h2v2zm0-4h-2V8h2v2z"/></svg>
-                                    PlayStation Ecosystem
+                                    PlayStation HEN
                                 </h4>
-                                <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">PlayStation support is actively in development and testing. Current testing is focused on PS3 and PS4 hardware, while broader PlayStation compatibility is expected across supported PKG-based systems.</p>
+                                <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">Access the refreshed PS3 HEN host with every supported Hybrid Firmware payload and on-console guidance. Firmware-specific builds are kept current for safe installation across our PlayStation lineup.</p>
                                 
                                 <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
                                     <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">PS3</span>
@@ -1395,9 +1459,9 @@
                                     <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">PSP</span>
                                 </div>
                                 
-                                <a href="download-playstation.html" class="btn" style="background: #00439C; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0, 67, 156, 0.3);">
+                                <a href="hen/index.html" class="btn" style="background: #00439C; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0, 67, 156, 0.3);">
                                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    Download Vortex Prime PlayStation Homebrew Store.pkg
+                                    View all HEN versions
                                 </a>
                             </div>
 
@@ -1610,20 +1674,39 @@
                     let storeItems = [];
                     let filteredItems = [];
                     let currentQuery = '';
-                    let currentPlatform = 'All';
+                    let currentPlatform = 'PS4'; // Default to PS4 for console-friendliness
                     let currentCategory = 'All';
                     let currentPage = 1;
 
-                    const BUILD_PROFILE = 'PS4';
-                    const INSTALL_PATH = 'Homebrew Store/PS4';
+                    function enforcePS4WhenPackaged() {
+                        const path = decodeURIComponent((window.location.pathname || '')).toLowerCase();
+                        const isPS4Build = path.includes('/homebrew store/ps4') || path.endsWith('homebrew store/ps4/') || path.endsWith('homebrew store/ps4/index.html');
+                        if (isPS4Build) {
+                            currentPlatform = 'PS4';
+                        }
+                        
+                        // Update Dropdown Labels and Active States
+                        setStorePlatform(currentPlatform);
+                        setStoreCategory(currentCategory);
+                    }
+                    enforcePS4WhenPackaged();
 
-                    if (BUILD_PROFILE === 'PS4') {
-                        currentPlatform = 'PS4';
-                        const opts = document.querySelectorAll('#platformDropdown .store-filter-option');
-                        opts.forEach(opt => {
-                            const v = opt.getAttribute('data-platform');
-                            opt.classList.toggle('active', v === 'PS4');
+                    function updateCategoryVisibility(platform) {
+                        const categoryOptions = document.querySelectorAll('#categoryDropdown .store-filter-option');
+                        categoryOptions.forEach(opt => {
+                            const cat = opt.getAttribute('data-category');
+                            if (platform === 'PS4') {
+                                // Hide PC Tools for PS4
+                                opt.classList.toggle('hidden', cat === 'PC Tools');
+                            } else {
+                                opt.classList.remove('hidden');
+                            }
                         });
+
+                        // If current category is hidden, reset to All
+                        if (platform === 'PS4' && currentCategory === 'PC Tools') {
+                            setStoreCategory('All');
+                        }
                     }
 
                     function showPage(pageId) {
@@ -1635,6 +1718,12 @@
                         if (page) page.classList.add('active');
                         if (nav) nav.classList.add('active');
                         
+                        // Ensure defaults are applied when entering store
+                        if (pageId === 'store') {
+                            enforcePS4WhenPackaged();
+                            applyFilters();
+                        }
+
                         // Update hash without jumping
                         if (pageId === 'home') {
                             if (window.location.hash) {
@@ -1700,6 +1789,9 @@
                     function createCard(theme, positionNumber) {
                         const card = document.createElement('div');
                         card.className = 'theme-card';
+                        card.setAttribute('tabindex', '0'); // Make focusable for controller navigation
+                        card.setAttribute('role', 'article');
+                        card.setAttribute('aria-label', `Package: ${theme.name || 'Untitled'}`);
 
                         const preview = (theme.preview || '').trim();
                         const previewStyle = preview
@@ -1881,11 +1973,20 @@
                     function updateNoResults(query, hasResults) {
                         if (!noResults) return;
                         
-                        // If no query and 0 items, we still want to show the grid (which will be empty slots)
+                        // If no query and 0 items, we usually show the grid (empty slots)
+                        // EXCEPT for PS4 where the user explicitly wants a message and no placeholders
                         if (!query && !hasResults) {
-                            noResults.style.display = 'none';
-                            storeGrid.style.display = 'grid';
-                            return;
+                            if (currentPlatform === 'PS4') {
+                                noResults.style.display = 'block';
+                                storeGrid.style.display = 'none';
+                                noResultsMsg.textContent = 'No PS4 store items are available yet.';
+                                if (noResultsSub) noResultsSub.textContent = 'Check back later or switch platforms to see other packages.';
+                                return;
+                            } else {
+                                noResults.style.display = 'none';
+                                storeGrid.style.display = 'grid';
+                                return;
+                            }
                         }
 
                         noResults.style.display = hasResults ? 'none' : 'block';
@@ -1925,17 +2026,27 @@
                         currentPlatform = platform;
                         
                         // Update UI
+                        const platformBtn = document.getElementById('platformFilterBtn');
+                        if (platformBtn) platformBtn.querySelector('span').textContent = platform === 'All' ? 'All Platforms' : platform;
+
                         document.querySelectorAll('#platformDropdown .store-filter-option').forEach(opt => {
                             opt.classList.toggle('active', opt.getAttribute('data-platform') === platform);
                         });
                         document.getElementById('platformDropdown').classList.remove('open');
                         
+                        // Handle Category Visibility
+                        updateCategoryVisibility(platform);
+
                         currentPage = 1;
                         applyFilters();
                     };
 
                     window.setStoreCategory = function (category) {
                         currentCategory = category;
+                        
+                        const categoryBtn = document.getElementById('categoryFilterBtn');
+                        if (categoryBtn) categoryBtn.querySelector('span').textContent = category === 'All' ? 'All Categories' : category;
+
                         document.querySelectorAll('#categoryDropdown .store-filter-option').forEach(opt => {
                             opt.classList.toggle('active', opt.getAttribute('data-category') === category);
                         });
@@ -1956,7 +2067,12 @@
                     window.clearStoreSearch = function () {
                         if (searchInput) {
                             searchInput.value = '';
-                            searchInput.focus();
+                            // Avoid stealing focus on console if it might re-open keyboard unnecessarily
+                            // But usually users want to type again, so we focus but check if on console
+                            const isConsole = /PlayStation|Xbox|Nintendo/i.test(navigator.userAgent);
+                            if (!isConsole) {
+                                searchInput.focus();
+                            }
                         }
                         currentQuery = '';
                         if (clearButton) clearButton.style.display = 'none';
