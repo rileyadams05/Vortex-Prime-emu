@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xbox 360 Bad Update — Vortex Prime</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #050607;
+        --gradient: radial-gradient(circle at 20% 20%, rgba(16, 124, 16, 0.28), rgba(5, 6, 7, 0.92));
+        --panel: rgba(16, 124, 16, 0.08);
+        --border: rgba(16, 124, 16, 0.35);
+        --text: #f5fff4;
+        --muted: rgba(215, 245, 210, 0.7);
+        --accent: #12b76a;
+        --accent-soft: rgba(18, 183, 106, 0.18);
+        font-family: "Segoe UI", "Inter", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--gradient);
+        color: var(--text);
+        display: flex;
+        justify-content: center;
+        padding: 3rem 1.5rem 4rem;
+      }
+
+      main {
+        width: min(880px, 100%);
+        background: rgba(4, 7, 5, 0.72);
+        border: 1px solid rgba(16, 124, 16, 0.2);
+        border-radius: 20px;
+        padding: clamp(2rem, 3vw, 3rem);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(14px);
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+      }
+
+      h1 {
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        margin: 0;
+      }
+
+      h1 svg {
+        width: clamp(42px, 6vw, 56px);
+        height: clamp(42px, 6vw, 56px);
+        flex-shrink: 0;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+        margin: 2rem 0 2.5rem;
+      }
+
+      .cta {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.85rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .cta.primary {
+        background: var(--accent);
+        color: #041206;
+        box-shadow: 0 10px 24px rgba(18, 183, 106, 0.35);
+      }
+
+      .cta.secondary {
+        border: 1px solid var(--border);
+        color: var(--text);
+        background: rgba(18, 183, 106, 0.08);
+      }
+
+      .cta:hover {
+        transform: translateY(-2px);
+      }
+
+      .panel-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .panel {
+        border-radius: 16px;
+        border: 1px solid rgba(16, 124, 16, 0.22);
+        background: rgba(6, 16, 6, 0.65);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .panel strong {
+        font-size: 0.92rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgba(205, 255, 210, 0.82);
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 1.2rem;
+        color: rgba(215, 245, 210, 0.75);
+      }
+
+      li {
+        margin-bottom: 0.65rem;
+      }
+
+      .disclaimer {
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        background: rgba(92, 35, 13, 0.16);
+        border: 1px solid rgba(255, 178, 102, 0.3);
+        color: rgba(255, 226, 200, 0.86);
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      footer {
+        margin-top: 2.5rem;
+        font-size: 0.9rem;
+        color: rgba(215, 245, 210, 0.65);
+      }
+
+      footer a {
+        color: #9ff5b7;
+      }
+
+      @media (max-width: 720px) {
+        body {
+          padding: 2rem 1rem 3rem;
+        }
+
+        .cta {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>
+          <svg viewBox="0 0 64 64" fill="none" stroke="#12b76a" stroke-width="3.5">
+            <circle cx="32" cy="32" r="26" />
+            <path d="M20 22l12 14 12-14" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M24 44c3-4 6.5-6 8-6s5 2 8 6" stroke-linecap="round" />
+          </svg>
+          Xbox 360 Bad Update Hub
+        </h1>
+        <p>
+          Xbox 360 Bad Update is an external, community-driven softmod project maintained by
+          <a href="https://github.com/grimdoomer" style="color: #9ff5b7;">grimdoomer</a>. This page gathers the
+          essentials—official documentation, release builds, and setup checkpoints—so you can dive in with confidence.
+        </p>
+      </header>
+
+      <div class="cta-row">
+        <a class="cta primary" href="https://github.com/grimdoomer/Xbox360BadUpdate" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5z"/></svg>
+          Visit Repository
+        </a>
+        <a class="cta secondary" href="https://github.com/grimdoomer/Xbox360BadUpdate/releases" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 4h14v2H5zm0 6h14v2H5zm0 6h14v2H5z"/></svg>
+          View Releases
+        </a>
+        <a class="cta secondary" href="https://github.com/grimdoomer/Xbox360BadUpdate/wiki" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 5v14h14V5H5zm2 2h10v10H7V7z"/></svg>
+          Project Wiki
+        </a>
+      </div>
+
+      <div class="panel-grid">
+        <div class="panel">
+          <strong>Quick Start Checklist</strong>
+          <ul>
+            <li>Read the project README and wiki to understand supported dashboard versions.</li>
+            <li>Create a verified NAND backup and keep it off-device before flashing anything.</li>
+            <li>Review the release notes for firmware-specific warnings and recovery paths.</li>
+            <li>Prepare a clean USB drive (FAT32) dedicated to the exploit files.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <strong>Helpful Links</strong>
+          <ul>
+            <li><a href="https://discord.gg/xbins" rel="noopener noreferrer" style="color: #9ff5b7;">XBins community</a> for additional utilities.</li>
+            <li><a href="https://www.reddit.com/r/360hacks/" rel="noopener noreferrer" style="color: #9ff5b7;">/r/360hacks subreddit</a> for troubleshooting tips.</li>
+            <li><a href="https://www.se7ensins.com/forums/forums/xbox-360-hacking-modding-tutorials.127/" rel="noopener noreferrer" style="color: #9ff5b7;">Se7enSins tutorials archive</a> for historical references.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <strong>What to Expect</strong>
+          <ul>
+            <li>Bad Update is a software-only approach—no hardware glitch chip required.</li>
+            <li>Project status evolves quickly; watch the repository for issue tracker updates.</li>
+            <li>You are responsible for evaluating risk, legality, and warranty implications.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        This resource is provided as a convenience. Vortex Prime does not own, host, or certify Xbox 360 Bad Update.
+        Follow the original repository instructions and understand the risks before applying any exploit. Proceed at
+        your own discretion.
+      </div>
+
+      <footer>
+        Want to jump back to the store? <a href="/">Return to the Vortex Prime homepage</a> or explore the
+        <a href="/ps3/" style="color: #9ff5b7;">PlayStation HEN portal</a>.
+      </footer>
+    </main>
+  </body>
+</html>
