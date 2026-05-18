@@ -134,7 +134,7 @@
   <div class="header-right">
     <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none;">&larr; Back to Store</a>
     <div id="userBadge" class="user-badge">
-      <img id="userAvatar" alt="" src=""/>
+      <img id="userAvatar" alt="" src="" style="display:none;"/>
       <span class="name" id="userName"></span>
       <button id="logoutBtn" title="Sign out">Sign out</button>
     </div>
@@ -147,10 +147,10 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm3 8H9V7a3 3 0 016 0v3z"/></svg>
     </div>
     <div class="auth-title" id="authTitle">Admin access locked</div>
-    <div class="auth-desc">This portal is disabled until you sign in with GitHub. Please sign in or create a GitHub account to continue.</div>
+    <div class="auth-desc">This portal is disabled until you sign in with Google. Please sign in or create a Google account to continue.</div>
     <div class="auth-actions">
-      <a class="primary" href="/api/github/login">Sign in with GitHub</a>
-      <a href="https://github.com/signup" target="_blank" rel="noopener noreferrer">Create GitHub Account</a>
+      <a class="primary" href="/api/google/login">Sign in with Google</a>
+      <a href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">Create Google Account</a>
     </div>
     <div class="auth-note">All editing actions are disabled while locked.</div>
   </div>
@@ -187,7 +187,7 @@
   // Auth: check session and update UI
   async function checkAuth() {
     try {
-      const res = await fetch('/api/github/me', { credentials: 'include' });
+      const res = await fetch('/api/google/me', { credentials: 'include' });
       const data = await res.json();
       const gate = document.getElementById('authGate');
       const badge = document.getElementById('userBadge');
@@ -195,11 +195,20 @@
         if (gate) gate.style.display = 'none';
         if (badge) {
           badge.style.display = 'inline-flex';
-          document.getElementById('userName').textContent = data.user.login;
-          // Optionally fetch avatar via html_url later; keep minimal now
-          fetch('https://api.github.com/users/' + encodeURIComponent(data.user.login))
-            .then(r => r.ok ? r.json() : null)
-            .then(u => { if (u && u.avatar_url) document.getElementById('userAvatar').src = u.avatar_url; });
+          document.getElementById('userName').textContent = data.user.name;
+          const avatar = document.getElementById('userAvatar');
+          if (data.user.picture) {
+            avatar.style.display = 'block';
+            avatar.src = data.user.picture;
+          } else {
+            avatar.style.display = 'none';
+            avatar.removeAttribute('src');
+          }
+          if (data.user.email) {
+            badge.title = data.user.email;
+          } else {
+            badge.removeAttribute('title');
+          }
         }
       } else {
         if (gate) gate.style.display = 'flex';
@@ -214,7 +223,7 @@
     const t = e.target;
     if (t && t.id === 'logoutBtn') {
       e.preventDefault();
-      fetch('/api/github/logout', { method: 'POST', credentials: 'include' })
+      fetch('/api/google/logout', { method: 'POST', credentials: 'include' })
         .then(() => { location.reload(); });
     }
   });

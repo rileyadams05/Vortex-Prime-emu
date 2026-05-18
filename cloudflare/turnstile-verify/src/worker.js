@@ -77,74 +77,127 @@ export default {
     }
     }
 
-    // GitHub OAuth: /api/github/login
-    if (pathname.endsWith('/api/github/login')) {
-      const state = await randomState();
-      const clientId = env.GITHUB_CLIENT_ID || 'Ov23li2Nlt4Ak7DUKSa1';
-      const redirectUri = `https://vortex-prime-emu.com/api/github/callback`;
-      const authorize = new URL('https://github.com/login/oauth/authorize');
+    // Google OAuth: /api/google/login
+    if (pathname.endsWith('/api/google/login')) {
+      const state = randomState();
+      const codeVerifier = randomString(64);
+      const codeChallenge = await pkceChallenge(codeVerifier);
+      const clientId = env.GOOGLE_CLIENT_ID || '1031854944297-5fnr5ag53nnviq0av9htnctq733uae0k.apps.googleusercontent.com';
+      const redirectUri = 'https://vortex-prime-emu.com/auth/google/callback.html';
+
+      const authorize = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authorize.searchParams.set('client_id', clientId);
       authorize.searchParams.set('redirect_uri', redirectUri);
-      authorize.searchParams.set('scope', 'read:user user:email');
+      authorize.searchParams.set('response_type', 'code');
+      authorize.searchParams.set('scope', 'openid email profile');
       authorize.searchParams.set('state', state);
-      // set state cookie
+      authorize.searchParams.set('code_challenge', codeChallenge);
+      authorize.searchParams.set('code_challenge_method', 'S256');
+      authorize.searchParams.set('prompt', 'select_account');
+
       const headers = new Headers({ Location: authorize.toString() });
       headers.append('Set-Cookie', cookie('vp_state', state, { path: '/', httpOnly: true, sameSite: 'Lax', secure: true, maxAge: 600 }));
+      headers.append('Set-Cookie', cookie('vp_pkce', codeVerifier, { path: '/', httpOnly: true, sameSite: 'Lax', secure: true, maxAge: 600 }));
       return new Response(null, { status: 302, headers });
     }
 
-    // GitHub OAuth: /api/github/callback
-    if (pathname.endsWith('/api/github/callback')) {
-      const qs = url.searchParams;
-      const code = qs.get('code') || '';
-      const state = qs.get('state') || '';
-      const cookies = parseCookies(request.headers.get('Cookie') || '');
-      if (!code || !state || !cookies['vp_state'] || cookies['vp_state'] !== state) {
-        return new Response('Invalid OAuth state.', { status: 400 });
+    // Google OAuth: /api/google/callback (POST from callback page)
+    if (pathname.endsWith('/api/google/callback')) {
+      if (request.method !== 'POST') {
+        return new Response(JSON.stringify({ ok: false, error: 'method-not-allowed' }), {
+          status: 405,
+          headers: { 'content-type': 'application/json' }
+        });
       }
 
-      const redirectUri = `https://vortex-prime-emu.com/api/github/callback`;
-      const tokenParams = new URLSearchParams();
-      tokenParams.set('client_id', env.GITHUB_CLIENT_ID || 'Ov23li2Nlt4Ak7DUKSa1');
-      tokenParams.set('client_secret', env.GITHUB_CLIENT_SECRET || 'bdf41a1259fffedd572115258c7289900da321fa');
-      tokenParams.set('code', code);
-      tokenParams.set('redirect_uri', redirectUri);
+      let payload = {};
+      try {
+        payload = await request.json();
+      } catch (_) {}
 
-      const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      const code = typeof payload.code === 'string' ? payload.code : '';
+      const state = typeof payload.state === 'string' ? payload.state : '';
+      const cookies = parseCookies(request.headers.get('Cookie') || '');
+      const expectedState = cookies['vp_state'] || '';
+      const codeVerifier = cookies['vp_pkce'] || '';
+
+      if (!code || !state || !expectedState || state !== expectedState || !codeVerifier) {
+        return new Response(JSON.stringify({ ok: false, error: 'invalid-state' }), {
+          status: 400,
+          headers: { 'content-type': 'application/json' }
+        });
+      }
+
+      const clientId = env.GOOGLE_CLIENT_ID || '1031854944297-5fnr5ag53nnviq0av9htnctq733uae0k.apps.googleusercontent.com';
+      const clientSecret = env.GOOGLE_CLIENT_SECRET;
+      if (!clientSecret) {
+        return new Response(JSON.stringify({ ok: false, error: 'server-misconfigured' }), {
+          status: 500,
+          headers: { 'content-type': 'application/json' }
+        });
+      }
+
+      const redirectUri = 'https://vortex-prime-emu.com/auth/google/callback.html';
+      const params = new URLSearchParams();
+      params.set('code', code);
+      params.set('client_id', clientId);
+      params.set('client_secret', clientSecret);
+      params.set('redirect_uri', redirectUri);
+      params.set('grant_type', 'authorization_code');
+      params.set('code_verifier', codeVerifier);
+
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: tokenParams
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: params
       });
-      const tokenJson = await tokenRes.json();
-      const access = tokenJson.access_token;
-      if (!access) return new Response('OAuth failed', { status: 401 });
+      const tokenJson = await tokenRes.json().catch(() => ({}));
+      const idToken = tokenJson.id_token;
+      if (!tokenRes.ok || !idToken) {
+        return new Response(JSON.stringify({ ok: false, error: 'token-exchange-failed' }), {
+          status: 401,
+          headers: { 'content-type': 'application/json' }
+        });
+      }
 
-      const userRes = await fetch('https://api.github.com/user', {
-        headers: { 'Authorization': `Bearer ${access}`, 'User-Agent': 'Vortex-Prime-Worker' }
-      });
-      const user = await userRes.json();
-      if (!user || !user.login) return new Response('User fetch failed', { status: 401 });
+      const profile = parseJwt(idToken);
+      if (!profile || profile.aud !== clientId) {
+        return new Response(JSON.stringify({ ok: false, error: 'invalid-token' }), {
+          status: 401,
+          headers: { 'content-type': 'application/json' }
+        });
+      }
 
-      const session = await createSession({ sub: String(user.id), login: user.login, avatar_url: user.avatar_url, html_url: user.html_url }, env.SESSION_SECRET);
-      const headers = new Headers({ Location: '/admin/?authed=1' });
-      // clear state and set auth
+      const user = {
+        sub: String(profile.sub || ''),
+        email: profile.email || '',
+        name: profile.name || profile.given_name || profile.email || 'Google User',
+        picture: profile.picture || ''
+      };
+
+      const session = await createSession(user, env.SESSION_SECRET);
+      const headers = new Headers({ 'content-type': 'application/json' });
       headers.append('Set-Cookie', cookie('vp_state', '', { path: '/', httpOnly: true, sameSite: 'Lax', secure: true, maxAge: 0 }));
+      headers.append('Set-Cookie', cookie('vp_pkce', '', { path: '/', httpOnly: true, sameSite: 'Lax', secure: true, maxAge: 0 }));
       headers.append('Set-Cookie', cookie('vp_auth', session, { path: '/', httpOnly: true, sameSite: 'Lax', secure: true, maxAge: 60 * 60 * 24 * 7 }));
-      return new Response(null, { status: 302, headers });
+      return new Response(JSON.stringify({ ok: true, authenticated: true, user }), {
+        status: 200,
+        headers
+      });
     }
 
-    // GitHub OAuth: /api/github/me
-    if (pathname.endsWith('/api/github/me')) {
+    // Google OAuth: /api/google/me
+    if (pathname.endsWith('/api/google/me')) {
       const cookies = parseCookies(request.headers.get('Cookie') || '');
       const token = cookies['vp_auth'];
       let data = null;
       if (token) data = await verifySession(token, env.SESSION_SECRET).catch(() => null);
-      const body = data ? { authenticated: true, user: { login: data.login, avatar_url: data.avatar_url || null, html_url: data.html_url || null } } : { authenticated: false };
+      const body = data ? { authenticated: true, user: { name: data.name || data.email || 'Google User', email: data.email || null, picture: data.picture || null } } : { authenticated: false };
       return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
     }
 
-    // GitHub OAuth: /api/github/logout
-    if (pathname.endsWith('/api/github/logout')) {
+    // Google OAuth: /api/google/logout
+    if (pathname.endsWith('/api/google/logout')) {
       const headers = new Headers({ 'content-type': 'application/json' });
       headers.append('Set-Cookie', cookie('vp_auth', '', { path: '/', httpOnly: true, sameSite: 'Lax', secure: true, maxAge: 0 }));
       return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
@@ -174,10 +227,20 @@ function cookie(name, value, opts = {}) {
   return parts.join('; ');
 }
 
-async function randomState() {
-  const a = new Uint8Array(16);
+function randomState() {
+  return randomString(16);
+}
+
+function randomString(length = 32) {
+  const a = new Uint8Array(length);
   crypto.getRandomValues(a);
   return base64url(a);
+}
+
+async function pkceChallenge(verifier) {
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return base64url(new Uint8Array(digest));
 }
 
 function base64url(input) {
@@ -211,4 +274,17 @@ async function hmac(data, key) {
   const cryptoKey = await crypto.subtle.importKey('raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sigBuf = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(data));
   return base64url(new Uint8Array(sigBuf));
+}
+
+function parseJwt(token) {
+  if (typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+  const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+  try {
+    const json = atob(payload);
+    return JSON.parse(json);
+  } catch (_) {
+    return null;
+  }
 }
