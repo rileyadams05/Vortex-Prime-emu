@@ -630,138 +630,6 @@
             color: white;
         }
 
-        .xbox-exploit-panel {
-            margin-top: 1.75rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .xbox-exploit-panel[hidden] {
-            display: none;
-        }
-
-        .xbox-exploit-grid {
-            display: grid;
-            gap: 1.5rem;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        }
-
-        .xbox-card {
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 16px;
-            padding: 1.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .xbox-card__header {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .xbox-card__icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
-            background: rgba(255,255,255,0.04);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .xbox-card__icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .xbox-card h5 {
-            font-size: 1.05rem;
-            margin: 0;
-        }
-
-        .xbox-card__meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem 0.75rem;
-            margin-top: 0.4rem;
-            align-items: center;
-        }
-
-        .xbox-card__console {
-            background: rgba(16, 124, 16, 0.18);
-            color: #B7FFC0;
-            padding: 0.3rem 0.8rem;
-            border-radius: 999px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-        }
-
-        .xbox-card__tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-        }
-
-        .xbox-card__tags span {
-            background: rgba(255,255,255,0.08);
-            padding: 0.3rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            color: rgba(226, 232, 240, 0.9);
-            font-weight: 500;
-        }
-
-        .xbox-card__description {
-            color: var(--color-text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .xbox-card__links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin: 0.5rem 0 0.25rem;
-        }
-
-        .xbox-card__cta {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .xbox-card__secondary {
-            background: transparent;
-            border: 1px solid var(--color-border);
-            color: var(--color-text);
-        }
-
-        .xbox-card__note {
-            font-size: 0.85rem;
-            color: rgba(226, 232, 240, 0.75);
-            margin: 0;
-        }
-
-        .xbox-card__links .btn {
-            padding: 0.75rem 1.35rem;
-        }
-
-        @media (max-width: 640px) {
-            .xbox-exploit-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .xbox-card__header {
-                align-items: flex-start;
-            }
-        }
-
         .theme-card {
             position: relative;
             background: var(--color-bg-card);
@@ -1578,70 +1446,10 @@
                                     <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">Future Mods</span>
                                 </div>
 
-                                <button type="button" class="btn" id="xboxExploitToggle" aria-expanded="false" aria-controls="xbox-exploit-panel" style="background: #107C10; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 124, 16, 0.3);">
+                                <a href="xbox/index.html" class="btn" style="background: #107C10; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 124, 16, 0.3);">
                                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                                    <span>View all exploit versions</span>
-                                </button>
-
-                                <div class="xbox-exploit-panel" id="xbox-exploit-panel" hidden>
-                                    <div class="xbox-exploit-grid">
-                                        <article class="xbox-card">
-                                            <div class="xbox-card__header">
-                                                <div class="xbox-card__icon">
-                                                    <img src="assets/Xbox%20360%20.png" alt="Xbox 360 Bad Update icon" loading="lazy">
-                                                </div>
-                                                <div class="xbox-card__headline">
-                                                    <h5>Xbox 360 Bad Update</h5>
-                                                    <div class="xbox-card__meta">
-                                                        <span class="xbox-card__console">Xbox 360</span>
-                                                        <div class="xbox-card__tags">
-                                                            <span>Softmod Toolkit</span>
-                                                            <span>Offline Entry</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <p class="xbox-card__description">Software-only Xbox 360 exploit and softmod toolkit. Access community research, setup notes, and downloads straight from the original GitHub repository.</p>
-                                            <div class="xbox-card__links">
-                                                <a href="https://github.com/grimdoomer/Xbox360BadUpdate" target="_blank" rel="noopener noreferrer" class="btn xbox-card__cta">
-                                                    View GitHub project
-                                                </a>
-                                                <a href="https://github.com/grimdoomer/Xbox360BadUpdate/releases" target="_blank" rel="noopener noreferrer" class="btn xbox-card__secondary">
-                                                    View Releases
-                                                </a>
-                                            </div>
-                                            <p class="xbox-card__note">External community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
-                                        </article>
-
-                                        <article class="xbox-card">
-                                            <div class="xbox-card__header">
-                                                <div class="xbox-card__icon">
-                                                    <img src="assets/regional%20xbox.png" alt="ENDGAME Original Xbox icon" loading="lazy">
-                                                </div>
-                                                <div class="xbox-card__headline">
-                                                    <h5>ENDGAME — Original Xbox Exploit</h5>
-                                                    <div class="xbox-card__meta">
-                                                        <span class="xbox-card__console">Original Xbox</span>
-                                                        <div class="xbox-card__tags">
-                                                            <span>Dashboard Exploit</span>
-                                                            <span>Active Development</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <p class="xbox-card__description">A modern dashboard exploit for the original Microsoft Xbox. Explore the ENDGAME repository for setup steps, tooling, and release builds maintained by the XboxDev community.</p>
-                                            <div class="xbox-card__links">
-                                                <a href="https://github.com/XboxDev/endgame-exploit" target="_blank" rel="noopener noreferrer" class="btn xbox-card__cta">
-                                                    View GitHub project
-                                                </a>
-                                                <a href="https://github.com/XboxDev/endgame-exploit/releases" target="_blank" rel="noopener noreferrer" class="btn xbox-card__secondary">
-                                                    View Releases
-                                                </a>
-                                            </div>
-                                            <p class="xbox-card__note">External community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
-                                        </article>
-                                    </div>
-                                </div>
+                                    View all exploit versions
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -2195,26 +2003,6 @@
                         applyFilters();
                     }
 
-                    function initXboxExploitToggle() {
-                        const toggle = document.getElementById('xboxExploitToggle');
-                        const panel = document.getElementById('xbox-exploit-panel');
-                        if (!toggle || !panel) return;
-                        const toggleText = toggle.querySelector('span');
-
-                        toggle.addEventListener('click', () => {
-                            const isOpen = !panel.hasAttribute('hidden');
-                            if (isOpen) {
-                                panel.setAttribute('hidden', '');
-                                toggle.setAttribute('aria-expanded', 'false');
-                                if (toggleText) toggleText.textContent = 'View all exploit versions';
-                            } else {
-                                panel.removeAttribute('hidden');
-                                toggle.setAttribute('aria-expanded', 'true');
-                                if (toggleText) toggleText.textContent = 'Hide exploit versions';
-                            }
-                        });
-                    }
-
                     function handleStoreSearch(query) {
                         currentQuery = query.toLowerCase().trim();
                         if (clearButton) {
@@ -2284,12 +2072,8 @@
                     }
 
                     if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', () => {
-                            initXboxExploitToggle();
-                            loadStoreCatalog();
-                        });
+                        document.addEventListener('DOMContentLoaded', loadStoreCatalog);
                     } else {
-                        initXboxExploitToggle();
                         loadStoreCatalog();
                     }
 
