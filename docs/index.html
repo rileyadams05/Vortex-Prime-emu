@@ -694,6 +694,10 @@
             border-top: 1px solid rgba(255,255,255,0.05);
         }
 
+        .xbox-exploit-panel[hidden] {
+            display: none;
+        }
+
         .xbox-exploit-grid {
             display: grid;
             gap: 1.5rem;
@@ -714,6 +718,24 @@
             display: flex;
             gap: 1rem;
             align-items: center;
+        }
+
+        .xbox-card__icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .xbox-card__icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .xbox-card h5 {
@@ -1634,12 +1656,15 @@
                                     <span>Future Mods</span>
                                 </div>
 
-                                <a href="/xbox/" class="btn xbox-hub-cta" data-no-gate="true">Open full Xbox hub</a>
+                                <button type="button" class="btn xbox-hub-cta" id="xboxExploitToggle" aria-expanded="false" aria-controls="xbox-exploit-panel">View all exploit versions</button>
 
-                                <div class="xbox-exploit-panel" id="xbox-exploit-panel">
+                                <div class="xbox-exploit-panel" id="xbox-exploit-panel" hidden>
                                     <div class="xbox-exploit-grid">
                                         <article class="xbox-card">
                                             <div class="xbox-card__header">
+                                                <div class="xbox-card__icon">
+                                                    <img src="assets/Xbox%20360%20.png" alt="Xbox 360 Bad Update icon" loading="lazy">
+                                                </div>
                                                 <div class="xbox-card__headline">
                                                     <h5>Xbox 360 Bad Update</h5>
                                                     <div class="xbox-card__meta">
@@ -1665,6 +1690,9 @@
 
                                         <article class="xbox-card">
                                             <div class="xbox-card__header">
+                                                <div class="xbox-card__icon">
+                                                    <img src="assets/regional%20xbox.png" alt="ENDGAME Original Xbox icon" loading="lazy">
+                                                </div>
                                                 <div class="xbox-card__headline">
                                                     <h5>ENDGAME — Original Xbox Exploit</h5>
                                                     <div class="xbox-card__meta">
@@ -2246,6 +2274,25 @@
                         applyFilters();
                     }
 
+                    function initXboxExploitToggle() {
+                        const toggle = document.getElementById('xboxExploitToggle');
+                        const panel = document.getElementById('xbox-exploit-panel');
+                        if (!toggle || !panel) return;
+
+                        toggle.addEventListener('click', () => {
+                            const isOpen = !panel.hasAttribute('hidden');
+                            if (isOpen) {
+                                panel.setAttribute('hidden', '');
+                                toggle.setAttribute('aria-expanded', 'false');
+                                toggle.textContent = 'View all exploit versions';
+                            } else {
+                                panel.removeAttribute('hidden');
+                                toggle.setAttribute('aria-expanded', 'true');
+                                toggle.textContent = 'Hide exploit versions';
+                            }
+                        });
+                    }
+
                     function handleStoreSearch(query) {
                         currentQuery = query.toLowerCase().trim();
                         if (clearButton) {
@@ -2315,8 +2362,12 @@
                     }
 
                     if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', loadStoreCatalog);
+                        document.addEventListener('DOMContentLoaded', () => {
+                            initXboxExploitToggle();
+                            loadStoreCatalog();
+                        });
                     } else {
+                        initXboxExploitToggle();
                         loadStoreCatalog();
                     }
 
