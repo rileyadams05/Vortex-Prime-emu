@@ -630,64 +630,6 @@
             color: white;
         }
 
-        .xbox-hub {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: left;
-        }
-
-        .xbox-hub__title {
-            font-size: 1.25rem;
-            margin: 0 0 0.5rem;
-        }
-
-        .xbox-hub__description {
-            color: var(--color-text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin: 0 0 1.75rem;
-        }
-
-        .xbox-hub-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 1.75rem;
-        }
-
-        .xbox-hub-tags span {
-            background: rgba(255,255,255,0.08);
-            padding: 0.35rem 0.85rem;
-            border-radius: 100px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #E4E4E7;
-        }
-
-        .xbox-hub-cta {
-            background: #107C10;
-            color: white;
-            border: none;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.85rem 1.6rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(16, 124, 16, 0.28);
-        }
-
-        .xbox-hub-cta:hover,
-        .xbox-hub-cta:focus-visible {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 22px rgba(16, 124, 16, 0.33);
-            outline: none;
-        }
-
         .xbox-exploit-panel {
             margin-top: 1.75rem;
             padding-top: 1.5rem;
@@ -806,34 +748,11 @@
             margin: 0;
         }
 
-        .xbox-hub-footer {
-            margin-top: 1.5rem;
-            display: flex;
-            justify-content: flex-start;
-        }
-
-        .xbox-hub-link {
-            background: transparent;
-            border: 1px solid var(--color-border);
-            color: var(--color-text);
-            transition: all 0.2s;
-        }
-
-        .xbox-hub-link:hover,
-        .xbox-hub-link:focus-visible {
-            background: var(--color-bg-elevated);
-            border-color: var(--color-primary);
-        }
-
         .xbox-card__links .btn {
             padding: 0.75rem 1.35rem;
         }
 
         @media (max-width: 640px) {
-            .xbox-hub {
-                padding: 1.75rem 1.25rem;
-            }
-
             .xbox-exploit-grid {
                 grid-template-columns: 1fr;
             }
@@ -1646,17 +1565,23 @@
                             </div>
 
                             <!-- Xbox Section -->
-                            <div class="xbox-hub">
-                                <h4 class="xbox-hub__title">Xbox Exploit Hub</h4>
-                                <p class="xbox-hub__description">Explore community-maintained Xbox exploit resources in one place. Includes Xbox 360 and Original Xbox entries with links to the original projects, releases, and setup information.</p>
+                            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; text-align: left;">
+                                <h4 style="font-size: 1.25rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M21.58 16.09l-1.09-7.66C20.18 6.05 18.23 4 15.82 4H8.18C5.77 4 3.82 6.05 3.51 8.43l-1.09 7.66C2.2 17.65 3.39 19 4.94 19h14.12c1.55 0 2.74-1.35 2.52-2.91zM7.5 14h-2v-2h2v2zm0-4h-2V8h2v2zm4 4h-2v-2h2v2zm0-4h-2V8h2v2zm4 4h-2v-2h2v2zm0-4h-2V8h2v2z"/></svg>
+                                    Xbox Exploit Hub
+                                </h4>
+                                <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">Explore community-maintained Xbox exploit resources in one place. Includes Xbox 360 and Original Xbox entries with links to the original projects, releases, and setup information.</p>
 
-                                <div class="xbox-hub-tags">
-                                    <span>Xbox 360</span>
-                                    <span>Original Xbox</span>
-                                    <span>Future Mods</span>
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                                    <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">Xbox 360</span>
+                                    <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">Original Xbox</span>
+                                    <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">Future Mods</span>
                                 </div>
 
-                                <button type="button" class="btn xbox-hub-cta" id="xboxExploitToggle" aria-expanded="false" aria-controls="xbox-exploit-panel">View all exploit versions</button>
+                                <button type="button" class="btn" id="xboxExploitToggle" aria-expanded="false" aria-controls="xbox-exploit-panel" style="background: #107C10; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 124, 16, 0.3);">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                                    <span>View all exploit versions</span>
+                                </button>
 
                                 <div class="xbox-exploit-panel" id="xbox-exploit-panel" hidden>
                                     <div class="xbox-exploit-grid">
@@ -1715,10 +1640,6 @@
                                             </div>
                                             <p class="xbox-card__note">External community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
                                         </article>
-                                    </div>
-
-                                    <div class="xbox-hub-footer">
-                                        <a href="/" class="btn xbox-hub-link">Return to projects</a>
                                     </div>
                                 </div>
                             </div>
@@ -2278,17 +2199,18 @@
                         const toggle = document.getElementById('xboxExploitToggle');
                         const panel = document.getElementById('xbox-exploit-panel');
                         if (!toggle || !panel) return;
+                        const toggleText = toggle.querySelector('span');
 
                         toggle.addEventListener('click', () => {
                             const isOpen = !panel.hasAttribute('hidden');
                             if (isOpen) {
                                 panel.setAttribute('hidden', '');
                                 toggle.setAttribute('aria-expanded', 'false');
-                                toggle.textContent = 'View all exploit versions';
+                                if (toggleText) toggleText.textContent = 'View all exploit versions';
                             } else {
                                 panel.removeAttribute('hidden');
                                 toggle.setAttribute('aria-expanded', 'true');
-                                toggle.textContent = 'Hide exploit versions';
+                                if (toggleText) toggleText.textContent = 'Hide exploit versions';
                             }
                         });
                     }
