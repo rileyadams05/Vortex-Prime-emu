@@ -14,7 +14,8 @@
     { "pattern": "ps3.vortex-prime-emu.com/", "zone_name": "vortex-prime-emu.com" },
     { "pattern": "ps3.vortex-prime-emu.com/*", "zone_name": "vortex-prime-emu.com" },
     { "pattern": "ps4.vortex-prime-emu.com/", "zone_name": "vortex-prime-emu.com" },
-    { "pattern": "ps4.vortex-prime-emu.com/*", "zone_name": "vortex-prime-emu.com" }
+    { "pattern": "ps4.vortex-prime-emu.com/*", "zone_name": "vortex-prime-emu.com" },
+    { "pattern": "vortex-prime-emu.com/security-check/api/*", "zone_name": "vortex-prime-emu.com" }
   ],
   "compatibility_flags": [
     "nodejs_compat"

@@ -1406,11 +1406,11 @@
                 <div class="nav-container">
                     
                     <div class="nav-links">
-                        <a href="#" class="nav-link active" onclick="showPage('home'); return false;" id="nav-home">Home</a>
-                        <a href="#" class="nav-link" onclick="showPage('store'); return false;" id="nav-store">Store</a>
-                        <a href="#" class="nav-link" onclick="showPage('games'); return false;" id="nav-games">Games</a>
-                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank">Docs</a>
-                        <a href="https://discord.gg/PVFJ64QA" class="nav-link" target="_blank">Help</a>
+                        <a href="#" class="nav-link active" onclick="showPage('home'); return false;" id="nav-home" data-no-gate="true">Home</a>
+                        <a href="#" class="nav-link" onclick="showPage('store'); return false;" id="nav-store" data-no-gate="true">Store</a>
+                        <a href="#" class="nav-link" onclick="showPage('games'); return false;" id="nav-games" data-no-gate="true">Games</a>
+                        <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank" data-no-gate="true">Docs</a>
+                        <a href="https://discord.gg/PVFJ64QA" class="nav-link" target="_blank" data-no-gate="true">Help</a>
                     </div>
                 </div>
             </nav>
@@ -2205,7 +2205,7 @@
                         // Clean up hashes like '/' or empty strings to default to 'home'
                         const cleanHash = hash.replace(/^\/+/, '');
                         
-                        if (['home', 'store'].includes(cleanHash)) {
+                        if (['home', 'store', 'games'].includes(cleanHash)) {
                             showPage(cleanHash);
                         } else {
                             showPage('home');
@@ -2216,5 +2216,6 @@
                     initRouting();
                 })();
             </script>
+        <script type="module" src="/assets/js/security-gate.js"></script>
         </body>
         </html>
