@@ -3,7 +3,174 @@
 <head>
   <meta charset="UTF-8">
   <title>PlayStation HEN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #05070d;
+      --card: #0e1424;
+      --text: #f4f5f7;
+      --muted: #9aa4c2;
+      --accent: #0d6efd;
+      --accent-ps3: #0070f3;
+      --accent-ps4: #f5a623;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #101a33 0%, #05070d 55%, #020308 100%);
+      color: var(--text);
+      font-family: "Neue Haas Grotesk", "Inter", "Segoe UI", sans-serif;
+    }
+
+    .wrapper {
+      width: min(640px, 92vw);
+      background: color-mix(in srgb, var(--card) 80%, transparent 20%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: clamp(1.75rem, 2vw + 1rem, 2.5rem);
+      box-shadow: 0 30px 80px rgba(5, 10, 34, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 2.4vw + 1rem, 2.5rem);
+      letter-spacing: 0.04em;
+    }
+
+    .title-block p {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: clamp(0.95rem, 0.4vw + 0.9rem, 1.1rem);
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .cta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      padding: 1.4rem 1.5rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .cta span {
+      display: block;
+    }
+
+    .cta .label {
+      font-size: 0.85rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .cta .title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .cta .byline {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .cta::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 0;
+    }
+
+    .cta:hover,
+    .cta:focus-visible {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 24px 45px rgba(12, 18, 40, 0.45);
+      outline: none;
+    }
+
+    .cta:hover::after,
+    .cta:focus-visible::after {
+      opacity: 1;
+    }
+
+    .cta.ps3::after {
+      background: linear-gradient(135deg, rgba(0, 112, 243, 0.25), rgba(4, 12, 38, 0.1));
+    }
+
+    .cta.ps4::after {
+      background: linear-gradient(135deg, rgba(245, 166, 35, 0.25), rgba(28, 18, 4, 0.15));
+    }
+
+    .cta .content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 1.5rem 1rem;
+        align-items: flex-start;
+      }
+
+      .wrapper {
+        margin: auto;
+        gap: 1.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
+  <main class="wrapper">
+    <div class="title-block">
+      <h1>Select a HEN experience</h1>
+      <p>Choose the exploit host you need. Links will launch the official projects from their respective maintainers.</p>
+    </div>
+
+    <div class="actions">
+      <a class="cta ps3" href="#" data-target="ps3-hen">
+        <div class="content">
+          <span class="label">PS3</span>
+          <span class="title">PS3 HEN Enabler</span>
+          <span class="byline">by PS3Xploit Team</span>
+        </div>
+      </a>
+      <a class="cta ps4" href="#" data-target="ps4-golden-hen">
+        <div class="content">
+          <span class="label">PS4</span>
+          <span class="title">PS4 Golden HEN</span>
+          <span class="byline">by SiSTRo</span>
+        </div>
+      </a>
+    </div>
+  </main>
 </body>
 </html>
