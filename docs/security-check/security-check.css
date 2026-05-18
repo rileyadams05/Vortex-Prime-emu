@@ -109,25 +109,150 @@ h1 {
   color: var(--text-muted);
 }
 
-.altcha-area {
+.challenge-area {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+}
+
+.challenge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 1rem;
 }
 
-altcha-widget {
-  --altcha-color-base: rgba(6, 12, 24, 0.9);
-  --altcha-color-text: #f1f6ff;
-  --altcha-color-border: rgba(62, 103, 170, 0.65);
-  --altcha-color-border-focus: var(--accent);
-  --altcha-color-active: var(--accent);
-  --altcha-max-width: 100%;
+.challenge-title {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.82rem;
+  color: rgba(142, 161, 199, 0.8);
 }
 
-.altcha-help {
-  font-size: 0.9rem;
-  color: var(--text-muted);
+.challenge-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(12, 24, 42, 0.65);
+  border: 1px solid rgba(142, 161, 199, 0.25);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.challenge-refresh svg {
+  width: 18px;
+  height: 18px;
+}
+
+.challenge-refresh:hover,
+.challenge-refresh:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(12, 24, 42, 0.45);
+}
+
+.challenge-visual {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(60, 232, 130, 0.12), rgba(23, 181, 92, 0.08));
+  border: 1px solid rgba(60, 232, 130, 0.3);
+  padding: 1.85rem 1.5rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenge-wave {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(60, 232, 130, 0.28), transparent 55%),
+    radial-gradient(circle at 80% 30%, rgba(16, 38, 58, 0.45), transparent 60%),
+    radial-gradient(circle at 50% 80%, rgba(17, 181, 92, 0.2), transparent 65%);
+  opacity: 0.75;
+}
+
+.challenge-code {
+  position: relative;
+  font-family: "Space Grotesk", "JetBrains Mono", monospace;
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-shadow: 0 8px 28px rgba(10, 18, 30, 0.65);
+  z-index: 1;
+}
+
+.challenge-inputs {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+#challenge-input {
+  flex: 1 1 220px;
+  background: rgba(6, 12, 24, 0.88);
+  border: 1px solid rgba(62, 103, 170, 0.5);
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  color: var(--text);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+
+#challenge-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(60, 232, 130, 0.2);
+}
+
+.btn-confirm {
+  background: rgba(17, 33, 53, 0.9);
+  color: var(--text);
+  border: 1px solid rgba(142, 161, 199, 0.35);
+  padding: 0.75rem 1.6rem;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-confirm:hover,
+.btn-confirm:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 35px rgba(17, 33, 53, 0.45);
+}
+
+.challenge-feedback {
   margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.challenge-feedback.error {
+  color: var(--danger);
+}
+
+.challenge-feedback.success {
+  color: var(--accent);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .actions {

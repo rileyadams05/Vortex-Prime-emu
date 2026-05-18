@@ -7,24 +7,25 @@ const allowedHosts = new Set([
   "archive.org",
 ]);
 
-const ALTCHA_CHALLENGE_URL = "/security-check/api/challenge";
-const ALTCHA_VERIFY_URL = "/security-check/api/verify";
-
 const params = new URLSearchParams(window.location.search);
 const targetParam = params.get("to");
 
 const card = document.getElementById("security-card");
 const destinationHost = document.getElementById("destination-host");
 const destinationUrl = document.getElementById("destination-url");
-const altchaStatus = document.getElementById("altcha-status");
 const continueBtn = document.getElementById("continue-btn");
 const cancelBtn = document.getElementById("cancel-btn");
 const errorTemplate = /** @type {HTMLTemplateElement} */ (document.getElementById("error-template"));
 
-const widget = /** @type {HTMLElement & { configure?: (options: Record<string, unknown>) => void }} */ (
-  document.getElementById("altcha-widget")
-);
+const codeOutput = document.getElementById("challenge-code");
+const input = /** @type {HTMLInputElement | null} */ (document.getElementById("challenge-input"));
+const confirmBtn = document.getElementById("confirm-btn");
+const feedback = document.getElementById("challenge-feedback");
+const refreshBtn = document.getElementById("refresh-btn");
+
 let resolvedTarget = null;
+let activeCode = "";
+let solved = false;
 
 function renderError(message) {
   const fragment = errorTemplate.content.cloneNode(true);
@@ -62,57 +63,77 @@ function prepareDestination() {
   }
 }
 
-function configureAltcha() {
-  if (!widget) return;
-  widget.setAttribute("challenge", ALTCHA_CHALLENGE_URL);
-  widget.setAttribute("verifyurl", ALTCHA_VERIFY_URL);
-  widget.configure?.({ challenge: ALTCHA_CHALLENGE_URL, verifyurl: ALTCHA_VERIFY_URL });
+function generateCode() {
+  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const length = 5;
+  let code = "";
+  if (window.crypto?.getRandomValues) {
+    window.crypto.getRandomValues(new Uint8Array(length)).forEach((value) => {
+      code += charset[value % charset.length];
+    });
+  } else {
+    for (let i = 0; i < length; i += 1) {
+      const value = Math.floor(Math.random() * charset.length);
+      code += charset[value];
+    }
+  }
+  activeCode = code;
+  solved = false;
+  continueBtn.disabled = true;
+  if (codeOutput) codeOutput.textContent = code;
+  if (feedback) {
+    feedback.textContent = "Enter the code shown above to continue.";
+    feedback.classList.remove("error", "success");
+  }
+  if (input) {
+    input.value = "";
+    input.focus({ preventScroll: true });
+  }
 }
 
-function attachAltchaHandlers() {
-  if (!widget) return;
+function attachChallengeHandlers() {
+  confirmBtn?.addEventListener("click", () => {
+    if (!input) return;
+    const guess = input.value.trim().toUpperCase();
+    if (!guess) {
+      feedback?.classList.remove("success");
+      feedback?.classList.add("error");
+      if (feedback) feedback.textContent = "Please enter the code shown above.";
+      return;
+    }
 
-  widget.addEventListener("statechange", (event) => {
-    const state = event.detail?.state;
-
-    switch (state) {
-      case "verified":
-        altchaStatus.textContent = "Verification complete. You can continue.";
-        continueBtn.disabled = !resolvedTarget;
-        if (!continueBtn.disabled) continueBtn.focus({ preventScroll: true });
-        break;
-      case "error":
-        altchaStatus.textContent = "Challenge failed. Refresh the challenge and try again.";
-        continueBtn.disabled = true;
-        break;
-      case "expired":
-        altchaStatus.textContent = "Challenge expired. Requesting a new one…";
-        continueBtn.disabled = true;
-        break;
-      default:
-        altchaStatus.textContent = "Solve the proof-of-work challenge to unlock the continue button.";
-        continueBtn.disabled = true;
+    if (guess === activeCode) {
+      solved = true;
+      continueBtn.disabled = !resolvedTarget;
+      feedback?.classList.remove("error");
+      feedback?.classList.add("success");
+      if (feedback) feedback.textContent = "Code accepted! You can continue.";
+      continueBtn.focus({ preventScroll: true });
+    } else {
+      solved = false;
+      continueBtn.disabled = true;
+      feedback?.classList.remove("success");
+      feedback?.classList.add("error");
+      if (feedback) feedback.textContent = "Incorrect code. Try again.";
+      input.select();
     }
   });
 
-  widget.addEventListener("verified", () => {
-    altchaStatus.textContent = "Verification complete. You can continue.";
-    continueBtn.disabled = !resolvedTarget;
+  input?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      confirmBtn?.click();
+    }
   });
 
-  widget.addEventListener("code", () => {
-    altchaStatus.textContent = "Enter the code challenge to continue.";
-  });
-
-  widget.addEventListener("error", () => {
-    altchaStatus.textContent = "Encountered an issue with ALTCHA. Reload the page to try again.";
-    continueBtn.disabled = true;
+  refreshBtn?.addEventListener("click", () => {
+    generateCode();
   });
 }
 
 function attachActions() {
   continueBtn.addEventListener("click", () => {
-    if (!resolvedTarget) return;
+    if (!resolvedTarget || !solved) return;
     safeWindowOpen(resolvedTarget);
     window.location.assign(resolvedTarget.href);
   });
@@ -127,6 +148,6 @@ function attachActions() {
 }
 
 prepareDestination();
-configureAltcha();
-attachAltchaHandlers();
+generateCode();
+attachChallengeHandlers();
 attachActions();
