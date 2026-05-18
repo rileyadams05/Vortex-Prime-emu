@@ -446,57 +446,14 @@
             color: var(--color-text);
         }
 
-        /* Filter Button & Dropdown */
-        .store-filter-btn {
-            position: absolute;
-            right: 0.5rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            color: var(--color-text-secondary);
-            cursor: pointer;
-            padding: 0.5rem;
-            display: flex;
-            align-items: center;
-            border-left: 1px solid var(--color-border);
-            transition: all 0.2s ease;
-            z-index: 2;
-        }
-        .store-filter-btn:hover { color: var(--color-primary-light); }
-        .store-filter-btn svg { width: 20px; height: 20px; fill: currentColor; }
-
-        .store-filter-dropdown {
-            position: absolute;
-            top: calc(100% + 0.75rem);
-            right: 0;
-            width: 220px;
-            background: var(--color-bg-card);
-            border: 1px solid var(--color-border);
-            border-radius: 14px;
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
-            z-index: 100;
-            opacity: 0;
-            transform: translateY(-10px);
-            pointer-events: none;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-            padding: 0.5rem;
-        }
-        .store-filter-dropdown.open {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: all;
-        }
-
-        /* New: externalized filter controls under search */
-        .store-controls { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap; }
-        .filter-group { position: relative; display: inline-block; }
-        .store-controls .store-filter-btn { position: relative; right: auto; top: auto; border: 1px solid var(--color-border); padding: 0.5rem 0.8rem; border-radius: 8px; background: transparent; color: var(--color-text-secondary); display: inline-flex; align-items: center; gap: 0.5rem; }
-        .store-controls .store-filter-btn:hover { color: var(--color-primary-light); }
-        .store-controls .store-filter-btn span { font-size: 0.9rem; }
-        .store-controls .store-filter-dropdown { top: calc(100% + 0.5rem); right: 0; }
+        /* Store filter buttons */
+        .store-controls { display: grid; gap: 0.75rem; justify-content: center; margin-top: 0.75rem; }
+        .filter-group { display: flex; justify-content: center; }
+        .store-filter-buttons { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
         .store-filter-option {
+            appearance: none;
+            border: 1px solid var(--color-border);
+            background: transparent;
             padding: 0.75rem 1rem;
             border-radius: 8px;
             cursor: pointer;
@@ -506,7 +463,7 @@
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             outline: none;
         }
         .store-filter-option:focus-visible {
@@ -518,12 +475,9 @@
             color: var(--color-text);
         }
         .store-filter-option.active {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--color-primary-light);
-        }
-        .store-filter-option.active::after {
-            content: '✓';
-            font-size: 0.8rem;
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
         }
         .store-filter-option.hidden {
             display: none !important;
@@ -760,23 +714,6 @@
             display: flex;
             gap: 1rem;
             align-items: center;
-        }
-
-        .xbox-card__icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
-            background: rgba(255,255,255,0.04);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .xbox-card__icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
         }
 
         .xbox-card h5 {
@@ -1697,15 +1634,12 @@
                                     <span>Future Mods</span>
                                 </div>
 
-                                <a href="#xbox-exploit-panel" class="btn xbox-hub-cta" data-no-gate="true">View all exploit versions</a>
+                                <a href="/xbox/" class="btn xbox-hub-cta" data-no-gate="true">Open full Xbox hub</a>
 
                                 <div class="xbox-exploit-panel" id="xbox-exploit-panel">
                                     <div class="xbox-exploit-grid">
                                         <article class="xbox-card">
                                             <div class="xbox-card__header">
-                                                <div class="xbox-card__icon">
-                                                    <img src="assets/Xbox%20360%20.png" alt="Xbox 360 Bad Update icon" loading="lazy">
-                                                </div>
                                                 <div class="xbox-card__headline">
                                                     <h5>Xbox 360 Bad Update</h5>
                                                     <div class="xbox-card__meta">
@@ -1731,9 +1665,6 @@
 
                                         <article class="xbox-card">
                                             <div class="xbox-card__header">
-                                                <div class="xbox-card__icon">
-                                                    <img src="assets/regional%20xbox.png" alt="ENDGAME Original Xbox icon" loading="lazy">
-                                                </div>
                                                 <div class="xbox-card__headline">
                                                     <h5>ENDGAME — Original Xbox Exploit</h5>
                                                     <div class="xbox-card__meta">
@@ -1759,7 +1690,7 @@
                                     </div>
 
                                     <div class="xbox-hub-footer">
-                                        <a href="/xbox/" class="btn xbox-hub-link">Open full Xbox hub</a>
+                                        <a href="/" class="btn xbox-hub-link">Return to projects</a>
                                     </div>
                                 </div>
                             </div>
@@ -1856,25 +1787,23 @@
                             </div>
                             <div class="store-controls">
                                 <div class="filter-group">
-                                    <button class="store-filter-btn" id="platformFilterBtn" onclick="togglePlatformDropdown()" title="Filter by Console"><span>Console Filter</span></button>
-                                    <div class="store-filter-dropdown" id="platformDropdown">
-                                        <div class="store-filter-option active" data-platform="All" onclick="setStorePlatform('All')">All Platforms</div>
-                                        <div class="store-filter-option" data-platform="PS5" onclick="setStorePlatform('PS5')">PS5</div>
-                                        <div class="store-filter-option" data-platform="PS4" onclick="setStorePlatform('PS4')">PS4</div>
-                                        <div class="store-filter-option" data-platform="PS3" onclick="setStorePlatform('PS3')">PS3</div>
-                                        <div class="store-filter-option" data-platform="PS Vita" onclick="setStorePlatform('PS Vita')">PS Vita</div>
-                                        <div class="store-filter-option" data-platform="PSP" onclick="setStorePlatform('PSP')">PSP</div>
-                                        <div class="store-filter-option" data-platform="Original Xbox" onclick="setStorePlatform('Original Xbox')">Original Xbox</div>
-                                        <div class="store-filter-option" data-platform="Xbox 360" onclick="setStorePlatform('Xbox 360')">Xbox 360</div>
+                                    <div class="store-filter-buttons" id="platformDropdown" aria-label="Console filters">
+                                        <button type="button" class="store-filter-option active" data-platform="All" onclick="setStorePlatform('All')">All Platforms</button>
+                                        <button type="button" class="store-filter-option" data-platform="PS5" onclick="setStorePlatform('PS5')">PS5</button>
+                                        <button type="button" class="store-filter-option" data-platform="PS4" onclick="setStorePlatform('PS4')">PS4</button>
+                                        <button type="button" class="store-filter-option" data-platform="PS3" onclick="setStorePlatform('PS3')">PS3</button>
+                                        <button type="button" class="store-filter-option" data-platform="PS Vita" onclick="setStorePlatform('PS Vita')">PS Vita</button>
+                                        <button type="button" class="store-filter-option" data-platform="PSP" onclick="setStorePlatform('PSP')">PSP</button>
+                                        <button type="button" class="store-filter-option" data-platform="Original Xbox" onclick="setStorePlatform('Original Xbox')">Original Xbox</button>
+                                        <button type="button" class="store-filter-option" data-platform="Xbox 360" onclick="setStorePlatform('Xbox 360')">Xbox 360</button>
                                     </div>
                                 </div>
                                 <div class="filter-group">
-                                    <button class="store-filter-btn" id="categoryFilterBtn" onclick="toggleCategoryDropdown()" title="Filter by Category"><span>Category Filter</span></button>
-                                    <div class="store-filter-dropdown" id="categoryDropdown">
-                                        <div class="store-filter-option active" data-category="All" onclick="setStoreCategory('All')">All Categories</div>
-                                        <div class="store-filter-option" data-category="PC Tools" onclick="setStoreCategory('PC Tools')">PC Tools</div>
-                                        <div class="store-filter-option" data-category="Console Apps" onclick="setStoreCategory('Console Apps')">Console Apps</div>
-                                        <div class="store-filter-option" data-category="Homebrew Apps" onclick="setStoreCategory('Homebrew Apps')">Homebrew Apps</div>
+                                    <div class="store-filter-buttons" id="categoryDropdown" aria-label="Category filters">
+                                        <button type="button" class="store-filter-option active" data-category="All" onclick="setStoreCategory('All')">All Categories</button>
+                                        <button type="button" class="store-filter-option" data-category="PC Tools" onclick="setStoreCategory('PC Tools')">PC Tools</button>
+                                        <button type="button" class="store-filter-option" data-category="Console Apps" onclick="setStoreCategory('Console Apps')">Console Apps</button>
+                                        <button type="button" class="store-filter-option" data-category="Homebrew Apps" onclick="setStoreCategory('Homebrew Apps')">Homebrew Apps</button>
                                     </div>
                                 </div>
                             </div>
@@ -2292,35 +2221,13 @@
                         }
                     }
 
-                    window.togglePlatformDropdown = function() {
-                        document.getElementById('platformDropdown').classList.toggle('open');
-                    };
-
-                    window.toggleCategoryDropdown = function() {
-                        document.getElementById('categoryDropdown').classList.toggle('open');
-                    };
-
-                    // Close dropdown on click outside
-                    document.addEventListener('click', (e) => {
-                        const pDrop = document.getElementById('platformDropdown');
-                        const pBtn = document.getElementById('platformFilterBtn');
-                        const cDrop = document.getElementById('categoryDropdown');
-                        const cBtn = document.getElementById('categoryFilterBtn');
-                        if (pDrop && !pDrop.contains(e.target) && !pBtn.contains(e.target)) pDrop.classList.remove('open');
-                        if (cDrop && !cDrop.contains(e.target) && !cBtn.contains(e.target)) cDrop.classList.remove('open');
-                    });
-
                     function setStorePlatform(platform) {
                         currentPlatform = platform;
                         
                         // Update UI
-                        const platformBtn = document.getElementById('platformFilterBtn');
-                        if (platformBtn) platformBtn.querySelector('span').textContent = platform === 'All' ? 'All Platforms' : platform;
-
                         document.querySelectorAll('#platformDropdown .store-filter-option').forEach(opt => {
                             opt.classList.toggle('active', opt.getAttribute('data-platform') === platform);
                         });
-                        document.getElementById('platformDropdown').classList.remove('open');
                         
                         // Handle Category Visibility
                         updateCategoryVisibility(platform);
@@ -2332,13 +2239,9 @@
                     function setStoreCategory(category) {
                         currentCategory = category;
                         
-                        const categoryBtn = document.getElementById('categoryFilterBtn');
-                        if (categoryBtn) categoryBtn.querySelector('span').textContent = category === 'All' ? 'All Categories' : category;
-
                         document.querySelectorAll('#categoryDropdown .store-filter-option').forEach(opt => {
                             opt.classList.toggle('active', opt.getAttribute('data-category') === category);
                         });
-                        document.getElementById('categoryDropdown').classList.remove('open');
                         currentPage = 1;
                         applyFilters();
                     }
