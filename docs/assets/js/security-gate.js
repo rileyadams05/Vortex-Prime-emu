@@ -4,6 +4,7 @@ const ALLOWED_HOSTS = new Set([
   "objects.githubusercontent.com",
   "archive.org",
   "reddit.com",
+  "www.reddit.com",
 ]);
 
 const INTERNAL_HOST_SUFFIX = ".vortex-prime-emu.com";

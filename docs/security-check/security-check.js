@@ -6,6 +6,7 @@ const allowedHosts = new Set([
   "objects.githubusercontent.com",
   "archive.org",
   "reddit.com",
+  "www.reddit.com",
 ]);
 
 const params = new URLSearchParams(window.location.search);
