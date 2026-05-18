@@ -2082,7 +2082,7 @@
                         if (cDrop && !cDrop.contains(e.target) && !cBtn.contains(e.target)) cDrop.classList.remove('open');
                     });
 
-                    window.setStorePlatform = function (platform) {
+                    function setStorePlatform(platform) {
                         currentPlatform = platform;
                         
                         // Update UI
@@ -2099,9 +2099,9 @@
 
                         currentPage = 1;
                         applyFilters();
-                    };
+                    }
 
-                    window.setStoreCategory = function (category) {
+                    function setStoreCategory(category) {
                         currentCategory = category;
                         
                         const categoryBtn = document.getElementById('categoryFilterBtn');
@@ -2113,18 +2113,18 @@
                         document.getElementById('categoryDropdown').classList.remove('open');
                         currentPage = 1;
                         applyFilters();
-                    };
+                    }
 
-                    window.handleStoreSearch = function (query) {
+                    function handleStoreSearch(query) {
                         currentQuery = query.toLowerCase().trim();
                         if (clearButton) {
                             clearButton.style.display = currentQuery ? 'inline-flex' : 'none';
                         }
                         currentPage = 1;
                         applyFilters();
-                    };
+                    }
 
-                    window.clearStoreSearch = function () {
+                    function clearStoreSearch() {
                         if (searchInput) {
                             searchInput.value = '';
                             // Avoid stealing focus on console if it might re-open keyboard unnecessarily
@@ -2138,7 +2138,7 @@
                         if (clearButton) clearButton.style.display = 'none';
                         currentPage = 1;
                         applyFilters();
-                    };
+                    }
 
                     function applyFilters() {
                         const needle = currentQuery.toLowerCase();
