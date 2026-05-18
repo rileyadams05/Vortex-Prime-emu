@@ -132,7 +132,31 @@
       z-index: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.65rem;
+    }
+
+    .cta .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .cta .brand img {
+      display: block;
+      max-width: 160px;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.35));
+    }
+
+    .cta .brand img.brand-secondary {
+      max-width: 180px;
+    }
+
+    .cta .description {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.68);
     }
 
     @media (max-width: 520px) {
@@ -158,9 +182,12 @@
     <div class="actions">
       <a class="cta ps3" href="han_enabler.html" data-target="ps3-hen">
         <div class="content">
-          <span class="label">PS3</span>
-          <span class="title">PS3 HEN Enabler</span>
-          <span class="byline">by PS3Xploit Team</span>
+          <div class="brand">
+            <img class="brand-primary" src="/assets/PS3.png" alt="PlayStation 3" loading="lazy">
+            <img class="brand-secondary" src="/assets/ps3xploit-logo.png" alt="PS3Xploit" loading="lazy">
+          </div>
+          <span class="byline">By PS3Xploit Team</span>
+          <span class="description">Access the refreshed PS3 HEN host with supported Hybrid Firmware payloads and on-console guidance.</span>
         </div>
       </a>
       <a class="cta ps4" href="ps4-golden-hen.html" data-target="ps4-golden-hen">
