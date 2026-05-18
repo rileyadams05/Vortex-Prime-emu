@@ -684,40 +684,16 @@
             text-align: left;
         }
 
-        .xbox-hub__header {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .xbox-hub__icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            background: rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-        }
-
-        .xbox-hub__icon img {
-            width: 36px;
-            height: 36px;
-            object-fit: contain;
-        }
-
         .xbox-hub__title {
             font-size: 1.25rem;
-            margin: 0 0 0.35rem;
+            margin: 0 0 0.5rem;
         }
 
         .xbox-hub__description {
             color: var(--color-text-secondary);
             font-size: 0.95rem;
             line-height: 1.6;
-            margin: 0;
+            margin: 0 0 1.75rem;
         }
 
         .xbox-hub-tags {
@@ -736,7 +712,7 @@
             color: #E4E4E7;
         }
 
-        .xbox-hub-toggle {
+        .xbox-hub-cta {
             background: #107C10;
             color: white;
             border: none;
@@ -751,23 +727,11 @@
             box-shadow: 0 4px 12px rgba(16, 124, 16, 0.28);
         }
 
-        .xbox-hub-toggle:hover,
-        .xbox-hub-toggle:focus-visible {
+        .xbox-hub-cta:hover,
+        .xbox-hub-cta:focus-visible {
             transform: translateY(-1px);
             box-shadow: 0 6px 22px rgba(16, 124, 16, 0.33);
             outline: none;
-        }
-
-        .xbox-hub-toggle.is-open {
-            background: #0F8A10;
-        }
-
-        .xbox-hub-toggle .toggle-icon {
-            transition: transform 0.25s ease;
-        }
-
-        .xbox-hub-toggle.is-open .toggle-icon {
-            transform: rotate(-180deg);
         }
 
         .xbox-exploit-panel {
@@ -1724,15 +1688,8 @@
 
                             <!-- Xbox Section -->
                             <div class="xbox-hub">
-                                <div class="xbox-hub__header">
-                                    <div class="xbox-hub__icon">
-                                        <img src="assets/regional%20xbox.png" alt="Xbox sphere logo" loading="lazy">
-                                    </div>
-                                    <div class="xbox-hub__text">
-                                        <h4 class="xbox-hub__title">Xbox Exploit Hub</h4>
-                                        <p class="xbox-hub__description">Explore community-maintained Xbox exploit resources in one place. Includes Xbox 360 and Original Xbox entries with links to the original projects, releases, and setup information.</p>
-                                    </div>
-                                </div>
+                                <h4 class="xbox-hub__title">Xbox Exploit Hub</h4>
+                                <p class="xbox-hub__description">Explore community-maintained Xbox exploit resources in one place. Includes Xbox 360 and Original Xbox entries with links to the original projects, releases, and setup information.</p>
 
                                 <div class="xbox-hub-tags">
                                     <span>Xbox 360</span>
@@ -1740,12 +1697,9 @@
                                     <span>Future Mods</span>
                                 </div>
 
-                                <button type="button" class="btn xbox-hub-toggle" id="xboxHubToggle" aria-expanded="false" aria-controls="xboxHubPanel">
-                                    <svg class="toggle-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 15.5l-5.5-5.5 1.41-1.41L12 12.67l4.09-4.08L17.5 10z"/></svg>
-                                    <span data-toggle-label>View all exploit versions</span>
-                                </button>
+                                <a href="#xbox-exploit-panel" class="btn xbox-hub-cta" data-no-gate="true">View all exploit versions</a>
 
-                                <div class="xbox-exploit-panel" id="xboxHubPanel" hidden>
+                                <div class="xbox-exploit-panel" id="xbox-exploit-panel">
                                     <div class="xbox-exploit-grid">
                                         <article class="xbox-card">
                                             <div class="xbox-card__header">
@@ -2074,23 +2028,6 @@
                         event.preventDefault();
                         showPage(pageTarget);
                     });
-
-                    const xboxToggle = document.getElementById('xboxHubToggle');
-                    const xboxPanel = document.getElementById('xboxHubPanel');
-                    if (xboxToggle && xboxPanel) {
-                        xboxPanel.hidden = true;
-                        xboxToggle.addEventListener('click', () => {
-                            const expanded = xboxToggle.getAttribute('aria-expanded') === 'true';
-                            const nextState = !expanded;
-                            xboxToggle.setAttribute('aria-expanded', String(nextState));
-                            xboxPanel.hidden = !nextState;
-                            xboxToggle.classList.toggle('is-open', nextState);
-                            const label = xboxToggle.querySelector('[data-toggle-label]');
-                            if (label) {
-                                label.textContent = nextState ? 'Hide exploit versions' : 'View all exploit versions';
-                            }
-                        });
-                    }
 
                     function closeModal() {
                         installModal?.classList.remove('active');
