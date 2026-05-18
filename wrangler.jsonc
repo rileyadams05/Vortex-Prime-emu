@@ -1,18 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vortex-prime",
+  "main": "cloudflare/worker.js",
   "compatibility_date": "2026-05-09",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "docs"
+    "directory": "docs",
+    "binding": "ASSETS"
   },
   "routes": [
-    { "pattern": "vortex-prime-emu.com/api/github/*", "zone_name": "vortex-prime-emu.com" },
-    { "pattern": "www.vortex-prime-emu.com/api/github/*", "zone_name": "vortex-prime-emu.com" },
-    { "pattern": "vortex-prime-emu.com/api/turnstile-verify", "zone_name": "vortex-prime-emu.com" },
-    { "pattern": "www.vortex-prime-emu.com/api/turnstile-verify", "zone_name": "vortex-prime-emu.com" }
+    { "pattern": "ps3.vortex-prime-emu.com/", "zone_name": "vortex-prime-emu.com" },
+    { "pattern": "ps3.vortex-prime-emu.com/*", "zone_name": "vortex-prime-emu.com" },
+    { "pattern": "ps4.vortex-prime-emu.com/", "zone_name": "vortex-prime-emu.com" },
+    { "pattern": "ps4.vortex-prime-emu.com/*", "zone_name": "vortex-prime-emu.com" }
   ],
   "compatibility_flags": [
     "nodejs_compat"

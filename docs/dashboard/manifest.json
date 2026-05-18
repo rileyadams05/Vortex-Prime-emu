@@ -8,18 +8,5 @@
   "theme_color": "#107C10",
   "description": "Zero-Latency Xbox 360 Streaming Portal",
   "categories": ["games", "entertainment", "emulator"],
-  "icons": [
-    {
-      "src": "assets/AppIcon/Windows.ico",
-      "sizes": "256x256 512x512",
-      "type": "image/x-icon",
-      "purpose": "any"
-    },
-    {
-      "src": "../favicon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ]
+  "icons": []
 }
