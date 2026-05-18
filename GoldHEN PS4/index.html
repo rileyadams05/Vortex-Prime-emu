@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoldHEN Payload Host</title>
-    <link rel="stylesheet" href="assets/goldhen-host.css">
+    <link rel="stylesheet" href="../docs/hen/assets/goldhen-host.css">
   </head>
   <body>
     <main class="host-shell">
       <header>
         <h1>GoldHEN Payload Host</h1>
-        <p>Launch the PS4 browser, trigger your exploit entry point, then use these buttons to send GoldHEN or start the built-in BinLoader. Only stable payloads bundled with this project are listed.</p>
+        <p>Load this page on your PS4 browser, run the appropriate exploit entry point, then trigger GoldHEN or the BinLoader using the buttons below. Only stable payloads bundled in this project are exposed.</p>
       </header>
 
       <section class="status-box" aria-live="polite" aria-atomic="true">
@@ -22,13 +22,13 @@
         <!-- Buttons injected by goldhen-host.js -->
       </section>
 
-      <p class="footer-note"><strong>Tip:</strong> Run BinLoader first if your exploit expects a manual sender, then trigger the matching GoldHEN payload for your firmware.</p>
+      <p class="footer-note"><strong>Reminder:</strong> If the payload sender is missing, run BinLoader first and retry the desired GoldHEN payload for your firmware.</p>
     </main>
 
     <noscript>
       <p style="color: #ffd252; text-align: center; max-width: 640px; margin: 2rem auto; font-family: 'Segoe UI', sans-serif;">JavaScript is required for the GoldHEN host. Enable scripts in the PS4 browser, refresh, and try again.</p>
     </noscript>
 
-    <script src="assets/goldhen-host.js"></script>
+    <script src="../docs/hen/assets/goldhen-host.js"></script>
   </body>
 </html>

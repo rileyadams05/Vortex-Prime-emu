@@ -1,0 +1,209 @@
+/* GoldHEN + BinLoader host styling */
+:root {
+  color-scheme: dark;
+  --bg: #05060c;
+  --bg-accent: radial-gradient(circle at 20% -10%, rgba(235, 214, 70, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(71, 181, 173, 0.18), transparent 55%),
+    linear-gradient(160deg, #04060d 0%, #050a16 60%, #03040a 100%);
+  --card: rgba(10, 14, 26, 0.72);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f7f9ff;
+  --muted: #9da7c6;
+  --accent-gold: #ffd252;
+  --accent-green: #5dd39e;
+  --accent-fail: #ff6b6b;
+  --button-bg: rgba(12, 16, 32, 0.85);
+  --button-border: rgba(255, 255, 255, 0.12);
+  --button-hover: rgba(30, 38, 70, 0.75);
+  --shadow-strong: 0 32px 80px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", "Roboto", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  background-attachment: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 3vw, 3.5rem) clamp(1rem, 4vw, 4.5rem);
+}
+
+.host-shell {
+  width: min(880px, 96vw);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  box-shadow: var(--shadow-strong);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+  backdrop-filter: blur(22px);
+}
+
+.host-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: var(--bg-accent);
+}
+
+.host-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+header h1 {
+  margin: 0;
+  font-size: clamp(2.05rem, 2.4vw + 1.2rem, 2.8rem);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+header p {
+  margin: 0.75rem auto 0;
+  color: var(--muted);
+  max-width: 60ch;
+  text-align: center;
+  line-height: 1.6;
+  font-size: clamp(0.95rem, 0.3vw + 0.95rem, 1.1rem);
+}
+
+.status-box {
+  background: rgba(9, 12, 24, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-height: 84px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.status-label {
+  font-size: 0.82rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.status-message {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+  transition: color 0.25s ease;
+}
+
+.status-message[data-tone="ready"] {
+  color: var(--accent-gold);
+}
+
+.status-message[data-tone="loading"] {
+  color: #f7c948;
+}
+
+.status-message[data-tone="success"] {
+  color: var(--accent-green);
+}
+
+.status-message[data-tone="error"] {
+  color: var(--accent-fail);
+}
+
+.status-message[data-tone="warning"] {
+  color: #f9a825;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+}
+
+.host-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.05rem;
+  border-radius: 18px;
+  border: 1px solid var(--button-border);
+  background: var(--button-bg);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.host-button span {
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+}
+
+.host-button strong {
+  display: block;
+  font-size: 1.05rem;
+  color: var(--accent-gold);
+}
+
+.host-button[data-kind="binloader"] strong {
+  color: var(--accent-green);
+}
+
+.host-button:focus-visible {
+  outline: 2px solid rgba(255, 210, 82, 0.6);
+  outline-offset: 3px;
+}
+
+.host-button:hover,
+.host-button:focus-visible {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 22px 60px rgba(0, 0, 0, 0.5);
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: auto;
+  line-height: 1.6;
+}
+
+.footer-note strong {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 620px) {
+  .host-shell {
+    border-radius: 22px;
+    padding: 1.75rem;
+  }
+
+  .host-button {
+    border-radius: 16px;
+    padding: 0.95rem;
+  }
+}
