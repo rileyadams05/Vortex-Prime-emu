@@ -170,6 +170,12 @@
       line-height: 1.5;
     }
 
+    .link-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
     @media (max-width: 620px) {
       .method {
         padding: 1.5rem 1.35rem;
@@ -203,8 +209,11 @@
           <h2>Golden HEN Companion App</h2>
         </div>
         <p class="notes">Prefer the installer application route? Launch the official Golden HEN companion maintained by SiSTRo. Follow their documentation for setup, authentication, and payload delivery.</p>
-        <a class="cta-link" href="https://github.com/SiSTR0/ps4-hen-vtx" target="_blank" rel="noopener">Open Companion App Guide</a>
-        <p class="fine-print">External link. You are solely responsible for verifying authenticity, following instructions, and accepting all risks associated with third-party applications.</p>
+        <div class="link-stack">
+          <a class="cta-link" href="https://github.com/Vuemony/vue-after-free" target="_blank" rel="noopener">Vue After Free (Wi-Fi Host)</a>
+          <a class="cta-link" href="https://github.com/owendswang/vue-after-free-lite" target="_blank" rel="noopener">Vue After Free Lite</a>
+        </div>
+        <p class="fine-print">External resources curated for convenience. Verify authenticity, follow maintainer guidance, and accept all risk for third-party payload hosts.</p>
       </article>
     </section>
   </main>
