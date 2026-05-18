@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PS4 Golden HEN Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #04060d;
+      --card: #10182c;
+      --text: #f6f7fb;
+      --muted: #95a2c7;
+      --accent-usb: #f5a623;
+      --accent-app: #6366f1;
+      --warning: #fbd38d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1.5rem, 4vw, 4rem) clamp(1rem, 4vw, 3rem);
+      background: radial-gradient(circle at top, #1b2544 0%, #090d1a 55%, #03040a 100%);
+      color: var(--text);
+      font-family: "Neue Haas Grotesk", "Inter", "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(880px, 95vw);
+      background: color-mix(in srgb, var(--card) 85%, transparent 15%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 22px;
+      padding: clamp(1.75rem, 3vw, 3rem);
+      box-shadow: 0 40px 120px rgba(10, 15, 38, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(1.75rem, 3vw, 2.75rem);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 2.4vw + 1.1rem, 2.75rem);
+      letter-spacing: 0.04em;
+    }
+
+    header p {
+      margin: 0.65rem 0 0;
+      color: var(--muted);
+      font-size: clamp(0.95rem, 0.4vw + 0.95rem, 1.15rem);
+      line-height: 1.7;
+      max-width: 60ch;
+    }
+
+    .disclaimer {
+      margin: 0;
+      padding: 1rem 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      background: rgba(20, 24, 36, 0.65);
+      color: var(--warning);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .methods {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: clamp(1.25rem, 3vw, 2rem);
+    }
+
+    .method {
+      position: relative;
+      padding: 1.75rem;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(13, 18, 32, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      overflow: hidden;
+      min-height: 260px;
+    }
+
+    .method::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .method.usb::after {
+      background: linear-gradient(135deg, rgba(245, 166, 35, 0.35), rgba(41, 27, 4, 0.2));
+    }
+
+    .method.app::after {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(41, 28, 82, 0.25));
+    }
+
+    .method > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .method-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .method-header span {
+      font-size: 0.8rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .method-header h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .notes {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .cta-button,
+    .cta-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.95rem 1.4rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(2, 8, 20, 0.45);
+      color: inherit;
+      text-decoration: none;
+      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .cta-button {
+      cursor: not-allowed;
+    }
+
+    .cta-link:hover,
+    .cta-link:focus-visible {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.35);
+      background: rgba(30, 38, 68, 0.6);
+      outline: none;
+    }
+
+    .fine-print {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.58);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 620px) {
+      .method {
+        padding: 1.5rem 1.35rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>PS4 Golden HEN Preview</h1>
+      <p>This preview hub collects the resources needed to launch SiSTRo's Golden HEN payload from Vortex Prime. Choose the workflow that matches how you prefer to trigger the exploit.</p>
+    </header>
+
+    <p class="disclaimer"><strong>Safety first:</strong> Golden HEN is an advanced exploit. Proceed only if you understand the risks. Vortex Prime provides links and payloads for convenience but cannot guarantee compatibility or accept responsibility for console damage or data loss.</p>
+
+    <section class="methods">
+      <article class="method usb">
+        <div class="method-header">
+          <span>USB workflow</span>
+          <h2>Run PS4 Golden HEN</h2>
+        </div>
+        <p class="notes">Use this option when you are ready to trigger Golden HEN via the USB-hosted payload. The USB stick must contain the prepared files and remain connected during execution.</p>
+        <button class="cta-button" type="button" disabled>Run PS4 Golden HEN</button>
+        <p class="fine-print">USB-only payload. Final deployment assets will be bundled once QA is complete. This button will remain inactive until release.</p>
+      </article>
+
+      <article class="method app">
+        <div class="method-header">
+          <span>App workflow</span>
+          <h2>Golden HEN Companion App</h2>
+        </div>
+        <p class="notes">Prefer the installer application route? Launch the official Golden HEN companion maintained by SiSTRo. Follow their documentation for setup, authentication, and payload delivery.</p>
+        <a class="cta-link" href="https://github.com/SiSTR0/ps4-hen-vtx" target="_blank" rel="noopener">Open Companion App Guide</a>
+        <p class="fine-print">External link. You are solely responsible for verifying authenticity, following instructions, and accepting all risks associated with third-party applications.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
