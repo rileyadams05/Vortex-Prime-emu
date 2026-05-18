@@ -3,26 +3,49 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoldHEN Payload Host</title>
+    <title>Vortex Prime GoldHEN Host</title>
     <link rel="stylesheet" href="assets/goldhen-host.css">
   </head>
   <body>
     <main class="host-shell">
       <header>
-        <h1>GoldHEN Payload Host</h1>
-        <p>Launch the PS4 browser, trigger your exploit entry point, then use these buttons to send GoldHEN or start the built-in BinLoader. Only stable payloads bundled with this project are listed.</p>
+        <h1>Vortex Prime GoldHEN Host</h1>
+        <p>Open this page on your PS4 browser, confirm your firmware, then run GoldHEN directly from the console. The host will attempt to detect your firmware automatically and send the matching payload.</p>
       </header>
 
       <section class="status-box" aria-live="polite" aria-atomic="true">
         <span class="status-label">status</span>
-        <div class="status-message" data-status-message data-tone="ready">Preparing host…</div>
+        <div class="status-message" data-status-message data-tone="ready">Detecting firmware…</div>
       </section>
 
-      <section class="button-grid" data-button-grid>
-        <!-- Buttons injected by goldhen-host.js -->
+      <section class="firmware-panel">
+        <div class="firmware-header">
+          <h2>Firmware selection</h2>
+          <p class="detection-message" data-detection-message>Detecting firmware…</p>
+        </div>
+
+        <div class="firmware-controls">
+          <div class="firmware-control">
+            <span class="field-label">Detected / manual firmware</span>
+            <div class="field-group">
+              <input type="text" inputmode="decimal" pattern="[0-9.]*" placeholder="Enter firmware (e.g. 9.00)" data-firmware-input>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="primary-button" type="button" data-run-goldhen>Run GoldHEN</button>
+          <button class="ghost-button" type="button" data-cache-host>Cache host offline</button>
+        </div>
       </section>
 
-      <p class="footer-note"><strong>Tip:</strong> Run BinLoader first if your exploit expects a manual sender, then trigger the matching GoldHEN payload for your firmware.</p>
+      <details class="advanced-tools">
+        <summary>Advanced tools</summary>
+        <p>Manual BinLoader launch is available for troubleshooting or external payload sending. Most users do not need this step.</p>
+        <button class="ghost-button" type="button" data-launch-binloader>Start BinLoader manually</button>
+      </details>
+
+      <p class="limitation-note"><strong>Reminder:</strong> GoldHEN is not permanent. After a full reboot or shutdown you may need to run the exploit again. Rest Mode may keep GoldHEN active depending on your setup.</p>
     </main>
 
     <noscript>

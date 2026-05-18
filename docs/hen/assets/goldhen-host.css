@@ -1,21 +1,23 @@
-/* GoldHEN + BinLoader host styling */
+/* GoldHEN console host styling */
 :root {
   color-scheme: dark;
-  --bg: #05060c;
-  --bg-accent: radial-gradient(circle at 20% -10%, rgba(235, 214, 70, 0.18), transparent 45%),
-    radial-gradient(circle at 80% 10%, rgba(71, 181, 173, 0.18), transparent 55%),
-    linear-gradient(160deg, #04060d 0%, #050a16 60%, #03040a 100%);
-  --card: rgba(10, 14, 26, 0.72);
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #f7f9ff;
-  --muted: #9da7c6;
+  --bg: #020308;
+  --bg-accent: radial-gradient(circle at 15% -10%, rgba(255, 210, 82, 0.18), transparent 45%),
+    radial-gradient(circle at 85% 10%, rgba(93, 211, 158, 0.16), transparent 55%),
+    linear-gradient(160deg, #03040a 0%, #040716 65%, #020308 100%);
+  --panel: rgba(12, 16, 32, 0.85);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --panel-soft: rgba(8, 12, 24, 0.72);
+  --text: #f6f8ff;
+  --muted: #9ea9cb;
   --accent-gold: #ffd252;
   --accent-green: #5dd39e;
-  --accent-fail: #ff6b6b;
-  --button-bg: rgba(12, 16, 32, 0.85);
-  --button-border: rgba(255, 255, 255, 0.12);
-  --button-hover: rgba(30, 38, 70, 0.75);
-  --shadow-strong: 0 32px 80px rgba(0, 0, 0, 0.45);
+  --accent-warning: #f6c86c;
+  --accent-error: #ff6b6b;
+  --button-border: rgba(255, 255, 255, 0.16);
+  --button-bg: rgba(5, 7, 16, 0.92);
+  --button-hover: rgba(32, 38, 70, 0.85);
+  --shadow-strong: 0 34px 90px rgba(0, 0, 0, 0.55);
 }
 
 * {
@@ -25,35 +27,36 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Segoe UI", "Roboto", sans-serif;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
   color: var(--text);
   background: var(--bg);
   background-attachment: fixed;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(1.5rem, 3vw, 3.5rem) clamp(1rem, 4vw, 4.5rem);
+  padding: 2.5rem 1.5rem;
 }
 
 .host-shell {
+  position: relative;
   width: min(880px, 96vw);
-  background: var(--card);
-  border: 1px solid var(--border);
   border-radius: 28px;
-  padding: clamp(2rem, 4vw, 3.5rem);
+  padding: 2.75rem clamp(1.75rem, 4vw, 3rem);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
   box-shadow: var(--shadow-strong);
   display: flex;
   flex-direction: column;
-  gap: clamp(1.5rem, 3vw, 2.75rem);
-  backdrop-filter: blur(22px);
+  gap: 2rem;
+  backdrop-filter: blur(18px);
 }
 
 .host-shell::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: -2;
   background: var(--bg-accent);
+  z-index: -2;
 }
 
 .host-shell::after {
@@ -61,43 +64,49 @@ body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 header h1 {
   margin: 0;
-  font-size: clamp(2.05rem, 2.4vw + 1.2rem, 2.8rem);
-  letter-spacing: 0.04em;
-  text-align: center;
+  font-size: clamp(2.1rem, 2.5vw + 1.3rem, 3rem);
+  letter-spacing: 0.05em;
 }
 
 header p {
-  margin: 0.75rem auto 0;
+  margin: 0;
   color: var(--muted);
-  max-width: 60ch;
-  text-align: center;
-  line-height: 1.6;
-  font-size: clamp(0.95rem, 0.3vw + 0.95rem, 1.1rem);
+  max-width: 62ch;
+  margin-inline: auto;
+  line-height: 1.65;
+  font-size: clamp(0.95rem, 0.4vw + 0.9rem, 1.1rem);
 }
 
 .status-box {
-  background: rgba(9, 12, 24, 0.78);
+  background: var(--panel-soft);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 1rem 1.35rem;
+  border-radius: 20px;
+  padding: 1.2rem 1.4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  min-height: 84px;
+  gap: 0.5rem;
+  min-height: 92px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
 .status-label {
   font-size: 0.82rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.52);
 }
 
 .status-message {
@@ -112,98 +121,222 @@ header p {
 }
 
 .status-message[data-tone="loading"] {
-  color: #f7c948;
+  color: var(--accent-warning);
 }
 
 .status-message[data-tone="success"] {
   color: var(--accent-green);
 }
 
-.status-message[data-tone="error"] {
-  color: var(--accent-fail);
-}
-
 .status-message[data-tone="warning"] {
-  color: #f9a825;
+  color: var(--accent-warning);
 }
 
-.button-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: clamp(1rem, 2.5vw, 1.75rem);
+.status-message[data-tone="error"] {
+  color: var(--accent-error);
 }
 
-.host-button {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.05rem;
-  border-radius: 18px;
-  border: 1px solid var(--button-border);
-  background: var(--button-bg);
-  color: var(--text);
-  font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0.03em;
+.firmware-panel {
+  background: var(--panel-soft);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.firmware-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.firmware-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  text-align: center;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 18px 40px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.75);
 }
 
-.host-button span {
-  display: block;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.6);
-  text-transform: uppercase;
-  margin-bottom: 0.45rem;
+.detection-message {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+  transition: color 0.25s ease;
 }
 
-.host-button strong {
-  display: block;
-  font-size: 1.05rem;
-  color: var(--accent-gold);
-}
-
-.host-button[data-kind="binloader"] strong {
+.detection-message[data-tone="success"] {
   color: var(--accent-green);
 }
 
-.host-button:focus-visible {
-  outline: 2px solid rgba(255, 210, 82, 0.6);
-  outline-offset: 3px;
+.detection-message[data-tone="warning"] {
+  color: var(--accent-warning);
 }
 
-.host-button:hover,
-.host-button:focus-visible {
-  transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 22px 60px rgba(0, 0, 0, 0.5);
+.detection-message[data-tone="error"] {
+  color: var(--accent-error);
 }
 
-.footer-note {
+.field-label {
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.firmware-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.firmware-control {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.field-group {
+  flex: 1 1 220px;
+  background: rgba(3, 6, 14, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 0.2rem 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.field-group input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 1.05rem;
+  padding: 0.7rem 0.4rem;
+  letter-spacing: 0.04em;
+}
+
+.field-group input:focus {
+  outline: none;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.primary-button,
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 1.6rem;
+  border-radius: 18px;
+  border: 1px solid var(--button-border);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  background: var(--button-bg);
+  color: var(--accent-gold);
+  flex: 1 1 220px;
+}
+
+.primary-button:hover,
+.primary-button:focus-visible,
+.ghost-button:hover,
+.ghost-button:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  outline: none;
+}
+
+.primary-button[disabled] {
+  opacity: 0.55;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+.ghost-button {
+  color: var(--muted);
+  background: rgba(10, 12, 20, 0.7);
+}
+
+.advanced-tools {
+  background: rgba(6, 9, 18, 0.82);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1.35rem 1.5rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.advanced-tools summary {
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.advanced-tools summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced-tools summary::after {
+  content: "▸";
+  margin-left: 0.5rem;
+  transition: transform 0.2s ease;
+}
+
+.advanced-tools[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.advanced-tools p {
+  margin: 0.85rem 0 1.1rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.limitation-note {
+  margin: 0;
   text-align: center;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.55);
-  margin-top: auto;
+  color: rgba(255, 255, 255, 0.58);
   line-height: 1.6;
 }
 
-.footer-note strong {
-  color: rgba(255, 255, 255, 0.8);
+.limitation-note strong {
+  color: rgba(255, 255, 255, 0.82);
 }
 
-@media (max-width: 620px) {
-  .host-shell {
-    border-radius: 22px;
-    padding: 1.75rem;
+@media (max-width: 640px) {
+  body {
+    padding: 1.5rem 1rem;
   }
 
-  .host-button {
-    border-radius: 16px;
-    padding: 0.95rem;
+  .host-shell {
+    padding: 2.2rem 1.5rem;
+    border-radius: 24px;
+  }
+
+  .firmware-panel {
+    padding: 1.5rem;
+  }
+
+  .field-group {
+    flex: 1 1 100%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
   }
 }

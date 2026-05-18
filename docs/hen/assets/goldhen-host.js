@@ -3,183 +3,242 @@
 
   var state = {
     statusMessage: null,
-    statusTone: null,
-    buttonGrid: null,
-    buttons: []
+    detectionMessage: null,
+    firmwareInput: null,
+    runButton: null,
+    cacheButton: null,
+    binLoaderButton: null,
+    payloadMap: {},
+    payloadCache: {},
+    isBusy: false,
+    currentFirmware: ''
+  };
+
+  var cacheState = {
+    initialized: false,
+    registration: null
   };
 
   function init() {
+    bindDom();
+
+    if (!state.statusMessage || !state.firmwareInput || !state.runButton) {
+      return;
+    }
+
+    registerPayloads();
+    detectFirmware();
+    bindControls();
+    updateStatus('Ready. Confirm firmware and run GoldHEN.', 'ready');
+  }
+
+  function bindDom() {
     state.statusMessage = document.querySelector('[data-status-message]');
-    state.buttonGrid = document.querySelector('[data-button-grid]');
-
-    if (!state.statusMessage || !state.buttonGrid) {
-      return;
-    }
-
-    renderButtons();
-    bindEvents();
-    updateStatus('Ready. Choose a payload to send.', 'ready');
+    state.detectionMessage = document.querySelector('[data-detection-message]');
+    state.firmwareInput = document.querySelector('[data-firmware-input]');
+    state.runButton = document.querySelector('[data-run-goldhen]');
+    state.cacheButton = document.querySelector('[data-cache-host]');
+    state.binLoaderButton = document.querySelector('[data-launch-binloader]');
   }
 
-  function renderButtons() {
-    var payloadDefinitions = getPayloadDefinitions();
-    var fragment = document.createDocumentFragment();
+  function registerPayloads() {
+    var base = getPayloadBasePath();
+    state.payloadMap = {
+      '5.05': base + 'goldhen_2.3_505.bin',
+      '6.72': base + 'goldhen_2.3_672.bin',
+      '9.00': base + 'goldhen_2.3_900.bin'
+    };
 
-    for (var i = 0; i < payloadDefinitions.length; i++) {
-      var entry = payloadDefinitions[i];
-      var button = document.createElement('button');
-      button.className = 'host-button';
-      button.setAttribute('type', 'button');
-      button.setAttribute('data-kind', entry.kind);
-      if (entry.file) {
-        button.setAttribute('data-file', entry.file);
-      }
-      button.setAttribute('data-label', entry.label);
-
-      var span = document.createElement('span');
-      span.textContent = entry.overline;
-
-      var strong = document.createElement('strong');
-      strong.textContent = entry.title;
-
-      button.appendChild(span);
-      button.appendChild(strong);
-
-      fragment.appendChild(button);
-    }
-
-    state.buttonGrid.appendChild(fragment);
-    state.buttons = state.buttonGrid.querySelectorAll('.host-button');
-  }
-
-  function bindEvents() {
-    for (var i = 0; i < state.buttons.length; i++) {
-      state.buttons[i].addEventListener('click', handleButtonClick, false);
+    if (state.detectionMessage) {
+      state.detectionMessage.setAttribute('data-tone', 'loading');
+      state.detectionMessage.textContent = 'Detecting firmware...';
     }
   }
 
-  function handleButtonClick(event) {
-    var button = event.currentTarget;
-    var kind = button.getAttribute('data-kind');
+  function getPayloadBasePath() {
+    var path = window.location && window.location.pathname ? window.location.pathname.toLowerCase() : '';
 
-    if (kind === 'binloader') {
-      triggerBinLoader(button);
-      return;
-    }
-
-    var file = button.getAttribute('data-file');
-    var label = button.getAttribute('data-label');
-
-    if (!file) {
-      updateStatus('No payload file specified for this button.', 'error');
-      return;
-    }
-
-    loadPayload(file, label);
-  }
-
-  function getPayloadDefinitions() {
-    return [
-      {
-        kind: 'payload',
-        label: 'GoldHEN 2.3 for FW 5.05',
-        overline: 'GoldHEN',
-        title: '2.3 · Firmware 5.05',
-        file: 'goldhen_2.3_505.bin'
-      },
-      {
-        kind: 'payload',
-        label: 'GoldHEN 2.3 for FW 6.72',
-        overline: 'GoldHEN',
-        title: '2.3 · Firmware 6.72',
-        file: 'goldhen_2.3_672.bin'
-      },
-      {
-        kind: 'payload',
-        label: 'GoldHEN 2.3 for FW 9.00',
-        overline: 'GoldHEN',
-        title: '2.3 · Firmware 9.00',
-        file: 'goldhen_2.3_900.bin'
-      },
-      {
-        kind: 'binloader',
-        label: 'BinLoader utility',
-        overline: 'Utility',
-        title: 'BinLoader'
-      }
-    ];
-  }
-
-  function computeBasePaths() {
-    var path = (window.location && window.location.pathname ? window.location.pathname : '').toLowerCase();
-    var bases = [];
-
-    function pushUnique(value) {
-      if (bases.indexOf(value) === -1) {
-        bases.push(value);
-      }
-    }
-
-    if (path.indexOf('/docs/') !== -1 || path.indexOf('/hen/') !== -1) {
-      pushUnique('payloads/');
-      pushUnique('./payloads/');
+    if (path.indexOf('/docs/hen/') !== -1) {
+      return 'payloads/';
     }
 
     if (path.indexOf('goldhen%20ps4') !== -1 || path.indexOf('goldhen ps4') !== -1) {
-      pushUnique('GoldHEN/');
-      pushUnique('./GoldHEN/');
-      pushUnique('../GoldHEN/');
-      pushUnique('../docs/hen/payloads/');
-    } else {
-      pushUnique('../docs/hen/payloads/');
-      pushUnique('GoldHEN/');
-      pushUnique('./GoldHEN/');
+      return '../docs/hen/payloads/';
     }
 
-    pushUnique('../../docs/hen/payloads/');
-    pushUnique('../GoldHEN%20PS4/GoldHEN/');
-    pushUnique('../../GoldHEN%20PS4/GoldHEN/');
-
-    return bases;
+    return './payloads/';
   }
 
-  function loadPayload(file, label) {
-    updateStatus('Loading ' + label + ' …', 'loading');
+  function detectFirmware() {
+    if (!state.firmwareInput || !state.detectionMessage) {
+      return;
+    }
 
-    fetchPayload(file, function handleSuccess(result) {
-      dispatchPayload(result.buffer).then(function () {
-        updateStatus('Payload sent · ' + label, 'success');
-      }).catch(function (error) {
-        updateStatus('Payload ready. Unable to auto-send: ' + error.message, 'warning');
-        offerDownload(result.buffer, file);
+    var userAgent = window.navigator && window.navigator.userAgent ? String(window.navigator.userAgent) : '';
+    var detected = '';
+
+    var match = userAgent.match(/playstation 4 ([0-9]+\.[0-9]+)/i);
+    if (!match) {
+      match = userAgent.match(/firmware\/?\s*([0-9]+\.[0-9]+)/i);
+    }
+    if (!match) {
+      match = userAgent.match(/\(([0-9]+\.[0-9]+)\)/);
+    }
+
+    if (match && match[1]) {
+      detected = normaliseFirmware(match[1]);
+    }
+
+    if (detected && state.payloadMap[detected]) {
+      state.currentFirmware = detected;
+      state.firmwareInput.value = detected;
+      state.detectionMessage.setAttribute('data-tone', 'success');
+      state.detectionMessage.textContent = 'Detected firmware: ' + detected;
+    } else {
+      state.detectionMessage.setAttribute('data-tone', 'warning');
+      state.detectionMessage.textContent = 'Could not detect firmware. Enter it manually (5.05, 6.72, or 9.00).';
+    }
+  }
+
+  function normaliseFirmware(value) {
+    return value ? value.replace(/[^0-9.]/g, '').substring(0, 5) : '';
+  }
+
+  function bindControls() {
+    if (state.firmwareInput) {
+      state.firmwareInput.addEventListener('input', handleFirmwareChange, false);
+    }
+
+    if (state.runButton) {
+      state.runButton.addEventListener('click', handleRunGoldHen, false);
+    }
+
+    if (state.cacheButton) {
+      state.cacheButton.addEventListener('click', handleCacheHost, false);
+    }
+
+    if (state.binLoaderButton) {
+      state.binLoaderButton.addEventListener('click', handleManualBinLoader, false);
+    }
+  }
+
+  function handleFirmwareChange(event) {
+    state.currentFirmware = normaliseFirmware(event && event.target ? event.target.value : '');
+  }
+
+  function handleRunGoldHen() {
+    if (state.isBusy) {
+      return;
+    }
+
+    var firmware = normaliseFirmware(state.firmwareInput ? state.firmwareInput.value : '');
+
+    if (!firmware) {
+      updateStatus('Enter your firmware version (5.05, 6.72, or 9.00).', 'warning');
+      return;
+    }
+
+    if (!state.payloadMap[firmware]) {
+      updateStatus('Unsupported firmware or missing payload.', 'error');
+      return;
+    }
+
+    state.currentFirmware = firmware;
+    setBusy(true);
+    updateStatus('Preparing payload for firmware ' + firmware + '...', 'loading');
+
+    ensureBinLoaderReady()
+      .then(function () {
+        updateStatus('Loading GoldHEN for ' + firmware + '...', 'loading');
+        return fetchPayloadBuffer(firmware);
+      })
+      .then(function (buffer) {
+        return sendPayload(buffer);
+      })
+      .then(function () {
+        updateStatus('GoldHEN loaded successfully for firmware ' + firmware + '.', 'success');
+        setBusy(false);
+      })
+      .catch(function (error) {
+        updateStatus(error && error.message ? error.message : String(error || 'Failed to load payload.'), 'error');
+        setBusy(false);
       });
-    }, function handleFailure(errorMessage) {
-      updateStatus('Failed to load ' + label + ': ' + errorMessage, 'error');
-    });
   }
 
-  function fetchPayload(file, resolve, reject) {
-    var bases = computeBasePaths();
-    var index = 0;
-    var errors = [];
+  function setBusy(value) {
+    state.isBusy = value;
+    if (state.runButton) {
+      if (value) {
+        state.runButton.setAttribute('disabled', 'disabled');
+      } else {
+        state.runButton.removeAttribute('disabled');
+      }
+    }
+  }
 
-    function attemptNext() {
-      if (index >= bases.length) {
-        reject(errors.join('\n'));
+  function ensureBinLoaderReady() {
+    return new Promise(function (resolve, reject) {
+      updateStatus('Preparing BinLoader...', 'loading');
+
+      if (typeof window.sendPayload === 'function') {
+        updateStatus('BinLoader ready.', 'success');
+        resolve();
         return;
       }
 
-      var url = bases[index] + file;
-      index += 1;
-      requestArrayBuffer(url, function (buffer) {
-        resolve({ buffer: buffer, url: url });
-      }, function (error) {
-        errors.push(error + ' [' + url + ']');
-        attemptNext();
-      });
-    }
+      var starter = null;
+      if (typeof window.startBinLoader === 'function') {
+        starter = window.startBinLoader;
+      } else if (window.binLoader && typeof window.binLoader.start === 'function') {
+        starter = function () {
+          return window.binLoader.start();
+        };
+      }
 
-    attemptNext();
+      if (!starter) {
+        resolve();
+        return;
+      }
+
+      try {
+        var result = starter();
+        if (result && typeof result.then === 'function') {
+          result.then(function () {
+            updateStatus('BinLoader ready.', 'success');
+            resolve();
+          }).catch(function (error) {
+            reject(new Error('BinLoader failed: ' + (error && error.message ? error.message : error)));
+          });
+        } else {
+          updateStatus('BinLoader ready.', 'success');
+          resolve();
+        }
+      } catch (error) {
+        reject(new Error('BinLoader error: ' + (error && error.message ? error.message : error)));
+      }
+    });
+  }
+
+  function fetchPayloadBuffer(firmware) {
+    return new Promise(function (resolve, reject) {
+      if (state.payloadCache[firmware]) {
+        resolve(state.payloadCache[firmware]);
+        return;
+      }
+
+      var url = state.payloadMap[firmware];
+      if (!url) {
+        reject(new Error('Unsupported firmware or missing payload.'));
+        return;
+      }
+
+      requestArrayBuffer(url, function (buffer) {
+        state.payloadCache[firmware] = buffer;
+        resolve(buffer);
+      }, function (message) {
+        reject(new Error('Failed to load payload: ' + message));
+      });
+    });
   }
 
   function requestArrayBuffer(url, onSuccess, onError) {
@@ -215,18 +274,18 @@
     }
   }
 
-  function dispatchPayload(buffer) {
+  function sendPayload(buffer) {
     return new Promise(function (resolve, reject) {
       var sender = findPayloadSender();
 
       if (!sender) {
-        reject(new Error('No payload sender available. Launch BinLoader or exploit first.'));
+        reject(new Error('Payload ready. Send manually via BinLoader on port 9020.'));
         return;
       }
 
       try {
-        var uint8 = new Uint8Array(buffer);
-        var result = sender.length > 1 ? sender(uint8, uint8.length) : sender(uint8);
+        var data = new Uint8Array(buffer);
+        var result = sender.length > 1 ? sender(data, data.length) : sender(data);
 
         if (result && typeof result.then === 'function') {
           result.then(resolve).catch(reject);
@@ -235,14 +294,14 @@
         }
       } catch (error) {
         try {
-          var fallbackResult = sender(buffer);
-          if (fallbackResult && typeof fallbackResult.then === 'function') {
-            fallbackResult.then(resolve).catch(reject);
+          var fallback = sender(buffer);
+          if (fallback && typeof fallback.then === 'function') {
+            fallback.then(resolve).catch(reject);
           } else {
             resolve();
           }
-        } catch (innerError) {
-          reject(innerError);
+        } catch (inner) {
+          reject(inner);
         }
       }
     });
@@ -268,56 +327,78 @@
     return null;
   }
 
-  function offerDownload(buffer, fileName) {
-    if (!window.URL || !window.Blob) {
+  function handleCacheHost() {
+    if (cacheState.initialized) {
+      updateStatus('Host already cached. You can revisit offline.', 'success');
       return;
     }
 
-    try {
-      var blob = new Blob([buffer], { type: 'application/octet-stream' });
-      var link = document.createElement('a');
-      var url = URL.createObjectURL(blob);
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(function () {
-        URL.revokeObjectURL(url);
-      }, 1500);
-    } catch (error) {
-      // Ignore download fallback errors silently.
-    }
+    updateStatus('Caching host offline...', 'loading');
+
+    registerServiceWorker()
+      .then(function () {
+        updateStatus('Host cached successfully. Offline mode ready.', 'success');
+      })
+      .catch(function (error) {
+        updateStatus('Failed to cache host: ' + (error && error.message ? error.message : error), 'error');
+      });
   }
 
-  function triggerBinLoader() {
-    updateStatus('Loading BinLoader …', 'loading');
+  function registerServiceWorker() {
+    return new Promise(function (resolve, reject) {
+      if (!('serviceWorker' in window.navigator)) {
+        reject(new Error('Offline caching not supported in this browser.'));
+        return;
+      }
 
-    var handler = null;
+      var scriptPath = resolveServiceWorkerPath();
+      var scope = scriptPath.indexOf('../') === 0 ? '../docs/hen/' : './';
 
+      window.navigator.serviceWorker.register(scriptPath, { scope: scope })
+        .then(function (registration) {
+          cacheState.initialized = true;
+          cacheState.registration = registration;
+          resolve();
+        })
+        .catch(reject);
+    });
+  }
+
+  function resolveServiceWorkerPath() {
+    var path = window.location && window.location.pathname ? window.location.pathname.toLowerCase() : '';
+    if (path.indexOf('/docs/hen/') !== -1) {
+      return 'goldhen-host-sw.js';
+    }
+    return '../docs/hen/goldhen-host-sw.js';
+  }
+
+  function handleManualBinLoader() {
+    updateStatus('Starting BinLoader...', 'loading');
+
+    var starter = null;
     if (typeof window.startBinLoader === 'function') {
-      handler = window.startBinLoader;
+      starter = window.startBinLoader;
     } else if (window.binLoader && typeof window.binLoader.start === 'function') {
-      handler = function () {
+      starter = function () {
         return window.binLoader.start();
       };
     }
 
-    if (!handler) {
-      updateStatus('BinLoader entry point not available. Run your exploit first or use an external sender.', 'warning');
+    if (!starter) {
+      updateStatus('BinLoader entry point not available. Trigger your exploit manually.', 'warning');
       return;
     }
 
     try {
-      var result = handler();
+      var result = starter();
       if (result && typeof result.then === 'function') {
         result.then(function () {
-          updateStatus('BinLoader ready. Send your payload from a sender on port 9020.', 'success');
+          updateStatus('BinLoader ready. Send payload from a sender on port 9020.', 'success');
         }).catch(function (error) {
           updateStatus('BinLoader failed: ' + (error && error.message ? error.message : error), 'error');
         });
       } else {
-        updateStatus('BinLoader ready. Send your payload from a sender on port 9020.', 'success');
+        updateStatus('BinLoader ready. Send payload from a sender on port 9020.', 'success');
       }
     } catch (error) {
       updateStatus('BinLoader error: ' + (error && error.message ? error.message : error), 'error');
@@ -329,8 +410,7 @@
       return;
     }
 
-    var appliedTone = tone || 'ready';
-    state.statusMessage.setAttribute('data-tone', appliedTone);
+    state.statusMessage.setAttribute('data-tone', tone || 'ready');
     state.statusMessage.textContent = message;
   }
 
