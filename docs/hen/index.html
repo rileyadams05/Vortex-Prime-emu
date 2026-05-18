@@ -58,8 +58,8 @@
 
     .actions {
       display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.2rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     }
 
     .cta {
@@ -153,6 +153,59 @@
       max-width: 200px;
     }
 
+    .cta .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .cta .tag {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .cta .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.2rem;
+    }
+
+    .cta .button-row a {
+      flex: 1 1 150px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cta .button-row a:hover,
+    .cta .button-row a:focus-visible {
+      transform: translateY(-3px);
+      background: rgba(13, 110, 253, 0.3);
+      box-shadow: 0 16px 32px rgba(5, 12, 38, 0.35);
+      outline: none;
+    }
+
+    .cta .disclaimer {
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
     .cta .description {
       font-size: 0.9rem;
       line-height: 1.5;
@@ -200,6 +253,27 @@
           <span class="description">Launch the GoldHEN host maintained by the community with ready-to-send payloads for supported PS4 firmware versions.</span>
         </div>
       </a>
+      <div class="cta ps4" data-target="vue-after-free" style="border-color: rgba(93, 211, 158, 0.28);">
+        <div class="content">
+          <div class="brand">
+            <img class="brand-primary" src="/assets/PS4.png" alt="PlayStation 4" loading="lazy">
+            <img class="brand-secondary" src="/assets/vue%20after%20free%20.png" alt="vue-after-free" loading="lazy">
+          </div>
+          <span class="byline">PS4 app-based exploit resource</span>
+          <span class="description">App-based PS4 exploit resource. The original app version is maintained at the Vuemony repository, with an alternative lite version available separately. Vortex Prime links to the original sources instead of hosting the app directly because these projects may update frequently.</span>
+          <div class="tag-row">
+            <span class="tag">PS4</span>
+            <span class="tag">App-based</span>
+            <span class="tag">Exploit</span>
+            <span class="tag">External Project</span>
+          </div>
+          <div class="button-row">
+            <a href="https://github.com/Vuemony/vue-after-free" rel="noopener" target="_blank">View Original App Version</a>
+            <a href="https://github.com/owendswang/vue-after-free-lite" rel="noopener" target="_blank">View Lite Alternative</a>
+          </div>
+          <span class="disclaimer">This is an external community project. Vortex Prime links to the original repositories and does not host or maintain these app files. Use the original repository instructions and understand the risks before using console exploit software.</span>
+        </div>
+      </div>
     </div>
   </main>
 </body>
