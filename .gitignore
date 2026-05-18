@@ -3,6 +3,11 @@ node_modules/
 target/
 bin/
 obj/
+docs/assets/js/vendor/
+dist/
+.DS_Store
+Thumbs.db
+google/
 *.log
 
 # Python

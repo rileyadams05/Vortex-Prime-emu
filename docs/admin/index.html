@@ -415,11 +415,11 @@
         <div class="form-grid">
           <div class="field">
             <label>Package Title *</label>
-            <input type="text" data-field="name" value="${esc(pkg.name)}" placeholder="e.g. Dark Neon Theme" oninput="onFieldInput(${i},'name',this.value)">
+            <input type="text" data-field="name" value="${esc(pkg.name)}" placeholder="Example" oninput="onFieldInput(${i},'name',this.value)">
           </div>
           <div class="field">
             <label>Store Code *</label>
-            <input type="text" data-field="code" value="${esc(pkg.code)}" placeholder="e.g. DARK-NEON-01" oninput="onFieldInput(${i},'code',this.value)">
+            <input type="text" data-field="code" value="${esc(pkg.code)}" placeholder="Example" oninput="onFieldInput(${i},'code',this.value)">
           </div>
           <div class="field full">
             <label>Description</label>
@@ -453,10 +453,10 @@
             <input type="datetime-local" data-field="updated" value="${esc(pkg.updated ? pkg.updated.replace('Z','') : '')}" oninput="onFieldInput(${i},'updated',this.value)">
           </div>
           <div class="field full">
-            <label>Tags (press Enter or comma to add)</label>
+            <label>Tags (optional — press Enter or comma to add)</label>
             <div class="tags-input" id="tags-wrap-${i}" onclick="focusTagInput(${i})">
               ${tagChipsHtml}
-              <input type="text" id="tag-input-${i}" placeholder="${tags.length ? '' : 'e.g. theme, retro, dark'}" style="border:none;background:transparent;outline:none;min-width:100px;flex:1;font-size:.85rem;color:var(--text)">
+              <input type="text" id="tag-input-${i}" placeholder="${tags.length ? '' : 'Example'}" style="border:none;background:transparent;outline:none;min-width:100px;flex:1;font-size:.85rem;color:var(--text)">
             </div>
           </div>
           <div class="field">
@@ -621,14 +621,17 @@
     toast(`File ${filename} selected.`);
   }
 
-  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:8000/api' 
-    : 'https://vortex-prime-emu.com/api';
+  const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const API_BASE = IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '';
 
   window.submitToStore = async function(i, btn) {
     collectAll();
     const pkg = packages[i];
     if (!pkg.name || !pkg.code) return toast('Name and Store Code are required.', 'error');
+    if (!IS_LOCAL_BACKEND) {
+      toast('Server upload requires running the local API backend. Use "Save Package File" and commit the JSON instead.', 'error');
+      return;
+    }
     
     const oldText = btn.textContent;
     btn.textContent = 'Uploading...';
@@ -674,6 +677,10 @@
   window.deleteFromServer = async function(i) {
     const pkg = packages[i];
     if (!pkg.id) return toast('This package is not yet on the server.', 'error');
+    if (!IS_LOCAL_BACKEND) {
+      toast('Server removal is only available when the local API backend is running.', 'error');
+      return;
+    }
 
     try {
       const res = await fetch(`${API_BASE}/store/themes/${pkg.id}`, {
@@ -799,25 +806,36 @@
     toast('Upload file prepared â€” commit it to go live.');
   };
 
-  // â”€â”€ Auto-load live themes from API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  fetch(`${API_BASE}/store/themes`, { cache: 'no-store' })
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(data => {
-      packages = Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []);
-      document.getElementById('saveHint').textContent =
-        `Connected to live store. Total ${packages.length} package(s) available.`;
-      render();
-    })
-    .catch(() => {
-      // Fallback to static if API down
-      fetch('../store/themes.json', { cache: 'no-store' })
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(data => {
-          packages = Array.isArray(data.dashboards) ? data.dashboards : [];
-          render();
-        })
-        .catch(() => render());
-    });
+  // â”€â”€ Auto-load themes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  if (IS_LOCAL_BACKEND) {
+    fetch(`${API_BASE}/store/themes`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => {
+        packages = Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []);
+        document.getElementById('saveHint').textContent =
+          `Connected to live store. Total ${packages.length} package(s) available.`;
+        render();
+      })
+      .catch(() => {
+        fetch('../store/themes.json', { cache: 'no-store' })
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then(data => {
+            packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+            render();
+          })
+          .catch(() => render());
+      });
+  } else {
+    fetch('../store/themes.json', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => {
+        packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+        document.getElementById('saveHint').textContent =
+          `Loaded static catalogue. Total ${packages.length} package(s) available.`;
+        render();
+      })
+      .catch(() => render());
+  }
 
 })();
 </script>
