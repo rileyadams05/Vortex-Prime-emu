@@ -29,7 +29,7 @@
     registerPayloads();
     detectFirmware();
     bindControls();
-    updateStatus('Ready. Confirm firmware and run GoldHEN.', 'ready');
+    clearStatus();
   }
 
   function bindDom() {
@@ -403,6 +403,15 @@
     } catch (error) {
       updateStatus('BinLoader error: ' + (error && error.message ? error.message : error), 'error');
     }
+  }
+
+  function clearStatus() {
+    if (!state.statusMessage) {
+      return;
+    }
+
+    state.statusMessage.textContent = '';
+    state.statusMessage.removeAttribute('data-tone');
   }
 
   function updateStatus(message, tone) {

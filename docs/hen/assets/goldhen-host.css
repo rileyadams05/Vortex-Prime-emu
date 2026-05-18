@@ -99,6 +99,10 @@ header p {
   opacity: 0.9;
 }
 
+.action-status:empty {
+  display: none;
+}
+
 .action-status[data-tone="loading"] {
   opacity: 1;
 }
@@ -147,7 +151,7 @@ header p {
 }
 
 .detection-message[data-tone="warning"] {
-  color: var(--accent-warning);
+  color: #ffffff;
 }
 
 .detection-message[data-tone="error"] {
@@ -219,8 +223,11 @@ header p {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   background: var(--button-bg);
-  color: var(--accent-gold);
   flex: 1 1 220px;
+}
+
+.primary-button {
+  color: #ffffff;
 }
 
 .primary-button:hover,
