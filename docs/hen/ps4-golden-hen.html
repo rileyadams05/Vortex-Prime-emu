@@ -115,6 +115,29 @@
       gap: 0.4rem;
     }
 
+    .method-header.with-icon {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .method-title {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .method-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(2, 8, 20, 0.55);
+      padding: 0.35rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      object-fit: contain;
+      box-shadow: 0 12px 30px rgba(6, 12, 30, 0.45);
+    }
+
     .method-header span {
       font-size: 0.8rem;
       letter-spacing: 0.16em;
@@ -204,11 +227,14 @@
       </article>
 
       <article class="method app">
-        <div class="method-header">
-          <span>App workflow</span>
-          <h2>Golden HEN Companion App</h2>
+        <div class="method-header with-icon">
+          <img class="method-icon" src="../assets/vue.png" alt="Vue After Free icon">
+          <div class="method-title">
+            <span>App workflow</span>
+            <h2>Vue After Free exploit app</h2>
+          </div>
         </div>
-        <p class="notes">Prefer the installer application route? Launch the official Golden HEN companion maintained by SiSTRo. Follow their documentation for setup, authentication, and payload delivery.</p>
+        <p class="notes">Vue After Free is a PlayStation Vue userland code execution exploit for PS4 firmware 5.05-13.04. Launch the Vue app with a network connection, an activated profile, and the prepared save to trigger the jailbreak, then pick the Manual, Extended Storage, or System Backup workflows to deliver payloads from its built-in menu or USB.</p>
         <div class="link-stack">
           <a class="cta-link" href="https://github.com/Vuemony/vue-after-free" target="_blank" rel="noopener">Vue After Free (Original)</a>
           <a class="cta-link" href="https://github.com/owendswang/vue-after-free-lite" target="_blank" rel="noopener">Vue After Free Lite (Alternative update)</a>
