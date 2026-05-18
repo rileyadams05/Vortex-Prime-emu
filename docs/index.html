@@ -676,10 +676,92 @@
             color: white;
         }
 
-        .xbox-section {
+        .xbox-hub {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: left;
+        }
+
+        .xbox-hub__title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .xbox-hub__crest {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .xbox-hub__description {
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .xbox-hub-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .xbox-hub-tags span {
+            background: rgba(255,255,255,0.08);
+            padding: 0.35rem 0.85rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #E4E4E7;
+        }
+
+        .xbox-hub-toggle {
+            background: transparent;
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .xbox-hub-toggle:hover,
+        .xbox-hub-toggle:focus-visible,
+        .xbox-hub-toggle.is-open {
+            background: var(--color-bg-elevated);
+            border-color: var(--color-primary);
+            outline: none;
+        }
+
+        .xbox-hub-toggle .toggle-icon {
+            transition: transform 0.25s ease;
+        }
+
+        .xbox-hub-toggle.is-open .toggle-icon {
+            transform: rotate(-180deg);
+        }
+
+        .xbox-exploit-panel {
+            margin-top: 1.75rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .xbox-exploit-grid {
+            display: grid;
             gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         }
 
         .xbox-card {
@@ -688,14 +770,14 @@
             border-radius: 16px;
             padding: 1.75rem;
             display: flex;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-            align-items: flex-start;
+            flex-direction: column;
+            gap: 1.25rem;
         }
 
         .xbox-card__thumb {
-            flex: 0 0 160px;
-            max-width: 200px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.02);
         }
 
         .xbox-card__thumb img {
@@ -705,14 +787,9 @@
             border-radius: 14px;
         }
 
-        .xbox-card__body {
-            flex: 1;
-            min-width: 260px;
-        }
-
-        .xbox-card__body h4 {
-            font-size: 1.25rem;
-            margin-bottom: 0.75rem;
+        .xbox-card__body h5 {
+            font-size: 1.05rem;
+            margin: 0 0 0.75rem;
             display: flex;
             align-items: center;
             gap: 0.6rem;
@@ -725,12 +802,6 @@
             margin-bottom: 1rem;
         }
 
-        .xbox-card__note {
-            font-size: 0.85rem;
-            color: rgba(226, 232, 240, 0.75);
-            margin-bottom: 0.5rem;
-        }
-
         .xbox-card__links {
             display: flex;
             flex-wrap: wrap;
@@ -738,8 +809,60 @@
             margin-bottom: 1rem;
         }
 
+        .xbox-card__cta {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .xbox-card__secondary {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        .xbox-card__note {
+            font-size: 0.85rem;
+            color: rgba(226, 232, 240, 0.75);
+            margin: 0;
+        }
+
+        .xbox-hub-footer {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .xbox-hub-link {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            transition: all 0.2s;
+        }
+
+        .xbox-hub-link:hover,
+        .xbox-hub-link:focus-visible {
+            background: var(--color-bg-elevated);
+            border-color: var(--color-primary);
+        }
+
         .xbox-card__links .btn {
             padding: 0.75rem 1.35rem;
+        }
+
+        @media (max-width: 640px) {
+            .xbox-hub {
+                padding: 1.75rem 1.25rem;
+            }
+
+            .xbox-hub__title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .xbox-exploit-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .theme-card {
@@ -1545,52 +1668,75 @@
                             </div>
 
                             <!-- Xbox Section -->
-                            <div class="xbox-section">
-                                <article class="xbox-card">
-                                    <div class="xbox-card__thumb">
-                                        <img src="assets/Xbox%20360%20.png" alt="Xbox 360 Bad Update logo">
-                                    </div>
-                                    <div class="xbox-card__body">
-                                        <h4>
-                                            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
-                                            Xbox 360 Bad Update
-                                        </h4>
-                                        <p>Software-only Xbox 360 exploit and softmod toolkit. Access community research, setup notes, and downloads straight from the original GitHub repository.</p>
-                                        <div class="xbox-card__links">
-                                            <a href="https://github.com/grimdoomer/Xbox360BadUpdate" target="_blank" rel="noopener noreferrer" class="btn" style="background: var(--color-primary); color: white;">
-                                                View Xbox 360 Bad Update
-                                            </a>
-                                            <a href="https://github.com/grimdoomer/Xbox360BadUpdate/releases" target="_blank" rel="noopener noreferrer" class="btn" style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text);">
-                                                View Releases
-                                            </a>
-                                        </div>
-                                        <p class="xbox-card__note">This is an external community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
-                                        <p class="xbox-card__note" style="margin: 0;">Need a quick overview? <a href="/xbox/">Visit the Xbox exploit hub</a> for curated notes and links.</p>
-                                    </div>
-                                </article>
+                            <div class="xbox-hub">
+                                <h4 class="xbox-hub__title">
+                                    <img src="assets/regional%20xbox.png" alt="" class="xbox-hub__crest" loading="lazy">
+                                    Xbox Exploit Hub
+                                </h4>
+                                <p class="xbox-hub__description">Explore community-maintained Xbox exploits in one place. We track software-only entry points, setup guides, and release builds with the same curation as our PlayStation HEN flow.</p>
 
-                                <article class="xbox-card">
-                                    <div class="xbox-card__thumb">
-                                        <img src="assets/regional%20xbox.png" alt="ENDGAME original Xbox logo">
+                                <div class="xbox-hub-tags">
+                                    <span>Xbox 360</span>
+                                    <span>Original Xbox</span>
+                                    <span>Future Mods</span>
+                                </div>
+
+                                <button type="button" class="btn xbox-hub-toggle" id="xboxHubToggle" aria-expanded="false" aria-controls="xboxHubPanel">
+                                    <svg class="toggle-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 15.5l-5.5-5.5 1.41-1.41L12 12.67l4.09-4.08L17.5 10z"/></svg>
+                                    <span data-toggle-label>View Xbox exploits</span>
+                                </button>
+
+                                <div class="xbox-exploit-panel" id="xboxHubPanel" hidden>
+                                    <div class="xbox-exploit-grid">
+                                        <article class="xbox-card">
+                                            <div class="xbox-card__thumb">
+                                                <img src="assets/Xbox%20360%20.png" alt="Xbox 360 Bad Update logo" loading="lazy">
+                                            </div>
+                                            <div class="xbox-card__body">
+                                                <h5>
+                                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                                                    Xbox 360 Bad Update
+                                                </h5>
+                                                <p>Software-only Xbox 360 exploit and softmod toolkit. Access community research, setup notes, and downloads straight from the original GitHub repository.</p>
+                                                <div class="xbox-card__links">
+                                                    <a href="https://github.com/grimdoomer/Xbox360BadUpdate" target="_blank" rel="noopener noreferrer" class="btn xbox-card__cta">
+                                                        View Xbox 360 Bad Update
+                                                    </a>
+                                                    <a href="https://github.com/grimdoomer/Xbox360BadUpdate/releases" target="_blank" rel="noopener noreferrer" class="btn xbox-card__secondary">
+                                                        View Releases
+                                                    </a>
+                                                </div>
+                                                <p class="xbox-card__note">External community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
+                                            </div>
+                                        </article>
+
+                                        <article class="xbox-card">
+                                            <div class="xbox-card__thumb">
+                                                <img src="assets/regional%20xbox.png" alt="ENDGAME original Xbox logo" loading="lazy">
+                                            </div>
+                                            <div class="xbox-card__body">
+                                                <h5>
+                                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                                                    ENDGAME — Original Xbox Exploit
+                                                </h5>
+                                                <p>A modern dashboard exploit for the original Microsoft Xbox. Explore the ENDGAME repository for setup steps, tooling, and release builds maintained by the XboxDev community.</p>
+                                                <div class="xbox-card__links">
+                                                    <a href="https://github.com/XboxDev/endgame-exploit" target="_blank" rel="noopener noreferrer" class="btn xbox-card__cta">
+                                                        View ENDGAME
+                                                    </a>
+                                                    <a href="https://github.com/XboxDev/endgame-exploit/releases" target="_blank" rel="noopener noreferrer" class="btn xbox-card__secondary">
+                                                        View Releases
+                                                    </a>
+                                                </div>
+                                                <p class="xbox-card__note">External community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
+                                            </div>
+                                        </article>
                                     </div>
-                                    <div class="xbox-card__body">
-                                        <h4>
-                                            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
-                                            ENDGAME — Original Xbox Exploit
-                                        </h4>
-                                        <p>A modern dashboard exploit for the original Microsoft Xbox. Explore the ENDGAME repository for setup steps, tooling, and release builds maintained by the XboxDev community.</p>
-                                        <div class="xbox-card__links">
-                                            <a href="https://github.com/XboxDev/endgame-exploit" target="_blank" rel="noopener noreferrer" class="btn" style="background: var(--color-primary); color: white;">
-                                                View ENDGAME
-                                            </a>
-                                            <a href="https://github.com/XboxDev/endgame-exploit/releases" target="_blank" rel="noopener noreferrer" class="btn" style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text);">
-                                                View Releases
-                                            </a>
-                                        </div>
-                                        <p class="xbox-card__note">This is an external community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
-                                        <p class="xbox-card__note" style="margin: 0;">Want both projects in one place? <a href="/xbox/">Visit the Xbox exploit hub</a> for summaries and links.</p>
+
+                                    <div class="xbox-hub-footer">
+                                        <a href="/xbox/" class="btn xbox-hub-link">Open full Xbox hub</a>
                                     </div>
-                                </article>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1857,6 +2003,23 @@
                         event.preventDefault();
                         showPage(pageTarget);
                     });
+
+                    const xboxToggle = document.getElementById('xboxHubToggle');
+                    const xboxPanel = document.getElementById('xboxHubPanel');
+                    if (xboxToggle && xboxPanel) {
+                        xboxPanel.hidden = true;
+                        xboxToggle.addEventListener('click', () => {
+                            const expanded = xboxToggle.getAttribute('aria-expanded') === 'true';
+                            const nextState = !expanded;
+                            xboxToggle.setAttribute('aria-expanded', String(nextState));
+                            xboxPanel.hidden = !nextState;
+                            xboxToggle.classList.toggle('is-open', nextState);
+                            const label = xboxToggle.querySelector('[data-toggle-label]');
+                            if (label) {
+                                label.textContent = nextState ? 'Hide Xbox exploits' : 'View Xbox exploits';
+                            }
+                        });
+                    }
 
                     function closeModal() {
                         installModal?.classList.remove('active');
