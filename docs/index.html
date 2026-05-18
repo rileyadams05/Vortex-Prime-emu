@@ -676,6 +676,72 @@
             color: white;
         }
 
+        .xbox-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .xbox-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .xbox-card__thumb {
+            flex: 0 0 160px;
+            max-width: 200px;
+        }
+
+        .xbox-card__thumb img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 14px;
+        }
+
+        .xbox-card__body {
+            flex: 1;
+            min-width: 260px;
+        }
+
+        .xbox-card__body h4 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .xbox-card__body p {
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .xbox-card__note {
+            font-size: 0.85rem;
+            color: rgba(226, 232, 240, 0.75);
+            margin-bottom: 0.5rem;
+        }
+
+        .xbox-card__links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .xbox-card__links .btn {
+            padding: 0.75rem 1.35rem;
+        }
+
         .theme-card {
             position: relative;
             background: var(--color-bg-card);
@@ -1477,75 +1543,52 @@
                             </div>
 
                             <!-- Xbox Section -->
-                            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(16,124,16,0.25); border-radius: 12px; padding: 2rem; text-align: left; display: flex; flex-direction: column; gap: 2rem;">
-                                <div style="display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start;">
-                                    <div style="flex: 0 0 180px; max-width: 220px; width: 100%; border: 1px solid rgba(16,124,16,0.25); border-radius: 14px; padding: 1rem; background: rgba(16,124,16,0.12); display: flex; align-items: center; justify-content: center;">
-                                        <img src="assets/Xbox%20360%20.png" alt="Xbox 360 Bad Update" style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 12px 28px rgba(16,124,16,0.25);" />
+                            <div class="xbox-section">
+                                <article class="xbox-card">
+                                    <div class="xbox-card__thumb">
+                                        <img src="assets/Xbox%20360%20.png" alt="Xbox 360 Bad Update logo">
                                     </div>
-
-                                    <div style="flex: 1 1 280px; min-width: 260px;">
-                                        <h4 style="font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.75rem;">
+                                    <div class="xbox-card__body">
+                                        <h4>
                                             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
                                             Xbox 360 Bad Update
                                         </h4>
-                                        <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6;">Software-only Xbox 360 exploit and softmod toolkit. Access community research, setup notes, and downloads straight from the original GitHub repository.</p>
-
-                                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-                                            <span style="padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(16,124,16,0.15); color: #9ff5b7; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em;">Xbox&nbsp;360</span>
-                                            <span style="padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(16,124,16,0.15); color: #9ff5b7; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em;">Softmod</span>
-                                            <span style="padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(16,124,16,0.15); color: #9ff5b7; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em;">Exploit</span>
-                                        </div>
-
-                                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
-                                            <a href="https://github.com/grimdoomer/Xbox360BadUpdate" target="_blank" rel="noopener noreferrer" class="btn" style="background: #107C10; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.4rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s;">
-                                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5z"/></svg>
+                                        <p>Software-only Xbox 360 exploit and softmod toolkit. Access community research, setup notes, and downloads straight from the original GitHub repository.</p>
+                                        <div class="xbox-card__links">
+                                            <a href="https://github.com/grimdoomer/Xbox360BadUpdate" target="_blank" rel="noopener noreferrer" class="btn" style="background: var(--color-primary); color: white;">
                                                 View Xbox 360 Bad Update
                                             </a>
-                                            <a href="https://github.com/grimdoomer/Xbox360BadUpdate/releases" target="_blank" rel="noopener noreferrer" class="btn" style="background: transparent; border: 1px solid rgba(16,124,16,0.5); color: #9ff5b7; text-decoration: none; display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.4rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
-                                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M5 4h14v2H5zm0 6h14v2H5zm0 6h14v2H5z"/></svg>
+                                            <a href="https://github.com/grimdoomer/Xbox360BadUpdate/releases" target="_blank" rel="noopener noreferrer" class="btn" style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text);">
                                                 View Releases
                                             </a>
                                         </div>
-
-                                        <p style="color: rgba(229,255,233,0.7); font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.5rem;">This is an external community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
-                                        <p style="color: var(--color-text-secondary); font-size: 0.85rem; line-height: 1.6; margin: 0;">Need a quick overview? <a href="/xbox/" style="color: #9ff5b7; text-decoration: underline;">Visit the Xbox exploit hub</a> for curated notes and links.</p>
+                                        <p class="xbox-card__note">This is an external community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
+                                        <p class="xbox-card__note" style="margin: 0;">Need a quick overview? <a href="/xbox/">Visit the Xbox exploit hub</a> for curated notes and links.</p>
                                     </div>
-                                </div>
+                                </article>
 
-                                <div style="display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start; border-top: 1px solid rgba(16,124,16,0.18); padding-top: 1.75rem;">
-                                    <div style="flex: 0 0 180px; max-width: 220px; width: 100%; border: 1px solid rgba(120,255,160,0.35); border-radius: 14px; padding: 1rem; background: rgba(120,255,160,0.12); display: flex; align-items: center; justify-content: center;">
-                                        <img src="assets/regional%20xbox.png" alt="ENDGAME Original Xbox" style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 12px 28px rgba(120,255,160,0.22);" />
+                                <article class="xbox-card">
+                                    <div class="xbox-card__thumb">
+                                        <img src="assets/regional%20xbox.png" alt="ENDGAME original Xbox logo">
                                     </div>
-
-                                    <div style="flex: 1 1 280px; min-width: 260px;">
-                                        <h4 style="font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.75rem;">
+                                    <div class="xbox-card__body">
+                                        <h4>
                                             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
                                             ENDGAME — Original Xbox Exploit
                                         </h4>
-                                        <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6;">A modern dashboard exploit for the original Microsoft Xbox. Explore the ENDGAME repository for setup steps, tooling, and release builds maintained by the XboxDev community.</p>
-
-                                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-                                            <span style="padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(120,255,160,0.15); color: #bcffd0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em;">Original&nbsp;Xbox</span>
-                                            <span style="padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(120,255,160,0.15); color: #bcffd0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em;">Dashboard&nbsp;Exploit</span>
-                                            <span style="padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(120,255,160,0.15); color: #bcffd0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em;">Softmod</span>
-                                            <span style="padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(120,255,160,0.15); color: #bcffd0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em;">ENDGAME</span>
-                                        </div>
-
-                                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
-                                            <a href="https://github.com/XboxDev/endgame-exploit" target="_blank" rel="noopener noreferrer" class="btn" style="background: rgba(120,255,160,0.25); border: 1px solid rgba(120,255,160,0.55); color: #0f301b; text-decoration: none; display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.4rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s;">
-                                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"/><path d="M5 5h7v2H7v10h10v-5h2v7H5z"/></svg>
+                                        <p>A modern dashboard exploit for the original Microsoft Xbox. Explore the ENDGAME repository for setup steps, tooling, and release builds maintained by the XboxDev community.</p>
+                                        <div class="xbox-card__links">
+                                            <a href="https://github.com/XboxDev/endgame-exploit" target="_blank" rel="noopener noreferrer" class="btn" style="background: var(--color-primary); color: white;">
                                                 View ENDGAME
                                             </a>
-                                            <a href="https://github.com/XboxDev/endgame-exploit/releases" target="_blank" rel="noopener noreferrer" class="btn" style="background: transparent; border: 1px solid rgba(120,255,160,0.4); color: #bcffd0; text-decoration: none; display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.4rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
-                                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M5 4h14v2H5zm0 6h14v2H5zm0 6h14v2H5z"/></svg>
+                                            <a href="https://github.com/XboxDev/endgame-exploit/releases" target="_blank" rel="noopener noreferrer" class="btn" style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text);">
                                                 View Releases
                                             </a>
                                         </div>
-
-                                        <p style="color: rgba(229,255,233,0.7); font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.5rem;">This is an external community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
-                                        <p style="color: var(--color-text-secondary); font-size: 0.85rem; line-height: 1.6; margin: 0;">Want both projects in one place? <a href="/xbox/" style="color: #9ff5b7; text-decoration: underline;">Visit the Xbox exploit hub</a> for summaries and links.</p>
+                                        <p class="xbox-card__note">This is an external community project. Follow the original repository instructions and understand the risks before using console exploit software.</p>
+                                        <p class="xbox-card__note" style="margin: 0;">Want both projects in one place? <a href="/xbox/">Visit the Xbox exploit hub</a> for summaries and links.</p>
                                     </div>
-                                </div>
+                                </article>
                             </div>
                         </div>
                     </div>
