@@ -482,12 +482,12 @@
             </div>
           </div>
           <div class="field">
-            <label>ZIP Package</label>
+            <label>ZIP or PKG Package</label>
             <div class="upload-zone" onclick="document.getElementById('zip-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'zip_file')">
               <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
-              <span class="file-name" id="zip-name-${i}">${pkg.zip_file ? (pkg.zip_file.startsWith('blob:') ? 'File ready' : esc(pkg.zip_file.split('/').pop())) : 'Click or drop ZIP file'}</span>
-              <span class="upload-hint-box">No GitHub knowledge required. Files are hosted on Vortex Prime servers.</span>
-              <input type="file" id="zip-file-${i}" accept=".zip,.rar,.7z" style="display:none" onchange="handleFileSelect(${i}, 'zip_file', this)">
+              <span class="file-name" id="zip-name-${i}">${pkg.zip_file ? (pkg.zip_file.startsWith('blob:') ? 'File ready' : esc(pkg.zip_file.split('/').pop())) : 'Click or drop ZIP/PKG file'}</span>
+              <span class="upload-hint-box">Upload ZIP archives or PlayStation PKG installers. Files are hosted on Vortex Prime servers.</span>
+              <input type="file" id="zip-file-${i}" accept=".zip,.rar,.7z,.pkg,.PKG" style="display:none" onchange="handleFileSelect(${i}, 'zip_file', this)">
               <input type="hidden" data-field="zip_file" value="${esc(pkg.zip_file)}">
             </div>
           </div>
