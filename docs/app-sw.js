@@ -1,10 +1,16 @@
-const CACHE_NAME = "vortex-prime-app-v1";
+const CACHE_NAME = "vortex-prime-app-v2";
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/site.webmanifest",
+  "/favicon.ico",
   "/favicon.svg",
   "/favicon.png",
+  "/favicon-48x48.png",
+  "/favicon-96x96.png",
+  "/favicon-192x192.png",
+  "/favicon-512x512.png",
+  "/apple-touch-icon.png",
   "/pwa-icon-192.png",
   "/pwa-icon-512.png"
 ];
