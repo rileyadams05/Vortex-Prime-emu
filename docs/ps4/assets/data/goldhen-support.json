@@ -1,0 +1,74 @@
+[
+  {
+    "firmware": ["5.05", "6.71", "6.72", "9.00", "9.60", "10.00", "10.01", "10.50", "10.70", "10.71", "11.00"],
+    "name": "GoldHEN v2.4b18",
+    "release": "2.4b18",
+    "status": "official-github",
+    "stability": "recommended",
+    "notes": "Official GitHub release. Supports 5.05, 6.71/6.72, 9.00, 9.60, 10.00/10.01, 10.50, 10.70/10.71, and 11.00."
+  },
+  {
+    "firmware": ["5.05", "6.71", "6.72", "9.00", "9.60", "10.00", "10.01", "11.00"],
+    "name": "GoldHEN v2.4b17.3",
+    "release": "2.4b17.3",
+    "status": "official-github",
+    "stability": "old",
+    "notes": "Added 9.60 support."
+  },
+  {
+    "firmware": ["5.05", "6.71", "6.72", "9.00", "10.00", "10.01", "11.00"],
+    "name": "GoldHEN v2.4b17.2",
+    "release": "2.4b17.2",
+    "status": "official-github",
+    "stability": "old",
+    "notes": "Added 10.00 / 10.01 support."
+  },
+  {
+    "firmware": ["5.05", "6.71", "6.72", "9.00", "11.00"],
+    "name": "GoldHEN v2.4b17",
+    "release": "2.4b17",
+    "status": "official-github",
+    "stability": "old",
+    "notes": "Added 11.00 support."
+  },
+  {
+    "firmware": ["5.05", "6.72", "9.00"],
+    "name": "GoldHEN v2.3",
+    "release": "2.3",
+    "status": "official-github",
+    "stability": "old-stable",
+    "notes": "Older stable-style release with files for 5.05, 6.72, and 9.00."
+  },
+  {
+    "firmware": ["7.00", "7.01", "7.02", "7.50", "7.51", "7.55", "8.00", "8.01", "8.03", "8.50", "8.52", "9.03", "9.04", "9.50", "9.51", "11.02", "11.50", "11.52", "12.00", "12.02", "12.50", "12.52", "13.00"],
+    "name": "GoldHEN v2.4b18.x Ko-fi beta builds",
+    "release": "2.4b18.x",
+    "status": "ko-fi-beta",
+    "stability": "beta",
+    "notes": "Newer beta builds add wider firmware support. Use the exact newest release that matches the firmware."
+  },
+  {
+    "firmware": ["13.00"],
+    "name": "GoldHEN v2.4b18.9",
+    "release": "2.4b18.9",
+    "status": "ko-fi-beta",
+    "stability": "newest-beta",
+    "notes": "Adds PS4 firmware 13.00 support."
+  },
+  {
+    "firmware": ["12.50", "12.52"],
+    "name": "GoldHEN v2.4b18.7",
+    "release": "2.4b18.7",
+    "status": "ko-fi-beta",
+    "stability": "beta",
+    "notes": "Adds 12.50 and 12.52 support."
+  },
+  {
+    "firmware": ["9.03"],
+    "name": "GoldHEN v2.4b18.3",
+    "release": "2.4b18.3",
+    "status": "ko-fi-beta",
+    "stability": "beta",
+    "notes": "Adds 9.03 support."
+  }
+]
