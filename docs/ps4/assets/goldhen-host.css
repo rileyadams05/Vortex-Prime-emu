@@ -240,6 +240,26 @@ header .attribution {
   letter-spacing: 0.04em;
 }
 
+.field-group-select {
+  padding: 0;
+}
+
+.field-group-select select {
+  width: 100%;
+  background: rgba(3, 6, 14, 0.82);
+  border: none;
+  color: var(--text);
+  font-size: 1.05rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: 16px;
+  appearance: none;
+  letter-spacing: 0.04em;
+}
+
+.field-group-select select:focus {
+  outline: none;
+}
+
 .field-group input:focus {
   outline: none;
 }
@@ -293,40 +313,15 @@ header .attribution {
   background: rgba(10, 12, 20, 0.7);
 }
 
-.advanced-tools {
-  background: rgba(6, 9, 18, 0.82);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 1.35rem 1.5rem;
-  color: rgba(255, 255, 255, 0.72);
+.version-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.advanced-tools summary {
-  cursor: pointer;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.advanced-tools summary::-webkit-details-marker {
-  display: none;
-}
-
-.advanced-tools summary::after {
-  content: "▸";
-  margin-left: 0.5rem;
-  transition: transform 0.2s ease;
-}
-
-.advanced-tools[open] summary::after {
-  transform: rotate(90deg);
-}
-
-.advanced-tools p {
-  margin: 0.85rem 0 1.1rem;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.62);
+.version-actions {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .limitation-note {
