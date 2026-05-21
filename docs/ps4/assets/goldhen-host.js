@@ -15,7 +15,8 @@
     visiblePayloads: [],
     isBusy: false,
     currentFirmware: '',
-    selectedPayload: null
+    selectedPayload: null,
+    deepLink: null
   };
 
   var cacheState = {
@@ -34,6 +35,7 @@
     detectFirmware();
     bindControls();
     clearStatus();
+    applyDeepLink();
   }
 
   function bindDom() {
@@ -65,6 +67,86 @@
       state.detectionMessage.setAttribute('data-tone', 'loading');
       state.detectionMessage.textContent = 'Detecting firmware...';
     }
+  }
+
+  function applyDeepLink() {
+    if (typeof URLSearchParams === 'undefined' || !state.firmwareInput) {
+      return;
+    }
+
+    var params = new URLSearchParams(window.location && window.location.search ? window.location.search : '');
+    if (!params || params.toString().length === 0) {
+      return;
+    }
+
+    var firmwareParam = normaliseFirmware(params.get('firmware'));
+    var payloadLabel = params.get('payloadLabel');
+    var payloadVersion = params.get('payloadVersion');
+    var payloadPath = params.get('payloadPath');
+    var autoRun = params.get('autoRun') === '1';
+
+    if (firmwareParam) {
+      state.firmwareInput.value = firmwareParam;
+      state.currentFirmware = firmwareParam;
+    }
+
+    if (payloadPath && firmwareParam) {
+      var label = payloadLabel || payloadVersion || 'GoldHEN Payload';
+      var payload = createPayload(label, payloadPath);
+      if (!state.payloadMap[firmwareParam]) {
+        state.payloadMap[firmwareParam] = [];
+      }
+      var exists = state.payloadMap[firmwareParam].some(function (item) {
+        return item && item.url === payloadPath;
+      });
+      if (!exists) {
+        state.payloadMap[firmwareParam].unshift(payload);
+      }
+      state.deepLink = {
+        firmware: firmwareParam,
+        payloadLabel: label,
+        autoRun: autoRun
+      };
+    } else if (firmwareParam) {
+      state.deepLink = {
+        firmware: firmwareParam,
+        payloadLabel: payloadLabel || payloadVersion || '',
+        autoRun: autoRun
+      };
+    }
+
+    if (firmwareParam) {
+      handleNextStep();
+
+      if (state.versionSelect && state.deepLink && state.deepLink.payloadLabel) {
+        var matchIndex = state.visiblePayloads.findIndex(function (payload) {
+          if (!payload) {
+            return false;
+          }
+          return payload.label === state.deepLink.payloadLabel || payload.id === state.deepLink.payloadLabel;
+        });
+        if (matchIndex >= 0) {
+          state.versionSelect.selectedIndex = matchIndex;
+          handleVersionChange();
+        }
+      }
+
+      if (state.deepLink && state.deepLink.autoRun && state.runButton && !state.runButton.hasAttribute('disabled')) {
+        handleRunGoldHen();
+      }
+
+      clearDeepLinkParams();
+    }
+  }
+
+  function clearDeepLinkParams() {
+    if (!window.history || !window.history.replaceState) {
+      return;
+    }
+
+    var cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState(null, document.title, cleanUrl);
+    state.deepLink = null;
   }
 
   function createPayload(label, url) {
@@ -116,12 +198,47 @@
       state.detectionMessage.textContent = 'Detected firmware: ' + detected;
     } else {
       state.detectionMessage.setAttribute('data-tone', 'warning');
-      state.detectionMessage.textContent = 'Could not detect firmware. Enter it manually (5.05, 6.72, or 9.00).';
+      state.detectionMessage.textContent = 'Could not detect firmware. Enter it manually (for example 5.05, 9.00, 11.00).';
     }
   }
 
   function normaliseFirmware(value) {
-    return value ? value.replace(/[^0-9.]/g, '').substring(0, 5) : '';
+    if (!value) {
+      return '';
+    }
+
+    var cleaned = String(value)
+      .trim()
+      .replace(/[^0-9.]/g, '')
+      .replace(/\.+/g, '.')
+      .replace(/^\./, '')
+      .replace(/\.$/, '')
+      .substring(0, 8);
+
+    if (!cleaned) {
+      return '';
+    }
+
+    if (/^\d{3}$/.test(cleaned)) {
+      return parseInt(cleaned.slice(0, cleaned.length - 2), 10) + '.' + cleaned.slice(-2);
+    }
+
+    if (/^\d$/.test(cleaned)) {
+      return cleaned + '.00';
+    }
+
+    var parts = cleaned.split('.').filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0] + '.00';
+    }
+
+    if (parts.length >= 2) {
+      var major = parts[0];
+      var minor = (parts[1] + '00').slice(0, 2);
+      return major + '.' + minor;
+    }
+
+    return cleaned;
   }
 
   function bindControls() {

@@ -42,6 +42,20 @@
       </section>
 
       <section class="results" data-results aria-live="polite" aria-atomic="false">
+        <div class="results-toolbar" data-results-toolbar hidden>
+          <div class="results-summary">
+            <h2 data-results-title></h2>
+            <p data-results-subtitle></p>
+          </div>
+          <div class="sort-controls" role="group" aria-label="Sort GoldHEN versions">
+            <span class="sort-label">Sort</span>
+            <button type="button" class="sort-button is-active" data-sort-option="newest">Newest first</button>
+            <button type="button" class="sort-button" data-sort-option="recommended">Recommended first</button>
+          </div>
+        </div>
+
+        <div class="results-body" data-results-body></div>
+
         <div class="empty-state" data-empty-state>
           <strong>Start by entering your firmware.</strong>
           <span>We&rsquo;ll highlight the latest compatible GoldHEN builds once you search.</span>

@@ -1,74 +1,173 @@
 [
   {
-    "firmware": ["5.05", "6.71", "6.72", "9.00", "9.60", "10.00", "10.01", "10.50", "10.70", "10.71", "11.00"],
-    "name": "GoldHEN v2.4b18",
-    "release": "2.4b18",
-    "status": "official-github",
-    "stability": "recommended",
-    "notes": "Official GitHub release. Supports 5.05, 6.71/6.72, 9.00, 9.60, 10.00/10.01, 10.50, 10.70/10.71, and 11.00."
-  },
-  {
-    "firmware": ["5.05", "6.71", "6.72", "9.00", "9.60", "10.00", "10.01", "11.00"],
-    "name": "GoldHEN v2.4b17.3",
-    "release": "2.4b17.3",
-    "status": "official-github",
-    "stability": "old",
-    "notes": "Added 9.60 support."
-  },
-  {
-    "firmware": ["5.05", "6.71", "6.72", "9.00", "10.00", "10.01", "11.00"],
-    "name": "GoldHEN v2.4b17.2",
-    "release": "2.4b17.2",
-    "status": "official-github",
-    "stability": "old",
-    "notes": "Added 10.00 / 10.01 support."
-  },
-  {
-    "firmware": ["5.05", "6.71", "6.72", "9.00", "11.00"],
-    "name": "GoldHEN v2.4b17",
-    "release": "2.4b17",
-    "status": "official-github",
-    "stability": "old",
-    "notes": "Added 11.00 support."
-  },
-  {
-    "firmware": ["5.05", "6.72", "9.00"],
-    "name": "GoldHEN v2.3",
-    "release": "2.3",
-    "status": "official-github",
-    "stability": "old-stable",
-    "notes": "Older stable-style release with files for 5.05, 6.72, and 9.00."
-  },
-  {
-    "firmware": ["7.00", "7.01", "7.02", "7.50", "7.51", "7.55", "8.00", "8.01", "8.03", "8.50", "8.52", "9.03", "9.04", "9.50", "9.51", "11.02", "11.50", "11.52", "12.00", "12.02", "12.50", "12.52", "13.00"],
-    "name": "GoldHEN v2.4b18.x Ko-fi beta builds",
-    "release": "2.4b18.x",
-    "status": "ko-fi-beta",
-    "stability": "beta",
-    "notes": "Newer beta builds add wider firmware support. Use the exact newest release that matches the firmware."
-  },
-  {
-    "firmware": ["13.00"],
+    "version": "2.4b18.9",
     "name": "GoldHEN v2.4b18.9",
-    "release": "2.4b18.9",
-    "status": "ko-fi-beta",
-    "stability": "newest-beta",
-    "notes": "Adds PS4 firmware 13.00 support."
+    "type": "beta",
+    "source": "ko-fi",
+    "newest": true,
+    "recommended": false,
+    "supportedFirmwares": [
+      "5.05", "6.71", "6.72", "9.00", "9.60",
+      "10.00", "10.01", "10.50", "10.70", "10.71",
+      "11.00", "11.02", "11.50", "11.52",
+      "12.00", "12.02", "12.50", "12.52", "13.00"
+    ],
+    "notes": "Newest known Ko-fi beta. Adds support up to firmware 13.00."
   },
   {
-    "firmware": ["12.50", "12.52"],
-    "name": "GoldHEN v2.4b18.7",
-    "release": "2.4b18.7",
-    "status": "ko-fi-beta",
-    "stability": "beta",
-    "notes": "Adds 12.50 and 12.52 support."
+    "version": "2.4b18",
+    "name": "GoldHEN v2.4b18",
+    "type": "beta",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": [
+      "5.05", "6.71", "6.72", "9.00", "9.60",
+      "10.00", "10.01", "10.50", "10.70", "10.71", "11.00"
+    ],
+    "notes": "Official GitHub prerelease/beta."
   },
   {
-    "firmware": ["9.03"],
-    "name": "GoldHEN v2.4b18.3",
-    "release": "2.4b18.3",
-    "status": "ko-fi-beta",
-    "stability": "beta",
-    "notes": "Adds 9.03 support."
+    "version": "2.4b17.3",
+    "name": "GoldHEN v2.4b17.3",
+    "type": "beta",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": [
+      "5.05", "6.71", "6.72", "9.00", "9.60",
+      "10.00", "10.01", "11.00"
+    ],
+    "notes": "Beta/prerelease. Added 9.60 support."
+  },
+  {
+    "version": "2.4b17.2",
+    "name": "GoldHEN v2.4b17.2",
+    "type": "beta",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": [
+      "5.05", "6.71", "6.72", "9.00",
+      "10.00", "10.01", "11.00"
+    ],
+    "notes": "Beta/prerelease. Added 10.00 / 10.01 support."
+  },
+  {
+    "version": "2.4b17",
+    "name": "GoldHEN v2.4b17",
+    "type": "beta",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": [
+      "5.05", "6.71", "6.72", "9.00", "11.00"
+    ],
+    "notes": "Beta/prerelease. Added 11.00 support."
+  },
+  {
+    "version": "2.3",
+    "name": "GoldHEN v2.3",
+    "type": "stable",
+    "source": "github",
+    "newest": false,
+    "recommended": true,
+    "supportedFirmwares": ["5.05", "6.72", "9.00"],
+    "payloads": [
+      { "firmware": "5.05", "path": "payloads/goldhen_2.3_505.bin", "label": "GoldHEN 2.3" },
+      { "firmware": "6.72", "path": "payloads/goldhen_2.3_672.bin", "label": "GoldHEN 2.3" },
+      { "firmware": "9.00", "path": "payloads/goldhen_2.3_900.bin", "label": "GoldHEN 2.3" }
+    ],
+    "notes": "Recommended stable release for 9.00. Added plugins, FPS counter, TitleID label, MC4 cheat format, scanlines overlay, and internal pkg installation."
+  },
+  {
+    "version": "2.2.4",
+    "name": "GoldHEN v2.2.4",
+    "type": "stable",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "9.00"],
+    "notes": "Older stable release. Fixed KLog tty redirect."
+  },
+  {
+    "version": "2.2.3",
+    "name": "GoldHEN v2.2.3",
+    "type": "stable",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "9.00"],
+    "notes": "Older stable release. Added debug settings, cheat settings, KLog settings, GoldHEN shortcut, PS2 cheat support, Southbridge info, and improved app version detection."
+  },
+  {
+    "version": "2.2.2",
+    "name": "GoldHEN v2.2.2",
+    "type": "stable",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "9.00"],
+    "notes": "Older stable release. Added cheat absolute offset support and fixed bugs."
+  },
+  {
+    "version": "2.2.1",
+    "name": "GoldHEN v2.2.1",
+    "type": "stable",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "9.00"],
+    "notes": "Older stable release. Improved Cheat Menu stability."
+  },
+  {
+    "version": "2.2",
+    "name": "GoldHEN v2.2",
+    "type": "stable",
+    "source": "github",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "9.00"],
+    "notes": "Older stable release. Added initial Cheat Menu."
+  },
+  {
+    "version": "2.1.2",
+    "name": "GoldHEN v2.1.2",
+    "type": "stable",
+    "source": "older-release",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "9.00"],
+    "notes": "Older stable GoldHEN release. Keep this visible for users who want older payloads."
+  },
+  {
+    "version": "2.0b2",
+    "name": "GoldHEN v2.0b2",
+    "type": "beta",
+    "source": "older-release",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "9.00"],
+    "notes": "Old beta release. Only show if the payload file actually exists in your host."
+  },
+  {
+    "version": "1.1",
+    "name": "GoldHEN v1.1",
+    "type": "stable",
+    "source": "older-release",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05"],
+    "notes": "Old 5.05-era release."
+  },
+  {
+    "version": "1.0",
+    "name": "GoldHEN v1.0",
+    "type": "stable",
+    "source": "older-release",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05"],
+    "notes": "Original old 5.05-era release."
   }
 ]
