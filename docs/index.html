@@ -1367,10 +1367,10 @@
                 <div class="nav-container">
                     
                     <div class="nav-links">
-                        <a href="#" class="nav-link active" id="nav-home" data-no-gate="true" data-page="home">Home</a>
-                        <a href="#" class="nav-link" id="nav-store" data-no-gate="true" data-page="store">Store</a>
-                        <a href="#" class="nav-link" id="nav-store-mods" data-no-gate="true" data-page="store-mods">Store Mods</a>
-                        <a href="#" class="nav-link" id="nav-games" data-no-gate="true" data-page="games">Games</a>
+                        <a href="/" class="nav-link active" id="nav-home" data-no-gate="true" data-page="home">Home</a>
+                        <a href="/store/" class="nav-link" id="nav-store" data-no-gate="true" data-page="store">Store</a>
+                        <a href="/store-mods/" class="nav-link" id="nav-store-mods" data-no-gate="true" data-page="store-mods">Store Mods</a>
+                        <a href="/games/" class="nav-link" id="nav-games" data-no-gate="true" data-page="games">Games</a>
                         <a href="https://www.reddit.com/r/Vortex_Prime_HB_store/" class="nav-link" target="_blank" rel="noopener" data-no-gate="true">Discussions</a>
                         <a href="https://discord.gg/TwMsbb97Mm" class="nav-link" target="_blank" rel="noopener" data-no-gate="true">Community</a>
                         <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank" data-no-gate="true">Docs</a>
@@ -1390,24 +1390,16 @@
                     <h1>Vortex Prime Store</h1>
                     <p class="hero-hint" style="font-size: 1.1rem; max-width: 600px; margin: 1rem auto 2rem; color: var(--color-text-secondary);">Browse, upload, and manage community packages for Vortex Prime.</p>
 
-                    <!-- Manage the Store CTA -->
+                    <!-- Store CTA -->
                     <div class="store-cta" style="margin: 2rem auto 4rem auto; background: var(--color-bg-elevated); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--color-border); max-width: 800px;">
-                        <h3 style="text-align: center; margin-bottom: 1rem; font-size: 1.5rem;">Manage the Store</h3>
-                        <p style="text-align: center; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 2rem auto; line-height: 1.6;">Use the Store Creator Portal to add, edit, and remove packages. Your changes go live instantly.</p>
+                        <h3 style="text-align: center; margin-bottom: 1rem; font-size: 1.5rem;">Open the Store</h3>
+                        <p style="text-align: center; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 2rem auto; line-height: 1.6;">Browse community packages and console tools for Vortex Prime.</p>
  
                         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                            <a class="btn" href="admin/" style="background: #10B981; color: white; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v4h4v2h-4v4h-2v-4H7v-2h4V7h2z"/></svg>
-                                Store Creator Portal
-                            </a>
-                            <a href="#" data-page="store" data-no-gate="true" class="btn" style="background: transparent; color: var(--color-text); border: 1px solid var(--color-border); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
+                            <a href="/store/" data-page="store" data-no-gate="true" class="btn" style="background: transparent; color: var(--color-text); border: 1px solid var(--color-border); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                                 Store
                             </a>
-                            <button type="button" class="btn" id="installAppButton" style="display: none; background: transparent; color: var(--color-text); border: 1px solid var(--color-border); align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
-                                Install App
-                            </button>
                         </div>
 
                         <div style="margin-top: 3rem; display: flex; flex-direction: column; gap: 1.5rem;">
@@ -1526,6 +1518,13 @@
                     <section class="store-hero">
                         <h1>Store</h1>
                         <p>Discover community-built store packages. Filter by code, creator, or tag and copy the store code to bring new content into Vortex Prime.</p>
+
+                        <div style="display: flex; justify-content: center; margin: 1.5rem 0 2rem;">
+                            <a class="btn" href="/admin/" data-no-gate="true" style="background: #10B981; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+                                Upload
+                            </a>
+                        </div>
 
                         <div class="store-search-wrap">
                             <div class="store-search-field">
@@ -1683,7 +1682,7 @@
 
                     const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                     const API_BASE = IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '';
-                    const STORE_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/themes` : 'store/themes.json';
+                    const STORE_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/themes` : '/store/themes.json';
                     const CARDS_PER_PAGE = 10;
 
                     const storeGrid = document.getElementById('storeGrid');
@@ -1743,16 +1742,40 @@
                             applyFilters();
                         }
 
-                        // Update hash without jumping
-                        if (pageId === 'home') {
-                            if (window.location.hash) {
-                                history.replaceState(null, null, ' ');
-                            }
-                        } else {
-                            history.replaceState(null, null, '#' + pageId);
+                        const routePath = getRoutePath(pageId);
+                        if (window.location.pathname !== routePath) {
+                            history.pushState({ pageId }, '', routePath);
                         }
-                        
+
                         window.scrollTo(0, 0);
+                    }
+
+                    function getRoutePath(pageId) {
+                        const routes = {
+                            home: '/',
+                            store: '/store/',
+                            'store-mods': '/store-mods/',
+                            games: '/games/'
+                        };
+                        return routes[pageId] || '/';
+                    }
+
+                    function getPageFromLocation() {
+                        const storedRoute = sessionStorage.getItem('vortex-route');
+                        if (storedRoute) {
+                            sessionStorage.removeItem('vortex-route');
+                            return storedRoute;
+                        }
+
+                        const path = window.location.pathname.replace(/\/+$/, '');
+                        const routes = {
+                            '': 'home',
+                            '/index.html': 'home',
+                            '/store': 'store',
+                            '/store-mods': 'store-mods',
+                            '/games': 'games'
+                        };
+                        return routes[path] || 'home';
                     }
 
                     document.addEventListener('click', (event) => {
@@ -1917,7 +1940,7 @@
                             </div>
                             <div class="theme-info" style="text-align: center; display: flex; flex-direction: column; justify-content: center; height: 100%; min-height: 150px;">
                                 <h3 style="color: var(--color-text-muted); margin-bottom: 0.5rem; font-weight: 500;">Empty Slot</h3>
-                                <p style="font-size: 0.85rem; color: rgba(113, 113, 122, 0.7);">Upload a package via the Store Creator Portal to fill this space.</p>
+                                <p style="font-size: 0.85rem; color: rgba(113, 113, 122, 0.7);">Upload a package to fill this space.</p>
                             </div>
                         `;
                         return card;
@@ -2141,15 +2164,7 @@
 
                     // Initialize routing
                     function initRouting() {
-                        const hash = window.location.hash.replace('#', '');
-                        // Clean up hashes like '/' or empty strings to default to 'home'
-                        const cleanHash = hash.replace(/^\/+/, '');
-                        
-                        if (['home', 'store', 'store-mods', 'games'].includes(cleanHash)) {
-                            showPage(cleanHash);
-                        } else {
-                            showPage('home');
-                        }
+                        showPage(getPageFromLocation());
                     }
 
                     window.addEventListener('popstate', initRouting);
