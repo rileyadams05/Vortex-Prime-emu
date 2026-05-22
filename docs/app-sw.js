@@ -1,4 +1,4 @@
-const CACHE_NAME = "vortex-prime-app-v2";
+const CACHE_NAME = "vortex-prime-app-v3";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -34,8 +34,17 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request, { cache: "reload" }).catch(() =>
+        caches.match(event.request).then((cached) => cached || caches.match("/index.html"))
+      )
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: "reload" })
       .then((response) => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
