@@ -10,6 +10,10 @@ Thumbs.db
 google/
 *.log
 
+# Local source/reference checkouts that should not be GitHub Pages submodules
+PS3HEN/
+GoldHEN PS4/GoldHEN/
+
 # Python
 __pycache__/
 *.pyc
