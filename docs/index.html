@@ -1629,14 +1629,6 @@
                                     <button type="button" class="store-filter-option" data-platform="Xbox 360" onclick="setModsPlatform('Xbox 360')">Xbox 360</button>
                                 </div>
                             </div>
-                            <div class="filter-group">
-                                <div class="store-filter-buttons" id="modsCategoryDropdown" aria-label="Mod category filters">
-                                    <button type="button" class="store-filter-option active" data-category="All" onclick="setModsCategory('All')">All Categories</button>
-                                    <button type="button" class="store-filter-option" data-category="Game Mods" onclick="setModsCategory('Game Mods')">Game Mods</button>
-                                    <button type="button" class="store-filter-option" data-category="Patches" onclick="setModsCategory('Patches')">Patches</button>
-                                    <button type="button" class="store-filter-option" data-category="Tools" onclick="setModsCategory('Tools')">Tools</button>
-                                </div>
-                            </div>
                         </div>
                         <div class="store-search-hint">Search by mod's name or creator name.</div>
                     </div>
@@ -1758,7 +1750,6 @@
                     let filteredMods = [];
                     let modsQuery = '';
                     let modsPlatform = 'All';
-                    let modsCategory = 'All';
                     let modsPage = 1;
 
                     function initializeStoreFilters() {
@@ -1769,7 +1760,6 @@
 
                     function initializeModsFilters() {
                         setModsPlatform(modsPlatform);
-                        setModsCategory(modsCategory);
                     }
                     initializeModsFilters();
 
@@ -1810,7 +1800,6 @@
 
                         if (pageId === 'store-mods') {
                             modsPlatform = 'All';
-                            modsCategory = 'All';
                             initializeModsFilters();
                             applyModsFilters();
                         }
@@ -2267,17 +2256,6 @@
                         applyModsFilters();
                     }
 
-                    function setModsCategory(category) {
-                        modsCategory = category;
-
-                        document.querySelectorAll('#modsCategoryDropdown .store-filter-option').forEach(opt => {
-                            opt.classList.toggle('active', opt.getAttribute('data-category') === category);
-                        });
-
-                        modsPage = 1;
-                        applyModsFilters();
-                    }
-
                     function handleStoreSearch(query) {
                         currentQuery = query.toLowerCase().trim();
                         if (clearButton) {
@@ -2348,8 +2326,6 @@
                         const needle = modsQuery.toLowerCase();
                         filteredMods = modItems.filter((item) => {
                             const platformMatch = modsPlatform === 'All' || item.platform === modsPlatform;
-                            const itemCategory = (item.category || 'Game Mods');
-                            const categoryMatch = modsCategory === 'All' || itemCategory === modsCategory;
 
                             const queryMatch = !needle ||
                                 (item.name || '').toLowerCase().includes(needle) ||
@@ -2358,7 +2334,7 @@
                                 (item.author || '').toLowerCase().includes(needle) ||
                                 (Array.isArray(item.tags) && item.tags.some(t => String(t).toLowerCase().includes(needle)));
 
-                            return platformMatch && categoryMatch && queryMatch;
+                            return platformMatch && queryMatch;
                         });
 
                         modsPage = 1;
@@ -2423,7 +2399,6 @@
                     window.clearStoreSearch = clearStoreSearch;
                     window.handleModsSearch = handleModsSearch;
                     window.setModsPlatform = setModsPlatform;
-                    window.setModsCategory = setModsCategory;
                     window.clearModsSearch = clearModsSearch;
                     window.copyCode = copyCode;
                     window.closeModal = closeModal;
