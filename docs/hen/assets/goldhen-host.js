@@ -7,10 +7,9 @@
     detectionMessage: null,
     firmwareInput: null,
     nextButton: null,
-    runButton: null,
     cacheButton: null,
     versionPanel: null,
-    versionSelect: null,
+    versionList: null,
     visiblePayloads: [],
     currentFirmware: '',
     selectedFirmware: null,
@@ -29,10 +28,9 @@
     state.detectionMessage = document.querySelector('[data-detection-message]');
     state.firmwareInput = document.querySelector('[data-firmware-input]');
     state.nextButton = document.querySelector('[data-next-goldhen]');
-    state.runButton = document.querySelector('[data-run-goldhen]');
     state.cacheButton = document.querySelector('[data-cache-host]');
     state.versionPanel = document.querySelector('[data-version-panel]');
-    state.versionSelect = document.querySelector('[data-version-select]');
+    state.versionList = document.querySelector('[data-version-list]');
   }
 
   function bindControls() {
@@ -45,14 +43,6 @@
 
     if (state.nextButton) {
       state.nextButton.addEventListener('click', handleNextStep, false);
-    }
-
-    if (state.versionSelect) {
-      state.versionSelect.addEventListener('change', handleVersionChange, false);
-    }
-
-    if (state.runButton) {
-      state.runButton.addEventListener('click', handleRunGoldHen, false);
     }
 
     if (state.cacheButton) {
@@ -175,7 +165,7 @@
 
     state.currentFirmware = firmware;
     state.selectedFirmware = firmwareConfig;
-    state.visiblePayloads = firmwareConfig.payloads.slice();
+    state.visiblePayloads = sortPayloads(firmware, firmwareConfig.payloads.slice());
     populateVersionOptions();
     revealVersionPanel();
 
@@ -187,38 +177,19 @@
   }
 
   function populateVersionOptions() {
-    if (!state.versionSelect) {
+    if (!state.versionList) {
       return;
     }
 
-    state.versionSelect.innerHTML = '';
+    state.versionList.innerHTML = '';
     state.visiblePayloads.forEach(function (payload, index) {
-      var option = document.createElement('option');
-      option.value = String(index);
-      option.textContent = payload.label + ' - ' + payload.file;
-      state.versionSelect.appendChild(option);
+      state.versionList.appendChild(createPayloadCard(payload, index));
     });
-
-    state.versionSelect.selectedIndex = 0;
-    handleVersionChange();
   }
 
   function revealVersionPanel() {
     if (state.versionPanel) {
       state.versionPanel.removeAttribute('hidden');
-    }
-  }
-
-  function handleVersionChange() {
-    var index = state.versionSelect ? parseInt(state.versionSelect.value, 10) : -1;
-    state.selectedPayload = !isNaN(index) ? state.visiblePayloads[index] : null;
-
-    if (state.runButton) {
-      if (state.selectedPayload) {
-        state.runButton.removeAttribute('disabled');
-      } else {
-        state.runButton.setAttribute('disabled', 'disabled');
-      }
     }
   }
 
@@ -230,21 +201,149 @@
     if (state.versionPanel) {
       state.versionPanel.setAttribute('hidden', 'hidden');
     }
-    if (state.versionSelect) {
-      state.versionSelect.innerHTML = '';
-    }
-    if (state.runButton) {
-      state.runButton.setAttribute('disabled', 'disabled');
+    if (state.versionList) {
+      state.versionList.innerHTML = '';
     }
   }
 
-  function handleRunGoldHen() {
-    if (!state.selectedFirmware || !state.selectedPayload) {
+  function handleRunGoldHen(payload) {
+    if (!state.selectedFirmware || !payload) {
       updateStatus('Select a firmware and GoldHEN payload first.', 'warning');
       return;
     }
 
-    window.location.href = buildEngineUrl(state.currentFirmware, state.selectedFirmware, state.selectedPayload);
+    state.selectedPayload = payload;
+    window.location.href = buildEngineUrl(state.currentFirmware, state.selectedFirmware, payload);
+  }
+
+  function createPayloadCard(payload, index) {
+    var meta = getPayloadMeta(state.currentFirmware, payload, index);
+    var card = document.createElement('article');
+    card.className = 'version-card';
+
+    var badgeRow = document.createElement('div');
+    badgeRow.className = 'version-badges';
+    meta.badges.forEach(function (badge) {
+      var badgeEl = document.createElement('span');
+      badgeEl.className = 'version-badge version-badge-' + badge.toLowerCase();
+      badgeEl.textContent = badge;
+      badgeRow.appendChild(badgeEl);
+    });
+
+    var title = document.createElement('h3');
+    title.textContent = payload.label;
+
+    var filename = document.createElement('p');
+    filename.className = 'version-file';
+    filename.textContent = payload.file;
+
+    var note = document.createElement('p');
+    note.className = 'version-note';
+    note.textContent = meta.note;
+
+    var runButton = document.createElement('button');
+    runButton.type = 'button';
+    runButton.className = 'primary-button version-run-button';
+    runButton.textContent = 'Run ' + payload.label;
+    runButton.addEventListener('click', function () {
+      handleRunGoldHen(payload);
+    }, false);
+
+    card.appendChild(badgeRow);
+    card.appendChild(title);
+    card.appendChild(filename);
+    card.appendChild(note);
+    card.appendChild(runButton);
+    return card;
+  }
+
+  function sortPayloads(firmware, payloads) {
+    return payloads.sort(function (a, b) {
+      var aMeta = getPayloadMeta(firmware, a, 0);
+      var bMeta = getPayloadMeta(firmware, b, 0);
+      if (aMeta.rank !== bMeta.rank) {
+        return aMeta.rank - bMeta.rank;
+      }
+      return compareVersions(bMeta.version, aMeta.version);
+    });
+  }
+
+  function getPayloadMeta(firmware, payload) {
+    var version = getPayloadVersion(payload);
+    var isBeta = /b/i.test(version);
+    var recommended = version === getRecommendedVersion(firmware);
+    var newer = isBeta && compareVersions(version, getRecommendedVersion(firmware)) > 0;
+    var legacy = compareVersions(version, '2.1') < 0;
+    var rank = recommended ? 0 : newer ? 1 : legacy ? 3 : 2;
+    var badges = [];
+
+    if (recommended) {
+      badges.push('RECOMMENDED');
+    } else if (newer) {
+      badges.push('NEWER');
+    } else if (legacy) {
+      badges.push('LEGACY');
+    } else {
+      badges.push('OLD');
+    }
+
+    badges.push(isBeta ? 'BETA' : 'STABLE');
+
+    return {
+      version: version,
+      rank: rank,
+      badges: badges,
+      note: getPayloadNote(firmware, version, recommended, newer, legacy, isBeta)
+    };
+  }
+
+  function getPayloadNote(firmware, version, recommended, newer, legacy, isBeta) {
+    if (recommended) {
+      return 'Best normal recommended stable option for ' + firmware + '.';
+    }
+    if (newer) {
+      return 'Newer beta/prerelease build. Not the main recommended stable option.';
+    }
+    if (legacy) {
+      return isBeta ? 'Very old beta release.' : 'Very old stable release.';
+    }
+    return 'Older stable release.';
+  }
+
+  function getRecommendedVersion(firmware) {
+    if (firmware === '9.00') {
+      return '2.3';
+    }
+    return '2.3';
+  }
+
+  function getPayloadVersion(payload) {
+    var match = String(payload && payload.label ? payload.label : '').match(/v([0-9][0-9A-Za-z.]*[0-9A-Za-z])/);
+    return match && match[1] ? match[1] : '0';
+  }
+
+  function compareVersions(a, b) {
+    var aParts = tokenizeVersion(a);
+    var bParts = tokenizeVersion(b);
+    var length = Math.max(aParts.length, bParts.length);
+    for (var i = 0; i < length; i += 1) {
+      var av = aParts[i] || 0;
+      var bv = bParts[i] || 0;
+      if (av !== bv) {
+        return av - bv;
+      }
+    }
+    return 0;
+  }
+
+  function tokenizeVersion(value) {
+    var tokens = String(value || '0').match(/[0-9]+|[A-Za-z]+/g) || ['0'];
+    return tokens.map(function (token) {
+      if (/^[0-9]+$/.test(token)) {
+        return parseInt(token, 10);
+      }
+      return token.toLowerCase().charCodeAt(0) - 96;
+    });
   }
 
   function buildEngineUrl(firmware, firmwareConfig, payload) {

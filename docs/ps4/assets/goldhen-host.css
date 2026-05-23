@@ -240,26 +240,6 @@ header .attribution {
   letter-spacing: 0.04em;
 }
 
-.field-group-select {
-  padding: 0;
-}
-
-.field-group-select select {
-  width: 100%;
-  background: rgba(3, 6, 14, 0.82);
-  border: none;
-  color: var(--text);
-  font-size: 1.05rem;
-  padding: 0.9rem 0.95rem;
-  border-radius: 16px;
-  appearance: none;
-  letter-spacing: 0.04em;
-}
-
-.field-group-select select:focus {
-  outline: none;
-}
-
 .field-group input:focus {
   outline: none;
 }
@@ -319,9 +299,87 @@ header .attribution {
   gap: 1rem;
 }
 
-.version-actions {
+.version-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.version-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(3, 6, 14, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.version-card h3,
+.version-file,
+.version-note {
+  margin: 0;
+}
+
+.version-card h3 {
+  font-size: 1.08rem;
+  letter-spacing: 0.02em;
+}
+
+.version-file {
+  font-family: Consolas, "Courier New", monospace;
+  color: var(--accent-gold);
+  overflow-wrap: anywhere;
+}
+
+.version-note {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.version-badges {
   display: flex;
-  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.version-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.6rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.version-badge-recommended {
+  color: #07120d;
+  background: var(--accent-green);
+}
+
+.version-badge-stable {
+  color: #10110a;
+  background: var(--accent-gold);
+}
+
+.version-badge-beta,
+.version-badge-newer {
+  background: rgba(93, 154, 255, 0.22);
+  color: #bcd4ff;
+}
+
+.version-badge-old,
+.version-badge-legacy {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.version-run-button {
+  width: 100%;
+  margin-top: 0.2rem;
+  flex: 0 0 auto;
 }
 
 .limitation-note {
