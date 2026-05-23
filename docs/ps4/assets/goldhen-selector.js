@@ -4,6 +4,7 @@ const SORT_OPTIONS = {
   NEWEST: 'newest',
   RECOMMENDED: 'recommended'
 };
+const UNSUPPORTED_FIRMWARE_MESSAGE = 'The owner has not made a host for this firmware version yet. This firmware requires a different method and is not supported on this website. Please use another trusted website/source for this version.';
 
 const state = {
   input: document.querySelector('[data-firmware-input]'),
@@ -42,7 +43,7 @@ function handleSubmit(event) {
   const normalised = normaliseFirmware(state.input.value);
   if (!normalised) {
     state.lastResult = null;
-    renderUnsupported('Enter a valid firmware version (for example 5.05 or 11.00).');
+    renderUnsupported('Enter a valid firmware version from the local Karo browser-host set, for example 5.05 or 9.00.');
     return;
   }
 
@@ -112,10 +113,6 @@ function normaliseFirmware(value) {
 }
 
 function normaliseGroupedFirmware(value) {
-  if (value === '12.00' || value === '12.02') {
-    return '12.02';
-  }
-
   return value;
 }
 
@@ -150,7 +147,7 @@ function getGoldHENOptions(inputFirmware) {
     return {
       firmware: normalisedFirmware,
       supported: false,
-      message: 'No known public GoldHEN support found for this firmware.'
+      message: UNSUPPORTED_FIRMWARE_MESSAGE
     };
   }
 
@@ -439,6 +436,8 @@ function formatSource(source) {
       return 'Ko-fi beta';
     case 'older-release':
       return 'Archive build';
+    case 'local-karo':
+      return 'Local Karo files';
     default:
       return source || 'Community';
   }
@@ -450,6 +449,8 @@ function formatChannel(type) {
       return 'Stable';
     case 'beta':
       return 'Beta / prerelease';
+    case 'karo-local':
+      return 'Karo local';
     default:
       return type || 'Unknown';
   }

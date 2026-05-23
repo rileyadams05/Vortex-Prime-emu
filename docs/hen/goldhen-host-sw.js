@@ -1,12 +1,11 @@
-const CACHE_NAME = 'vortex-goldhen-cache-v1';
+const CACHE_NAME = 'vortex-goldhen-cache-v2';
 const RESOURCES = [
   './',
   './ps4-golden-hen.html',
   './assets/goldhen-host.css',
   './assets/goldhen-host.js',
-  './payloads/goldhen_2.3_505.bin',
-  './payloads/goldhen_2.3_672.bin',
-  './payloads/goldhen_2.3_900.bin'
+  './assets/data/karo-goldhen-manifest.json',
+  '../ps4/karo/vortex-autostart.js'
 ];
 
 self.addEventListener('install', event => {

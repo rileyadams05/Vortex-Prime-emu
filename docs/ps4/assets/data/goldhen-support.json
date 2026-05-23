@@ -2,172 +2,151 @@
   {
     "version": "2.4b18.9",
     "name": "GoldHEN v2.4b18.9",
-    "type": "beta",
-    "source": "ko-fi",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": true,
     "recommended": false,
-    "supportedFirmwares": [
-      "5.05", "6.71", "6.72", "9.00", "9.60",
-      "10.00", "10.01", "10.50", "10.70", "10.71",
-      "11.00", "11.02", "11.50", "11.52",
-      "12.00", "12.02", "12.50", "12.52", "13.00"
-    ],
-    "notes": "Newest known Ko-fi beta. Adds support up to firmware 13.00."
+    "supportedFirmwares": ["5.05", "6.72", "7.02", "7.50", "7.51", "7.55", "9.00"],
+    "notes": "Listed only where a matching payload exists in the local Karo browser-host files."
   },
   {
-    "version": "2.4b18",
-    "name": "GoldHEN v2.4b18",
-    "type": "beta",
-    "source": "github",
+    "version": "2.4b16.2",
+    "name": "GoldHEN v2.4b16.2",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
-    "supportedFirmwares": [
-      "5.05", "6.71", "6.72", "9.00", "9.60",
-      "10.00", "10.01", "10.50", "10.70", "10.71", "11.00"
-    ],
-    "notes": "Official GitHub prerelease/beta."
-  },
-  {
-    "version": "2.4b17.3",
-    "name": "GoldHEN v2.4b17.3",
-    "type": "beta",
-    "source": "github",
-    "newest": false,
-    "recommended": false,
-    "supportedFirmwares": [
-      "5.05", "6.71", "6.72", "9.00", "9.60",
-      "10.00", "10.01", "11.00"
-    ],
-    "notes": "Beta/prerelease. Added 9.60 support."
-  },
-  {
-    "version": "2.4b17.2",
-    "name": "GoldHEN v2.4b17.2",
-    "type": "beta",
-    "source": "github",
-    "newest": false,
-    "recommended": false,
-    "supportedFirmwares": [
-      "5.05", "6.71", "6.72", "9.00",
-      "10.00", "10.01", "11.00"
-    ],
-    "notes": "Beta/prerelease. Added 10.00 / 10.01 support."
-  },
-  {
-    "version": "2.4b17",
-    "name": "GoldHEN v2.4b17",
-    "type": "beta",
-    "source": "github",
-    "newest": false,
-    "recommended": false,
-    "supportedFirmwares": [
-      "5.05", "6.71", "6.72", "9.00", "11.00"
-    ],
-    "notes": "Beta/prerelease. Added 11.00 support."
+    "supportedFirmwares": ["5.05", "6.72"],
+    "notes": "Local Karo payload found for 5.05 and 6.72."
   },
   {
     "version": "2.3",
     "name": "GoldHEN v2.3",
-    "type": "stable",
-    "source": "github",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
-    "recommended": true,
-    "supportedFirmwares": ["5.05", "6.72", "9.00"],
-    "payloads": [
-      { "firmware": "5.05", "path": "payloads/goldhen_2.3_505.bin", "label": "GoldHEN 2.3" },
-      { "firmware": "6.72", "path": "payloads/goldhen_2.3_672.bin", "label": "GoldHEN 2.3" },
-      { "firmware": "9.00", "path": "payloads/goldhen_2.3_900.bin", "label": "GoldHEN 2.3" }
-    ],
-    "notes": "Recommended stable release for 9.00. Added plugins, FPS counter, TitleID label, MC4 cheat format, scanlines overlay, and internal pkg installation."
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "7.02", "9.00"],
+    "notes": "Local Karo payload found for these browser-host firmwares."
   },
   {
     "version": "2.2.4",
     "name": "GoldHEN v2.2.4",
-    "type": "stable",
-    "source": "github",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
     "supportedFirmwares": ["5.05", "6.72", "9.00"],
-    "notes": "Older stable release. Fixed KLog tty redirect."
+    "notes": "Local Karo payload found for these browser-host firmwares."
   },
   {
     "version": "2.2.3",
     "name": "GoldHEN v2.2.3",
-    "type": "stable",
-    "source": "github",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
     "supportedFirmwares": ["5.05", "6.72", "9.00"],
-    "notes": "Older stable release. Added debug settings, cheat settings, KLog settings, GoldHEN shortcut, PS2 cheat support, Southbridge info, and improved app version detection."
+    "notes": "Local Karo payload found for these browser-host firmwares."
   },
   {
     "version": "2.2.2",
     "name": "GoldHEN v2.2.2",
-    "type": "stable",
-    "source": "github",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
-    "supportedFirmwares": ["5.05", "6.72", "9.00"],
-    "notes": "Older stable release. Added cheat absolute offset support and fixed bugs."
+    "supportedFirmwares": ["5.05", "6.72", "7.02", "7.50", "7.51", "7.55", "9.00"],
+    "notes": "Local Karo payload found for these browser-host firmwares."
   },
   {
     "version": "2.2.1",
     "name": "GoldHEN v2.2.1",
-    "type": "stable",
-    "source": "github",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
-    "supportedFirmwares": ["5.05", "6.72", "9.00"],
-    "notes": "Older stable release. Improved Cheat Menu stability."
+    "supportedFirmwares": ["5.05", "6.72"],
+    "notes": "Local Karo payload found for 5.05 and 6.72."
   },
   {
     "version": "2.2",
     "name": "GoldHEN v2.2",
-    "type": "stable",
-    "source": "github",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
-    "supportedFirmwares": ["5.05", "6.72", "9.00"],
-    "notes": "Older stable release. Added initial Cheat Menu."
+    "supportedFirmwares": ["5.05", "6.72"],
+    "notes": "Local Karo payload found for 5.05 and 6.72."
   },
   {
     "version": "2.1.2",
     "name": "GoldHEN v2.1.2",
-    "type": "stable",
-    "source": "older-release",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
     "supportedFirmwares": ["5.05", "6.72", "9.00"],
-    "notes": "Older stable GoldHEN release. Keep this visible for users who want older payloads."
+    "notes": "Local Karo payload found for these browser-host firmwares."
+  },
+  {
+    "version": "2.1.1",
+    "name": "GoldHEN v2.1.1",
+    "type": "karo-local",
+    "source": "local-karo",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72"],
+    "notes": "Local Karo payload found for 5.05 and 6.72."
+  },
+  {
+    "version": "2.1",
+    "name": "GoldHEN v2.1",
+    "type": "karo-local",
+    "source": "local-karo",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72"],
+    "notes": "Local Karo payload found for 5.05 and 6.72."
   },
   {
     "version": "2.0b2",
     "name": "GoldHEN v2.0b2",
-    "type": "beta",
-    "source": "older-release",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
     "supportedFirmwares": ["5.05", "6.72", "9.00"],
-    "notes": "Old beta release. Only show if the payload file actually exists in your host."
+    "notes": "Local Karo payload found for these browser-host firmwares."
+  },
+  {
+    "version": "2.0b",
+    "name": "GoldHEN v2.0b",
+    "type": "karo-local",
+    "source": "local-karo",
+    "newest": false,
+    "recommended": false,
+    "supportedFirmwares": ["5.05", "6.72", "7.50", "7.51", "7.55"],
+    "notes": "Local Karo payload found for these browser-host firmwares."
   },
   {
     "version": "1.1",
     "name": "GoldHEN v1.1",
-    "type": "stable",
-    "source": "older-release",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
-    "supportedFirmwares": ["5.05"],
-    "notes": "Old 5.05-era release."
+    "supportedFirmwares": ["5.05", "6.72"],
+    "notes": "Local Karo payload found for 5.05 and 6.72."
   },
   {
     "version": "1.0",
     "name": "GoldHEN v1.0",
-    "type": "stable",
-    "source": "older-release",
+    "type": "karo-local",
+    "source": "local-karo",
     "newest": false,
     "recommended": false,
-    "supportedFirmwares": ["5.05"],
-    "notes": "Original old 5.05-era release."
+    "supportedFirmwares": ["5.05", "6.72"],
+    "notes": "Local Karo payload found for 5.05 and 6.72."
   }
 ]
