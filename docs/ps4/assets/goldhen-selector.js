@@ -43,7 +43,7 @@ function handleSubmit(event) {
   const normalised = normaliseFirmware(state.input.value);
   if (!normalised) {
     state.lastResult = null;
-    renderUnsupported('Enter a valid firmware version from the local Karo browser-host set, for example 5.05 or 9.00.');
+    renderUnsupported('Enter a valid firmware version from the local Vortex Prime browser-host set, for example 5.05 or 9.00.');
     return;
   }
 
@@ -436,8 +436,8 @@ function formatSource(source) {
       return 'Ko-fi beta';
     case 'older-release':
       return 'Archive build';
-    case 'local-karo':
-      return 'Local Karo files';
+    case 'vortex-local':
+      return 'Local Vortex Prime files';
     default:
       return source || 'Community';
   }
@@ -449,8 +449,8 @@ function formatChannel(type) {
       return 'Stable';
     case 'beta':
       return 'Beta / prerelease';
-    case 'karo-local':
-      return 'Karo local';
+    case 'vortex-local':
+      return 'Vortex Prime local';
     default:
       return type || 'Unknown';
   }

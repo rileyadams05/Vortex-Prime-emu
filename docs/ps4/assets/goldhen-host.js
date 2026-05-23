@@ -50,15 +50,15 @@
   }
 
   function loadManifest() {
-    updateDetection('Loading Karo payload map...', 'loading');
+    updateDetection('Loading Vortex Prime payload map...', 'loading');
 
-    requestJson('assets/data/karo-goldhen-manifest.json', function (manifest) {
+    requestJson('assets/data/vortex-goldhen-manifest.json', function (manifest) {
       state.manifest = manifest;
       detectFirmware();
       applyDeepLink();
       clearStatus();
     }, function (message) {
-      updateDetection('Could not load the Karo payload map.', 'error');
+      updateDetection('Could not load the Vortex Prime payload map.', 'error');
       updateStatus('Manifest load failed: ' + message, 'error');
     });
   }
@@ -165,7 +165,7 @@
 
   function handleNextStep() {
     if (!state.manifest) {
-      updateStatus('Karo payload map is still loading.', 'loading');
+      updateStatus('Vortex Prime payload map is still loading.', 'loading');
       return;
     }
 
@@ -179,7 +179,7 @@
     }
 
     if (!firmwareConfig || !firmwareConfig.payloads || !firmwareConfig.payloads.length) {
-      updateStatus('No Karo GoldHEN payloads are mapped for firmware ' + firmware + '.', 'error');
+      updateStatus('No Vortex Prime GoldHEN payloads are mapped for firmware ' + firmware + '.', 'error');
       resetVersionSelection();
       return;
     }
@@ -191,7 +191,7 @@
     revealVersionPanel();
 
     if (firmwareConfig.usbFlow) {
-      updateStatus('9.00 selected. Karo will show the USB prompt during the exploit at the original timing.', 'ready');
+      updateStatus('9.00 selected. Vortex Prime will show the USB prompt during the exploit at the original timing.', 'ready');
     } else {
       updateStatus('Select a GoldHEN payload for firmware ' + firmware + '.', 'ready');
     }
@@ -235,7 +235,7 @@
 
     state.selectedPayload = payload;
     var target = buildEngineUrl(state.currentFirmware, state.selectedFirmware, payload);
-    updateStatus('Opening Karo engine for ' + payload.label + '...', 'loading');
+    updateStatus('Opening Vortex Prime engine for ' + payload.label + '...', 'loading');
     window.location.href = target;
   }
 
@@ -397,7 +397,7 @@
 
   function handleCacheHost() {
     if (state.selectedFirmware && state.selectedFirmware.engine) {
-      updateStatus('Opening the Karo engine so its original offline cache can install.', 'loading');
+      updateStatus('Opening the Vortex Prime engine so its original offline cache can install.', 'loading');
       window.location.href = state.selectedFirmware.engine;
       return;
     }
@@ -405,7 +405,7 @@
     if ('serviceWorker' in window.navigator) {
       window.navigator.serviceWorker.register('goldhen-host-sw.js', { scope: './' })
         .then(function () {
-          updateStatus('Vortex selector cached. Open a firmware engine once to let Karo cache its exploit files.', 'success');
+          updateStatus('Vortex selector cached. Open a firmware engine once to let Vortex Prime cache its exploit files.', 'success');
         })
         .catch(function (error) {
           updateStatus('Offline cache failed: ' + (error && error.message ? error.message : error), 'error');
@@ -413,7 +413,7 @@
       return;
     }
 
-    updateStatus('Select a firmware, then use Cache host offline to open Karo’s original cache page.', 'warning');
+    updateStatus('Select a firmware, then use Cache host offline to open Vortex Prime’s original cache page.', 'warning');
   }
 
   function clearStatus() {

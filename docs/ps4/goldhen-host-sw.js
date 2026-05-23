@@ -4,8 +4,8 @@ const RESOURCES = [
   './index.html',
   './assets/goldhen-host.css',
   './assets/goldhen-host.js',
-  './assets/data/karo-goldhen-manifest.json',
-  './karo/vortex-autostart.js'
+  './assets/data/vortex-goldhen-manifest.json',
+  './vortex/vortex-autostart.js'
 ];
 
 self.addEventListener('install', event => {

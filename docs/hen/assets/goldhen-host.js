@@ -51,14 +51,14 @@
   }
 
   function loadManifest() {
-    updateDetection('Loading Karo payload map...', 'loading');
+    updateDetection('Loading Vortex Prime payload map...', 'loading');
 
-    requestJson('assets/data/karo-goldhen-manifest.json', function (manifest) {
+    requestJson('assets/data/vortex-goldhen-manifest.json', function (manifest) {
       state.manifest = manifest;
       detectFirmware();
       clearStatus();
     }, function (message) {
-      updateDetection('Could not load the local Karo payload map.', 'error');
+      updateDetection('Could not load the local Vortex Prime payload map.', 'error');
       updateStatus('Manifest load failed: ' + message, 'error');
     });
   }
@@ -144,7 +144,7 @@
 
   function handleNextStep() {
     if (!state.manifest) {
-      updateStatus('Karo payload map is still loading.', 'loading');
+      updateStatus('Vortex Prime payload map is still loading.', 'loading');
       return;
     }
 
@@ -170,7 +170,7 @@
     revealVersionPanel();
 
     if (firmwareConfig.usbFlow) {
-      updateStatus('9.00 selected. Karo will show the USB prompt during the exploit at the original timing.', 'ready');
+      updateStatus('9.00 selected. Vortex Prime will show the USB prompt during the exploit at the original timing.', 'ready');
     } else {
       updateStatus('Select the GoldHEN version for firmware ' + firmware + '.', 'ready');
     }
@@ -378,7 +378,7 @@
       return;
     }
 
-    updateStatus('Select a firmware from the local Karo browser-host list first.', 'warning');
+    updateStatus('Select a firmware from the local Vortex Prime browser-host list first.', 'warning');
   }
 
   function clearStatus() {

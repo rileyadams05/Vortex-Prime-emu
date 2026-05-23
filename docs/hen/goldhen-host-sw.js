@@ -4,8 +4,8 @@ const RESOURCES = [
   './ps4-golden-hen.html',
   './assets/goldhen-host.css',
   './assets/goldhen-host.js',
-  './assets/data/karo-goldhen-manifest.json',
-  '../ps4/karo/vortex-autostart.js'
+  './assets/data/vortex-goldhen-manifest.json',
+  '../ps4/vortex/vortex-autostart.js'
 ];
 
 self.addEventListener('install', event => {
