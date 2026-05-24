@@ -1,4 +1,0 @@
-Tunnel credentials written to C:\Users\Riley\.cloudflared\1fad916c-1f3f-4e41-ac61-2b088b1c3c4c.json. cloudflared chose this file based on where your origin certificate was found. Keep this file secret. To revoke these credentials, delete the tunnel.
-
-Created tunnel vortex with id 1fad916c-1f3f-4e41-ac61-2b088b1c3c4c
-2026-03-11T11:44:50Z WRN Your version 2025.8.1 is outdated. We recommend upgrading it to 2026.3.0

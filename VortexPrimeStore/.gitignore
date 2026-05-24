@@ -1,0 +1,26 @@
+# Local files
+.DS_Store
+Thumbs.db
+*.log
+.env*
+!.env.example
+.webui_secret_key
+
+# Build and dependency folders
+node_modules/
+dist/
+target/
+bin/
+obj/
+
+# Editor and temporary folders
+.vs/
+.vscode/
+.tmp/
+__pycache__/
+*.pyc
+*.pyo
+
+# Local upload/runtime output
+assets/Store/submissions/
+docs/uploads/

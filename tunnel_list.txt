@@ -1,3 +1,0 @@
-You can obtain more detailed information for each tunnel with `cloudflared tunnel info <name/uuid>`
-ID                                   NAME   CREATED              CONNECTIONS               
-1fad916c-1f3f-4e41-ac61-2b088b1c3c4c vortex 2026-03-11T11:44:52Z 2xmel02, 1xsyd01, 1xsyd05 

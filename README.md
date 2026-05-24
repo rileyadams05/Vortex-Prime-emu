@@ -35,7 +35,6 @@ The Creator Portal is used to prepare packages before they are published.
 Creators/admins can add:
 
 - Package title
-- Short description
 - Creator or author name
 - Platform
 - Tags
@@ -44,7 +43,6 @@ Creators/admins can add:
 - Package or archive file
 - README or Markdown description file
 - YouTube video links
-- Community video suggestions
 - External download or source URL
 
 The portal supports both Store uploads and Store Mods uploads.
@@ -119,7 +117,6 @@ Supported detail content:
 - Embedded YouTube videos
 - README text
 - Markdown README content
-- Approved community video links
 - Approved external guide or source links
 
 The README area is designed to feel similar to the way GitHub displays a repository README: it appears as a readable section on the package details page after the main media area.
@@ -155,17 +152,21 @@ Published Store and Store Mods items include an Edit button. The button opens th
 ## Project Structure
 
 ```text
-docs/
+.github/workflows/
+  pages.yml               GitHub Pages deployment for VortexPrimeStore/docs
+
+VortexPrimeStore/
+  docs/
   index.html              Public website, Store, Store Mods, and shared UI
   admin/index.html        Store Creator Portal
   store/themes.json       Static Store catalogue
   store-mods/mods.json    Static Mods catalogue
 
-backend/
+  backend/
   server.py               FastAPI routes and upload validation
   store_service.py        Submission saving, metadata, archive handling
 
-assets/
+  assets/
   Store/submissions/      Uploaded package assets when using the backend
 ```
 
@@ -176,14 +177,14 @@ The public website can be viewed from the `docs` folder as a static site. Backen
 Install backend dependencies:
 
 ```powershell
-cd "D:\PROJECTS\Vortex-Prime-emu"
+cd "D:\PROJECTS\Vortex-Prime-emu\VortexPrimeStore"
 pip install -r backend\requirements.txt
 ```
 
 Run the backend:
 
 ```powershell
-cd "D:\PROJECTS\Vortex-Prime-emu"
+cd "D:\PROJECTS\Vortex-Prime-emu\VortexPrimeStore"
 python backend\server.py
 ```
 
@@ -196,7 +197,7 @@ After editing the site or exported JSON files, publish with:
 ```powershell
 cd "D:\PROJECTS\Vortex-Prime-emu"
 git status
-git add docs backend README.md
+git add -A
 git commit -m "Update Vortex Prime Store"
 git push origin main
 ```
@@ -217,8 +218,8 @@ Vortex Prime Store is still being actively built. Current work is focused on:
 - Expanding creator tools
 - Making publishing easier
 - Improving validation for platform-specific uploads
-- Adding moderation-friendly community contribution flows
+- Keeping the active project folder clean and focused
 
-## License
+## Policies
 
-See [LICENSE](LICENSE) for license details.
+See the privacy and terms documents in `VortexPrimeStore/`.
