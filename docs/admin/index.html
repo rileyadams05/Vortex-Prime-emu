@@ -469,10 +469,10 @@
       const tagChips = card.querySelectorAll('.tag-chip');
       const tags = Array.from(tagChips).map(c => c.dataset.tag).filter(Boolean);
       const pkg = packages[idx] || {};
-      const category = g('category') || 'Homebrew Apps';
+      const category = uploadMode === 'mods' ? '' : (g('category') || 'Homebrew Apps');
       const platform = g('platform') || 'PS4';
-      const rules = getUploadRules(category, platform);
-      return {
+      const rules = getUploadRules(category || 'Homebrew Apps', platform);
+      const next = {
         ...pkg,
         id: card.dataset.id || pkg.id,
         name: g('name'),
@@ -485,11 +485,16 @@
         download_url: g('download_url'),
         platform,
         updated: g('updated') || undefined,
-        category,
         type: uploadConfig.type,
         fileType: rules.fileType,
         allowedExtensions: rules.allowedExtensions,
       };
+      if (uploadMode === 'mods') {
+        delete next.category;
+      } else {
+        next.category = category;
+      }
+      return next;
     });
   }
 
@@ -520,10 +525,20 @@
 
   function buildCard(pkg, i) {
     const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
-    const rules = getUploadRules(pkg.category || 'Homebrew Apps', pkg.platform || 'PS4');
+    const categoryValue = uploadMode === 'mods' ? 'Homebrew Apps' : (pkg.category || 'Homebrew Apps');
+    const rules = getUploadRules(categoryValue, pkg.platform || 'PS4');
     const tagChipsHtml = tags.map(t =>
       `<span class="tag-chip" data-tag="${esc(t)}">${esc(t)}<button type="button" onclick="removeTag(this)" title="Remove tag">Ã—</button></span>`
     ).join('');
+    const categoryFieldHtml = uploadMode === 'mods' ? '' : `
+          <div class="field">
+            <label>Category *</label>
+            <select data-field="category" onchange="onFieldInput(${i},'category',this.value)" style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; width: 100%;">
+              <option value="PC Tools" ${pkg.category==='PC Tools'?'selected':''}>PC Tools</option>
+              <option value="Console Apps" ${pkg.category==='Console Apps'?'selected':''}>Console Apps</option>
+              <option value="Homebrew Apps" ${pkg.category==='Homebrew Apps'?'selected':''}>Homebrew Apps</option>
+            </select>
+          </div>`;
 
     return `<div class="card pkg-card" data-idx="${i}" id="pkg-${i}" data-id="${pkg.id || ''}">
       <div class="card-header">
@@ -557,14 +572,7 @@
               <option value="Xbox 360" ${pkg.platform==='Xbox 360'?'selected':''}>Xbox 360</option>
             </select>
           </div>
-          <div class="field">
-            <label>Category *</label>
-            <select data-field="category" onchange="onFieldInput(${i},'category',this.value)" style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; width: 100%;">
-              <option value="PC Tools" ${pkg.category==='PC Tools'?'selected':''}>PC Tools</option>
-              <option value="Console Apps" ${pkg.category==='Console Apps'?'selected':''}>Console Apps</option>
-              <option value="Homebrew Apps" ${pkg.category==='Homebrew Apps'?'selected':''}>Homebrew Apps</option>
-            </select>
-          </div>
+          ${categoryFieldHtml}
           <div class="field">
             <label>Last Updated</label>
             <input type="datetime-local" data-field="updated" value="${esc(pkg.updated ? pkg.updated.replace('Z','') : '')}" oninput="onFieldInput(${i},'updated',this.value)">
@@ -856,7 +864,9 @@
     if (isUserAction) collectAll();
     const now = new Date().toISOString();
     const rules = getUploadRules('Homebrew Apps', 'PS4');
-    packages.push({ name: '', description: '', creator: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', category: 'Homebrew Apps', updated: now, type: uploadConfig.type, fileType: rules.fileType, allowedExtensions: rules.allowedExtensions });
+    const newPackage = { name: '', description: '', creator: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', updated: now, type: uploadConfig.type, fileType: rules.fileType, allowedExtensions: rules.allowedExtensions };
+    if (uploadMode !== 'mods') newPackage.category = 'Homebrew Apps';
+    packages.push(newPackage);
     if (isUserAction) markDirty();
     render();
     const newIdx = packages.length - 1;
@@ -927,9 +937,9 @@
       if (pkg.preview) out.preview = pkg.preview;
       if (pkg.zip_file) out.zip_file = pkg.zip_file;
       if (pkg.download_url) out.download_url = pkg.download_url;
-      if (pkg.category) out.category = pkg.category;
+      if (uploadMode !== 'mods' && pkg.category) out.category = pkg.category;
       if (pkg.updated) out.updated = pkg.updated.includes('T') && !pkg.updated.endsWith('Z') ? pkg.updated + 'Z' : pkg.updated;
-      const rules = getUploadRules(pkg.category || 'Homebrew Apps', pkg.platform || 'PS4');
+      const rules = getUploadRules(uploadMode === 'mods' ? 'Homebrew Apps' : (pkg.category || 'Homebrew Apps'), pkg.platform || 'PS4');
       out.type = uploadConfig.type;
       out.fileType = rules.fileType;
       out.allowedExtensions = rules.allowedExtensions;
