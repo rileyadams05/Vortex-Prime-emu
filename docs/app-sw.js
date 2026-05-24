@@ -1,4 +1,4 @@
-const CACHE_NAME = "vortex-prime-app-v3";
+const CACHE_NAME = "vortex-prime-app-v4";
 const CORE_ASSETS = [
   "/",
   "/index.html",
