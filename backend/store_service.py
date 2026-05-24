@@ -3,6 +3,7 @@ import logging
 import random
 import string
 import uuid
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -17,6 +18,46 @@ STORE_SUBMISSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_ZIP_SIZE = 50 * 1024 * 1024   # 50 MB
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+XBOX_360_ALLOWED_ARCHIVE_EXTENSIONS = [".zip", ".7z", ".rar"]
+XBOX_360_ALLOWED_INTERNAL_EXTENSIONS = {".xex", ".ini", ".txt"}
+ORIGINAL_XBOX_MEDIA_FOLDERS = {
+    "asset",
+    "assets",
+    "audio",
+    "background",
+    "backgrounds",
+    "icon",
+    "icons",
+    "image",
+    "images",
+    "media",
+    "music",
+    "preview",
+    "previews",
+    "screenshot",
+    "screenshots",
+    "sound",
+    "sounds",
+    "texture",
+    "textures",
+    "video",
+    "videos",
+}
+ORIGINAL_XBOX_MEDIA_EXTENSIONS = {
+    ".bmp",
+    ".gif",
+    ".jpg",
+    ".jpeg",
+    ".mp3",
+    ".mp4",
+    ".ogg",
+    ".png",
+    ".tga",
+    ".wav",
+    ".webp",
+    ".wmv",
+    ".xmv",
+}
 
 
 def _generate_code(length: int = 6) -> str:
@@ -38,6 +79,192 @@ async def verify_discord_token(access_token: str) -> Optional[dict]:
     return None
 
 
+def _safe_archive_member(name: str) -> bool:
+    normalized = name.replace("\\", "/").strip()
+    if not normalized or normalized.endswith("/"):
+        return False
+    parts = [part for part in normalized.split("/") if part]
+    return bool(parts) and not any(part in {".", ".."} for part in parts) and not Path(normalized).is_absolute()
+
+
+def _validate_xbox_360_member_names(names: list[str]) -> None:
+    valid_files = [name for name in names if _safe_archive_member(name)]
+    if not valid_files:
+        raise ValueError("Xbox 360 archives must contain files.")
+
+    has_launchable = False
+    invalid_files = []
+    for name in valid_files:
+        filename = Path(name.replace("\\", "/")).name
+        suffix = Path(filename).suffix.lower()
+        if suffix == ".xex" or suffix == "":
+            has_launchable = True
+            continue
+        if suffix in XBOX_360_ALLOWED_INTERNAL_EXTENSIONS:
+            continue
+        invalid_files.append(name)
+
+    if invalid_files:
+        raise ValueError("Xbox 360 archives can only include .XEX, extensionless LIVE/CON containers, .INI, and .TXT files.")
+
+    if not has_launchable:
+        raise ValueError("Xbox 360 archives must include at least one .XEX executable or one extensionless LIVE/CON container.")
+
+
+def _is_in_original_xbox_media_folder(name: str) -> bool:
+    parts = [part.lower() for part in name.replace("\\", "/").split("/") if part]
+    return any(part in ORIGINAL_XBOX_MEDIA_FOLDERS for part in parts[:-1])
+
+
+def _validate_original_xbox_member_names(names: list[str]) -> None:
+    valid_files = [name for name in names if _safe_archive_member(name)]
+    if not valid_files:
+        raise ValueError("Original Xbox archives must contain files.")
+
+    has_xbe = False
+    invalid_files = []
+    for name in valid_files:
+        filename = Path(name.replace("\\", "/")).name
+        suffix = Path(filename).suffix.lower()
+        if suffix == ".xbe":
+            has_xbe = True
+            continue
+        if suffix in {".ini", ".txt"}:
+            continue
+        if _is_in_original_xbox_media_folder(name) and suffix in ORIGINAL_XBOX_MEDIA_EXTENSIONS:
+            continue
+        invalid_files.append(name)
+
+    if invalid_files:
+        raise ValueError("Original Xbox archives can only include .XBE executables, .INI, .TXT, and standard media asset subfolders.")
+
+    if not has_xbe:
+        raise ValueError("Original Xbox archives must include at least one .XBE executable file.")
+
+
+def validate_xbox_360_archive(archive_bytes: bytes, filename: str) -> None:
+    ext = Path(filename).suffix.lower()
+    if ext == ".zip":
+        try:
+            from io import BytesIO
+
+            with zipfile.ZipFile(BytesIO(archive_bytes)) as archive:
+                _validate_xbox_360_member_names(archive.namelist())
+        except zipfile.BadZipFile as exc:
+            raise ValueError("Xbox 360 archive is not a valid ZIP file.") from exc
+        return
+
+    if ext == ".7z":
+        try:
+            import py7zr
+            from io import BytesIO
+
+            with py7zr.SevenZipFile(BytesIO(archive_bytes), mode="r") as archive:
+                _validate_xbox_360_member_names(archive.getnames())
+        except ImportError as exc:
+            raise ValueError("7Z validation is unavailable on the server.") from exc
+        except Exception as exc:
+            raise ValueError("Xbox 360 archive is not a valid 7Z file.") from exc
+        return
+
+    if ext == ".rar":
+        try:
+            import rarfile
+            from io import BytesIO
+
+            with rarfile.RarFile(BytesIO(archive_bytes)) as archive:
+                _validate_xbox_360_member_names(archive.namelist())
+        except ImportError as exc:
+            raise ValueError("RAR validation is unavailable on the server.") from exc
+        except Exception as exc:
+            raise ValueError("Xbox 360 archive is not a valid RAR file.") from exc
+        return
+
+    raise ValueError("Xbox 360 uploads must be compressed archives: ZIP, 7Z, or RAR.")
+
+
+def validate_original_xbox_archive(archive_bytes: bytes, filename: str) -> None:
+    ext = Path(filename).suffix.lower()
+    if ext == ".zip":
+        try:
+            from io import BytesIO
+
+            with zipfile.ZipFile(BytesIO(archive_bytes)) as archive:
+                _validate_original_xbox_member_names(archive.namelist())
+        except zipfile.BadZipFile as exc:
+            raise ValueError("Original Xbox archive is not a valid ZIP file.") from exc
+        return
+
+    if ext == ".7z":
+        try:
+            import py7zr
+            from io import BytesIO
+
+            with py7zr.SevenZipFile(BytesIO(archive_bytes), mode="r") as archive:
+                _validate_original_xbox_member_names(archive.getnames())
+        except ImportError as exc:
+            raise ValueError("7Z validation is unavailable on the server.") from exc
+        except Exception as exc:
+            raise ValueError("Original Xbox archive is not a valid 7Z file.") from exc
+        return
+
+    if ext == ".rar":
+        try:
+            import rarfile
+            from io import BytesIO
+
+            with rarfile.RarFile(BytesIO(archive_bytes)) as archive:
+                _validate_original_xbox_member_names(archive.namelist())
+        except ImportError as exc:
+            raise ValueError("RAR validation is unavailable on the server.") from exc
+        except Exception as exc:
+            raise ValueError("Original Xbox archive is not a valid RAR file.") from exc
+        return
+
+    raise ValueError("Original Xbox uploads must be compressed archives: ZIP, 7Z, or RAR.")
+
+
+def _safe_extract_path(base: Path, member_name: str) -> Path:
+    target = (base / member_name.replace("\\", "/")).resolve()
+    base_resolved = base.resolve()
+    if base_resolved != target and base_resolved not in target.parents:
+        raise ValueError("Archive contains an unsafe file path.")
+    return target
+
+
+def extract_archive(archive_path: Path, destination: Path) -> None:
+    ext = archive_path.suffix.lower()
+    destination.mkdir(parents=True, exist_ok=True)
+
+    if ext == ".zip":
+        with zipfile.ZipFile(archive_path) as archive:
+            for member in archive.infolist():
+                if member.is_dir():
+                    continue
+                target = _safe_extract_path(destination, member.filename)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(member) as source:
+                    target.write_bytes(source.read())
+        return
+
+    if ext == ".7z":
+        import py7zr
+
+        with py7zr.SevenZipFile(archive_path, mode="r") as archive:
+            for name in archive.getnames():
+                _safe_extract_path(destination, name)
+            archive.extractall(path=destination)
+        return
+
+    if ext == ".rar":
+        import rarfile
+
+        with rarfile.RarFile(archive_path) as archive:
+            for name in archive.namelist():
+                _safe_extract_path(destination, name)
+            archive.extractall(path=destination)
+
+
 async def save_submission(
     name: str,
     description: str,
@@ -57,6 +284,7 @@ async def save_submission(
     submission_type: str = "store",
     file_type: str = "pkg",
     allowed_extensions: list = None,
+    extract_contents: bool = False,
     db=None,
 ) -> dict:
     """Save an uploaded package to disk and record it in the store."""
@@ -71,6 +299,11 @@ async def save_submission(
     zip_path = folder / zip_filename
     zip_path.write_bytes(zip_bytes)
     zip_url = f"/assets/Store/submissions/{submission_id}/{zip_filename}"
+    extracted_url = None
+    if extract_contents:
+        extract_dir = folder / "extracted"
+        extract_archive(zip_path, extract_dir)
+        extracted_url = f"/assets/Store/submissions/{submission_id}/extracted/"
 
     # Save Icon (optional)
     icon_url = None
@@ -106,6 +339,7 @@ async def save_submission(
         "type": submission_type,
         "fileType": file_type,
         "allowedExtensions": allowed_extensions or [".pkg"],
+        "extracted_url": extracted_url,
         "status": "approved", # Automatic approval as per overhaul
         "submitted_at": datetime.now(timezone.utc).isoformat(),
         "updated": datetime.now(timezone.utc).isoformat(),

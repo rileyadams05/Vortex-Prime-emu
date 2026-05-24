@@ -785,11 +785,26 @@ async def upload_store_theme(
             raise HTTPException(status_code=401, detail="Discord token invalid or mismatched")
 
     submission_type = (type or "store").lower()
+    should_extract_archive = False
     if submission_type == "mod":
         allowed_extensions = [".zip", ".7z", ".rar"]
         if not theme.filename.lower().endswith(tuple(allowed_extensions)):
             raise HTTPException(status_code=400, detail="Mods must be uploaded as a compressed archive: ZIP, 7Z, or RAR.")
         file_type = "archive"
+    elif (platform or "").lower() == "xbox 360":
+        submission_type = "store"
+        allowed_extensions = [".zip", ".7z", ".rar"]
+        if not theme.filename.lower().endswith(tuple(allowed_extensions)):
+            raise HTTPException(status_code=400, detail="Xbox 360 uploads must be compressed archives: ZIP, 7Z, or RAR.")
+        file_type = "archive"
+        should_extract_archive = True
+    elif (platform or "").lower() == "original xbox":
+        submission_type = "store"
+        allowed_extensions = [".zip", ".7z", ".rar"]
+        if not theme.filename.lower().endswith(tuple(allowed_extensions)):
+            raise HTTPException(status_code=400, detail="Original Xbox uploads must be compressed archives: ZIP, 7Z, or RAR.")
+        file_type = "archive"
+        should_extract_archive = True
     elif (category or "").lower() == "pc tools":
         submission_type = "store"
         allowed_extensions = [".zip", ".7z", ".rar"]
@@ -812,6 +827,15 @@ async def upload_store_theme(
     zip_bytes = await theme.read()
     if len(zip_bytes) > store_service.MAX_ZIP_SIZE:
         raise HTTPException(status_code=413, detail="File exceeds 50 MB limit")
+
+    if should_extract_archive:
+        try:
+            if (platform or "").lower() == "original xbox":
+                store_service.validate_original_xbox_archive(zip_bytes, theme.filename)
+            else:
+                store_service.validate_xbox_360_archive(zip_bytes, theme.filename)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
 
     # Read optional images
     icon_bytes = None
@@ -853,6 +877,7 @@ async def upload_store_theme(
         submission_type=submission_type,
         file_type=file_type,
         allowed_extensions=allowed_extensions,
+        extract_contents=should_extract_archive,
         db=db if mongo_available else None,
     )
     return result

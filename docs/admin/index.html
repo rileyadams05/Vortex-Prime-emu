@@ -244,6 +244,30 @@
       };
     }
 
+    if (platform === 'Xbox 360') {
+      return {
+        fileType: 'archive',
+        allowedExtensions: ['.zip', '.7z', '.rar'],
+        fileLabel: 'Xbox 360 Archive',
+        dropText: 'Click or drop Xbox 360 archive file',
+        helpText: 'Upload one compressed archive containing Xbox 360 homebrew files. The archive must include at least one .XEX executable or one extensionless LIVE/CON container. Supported formats: ZIP, 7Z, and RAR.',
+        accept: '.zip,.7z,.rar',
+        invalidMessage: 'Xbox 360 uploads must be compressed archives: ZIP, 7Z, or RAR.'
+      };
+    }
+
+    if (platform === 'Original Xbox') {
+      return {
+        fileType: 'archive',
+        allowedExtensions: ['.zip', '.7z', '.rar'],
+        fileLabel: 'Original Xbox Archive',
+        dropText: 'Click or drop Original Xbox archive file',
+        helpText: 'Upload one compressed archive containing Original Xbox homebrew files. The archive must include at least one .XBE executable, usually default.xbe. Supported formats: ZIP, 7Z, and RAR.',
+        accept: '.zip,.7z,.rar',
+        invalidMessage: 'Original Xbox uploads must be compressed archives: ZIP, 7Z, or RAR.'
+      };
+    }
+
     if (category === 'PC Tools') {
       return {
         fileType: 'archive',
@@ -536,6 +560,8 @@
               <option value="PS2" ${pkg.platform==='PS2'?'selected':''}>PlayStation 2</option>
               <option value="PS Vita" ${pkg.platform==='PS Vita'?'selected':''}>PS Vita</option>
               <option value="PSP" ${pkg.platform==='PSP'?'selected':''}>PSP / PlayStation Portable</option>
+              <option value="Original Xbox" ${pkg.platform==='Original Xbox'?'selected':''}>Original Xbox</option>
+              <option value="Xbox 360" ${pkg.platform==='Xbox 360'?'selected':''}>Xbox 360</option>
             </select>
           </div>
           <div class="field">
