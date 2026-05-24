@@ -949,6 +949,72 @@
     toast('Upload file prepared - commit it to go live.');
   };
 
+  function getProfileAction() {
+    try {
+      return JSON.parse(localStorage.getItem('vpCreatorProfileAction') || 'null');
+    } catch {
+      return null;
+    }
+  }
+
+  function clearProfileAction() {
+    localStorage.removeItem('vpCreatorProfileAction');
+  }
+
+  function matchesProfileAction(pkg, action) {
+    if (!pkg || !action) return false;
+    return Boolean(
+      (action.id && pkg.id === action.id) ||
+      (action.code && pkg.code === action.code) ||
+      (action.name && pkg.name === action.name)
+    );
+  }
+
+  function applyProfileActionOrRender() {
+    const action = getProfileAction();
+    if (!action || action.source !== uploadMode) {
+      render();
+      return;
+    }
+
+    const index = packages.findIndex(pkg => matchesProfileAction(pkg, action));
+    if (index < 0) {
+      render();
+      clearProfileAction();
+      toast('That upload was not found in this catalogue.', 'error');
+      return;
+    }
+
+    if (action.action === 'delete') {
+      const label = packages[index].name || 'Untitled';
+      if (confirm(`Remove "${label}" from this catalogue?`)) {
+        packages.splice(index, 1);
+        markDirty();
+        render();
+        document.getElementById('saveHint').textContent = `Removed ${label}. Click Save Package File, replace ${uploadConfig.jsonPath}, then push to publish.`;
+        toast(`${uploadMode === 'mods' ? 'Mod' : 'Package'} removed. Save the package file to apply.`, 'success');
+      } else {
+        render();
+      }
+      clearProfileAction();
+      return;
+    }
+
+    render();
+    clearProfileAction();
+    setTimeout(() => {
+      const nextIndex = packages.findIndex(pkg => matchesProfileAction(pkg, action));
+      const card = document.getElementById('pkg-' + nextIndex);
+      if (!card) return;
+      card.classList.add('open');
+      card.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.55)';
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const first = card.querySelector('input[data-field="name"]');
+      if (first) first.focus();
+    }, 100);
+    toast('Opened your upload for editing.');
+  }
+
   // â”€â”€ Auto-load themes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const liveDataUrl = uploadMode === 'mods' ? `${API_BASE}/store/mods` : `${API_BASE}/store/themes`;
   const staticDataUrl = uploadMode === 'mods' ? '../store-mods/mods.json' : '../store/themes.json';
@@ -959,16 +1025,16 @@
         packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : (Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []));
         document.getElementById('saveHint').textContent =
           `Connected to live ${uploadMode === 'mods' ? 'mods' : 'store'}. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
-        render();
+        applyProfileActionOrRender();
       })
       .catch(() => {
         fetch(staticDataUrl, { cache: 'no-store' })
           .then(r => r.ok ? r.json() : Promise.reject())
           .then(data => {
             packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
-            render();
+            applyProfileActionOrRender();
           })
-          .catch(() => render());
+          .catch(() => applyProfileActionOrRender());
       });
   } else {
     fetch(staticDataUrl, { cache: 'no-store' })
@@ -977,9 +1043,9 @@
         packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
         document.getElementById('saveHint').textContent =
           `Loaded static catalogue. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
-        render();
+        applyProfileActionOrRender();
       })
-      .catch(() => render());
+      .catch(() => applyProfileActionOrRender());
   }
 
 })();

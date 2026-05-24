@@ -282,6 +282,13 @@
             border-radius: 999px;
             padding: 0.25rem 0.45rem;
             max-width: 320px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .user-badge:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.22);
         }
 
         .user-badge img {
@@ -312,6 +319,218 @@
             font: inherit;
             font-size: 0.72rem;
             cursor: pointer;
+        }
+
+        .profile-modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: flex-end;
+            z-index: 1200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+
+        .profile-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .profile-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .profile-panel {
+            position: relative;
+            width: min(460px, calc(100vw - 1.5rem));
+            height: calc(100vh - 1.5rem);
+            margin: 0.75rem;
+            overflow-y: auto;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            padding: 1.25rem;
+            transform: translateX(24px);
+            transition: transform 0.2s;
+        }
+
+        .profile-modal.active .profile-panel {
+            transform: translateX(0);
+        }
+
+        .profile-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .profile-close:hover {
+            color: var(--color-text);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .profile-head {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-right: 2.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .profile-head img {
+            width: 64px;
+            height: 64px;
+            border-radius: 999px;
+            object-fit: cover;
+            background: var(--color-bg-elevated);
+            border: 1px solid var(--color-border);
+        }
+
+        .profile-head h3 {
+            margin: 0 0 0.25rem;
+            font-size: 1.25rem;
+        }
+
+        .profile-head p {
+            margin: 0;
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-section {
+            border-top: 1px solid var(--color-border);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .profile-field {
+            display: grid;
+            gap: 0.35rem;
+            margin-bottom: 0.85rem;
+            color: var(--color-text-secondary);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .profile-field input {
+            width: 100%;
+            background: var(--color-bg-dark);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 0.72rem 0.8rem;
+            font: inherit;
+            font-weight: 500;
+        }
+
+        .profile-field input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .profile-field input[type="file"] {
+            color: var(--color-text-secondary);
+            cursor: pointer;
+        }
+
+        .profile-save,
+        .profile-secondary,
+        .profile-danger {
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 0.65rem 0.85rem;
+            color: var(--color-text);
+            background: rgba(255,255,255,0.06);
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .profile-save {
+            width: 100%;
+            border: none;
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .profile-secondary:hover,
+        .profile-danger:hover,
+        .profile-save:hover {
+            filter: brightness(1.08);
+        }
+
+        .profile-danger {
+            color: #fecaca;
+            border-color: rgba(239,68,68,0.45);
+            background: rgba(239,68,68,0.12);
+        }
+
+        .profile-uploads-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .profile-uploads-title h4 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .profile-upload-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .profile-upload-item {
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.035);
+            padding: 0.9rem;
+        }
+
+        .profile-upload-item h5 {
+            margin: 0 0 0.3rem;
+            font-size: 0.95rem;
+        }
+
+        .profile-upload-item p {
+            margin: 0;
+            color: var(--color-text-muted);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .profile-upload-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .profile-empty {
+            color: var(--color-text-muted);
+            border: 1px dashed var(--color-border);
+            border-radius: 10px;
+            padding: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
         }
 
         .nav-link {
@@ -1482,6 +1701,16 @@
             .upload-preview-box { min-height: 160px; }
             .store-search-wrap { max-width: 100%; padding: 0 1rem; }
             .store-search-input { padding-left: 2.5rem; }
+            .profile-panel {
+                width: calc(100vw - 1rem);
+                height: calc(100vh - 1rem);
+                margin: 0.5rem;
+                padding: 1rem;
+            }
+            .profile-head img {
+                width: 52px;
+                height: 52px;
+            }
         }
 
         @keyframes fadeIn {
@@ -1855,6 +2084,43 @@
                     </div>
                 </div>
             </div>
+            <div class="profile-modal" id="profileModal" aria-hidden="true">
+                <div class="profile-backdrop" id="profileBackdrop"></div>
+                <section class="profile-panel" role="dialog" aria-modal="true" aria-labelledby="profilePanelTitle">
+                    <button class="profile-close" id="profileCloseBtn" type="button" aria-label="Close profile">×</button>
+                    <div class="profile-head">
+                        <img id="profilePanelAvatar" alt="" src="">
+                        <div>
+                            <h3 id="profilePanelTitle">Profile</h3>
+                            <p id="profilePanelEmail"></p>
+                        </div>
+                    </div>
+                    <div class="profile-section">
+                        <label class="profile-field">
+                            Username
+                            <input id="profileNameInput" type="text" autocomplete="nickname" placeholder="Your username">
+                        </label>
+                        <label class="profile-field">
+                            Profile icon URL
+                            <input id="profileAvatarInput" type="url" autocomplete="photo" placeholder="https://...">
+                        </label>
+                        <label class="profile-field">
+                            Profile icon image
+                            <input id="profileAvatarFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+                        </label>
+                        <button class="profile-save" id="profileSaveBtn" type="button">Save Profile</button>
+                    </div>
+                    <div class="profile-section">
+                        <div class="profile-uploads-title">
+                            <h4>Your uploads</h4>
+                            <button class="profile-secondary" id="profileRefreshUploadsBtn" type="button">Refresh</button>
+                        </div>
+                        <div class="profile-upload-list" id="profileUploadsList">
+                            <div class="profile-empty">Your uploads will appear here after the catalogue loads.</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
             <script>
                 (function () {
                     let deferredInstallPrompt = null;
@@ -1869,6 +2135,17 @@
                     const mainUserName = document.getElementById('mainUserName');
                     const mainUserAvatar = document.getElementById('mainUserAvatar');
                     const mainLogoutBtn = document.getElementById('mainLogoutBtn');
+                    const profileModal = document.getElementById('profileModal');
+                    const profileBackdrop = document.getElementById('profileBackdrop');
+                    const profileCloseBtn = document.getElementById('profileCloseBtn');
+                    const profilePanelAvatar = document.getElementById('profilePanelAvatar');
+                    const profilePanelEmail = document.getElementById('profilePanelEmail');
+                    const profileNameInput = document.getElementById('profileNameInput');
+                    const profileAvatarInput = document.getElementById('profileAvatarInput');
+                    const profileAvatarFileInput = document.getElementById('profileAvatarFileInput');
+                    const profileSaveBtn = document.getElementById('profileSaveBtn');
+                    const profileRefreshUploadsBtn = document.getElementById('profileRefreshUploadsBtn');
+                    const profileUploadsList = document.getElementById('profileUploadsList');
 
                     function loadStoredUser() {
                         try {
@@ -1974,6 +2251,148 @@
                         }
                         persistUser(null);
                         applyMainUser(null);
+                        closeProfilePanel();
+                    }
+
+                    function profileAvatarFor(user) {
+                        return (user && user.picture) ? user.picture : '/favicon-96x96.png';
+                    }
+
+                    function openProfilePanel() {
+                        if (!currentUser || !profileModal) return;
+                        if (profilePanelAvatar) profilePanelAvatar.src = profileAvatarFor(currentUser);
+                        if (profilePanelEmail) profilePanelEmail.textContent = currentUser.email || 'Google profile';
+                        if (profileNameInput) profileNameInput.value = currentUser.name || currentUser.email || '';
+                        if (profileAvatarInput) profileAvatarInput.value = currentUser.picture || '';
+                        profileModal.classList.add('active');
+                        profileModal.setAttribute('aria-hidden', 'false');
+                        renderProfileUploads();
+                    }
+
+                    function closeProfilePanel() {
+                        if (!profileModal) return;
+                        profileModal.classList.remove('active');
+                        profileModal.setAttribute('aria-hidden', 'true');
+                    }
+
+                    function saveProfilePanel() {
+                        if (!currentUser) return;
+                        const nextUser = {
+                            ...currentUser,
+                            name: (profileNameInput && profileNameInput.value.trim()) || currentUser.name || currentUser.email || 'Google User',
+                            picture: (profileAvatarInput && profileAvatarInput.value.trim()) || ''
+                        };
+                        persistUser(nextUser);
+                        applyMainUser(nextUser);
+                        if (profilePanelAvatar) profilePanelAvatar.src = profileAvatarFor(nextUser);
+                        renderProfileUploads();
+                    }
+
+                    function normalizeOwner(value) {
+                        return String(value || '').trim().toLowerCase();
+                    }
+
+                    function packageBelongsToUser(item, user) {
+                        if (!item || !user) return false;
+                        const userKeys = [
+                            user.email,
+                            user.name,
+                            user.sub
+                        ].map(normalizeOwner).filter(Boolean);
+                        const itemKeys = [
+                            item.creator,
+                            item.author,
+                            item.uploader,
+                            item.owner,
+                            item.email,
+                            item.ownerEmail,
+                            item.googleEmail,
+                            item.discord_id,
+                            item.userId
+                        ].map(normalizeOwner).filter(Boolean);
+                        return itemKeys.some((key) => userKeys.includes(key));
+                    }
+
+                    function getUserUploads() {
+                        const storeUploads = storeItems.map((item) => ({ ...item, _source: 'store' }));
+                        const modUploads = modItems.map((item) => ({ ...item, _source: 'mods' }));
+                        return [...storeUploads, ...modUploads].filter((item) => packageBelongsToUser(item, currentUser));
+                    }
+
+                    function openCreatorForUpload(item, action) {
+                        const source = item && item._source === 'mods' ? 'mods' : 'store';
+                        localStorage.setItem('vpCreatorProfileAction', JSON.stringify({
+                            action,
+                            source,
+                            id: item.id || '',
+                            code: item.code || '',
+                            name: item.name || '',
+                            at: Date.now()
+                        }));
+                        window.location.href = source === 'mods' ? '/admin/?type=mods' : '/admin/';
+                    }
+
+                    async function deleteUserUpload(item) {
+                        if (!item) return;
+                        const name = item.name || 'this upload';
+                        if (!confirm(`Delete "${name}" from your uploads?`)) return;
+
+                        if (IS_LOCAL_BACKEND && item.id) {
+                            try {
+                                const owner = encodeURIComponent(currentUser.email || currentUser.sub || currentUser.name || '');
+                                const response = await fetch(`${API_BASE}/store/themes/${encodeURIComponent(item.id)}?discord_id=${owner}`, {
+                                    method: 'DELETE'
+                                });
+                                if (!response.ok) throw new Error('Server could not delete this upload.');
+                                await loadStoreCatalog();
+                                await loadModsCatalog();
+                                renderProfileUploads();
+                                return;
+                            } catch (error) {
+                                alert(error.message || 'Unable to delete this upload from the server.');
+                                return;
+                            }
+                        }
+
+                        alert('This hosted page cannot delete files directly. The creator portal will open so you can remove it and publish the updated store.');
+                        openCreatorForUpload(item, 'delete');
+                    }
+
+                    function renderProfileUploads() {
+                        if (!profileUploadsList || !currentUser) return;
+                        const uploads = getUserUploads();
+                        if (uploads.length === 0) {
+                            profileUploadsList.innerHTML = '<div class="profile-empty">No uploads matched this profile yet. Packages match when their creator or author name is the same as your signed-in username.</div>';
+                            return;
+                        }
+
+                        profileUploadsList.innerHTML = uploads.map((item, index) => {
+                            const sourceLabel = item._source === 'mods' ? 'Store Mods' : 'Store';
+                            const platform = item.platform ? ` • ${escapeHtml(item.platform)}` : '';
+                            const updated = formatUpdated(item.updated);
+                            const updatedLabel = updated ? ` • Updated ${escapeHtml(updated)}` : '';
+                            return `
+                                <article class="profile-upload-item">
+                                    <h5>${escapeHtml(item.name || 'Untitled Package')}</h5>
+                                    <p>${escapeHtml(sourceLabel)}${platform}${updatedLabel}</p>
+                                    <div class="profile-upload-actions">
+                                        <button class="profile-secondary" type="button" data-profile-action="update" data-profile-index="${index}">Update</button>
+                                        <button class="profile-danger" type="button" data-profile-action="delete" data-profile-index="${index}">Delete</button>
+                                    </div>
+                                </article>
+                            `;
+                        }).join('');
+
+                        profileUploadsList.querySelectorAll('[data-profile-action]').forEach((button) => {
+                            button.addEventListener('click', () => {
+                                const item = uploads[Number(button.dataset.profileIndex)];
+                                if (button.dataset.profileAction === 'delete') {
+                                    deleteUserUpload(item);
+                                } else {
+                                    openCreatorForUpload(item, 'update');
+                                }
+                            });
+                        });
                     }
 
                     if (mainSignInBtn) {
@@ -1986,13 +2405,45 @@
                     if (mainLogoutBtn) {
                         mainLogoutBtn.addEventListener('click', (event) => {
                             event.preventDefault();
+                            event.stopPropagation();
                             signOutMainUser();
+                        });
+                    }
+
+                    if (mainUserBadge) {
+                        mainUserBadge.addEventListener('click', (event) => {
+                            if (event.target.closest('#mainLogoutBtn')) return;
+                            openProfilePanel();
+                        });
+                    }
+
+                    if (profileBackdrop) profileBackdrop.addEventListener('click', closeProfilePanel);
+                    if (profileCloseBtn) profileCloseBtn.addEventListener('click', closeProfilePanel);
+                    if (profileSaveBtn) profileSaveBtn.addEventListener('click', saveProfilePanel);
+                    if (profileAvatarFileInput) {
+                        profileAvatarFileInput.addEventListener('change', () => {
+                            const file = profileAvatarFileInput.files && profileAvatarFileInput.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                                if (profileAvatarInput) profileAvatarInput.value = String(reader.result || '');
+                                if (profilePanelAvatar) profilePanelAvatar.src = String(reader.result || profileAvatarFor(currentUser));
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                    if (profileRefreshUploadsBtn) {
+                        profileRefreshUploadsBtn.addEventListener('click', async () => {
+                            await loadStoreCatalog();
+                            await loadModsCatalog();
+                            renderProfileUploads();
                         });
                     }
 
                     window.addEventListener('storage', (event) => {
                         if (event.key === USER_STORAGE_KEY) {
                             applyMainUser(loadStoredUser());
+                            if (profileModal && profileModal.classList.contains('active')) openProfilePanel();
                         }
                     });
 
@@ -2679,6 +3130,7 @@
                         }
 
                         applyFilters();
+                        if (profileModal && profileModal.classList.contains('active')) renderProfileUploads();
                     }
 
                     async function loadModsCatalog() {
@@ -2693,6 +3145,7 @@
                         }
 
                         applyModsFilters();
+                        if (profileModal && profileModal.classList.contains('active')) renderProfileUploads();
                     }
 
                     if (document.readyState === 'loading') {
@@ -2706,6 +3159,7 @@
                     document.addEventListener('keydown', (event) => {
                         if (event.key === 'Escape') {
                             closeModal();
+                            closeProfilePanel();
                         }
                     });
 
