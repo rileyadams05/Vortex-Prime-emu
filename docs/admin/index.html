@@ -50,7 +50,6 @@
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem; }
     .card-header { padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: .75rem; border-bottom: 1px solid var(--border); }
     .card-header .pkg-name { font-weight: 700; font-size: 1.1rem; flex: 1; }
-    .card-header .pkg-code { font-family: monospace; font-size: .85rem; color: var(--primary); background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); padding: .25rem .75rem; border-radius: 8px; }
     .card-header .chevron { display: none; }
     .card-body { display: block; padding: 1.5rem; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -479,7 +478,6 @@
         name: g('name'),
         description: g('description'),
         creator: g('creator'),
-        code: g('code'),
         tags,
         icon: g('icon'),
         preview: g('preview'),
@@ -530,17 +528,12 @@
     return `<div class="card pkg-card" data-idx="${i}" id="pkg-${i}" data-id="${pkg.id || ''}">
       <div class="card-header">
         <span class="pkg-name">${esc(pkg.name) || '<em style="color:var(--muted)">New Package</em>'}</span>
-        ${pkg.code ? `<span class="pkg-code">${esc(pkg.code)}</span>` : ''}
       </div>
       <div class="card-body">
         <div class="form-grid">
           <div class="field">
             <label>Package Title *</label>
             <input type="text" data-field="name" value="${esc(pkg.name)}" placeholder="Example" oninput="onFieldInput(${i},'name',this.value)">
-          </div>
-          <div class="field">
-            <label>Store Code *</label>
-            <input type="text" data-field="code" value="${esc(pkg.code)}" placeholder="Example" oninput="onFieldInput(${i},'code',this.value)">
           </div>
           <div class="field full">
             <label>Description</label>
@@ -706,17 +699,11 @@
       return;
     }
     // Update header live
-    if (field === 'name' || field === 'code') {
+    if (field === 'name') {
       const card = document.getElementById('pkg-' + i);
       if (card) {
         const nameEl = card.querySelector('.pkg-name');
-        const codeEl = card.querySelector('.pkg-code');
         if (nameEl) nameEl.innerHTML = esc(packages[i].name) || '<em style="color:var(--muted)">Untitled Package</em>';
-        if (field === 'code') {
-          if (value && codeEl) codeEl.textContent = value;
-          else if (value && !codeEl) nameEl.insertAdjacentHTML('afterend', `<span class="pkg-code">${esc(value)}</span>`);
-          else if (!value && codeEl) codeEl.remove();
-        }
       }
     }
   };
@@ -777,7 +764,7 @@
   window.submitToStore = async function(i, btn) {
     collectAll();
     const pkg = packages[i];
-    if (!pkg.name || !pkg.code) return toast('Name and Store Code are required.', 'error');
+    if (!pkg.name) return toast('Package Title is required.', 'error');
     if (!IS_LOCAL_BACKEND) {
       toast('Server upload requires running the local API backend. Use "Save Package File" and commit the JSON instead.', 'error');
       return;
@@ -796,7 +783,6 @@
       if (pkg.category) fd.append('category', pkg.category);
       fd.append('tags', JSON.stringify(pkg.tags));
       fd.append('download_url', pkg.download_url);
-      if (pkg.code) fd.append('code', pkg.code);
       fd.append('type', uploadConfig.type);
       fd.append('fileType', pkg.fileType || getUploadRules(pkg.category, pkg.platform).fileType);
       fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category, pkg.platform).allowedExtensions));
@@ -870,7 +856,7 @@
     if (isUserAction) collectAll();
     const now = new Date().toISOString();
     const rules = getUploadRules('Homebrew Apps', 'PS4');
-    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', category: 'Homebrew Apps', updated: now, type: uploadConfig.type, fileType: rules.fileType, allowedExtensions: rules.allowedExtensions });
+    packages.push({ name: '', description: '', creator: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', category: 'Homebrew Apps', updated: now, type: uploadConfig.type, fileType: rules.fileType, allowedExtensions: rules.allowedExtensions });
     if (isUserAction) markDirty();
     render();
     const newIdx = packages.length - 1;
@@ -936,7 +922,6 @@
       if (pkg.name) out.name = pkg.name;
       if (pkg.description) out.description = pkg.description;
       if (pkg.creator) out.creator = pkg.creator;
-      if (pkg.code) out.code = pkg.code;
       out.tags = Array.isArray(pkg.tags) ? pkg.tags.filter(Boolean) : [];
       if (pkg.icon) out.icon = pkg.icon;
       if (pkg.preview) out.preview = pkg.preview;
