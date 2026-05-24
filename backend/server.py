@@ -796,6 +796,12 @@ async def upload_store_theme(
         if not theme.filename.lower().endswith(tuple(allowed_extensions)):
             raise HTTPException(status_code=400, detail="PC Tools must be uploaded as a compressed archive: ZIP, 7Z, or RAR.")
         file_type = "archive"
+    elif (platform or "").lower() == "ps2":
+        submission_type = "store"
+        allowed_extensions = [".zip", ".7z", ".rar"]
+        if not theme.filename.lower().endswith(tuple(allowed_extensions)):
+            raise HTTPException(status_code=400, detail="PlayStation 2 uploads must be compressed archives: ZIP, 7Z, or RAR.")
+        file_type = "archive"
     else:
         submission_type = "store"
         allowed_extensions = [".pkg"]

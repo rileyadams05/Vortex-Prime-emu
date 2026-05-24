@@ -219,7 +219,7 @@
         jsonPath: 'docs/store/themes.json'
       };
 
-  function getUploadRules(category) {
+  function getUploadRules(category, platform = '') {
     if (uploadMode === 'mods') {
       return {
         fileType: 'archive',
@@ -229,6 +229,18 @@
         helpText: 'Upload a compressed archive containing the mod files, folder structure, readme, and install instructions. Supported formats: ZIP, 7Z, and RAR.',
         accept: '.zip,.7z,.rar',
         invalidMessage: 'Mods must be uploaded as a compressed archive: ZIP, 7Z, or RAR.'
+      };
+    }
+
+    if (platform === 'PS2') {
+      return {
+        fileType: 'archive',
+        allowedExtensions: ['.zip', '.7z', '.rar'],
+        fileLabel: 'PlayStation 2 Archive',
+        dropText: 'Click or drop PlayStation 2 archive file',
+        helpText: 'Upload a compressed archive containing the PlayStation 2 files, folder structure, readme, and install instructions. Supported formats: ZIP, 7Z, and RAR.',
+        accept: '.zip,.7z,.rar',
+        invalidMessage: 'PlayStation 2 uploads must be compressed archives: ZIP, 7Z, or RAR.'
       };
     }
 
@@ -435,7 +447,8 @@
       const tags = Array.from(tagChips).map(c => c.dataset.tag).filter(Boolean);
       const pkg = packages[idx] || {};
       const category = g('category') || 'Homebrew Apps';
-      const rules = getUploadRules(category);
+      const platform = g('platform') || 'PS4';
+      const rules = getUploadRules(category, platform);
       return {
         ...pkg,
         id: card.dataset.id || pkg.id,
@@ -448,7 +461,7 @@
         preview: g('preview'),
         zip_file: g('zip_file'),
         download_url: g('download_url'),
-        platform: g('platform') || 'PS4',
+        platform,
         updated: g('updated') || undefined,
         category,
         type: uploadConfig.type,
@@ -485,7 +498,7 @@
 
   function buildCard(pkg, i) {
     const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
-    const rules = getUploadRules(pkg.category || 'Homebrew Apps');
+    const rules = getUploadRules(pkg.category || 'Homebrew Apps', pkg.platform || 'PS4');
     const tagChipsHtml = tags.map(t =>
       `<span class="tag-chip" data-tag="${esc(t)}">${esc(t)}<button type="button" onclick="removeTag(this)" title="Remove tag">Ã—</button></span>`
     ).join('');
@@ -520,6 +533,7 @@
               <option value="PS5" ${pkg.platform==='PS5'?'selected':''}>PlayStation 5</option>
               <option value="PS4" ${pkg.platform==='PS4'?'selected':''}>PlayStation 4</option>
               <option value="PS3" ${pkg.platform==='PS3'?'selected':''}>PlayStation 3</option>
+              <option value="PS2" ${pkg.platform==='PS2'?'selected':''}>PlayStation 2</option>
               <option value="PS Vita" ${pkg.platform==='PS Vita'?'selected':''}>PS Vita</option>
               <option value="PSP" ${pkg.platform==='PSP'?'selected':''}>PSP / PlayStation Portable</option>
             </select>
@@ -647,8 +661,8 @@
   window.onFieldInput = function(i, field, value) {
     packages[i][field] = value;
     markDirty();
-    if (field === 'category') {
-      const rules = getUploadRules(value);
+    if (field === 'category' || field === 'platform') {
+      const rules = getUploadRules(packages[i].category || 'Homebrew Apps', packages[i].platform || 'PS4');
       packages[i].fileType = rules.fileType;
       packages[i].allowedExtensions = rules.allowedExtensions;
       if (packages[i].zip_file) {
@@ -699,7 +713,7 @@
   function processFile(i, field, file) {
     const filename = file.name;
     const lowerName = filename.toLowerCase();
-    const rules = getUploadRules(packages[i]?.category || 'Homebrew Apps');
+    const rules = getUploadRules(packages[i]?.category || 'Homebrew Apps', packages[i]?.platform || 'PS4');
     if (field === 'zip_file' && !rules.allowedExtensions.some(ext => lowerName.endsWith(ext))) {
       toast(rules.invalidMessage, 'error');
       const input = document.getElementById(`zip-file-${i}`);
@@ -758,8 +772,8 @@
       fd.append('download_url', pkg.download_url);
       if (pkg.code) fd.append('code', pkg.code);
       fd.append('type', uploadConfig.type);
-      fd.append('fileType', pkg.fileType || getUploadRules(pkg.category).fileType);
-      fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category).allowedExtensions));
+      fd.append('fileType', pkg.fileType || getUploadRules(pkg.category, pkg.platform).fileType);
+      fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category, pkg.platform).allowedExtensions));
       
       if (pkg.zip_file_file) fd.append('theme', pkg.zip_file_file);
       if (pkg.icon_file_file) fd.append('icon', pkg.icon_file_file);
@@ -829,7 +843,7 @@
   window.addPackage = function(isUserAction = true) {
     if (isUserAction) collectAll();
     const now = new Date().toISOString();
-    const rules = getUploadRules('Homebrew Apps');
+    const rules = getUploadRules('Homebrew Apps', 'PS4');
     packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', category: 'Homebrew Apps', updated: now, type: uploadConfig.type, fileType: rules.fileType, allowedExtensions: rules.allowedExtensions });
     if (isUserAction) markDirty();
     render();
@@ -904,7 +918,7 @@
       if (pkg.download_url) out.download_url = pkg.download_url;
       if (pkg.category) out.category = pkg.category;
       if (pkg.updated) out.updated = pkg.updated.includes('T') && !pkg.updated.endsWith('Z') ? pkg.updated + 'Z' : pkg.updated;
-      const rules = getUploadRules(pkg.category || 'Homebrew Apps');
+      const rules = getUploadRules(pkg.category || 'Homebrew Apps', pkg.platform || 'PS4');
       out.type = uploadConfig.type;
       out.fileType = rules.fileType;
       out.allowedExtensions = rules.allowedExtensions;
