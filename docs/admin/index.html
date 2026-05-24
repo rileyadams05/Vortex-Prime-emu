@@ -505,7 +505,6 @@
         allowedExtensions: rules.allowedExtensions,
         youtubeVideos: normalizeYoutubeVideos(pkg).filter(item => item && item.url),
         media: normalizeYoutubeVideos(pkg).filter(item => item && item.url).map(item => ({ type: 'youtube', title: item.title || 'YouTube Video', url: item.url })),
-        suggestedLinks: normalizeSuggestedLinks(pkg).filter(item => item && item.url),
       };
       if (uploadMode === 'mods') {
         delete next.category;
@@ -548,10 +547,6 @@
     return mediaVideos.map(item => ({ title: item.title || 'YouTube Video', url: item.url || '', submittedBy: item.submittedBy || '', status: item.status || 'approved' }));
   }
 
-  function normalizeSuggestedLinks(pkg) {
-    return Array.isArray(pkg.suggestedLinks) ? pkg.suggestedLinks : [];
-  }
-
   function buildYoutubeEditor(pkg, i) {
     const videos = normalizeYoutubeVideos(pkg);
     const rows = videos.length ? videos.map((item, videoIndex) => `
@@ -584,52 +579,6 @@
             <p>Paste YouTube watch, youtu.be, or Shorts links. Existing icon and preview image uploads stay unchanged.</p>
           </div>
           <button class="btn-secondary" type="button" onclick="addYoutubeVideo(${i})">+ Add YouTube Link</button>
-        </div>
-        <div class="media-editor-list">${rows}</div>
-      </div>
-    `;
-  }
-
-  function buildSuggestedLinksEditor(pkg, i) {
-    const links = normalizeSuggestedLinks(pkg);
-    const rows = links.length ? links.map((item, linkIndex) => `
-      <div class="media-editor-item">
-        <div class="media-editor-grid">
-          <label class="field">
-            Status
-            <select onchange="updateSuggestedLink(${i}, ${linkIndex}, 'status', this.value)">
-              <option value="pending" ${item.status === 'pending' ? 'selected' : ''}>pending</option>
-              <option value="approved" ${item.status === 'approved' ? 'selected' : ''}>approved</option>
-              <option value="rejected" ${item.status === 'rejected' ? 'selected' : ''}>rejected</option>
-            </select>
-          </label>
-          <label class="field">
-            Submitted By
-            <input type="text" value="${esc(item.submittedBy || '')}" placeholder="Username" oninput="updateSuggestedLink(${i}, ${linkIndex}, 'submittedBy', this.value)">
-          </label>
-          <label class="field">
-            Video Title
-            <input type="text" value="${esc(item.title || '')}" placeholder="Community Install Guide" oninput="updateSuggestedLink(${i}, ${linkIndex}, 'title', this.value)">
-          </label>
-          <label class="field">
-            YouTube Link
-            <input type="url" value="${esc(item.url || '')}" placeholder="https://youtu.be/..." oninput="updateSuggestedLink(${i}, ${linkIndex}, 'url', this.value)">
-          </label>
-        </div>
-        <div class="media-editor-actions">
-          <button class="btn-danger" type="button" onclick="removeSuggestedLink(${i}, ${linkIndex})">Remove Link</button>
-        </div>
-      </div>
-    `).join('') : '<div class="mini-empty">No suggested links yet. Add pending links here now; only approved links display publicly.</div>';
-
-    return `
-      <div class="subsection">
-        <div class="subsection-head">
-          <div>
-            <h3>Community Video Suggestions</h3>
-            <p>Videos added by other users. Only approved YouTube links show publicly.</p>
-          </div>
-          <button class="btn-secondary" type="button" onclick="addSuggestedLink(${i})">+ Add Suggested Video</button>
         </div>
         <div class="media-editor-list">${rows}</div>
       </div>
@@ -745,7 +694,6 @@
             <span class="upload-hint-box">Optional. Use this to redirect downloads to an external file or source page instead.</span>
           </div>
           ${buildYoutubeEditor(pkg, i)}
-          ${buildSuggestedLinksEditor(pkg, i)}
         </div>
         <div class="card-actions">
           <button class="btn-danger" style="margin-right:auto;" onclick="deleteFromServer(${i})">Delete from Server</button>
@@ -862,27 +810,6 @@
     render();
   };
 
-  window.addSuggestedLink = function(i) {
-    collectAll();
-    packages[i].suggestedLinks = normalizeSuggestedLinks(packages[i]);
-    packages[i].suggestedLinks.push({ title: '', url: '', submittedBy: '', status: 'pending' });
-    markDirty();
-    render();
-  };
-
-  window.updateSuggestedLink = function(i, linkIndex, field, value) {
-    packages[i].suggestedLinks = normalizeSuggestedLinks(packages[i]);
-    packages[i].suggestedLinks[linkIndex] = { ...(packages[i].suggestedLinks[linkIndex] || {}), [field]: value };
-    markDirty();
-  };
-
-  window.removeSuggestedLink = function(i, linkIndex) {
-    collectAll();
-    packages[i].suggestedLinks = normalizeSuggestedLinks(packages[i]).filter((_, index) => index !== linkIndex);
-    markDirty();
-    render();
-  };
-
   // â”€â”€ Modern Upload Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.handleFileSelect = function(i, field, input) {
     const file = input.files[0];
@@ -988,7 +915,6 @@
       fd.append('fileType', pkg.fileType || getUploadRules(pkg.category, pkg.platform).fileType);
       fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category, pkg.platform).allowedExtensions));
       fd.append('youtubeVideos', JSON.stringify(normalizeYoutubeVideos(pkg).filter(item => item.url)));
-      fd.append('suggestedLinks', JSON.stringify(normalizeSuggestedLinks(pkg).filter(item => item.url)));
       
       if (pkg.zip_file_file) fd.append('theme', pkg.zip_file_file);
       if (pkg.icon_file_file) fd.append('icon', pkg.icon_file_file);
@@ -1141,8 +1067,6 @@
         out.youtubeVideos = youtubeVideos;
         out.media = youtubeVideos.map(item => ({ type: 'youtube', title: item.title || 'YouTube Video', url: item.url }));
       }
-      const suggestedLinks = normalizeSuggestedLinks(pkg).filter(item => item.url);
-      if (suggestedLinks.length) out.suggestedLinks = suggestedLinks;
       const rules = getUploadRules(uploadMode === 'mods' ? 'Homebrew Apps' : (pkg.category || 'Homebrew Apps'), pkg.platform || 'PS4');
       out.type = uploadConfig.type;
       out.fileType = rules.fileType;

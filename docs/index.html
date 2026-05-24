@@ -1023,7 +1023,15 @@
             opacity: 0.3;
         }
 
-        .theme-view-details {
+        .theme-card-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            width: 100%;
+        }
+
+        .theme-view-details,
+        .theme-edit-item {
             width: 100%;
             padding: 0.75rem 1rem;
             background: rgba(255,255,255,0.06);
@@ -1036,9 +1044,14 @@
             transition: all 0.2s;
         }
 
-        .theme-view-details:hover {
+        .theme-view-details:hover,
+        .theme-edit-item:hover {
             border-color: var(--color-primary);
             background: rgba(16,185,129,0.1);
+        }
+
+        .theme-edit-item {
+            color: var(--color-primary-light);
         }
 
         .item-detail-modal {
@@ -1181,36 +1194,6 @@
             padding: 0.45rem 0.75rem;
             text-decoration: none;
             font-size: 0.82rem;
-        }
-
-        .suggest-video-form {
-            margin-top: 1rem;
-            border-top: 1px solid var(--color-border);
-            padding-top: 1rem;
-            display: grid;
-            gap: 0.65rem;
-        }
-
-        .suggest-video-form input {
-            width: 100%;
-            background: var(--color-bg-dark);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            color: var(--color-text);
-            padding: 0.7rem 0.85rem;
-            font: inherit;
-        }
-
-        .suggest-video-form button {
-            justify-self: start;
-            background: var(--color-primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.7rem 1rem;
-            font: inherit;
-            font-weight: 800;
-            cursor: pointer;
         }
 
         .readme-section {
@@ -2725,7 +2708,6 @@
                     const STORE_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/themes` : '/store/themes.json';
                     const MODS_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/mods` : '/store-mods/mods.json';
                     const CARDS_PER_PAGE = 10;
-                    const SUGGESTED_VIDEO_STORAGE_KEY = 'vpSuggestedYoutubeVideos';
 
                     const storeGrid = document.getElementById('storeGrid');
                     const noResults = document.getElementById('storeNoResults');
@@ -2915,21 +2897,6 @@
                         return '';
                     }
 
-                    function loadSuggestedVideos() {
-                        try {
-                            return JSON.parse(localStorage.getItem(SUGGESTED_VIDEO_STORAGE_KEY) || '{}');
-                        } catch (error) {
-                            return {};
-                        }
-                    }
-
-                    function saveSuggestedVideo(itemKey, video) {
-                        const all = loadSuggestedVideos();
-                        all[itemKey] = Array.isArray(all[itemKey]) ? all[itemKey] : [];
-                        all[itemKey].push(video);
-                        localStorage.setItem(SUGGESTED_VIDEO_STORAGE_KEY, JSON.stringify(all));
-                    }
-
                     function itemKey(item) {
                         return item.id || item.code || item.name || 'item';
                     }
@@ -2939,11 +2906,7 @@
                         const mediaVideos = Array.isArray(item.media)
                             ? item.media.filter(entry => entry && entry.type === 'youtube')
                             : [];
-                        const suggested = Array.isArray(item.suggestedLinks)
-                            ? item.suggestedLinks.filter(entry => entry && entry.status === 'approved' && getYoutubeId(entry.url))
-                            : [];
-                        const localSuggested = (loadSuggestedVideos()[itemKey(item)] || []).filter(entry => entry.status === 'pending');
-                        return [...official, ...mediaVideos, ...suggested, ...localSuggested]
+                        return [...official, ...mediaVideos]
                             .filter(entry => entry && entry.url && getYoutubeId(entry.url))
                             .map(entry => ({
                                 type: 'youtube',
@@ -2954,9 +2917,7 @@
                     }
 
                     function getGuideLinks(item) {
-                        return Array.isArray(item.suggestedLinks)
-                            ? item.suggestedLinks.filter(entry => entry && entry.status === 'approved' && entry.url && !getYoutubeId(entry.url))
-                            : [];
+                        return [];
                     }
 
                     function getGalleryItems(item) {
@@ -3044,12 +3005,6 @@
                             </div>
                             ${links.length ? `<div class="media-links">${links.map(link => `<a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.title || 'Community Link')}</a>`).join('')}</div>` : ''}
                             ${readmeMarkup ? `<div class="readme-section"><h4>${escapeHtml(item.readme?.filename || 'README')}</h4>${readmeMarkup}</div>` : ''}
-                            <div class="suggest-video-form">
-                                <strong>Suggest a YouTube video</strong>
-                                <input id="suggestVideoTitle" type="text" placeholder="Video title">
-                                <input id="suggestVideoUrl" type="url" placeholder="https://www.youtube.com/watch?v=...">
-                                <button id="suggestVideoBtn" type="button">Add Suggested Video</button>
-                            </div>
                         `;
                         itemDetailContent.querySelectorAll('.media-thumb').forEach(button => {
                             button.addEventListener('click', () => {
@@ -3058,20 +3013,6 @@
                                 if (main) main.innerHTML = renderMediaMain(media);
                             });
                         });
-                        const suggestButton = document.getElementById('suggestVideoBtn');
-                        if (suggestButton) {
-                            suggestButton.addEventListener('click', () => {
-                                const title = document.getElementById('suggestVideoTitle')?.value.trim() || 'Community Video';
-                                const url = document.getElementById('suggestVideoUrl')?.value.trim() || '';
-                                if (!getYoutubeId(url)) {
-                                    alert('Please enter a valid YouTube link.');
-                                    return;
-                                }
-                                saveSuggestedVideo(itemKey(item), { title, url, submittedBy: currentUser?.name || 'Community', status: 'pending' });
-                                alert('Video suggestion saved as pending on this browser. Admin approval is needed before it appears publicly for everyone.');
-                                renderItemDetails(item);
-                            });
-                        }
                     }
 
                     function openItemDetails(item) {
@@ -3178,7 +3119,10 @@
                                         ${copyButton}
                                     </div>
                                     ${downloadLink}
-                                    <button class="theme-view-details" type="button">View Details</button>
+                                    <div class="theme-card-actions">
+                                        <button class="theme-view-details" type="button">View Details</button>
+                                        <button class="theme-edit-item" type="button">Edit</button>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -3189,6 +3133,14 @@
                                 event.preventDefault();
                                 event.stopPropagation();
                                 openItemDetails(theme);
+                            });
+                        }
+                        const editButton = card.querySelector('.theme-edit-item');
+                        if (editButton) {
+                            editButton.addEventListener('click', (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                openCreatorForUpload(theme, 'update');
                             });
                         }
 

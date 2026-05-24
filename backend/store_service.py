@@ -287,7 +287,6 @@ async def save_submission(
     file_type: str = "pkg",
     allowed_extensions: list = None,
     youtube_videos: list = None,
-    suggested_links: list = None,
     extract_contents: bool = False,
     db=None,
 ) -> dict:
@@ -368,7 +367,6 @@ async def save_submission(
             for item in (youtube_videos or [])
             if isinstance(item, dict) and item.get("url")
         ],
-        "suggestedLinks": suggested_links or [],
         "type": submission_type,
         "fileType": file_type,
         "allowedExtensions": allowed_extensions or [".pkg"],

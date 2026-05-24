@@ -148,24 +148,9 @@ Supported examples:
 
 YouTube links are converted into embedded video players on the public package detail view.
 
-## Community Video Suggestions
+## Editing Published Items
 
-The data structure supports community/user-submitted video suggestions.
-
-Suggested videos include:
-
-- Title
-- YouTube URL
-- Submitted by
-- Status
-
-Statuses:
-
-- `pending`
-- `approved`
-- `rejected`
-
-Only approved suggestions are intended to show publicly. On a static GitHub Pages deployment, suggestions cannot be globally saved without a backend, but the data structure and admin review fields are already in place.
+Published Store and Store Mods items include an Edit button. The button opens the Creator Portal for the selected item so the owner/admin can update the same fields used when the package was first created.
 
 ## Project Structure
 

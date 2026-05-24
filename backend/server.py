@@ -773,7 +773,6 @@ async def upload_store_theme(
     fileType: str = Form("pkg"),
     allowedExtensions: str = Form(""),
     youtubeVideos: str = Form(""),
-    suggestedLinks: str = Form(""),
     access_token: str = Form(""),
     theme: UploadFile = File(...),
     icon: UploadFile = File(None),
@@ -879,13 +878,6 @@ async def upload_store_theme(
         except:
             youtube_video_list = []
 
-    suggested_link_list = []
-    if suggestedLinks:
-        try:
-            suggested_link_list = json.loads(suggestedLinks)
-        except:
-            suggested_link_list = []
-
     result = await store_service.save_submission(
         name=name,
         description=description,
@@ -908,7 +900,6 @@ async def upload_store_theme(
         file_type=file_type,
         allowed_extensions=allowed_extensions,
         youtube_videos=youtube_video_list,
-        suggested_links=suggested_link_list,
         extract_contents=should_extract_archive,
         db=db if mongo_available else None,
     )
