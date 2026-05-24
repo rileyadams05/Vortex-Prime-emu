@@ -46,6 +46,7 @@ async def save_submission(
     zip_bytes: bytes,
     zip_filename: str,
     platform: str = "PS4",
+    category: str = "Homebrew Apps",
     tags: list = None,
     icon_bytes: Optional[bytes] = None,
     icon_ext: Optional[str] = None,
@@ -53,6 +54,9 @@ async def save_submission(
     preview_ext: Optional[str] = None,
     download_url: str = "",
     code: str = None,
+    submission_type: str = "store",
+    file_type: str = "pkg",
+    allowed_extensions: list = None,
     db=None,
 ) -> dict:
     """Save an uploaded package to disk and record it in the store."""
@@ -93,11 +97,15 @@ async def save_submission(
         "author": author,
         "creator": author, # Alias for consistency
         "platform": platform,
+        "category": category,
         "tags": tags or [],
         "icon": icon_url,
         "preview": preview_url,
         "zip_file": zip_url,
         "download_url": download_url,
+        "type": submission_type,
+        "fileType": file_type,
+        "allowedExtensions": allowed_extensions or [".pkg"],
         "status": "approved", # Automatic approval as per overhaul
         "submitted_at": datetime.now(timezone.utc).isoformat(),
         "updated": datetime.now(timezone.utc).isoformat(),

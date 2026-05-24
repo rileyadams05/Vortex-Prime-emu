@@ -196,6 +196,64 @@
 (function () {
   let packages = [];
   let dirty = false;
+  const params = new URLSearchParams(window.location.search);
+  const uploadMode = params.get('type') === 'mods' ? 'mods' : 'store';
+  const uploadConfig = uploadMode === 'mods'
+    ? {
+        type: 'mod',
+        fileType: 'archive',
+        allowedExtensions: ['.zip', '.7z', '.rar'],
+        fileLabel: 'Mod Archive',
+        dropText: 'Click or drop mod archive file',
+        helpText: 'Upload a compressed archive containing the mod files, folder structure, readme, and install instructions. Supported formats: ZIP, 7Z, and RAR.',
+        accept: '.zip,.7z,.rar',
+        invalidMessage: 'Mods must be uploaded as a compressed archive: ZIP, 7Z, or RAR.',
+        jsonRoot: 'mods',
+        jsonFile: 'mods.json',
+        jsonPath: 'docs/store-mods/mods.json'
+      }
+    : {
+        type: 'store',
+        jsonRoot: 'dashboards',
+        jsonFile: 'themes.json',
+        jsonPath: 'docs/store/themes.json'
+      };
+
+  function getUploadRules(category) {
+    if (uploadMode === 'mods') {
+      return {
+        fileType: 'archive',
+        allowedExtensions: ['.zip', '.7z', '.rar'],
+        fileLabel: 'Mod Archive',
+        dropText: 'Click or drop mod archive file',
+        helpText: 'Upload a compressed archive containing the mod files, folder structure, readme, and install instructions. Supported formats: ZIP, 7Z, and RAR.',
+        accept: '.zip,.7z,.rar',
+        invalidMessage: 'Mods must be uploaded as a compressed archive: ZIP, 7Z, or RAR.'
+      };
+    }
+
+    if (category === 'PC Tools') {
+      return {
+        fileType: 'archive',
+        allowedExtensions: ['.zip', '.7z', '.rar'],
+        fileLabel: 'Tool Archive',
+        dropText: 'Click or drop tool archive file',
+        helpText: 'Upload a compressed archive containing the PC tool files, folder structure, readme, and install instructions. Supported formats: ZIP, 7Z, and RAR.',
+        accept: '.zip,.7z,.rar',
+        invalidMessage: 'PC Tools must be uploaded as a compressed archive: ZIP, 7Z, or RAR.'
+      };
+    }
+
+    return {
+      fileType: 'pkg',
+      allowedExtensions: ['.pkg'],
+      fileLabel: 'PKG Package',
+      dropText: 'Click or drop PKG file',
+      helpText: 'Upload a PlayStation PKG installer. PKG files are for Homebrew Apps and Console Apps.',
+      accept: '.pkg',
+      invalidMessage: 'Homebrew Apps and Console Apps must be uploaded as PKG files.'
+    };
+  }
 
   const GOOGLE_CLIENT_ID = '1031854944297-5fnr5ag53nnviq0av9htnctq733uae0k.apps.googleusercontent.com';
   const USER_STORAGE_KEY = 'vpGoogleAuthUser';
@@ -210,6 +268,16 @@
   const signInBtn = document.getElementById('googleSignInBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const authStatus = document.getElementById('authStatus');
+
+  document.title = uploadMode === 'mods' ? 'Vortex Prime Mods Creator Portal' : 'Vortex Prime Store Creator Portal';
+  const headerTitle = document.querySelector('header h1');
+  const headerSubtitle = document.querySelector('header p');
+  const toolbarTitle = document.querySelector('.toolbar h2');
+  const submitAllBtn = document.getElementById('submitAllBtn');
+  if (headerTitle) headerTitle.textContent = uploadMode === 'mods' ? 'Mods Creator Portal' : 'Store Creator Portal';
+  if (headerSubtitle) headerSubtitle.textContent = uploadMode === 'mods' ? 'Professional management for Vortex Prime mods' : 'Professional management for Vortex Prime packages';
+  if (toolbarTitle) toolbarTitle.textContent = uploadMode === 'mods' ? 'Mods' : 'Packages';
+  if (submitAllBtn) submitAllBtn.textContent = uploadMode === 'mods' ? 'Upload All Mods' : 'Upload All to Store';
 
   function setStatus(message, variant = '') {
     if (!authStatus) return;
@@ -354,7 +422,7 @@
   function markDirty() {
     dirty = true;
     const hint = document.getElementById('saveHint');
-    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes &mdash; click Upload to Store when ready.';
+    hint.innerHTML = `<span class="dirty-dot"></span>Unsaved changes - click ${uploadMode === 'mods' ? 'Upload Mods' : 'Upload to Store'} when ready.`;
   }
 
   // â”€â”€ Collect current field values into packages array â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -366,6 +434,8 @@
       const tagChips = card.querySelectorAll('.tag-chip');
       const tags = Array.from(tagChips).map(c => c.dataset.tag).filter(Boolean);
       const pkg = packages[idx] || {};
+      const category = g('category') || 'Homebrew Apps';
+      const rules = getUploadRules(category);
       return {
         ...pkg,
         id: card.dataset.id || pkg.id,
@@ -380,7 +450,10 @@
         download_url: g('download_url'),
         platform: g('platform') || 'PS4',
         updated: g('updated') || undefined,
-        category: g('category') || 'Homebrew Apps',
+        category,
+        type: uploadConfig.type,
+        fileType: rules.fileType,
+        allowedExtensions: rules.allowedExtensions,
       };
     });
   }
@@ -412,6 +485,7 @@
 
   function buildCard(pkg, i) {
     const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
+    const rules = getUploadRules(pkg.category || 'Homebrew Apps');
     const tagChipsHtml = tags.map(t =>
       `<span class="tag-chip" data-tag="${esc(t)}">${esc(t)}<button type="button" onclick="removeTag(this)" title="Remove tag">Ã—</button></span>`
     ).join('');
@@ -492,12 +566,12 @@
             </div>
           </div>
           <div class="field">
-            <label>ZIP or PKG Package</label>
+            <label>${esc(rules.fileLabel)}</label>
             <div class="upload-zone" onclick="document.getElementById('zip-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'zip_file')">
               <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
-              <span class="file-name" id="zip-name-${i}">${pkg.zip_file ? (pkg.zip_file.startsWith('blob:') ? 'File ready' : esc(pkg.zip_file.split('/').pop())) : 'Click or drop ZIP/PKG file'}</span>
-              <span class="upload-hint-box">Upload ZIP archives or PlayStation PKG installers. Files are hosted on Vortex Prime servers.</span>
-              <input type="file" id="zip-file-${i}" accept=".zip,.rar,.7z,.pkg,.PKG" style="display:none" onchange="handleFileSelect(${i}, 'zip_file', this)">
+              <span class="file-name" id="zip-name-${i}">${pkg.zip_file ? (pkg.zip_file.startsWith('blob:') ? 'File ready' : esc(pkg.zip_file.split('/').pop())) : esc(rules.dropText)}</span>
+              <span class="upload-hint-box">${esc(rules.helpText)}</span>
+              <input type="file" id="zip-file-${i}" accept="${esc(rules.accept)}" style="display:none" onchange="handleFileSelect(${i}, 'zip_file', this)">
               <input type="hidden" data-field="zip_file" value="${esc(pkg.zip_file)}">
             </div>
           </div>
@@ -509,7 +583,7 @@
         </div>
         <div class="card-actions">
           <button class="btn-danger" style="margin-right:auto;" onclick="deleteFromServer(${i})">Delete from Server</button>
-          <button class="btn-primary" onclick="submitToStore(${i}, this)">Upload this Package</button>
+          <button class="btn-primary" onclick="submitToStore(${i}, this)">Upload this ${uploadMode === 'mods' ? 'Mod' : 'Package'}</button>
         </div>
       </div>
     </div>`;
@@ -573,6 +647,24 @@
   window.onFieldInput = function(i, field, value) {
     packages[i][field] = value;
     markDirty();
+    if (field === 'category') {
+      const rules = getUploadRules(value);
+      packages[i].fileType = rules.fileType;
+      packages[i].allowedExtensions = rules.allowedExtensions;
+      if (packages[i].zip_file) {
+        const lowerName = packages[i].zip_file.toLowerCase();
+        const isAllowed = rules.allowedExtensions.some(ext => lowerName.endsWith(ext));
+        if (!isAllowed) {
+          packages[i].zip_file = '';
+          delete packages[i].zip_file_file;
+          toast(rules.invalidMessage, 'error');
+        }
+      }
+      render();
+      const newCard = document.getElementById('pkg-' + i);
+      if (newCard) newCard.classList.add('open');
+      return;
+    }
     // Update header live
     if (field === 'name' || field === 'code') {
       const card = document.getElementById('pkg-' + i);
@@ -606,6 +698,14 @@
 
   function processFile(i, field, file) {
     const filename = file.name;
+    const lowerName = filename.toLowerCase();
+    const rules = getUploadRules(packages[i]?.category || 'Homebrew Apps');
+    if (field === 'zip_file' && !rules.allowedExtensions.some(ext => lowerName.endsWith(ext))) {
+      toast(rules.invalidMessage, 'error');
+      const input = document.getElementById(`zip-file-${i}`);
+      if (input) input.value = '';
+      return;
+    }
     const path = '/uploads/' + filename;
     
     // Update internal data
@@ -657,6 +757,9 @@
       fd.append('tags', JSON.stringify(pkg.tags));
       fd.append('download_url', pkg.download_url);
       if (pkg.code) fd.append('code', pkg.code);
+      fd.append('type', uploadConfig.type);
+      fd.append('fileType', pkg.fileType || getUploadRules(pkg.category).fileType);
+      fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category).allowedExtensions));
       
       if (pkg.zip_file_file) fd.append('theme', pkg.zip_file_file);
       if (pkg.icon_file_file) fd.append('icon', pkg.icon_file_file);
@@ -726,7 +829,8 @@
   window.addPackage = function(isUserAction = true) {
     if (isUserAction) collectAll();
     const now = new Date().toISOString();
-    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', category: 'Homebrew Apps', updated: now });
+    const rules = getUploadRules('Homebrew Apps');
+    packages.push({ name: '', description: '', creator: '', code: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', category: 'Homebrew Apps', updated: now, type: uploadConfig.type, fileType: rules.fileType, allowedExtensions: rules.allowedExtensions });
     if (isUserAction) markDirty();
     render();
     const newIdx = packages.length - 1;
@@ -747,7 +851,7 @@
     packages.splice(i, 1);
     markDirty();
     render();
-    toast('Package removed. Click Save Package File to apply.', 'success');
+    toast(`${uploadMode === 'mods' ? 'Mod' : 'Package'} removed. Click Save Package File to apply.`, 'success');
   };
 
   // â”€â”€ Sorting and Ordering is now automatic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -764,11 +868,11 @@
       reader.onload = e => {
         try {
           const data = JSON.parse(e.target.result);
-          packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+          packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
           dirty = false;
-          document.getElementById('saveHint').textContent = `Loaded ${packages.length} package(s) from ${file.name} â€” click Save Package File when done.`;
+          document.getElementById('saveHint').textContent = `Loaded ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) from ${file.name} - click Save Package File when done.`;
           render();
-          toast(`Loaded ${packages.length} package(s).`);
+          toast(`Loaded ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s).`);
         } catch {
           toast('Invalid JSON file.', 'error');
         }
@@ -800,48 +904,54 @@
       if (pkg.download_url) out.download_url = pkg.download_url;
       if (pkg.category) out.category = pkg.category;
       if (pkg.updated) out.updated = pkg.updated.includes('T') && !pkg.updated.endsWith('Z') ? pkg.updated + 'Z' : pkg.updated;
+      const rules = getUploadRules(pkg.category || 'Homebrew Apps');
+      out.type = uploadConfig.type;
+      out.fileType = rules.fileType;
+      out.allowedExtensions = rules.allowedExtensions;
       return out;
     });
 
-    const json = JSON.stringify({ dashboards: clean }, null, 2);
+    const json = JSON.stringify({ [uploadConfig.jsonRoot]: clean }, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'themes.json';
+    a.download = uploadConfig.jsonFile;
     a.click();
     URL.revokeObjectURL(url);
     dirty = false;
-    document.getElementById('saveHint').textContent = 'Package file ready! Replace docs/store/themes.json in the repo and push to publish.';
-    toast('Upload file prepared â€” commit it to go live.');
+    document.getElementById('saveHint').textContent = `Package file ready! Replace ${uploadConfig.jsonPath} in the repo and push to publish.`;
+    toast('Upload file prepared - commit it to go live.');
   };
 
   // â”€â”€ Auto-load themes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const liveDataUrl = uploadMode === 'mods' ? `${API_BASE}/store/mods` : `${API_BASE}/store/themes`;
+  const staticDataUrl = uploadMode === 'mods' ? '../store-mods/mods.json' : '../store/themes.json';
   if (IS_LOCAL_BACKEND) {
-    fetch(`${API_BASE}/store/themes`, { cache: 'no-store' })
+    fetch(liveDataUrl, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
-        packages = Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []);
+        packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : (Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []));
         document.getElementById('saveHint').textContent =
-          `Connected to live store. Total ${packages.length} package(s) available.`;
+          `Connected to live ${uploadMode === 'mods' ? 'mods' : 'store'}. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
         render();
       })
       .catch(() => {
-        fetch('../store/themes.json', { cache: 'no-store' })
+        fetch(staticDataUrl, { cache: 'no-store' })
           .then(r => r.ok ? r.json() : Promise.reject())
           .then(data => {
-            packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+            packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
             render();
           })
           .catch(() => render());
       });
   } else {
-    fetch('../store/themes.json', { cache: 'no-store' })
+    fetch(staticDataUrl, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => {
-        packages = Array.isArray(data.dashboards) ? data.dashboards : [];
+        packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
         document.getElementById('saveHint').textContent =
-          `Loaded static catalogue. Total ${packages.length} package(s) available.`;
+          `Loaded static catalogue. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
         render();
       })
       .catch(() => render());

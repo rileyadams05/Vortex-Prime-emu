@@ -1924,19 +1924,24 @@
                         const hasDownload = Boolean(resolvedDownload);
                         const hasCode = Boolean((theme.code || '').trim());
                         const codeDisplay = hasCode ? escapeHtml(theme.code) : 'Not available yet';
+                        const isMod = theme.type === 'mod' || theme.fileType === 'archive';
+                        const hostedDownloadLabel = isMod ? 'Download Archive' : 'Download PKG';
+                        const hostedStatusLabel = isMod
+                            ? 'Mod archive hosted by Vortex Prime'
+                            : 'PKG package hosted by Vortex Prime';
 
                         const copyButton = hasCode
                             ? `<button class="theme-code-copy" onclick="copyCode(this, '${escapeAttribute((theme.code || '').trim())}')">Copy</button>`
                             : '<button class="theme-code-copy" disabled>Copy</button>';
 
                         const downloadLink = hasDownload
-                            ? `<a class="theme-download" href="${safeDownload}" target="_blank" rel="noopener">${downloadUrl ? 'Redirect to Download' : 'Download ZIP'}</a>`
+                            ? `<a class="theme-download" href="${safeDownload}" target="_blank" rel="noopener">${downloadUrl ? 'Redirect to Download' : hostedDownloadLabel}</a>`
                             : '<a class="theme-download disabled" href="#" tabindex="-1" aria-disabled="true" onclick="return false;">Download unavailable</a>';
 
                         const downloadStatusText = downloadUrl
                             ? 'External source (Redirecting...)'
                             : zipFile
-                                ? 'ZIP package hosted by Vortex Prime'
+                                ? hostedStatusLabel
                                 : 'Download source not yet available';
 
                         const downloadStatus = `

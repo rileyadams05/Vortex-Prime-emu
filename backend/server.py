@@ -765,9 +765,13 @@ async def upload_store_theme(
     discord_id: str = Form(...),
     author: str = Form(...),
     platform: str = Form("PS4"),
+    category: str = Form("Homebrew Apps"),
     tags: str = Form(""),
     download_url: str = Form(""),
     code: str = Form(None),
+    type: str = Form("store"),
+    fileType: str = Form("pkg"),
+    allowedExtensions: str = Form(""),
     access_token: str = Form(""),
     theme: UploadFile = File(...),
     icon: UploadFile = File(None),
@@ -780,9 +784,25 @@ async def upload_store_theme(
         if not user_info or str(user_info.get("id")) != discord_id:
             raise HTTPException(status_code=401, detail="Discord token invalid or mismatched")
 
-    # Validate ZIP
-    if not theme.filename.lower().endswith((".zip", ".rar", ".7z")):
-        raise HTTPException(status_code=400, detail="Package file must be an archive (ZIP/RAR/7Z)")
+    submission_type = (type or "store").lower()
+    if submission_type == "mod":
+        allowed_extensions = [".zip", ".7z", ".rar"]
+        if not theme.filename.lower().endswith(tuple(allowed_extensions)):
+            raise HTTPException(status_code=400, detail="Mods must be uploaded as a compressed archive: ZIP, 7Z, or RAR.")
+        file_type = "archive"
+    elif (category or "").lower() == "pc tools":
+        submission_type = "store"
+        allowed_extensions = [".zip", ".7z", ".rar"]
+        if not theme.filename.lower().endswith(tuple(allowed_extensions)):
+            raise HTTPException(status_code=400, detail="PC Tools must be uploaded as a compressed archive: ZIP, 7Z, or RAR.")
+        file_type = "archive"
+    else:
+        submission_type = "store"
+        allowed_extensions = [".pkg"]
+        if not theme.filename.lower().endswith(".pkg"):
+            raise HTTPException(status_code=400, detail="Homebrew Apps and Console Apps must be uploaded as PKG files.")
+        file_type = "pkg"
+
     zip_bytes = await theme.read()
     if len(zip_bytes) > store_service.MAX_ZIP_SIZE:
         raise HTTPException(status_code=413, detail="File exceeds 50 MB limit")
@@ -816,6 +836,7 @@ async def upload_store_theme(
         zip_bytes=zip_bytes,
         zip_filename=theme.filename,
         platform=platform,
+        category=category,
         tags=tag_list,
         icon_bytes=icon_bytes,
         icon_ext=icon_ext,
@@ -823,6 +844,9 @@ async def upload_store_theme(
         preview_ext=preview_ext,
         download_url=download_url,
         code=code,
+        submission_type=submission_type,
+        file_type=file_type,
+        allowed_extensions=allowed_extensions,
         db=db if mongo_available else None,
     )
     return result
@@ -832,7 +856,16 @@ async def upload_store_theme(
 async def get_store_themes():
     """Return all approved community packages for the website store."""
     themes = await store_service.get_approved_themes(db=db if mongo_available else None)
+    themes = [theme for theme in themes if theme.get("type", "store") == "store"]
     return {"themes": themes, "dashboards": themes} # Support both keys for compatibility
+
+
+@api_router.get("/store/mods")
+async def get_store_mods():
+    """Return all approved community mods for the website store mods page."""
+    themes = await store_service.get_approved_themes(db=db if mongo_available else None)
+    mods = [theme for theme in themes if theme.get("type") == "mod"]
+    return {"mods": mods}
 
 
 @api_router.delete("/store/themes/{submission_id}")
