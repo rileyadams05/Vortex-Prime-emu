@@ -1,158 +1,239 @@
+# Vortex Prime Store
 
- Vortex Prime
+Vortex Prime Store is a community package store and creator portal for publishing console apps, homebrew packages, PC tools, and mods. It is focused on browsing, managing, and publishing community uploads through a web store experience.
 
-> **⚠️ WORK IN PROGRESS - NOT A FINISHED PRODUCT ⚠️**
->
-> This project is under **active development** and is not yet ready for public use. Features may be incomplete, broken, or change without notice. **Use at your own risk.**
+> This project is in active development. Features, layouts, upload rules, and publishing workflows may change as the store is improved.
 
----
+## What This Project Does
 
-<p align="center">
-  <img src="frontend/public/assets/AppIcon/Windows.ico" alt="Vortex Prime Logo" width="128"/>
-</p>
+Vortex Prime Store provides:
 
-<p align="center">
-  <strong>A multi-platform emulator frontend for all your favorite gaming systems</strong>
-</p>
+- A public Store page for approved packages and tools
+- A public Store Mods page for mod archive uploads
+- A Creator Portal for adding, editing, and exporting store content
+- Google sign-in UI for creator/admin identity
+- Profile controls for signed-in users
+- Package detail pages with preview media, YouTube videos, README content, and useful links
+- GitHub Pages support for hosting the public site
+- Optional backend support for live uploads and server-side validation
 
-<p align="center">
-  <img src="https://img.shields.io/badge/status-in%20development-yellow" alt="Status: In Development"/>
-  <img src="https://img.shields.io/badge/platform-Windows-blue" alt="Platform: Windows"/>
-  <img src="https://img.shields.io/badge/built%20with-React%20%2B%20Python-orange" alt="Built with React + Python"/>
-</p>
+## Store Sections
 
----
+The public site is split into two main areas:
 
-## 🚧 Project Status
+| Section | Purpose |
+| --- | --- |
+| Store | Homebrew apps, console apps, PC tools, and platform-specific packages |
+| Store Mods | Compressed mod archives and mod-related uploads |
 
-| Feature | Status |
-|---------|--------|
-| Multi-Emulator Support (47+ systems) | 🟢 Working |
-| Multi-Platform Support (Win/Linux/Mac) | 🟢 Working |
-| PC Game Auto-Detection | 🟢 Working |
-| Mobile Emulator Support | 🟢 Working |
-| URL-Based Emulator Downloads | 🟢 Working |
-| Community Emulator Registry | 🟢 Working |
-| Achievement System (Exophase) | 🟢 Working |
-| Controller Support | 🟢 Working |
-| Streaming Features | 🟢 Working |
+The Store and Store Mods pages share the same visual style, but their upload rules are different.
 
-## 📋 What is Vortex Prime?
+## Creator Portal
 
-Vortex Prime is a **fully open-source, community-driven** multi-platform emulator frontend with:
-- Support for 47+ gaming systems (PlayStation, Xbox, Nintendo, PC, and more)
-- Multi-platform emulator support (Windows, Linux, macOS)
-- Mobile emulator support (Android, iOS)
-- URL-based emulator downloads - just paste a link!
-- Community emulator registry - share and discover emulators
-- Unified achievement tracking via RetroAchievements and Exophase
-- Modern gamepad navigation
-- Auto-detection of installed PC games
-- Discord integration for community support
+The Creator Portal is used to prepare packages before they are published.
 
-## 🌟 Community-Driven Project
+Creators/admins can add:
 
-**This project is FREE and open to everyone!**
+- Package title
+- Short description
+- Creator or author name
+- Platform
+- Tags
+- Icon image
+- Preview image
+- Package or archive file
+- README or Markdown description file
+- YouTube video links
+- Community video suggestions
+- External download or source URL
 
-- ✅ **Anyone can contribute** - Add emulators, fix bugs, improve features
-- ✅ **Full access** - Edit anything if you know what you're doing
-- ✅ **Community registry** - Share emulators with one click
-- ✅ **Auto-updates** - Community-added emulators update automatically
-- ✅ **Proper credit** - All contributors are acknowledged
+The portal supports both Store uploads and Store Mods uploads.
 
-**See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add emulators and contribute!**
+## Upload Rules
 
-## ⚠️ Disclaimer
+### Store
 
-- This is a **community project** and comes with **no guarantees**
-- **Not affiliated** with Microsoft, Xbox, or any emulator developers
-- You must own the games you play - this project does not condone piracy
-- **Cannot be sold** - See [LICENSE](LICENSE) for commercial use terms
+Store uploads support different file types depending on platform and category.
 
-## � Quick Start - Add an Emulator
+General package behavior:
 
-**No coding required!** Just paste a URL:
+- Homebrew Apps and Console Apps use `.pkg` where required
+- PC Tools use compressed archives
+- PlayStation 2 uses compressed archives
+- Xbox 360 uses compressed archives with internal validation
+- Original Xbox uses compressed archives with internal validation
 
-1. Open **Settings** → **PC Ports** → **Mobile Tab**
-2. Click **"Download Emulator"**
-3. Paste the download URL (e.g., BlueStacks, RPCS3, PPSSPP)
-4. Click **"Download & Install"**
-5. Launch from the dashboard!
+Archive formats:
 
-**Works with ANY emulator - Android, iOS,, both Xboxs 360 & original all way up to PlayStation 3, all way up to Nintendo wiiU etc
-## 🛠️ Development Setup
+- `.zip`
+- `.7z`
+- `.rar`
 
-This project uses:
-- **React** (Frontend - Port 3000)
-- **Python FastAPI** (Backend - Port 8000)
-- **Tauri 2.0** (Desktop wrapper - deprecated)
+### Store Mods
 
-```bash
-# Clone the repo
-git clone https://github.com/rileyadams05/Vortex-Prime-emu.git
+Mods are uploaded as compressed archives only.
 
-# Install dependencies
-cd frontend && npm install
-cd ../backend && pip install -r requirements.txt
+Allowed mod archive formats:
 
-# Run backend
-cd backend && python server.py
+- `.zip`
+- `.7z`
+- `.rar`
 
-# Run frontend (in new terminal)
-cd frontend && npm start
+Mods do not use the Store category selector.
+
+## Platform Archive Validation
+
+Some platforms require extra validation before publishing.
+
+### Xbox 360
+
+Xbox 360 archives must contain at least one of:
+
+- `.xex` executable
+- Extensionless LIVE/CON container file
+
+Allowed supporting files include:
+
+- `.ini`
+- `.txt`
+
+### Original Xbox
+
+Original Xbox archives must contain at least one:
+
+- `.xbe` executable
+
+Allowed supporting files include:
+
+- `.ini`
+- `.txt`
+- Standard media asset folders
+
+## Media And Details
+
+Each public package can include a detail view with a media-style layout.
+
+Supported detail content:
+
+- Existing preview image
+- Embedded YouTube videos
+- README text
+- Markdown README content
+- Approved community video links
+- Approved external guide or source links
+
+The README area is designed to feel similar to the way GitHub displays a repository README: it appears as a readable section on the package details page after the main media area.
+
+## README Uploads
+
+Creators can upload a README file for a Store item or Mod item.
+
+Supported README formats:
+
+- `.txt`
+- `.md`
+- `.markdown`
+
+The README is saved with the item metadata so it can display on GitHub Pages without needing a live backend.
+
+## YouTube Videos
+
+The Creator Portal supports YouTube links as links, not video file uploads.
+
+Supported examples:
+
+- `https://www.youtube.com/watch?v=VIDEO_ID`
+- `https://youtu.be/VIDEO_ID`
+- YouTube Shorts links
+
+YouTube links are converted into embedded video players on the public package detail view.
+
+## Community Video Suggestions
+
+The data structure supports community/user-submitted video suggestions.
+
+Suggested videos include:
+
+- Title
+- YouTube URL
+- Submitted by
+- Status
+
+Statuses:
+
+- `pending`
+- `approved`
+- `rejected`
+
+Only approved suggestions are intended to show publicly. On a static GitHub Pages deployment, suggestions cannot be globally saved without a backend, but the data structure and admin review fields are already in place.
+
+## Project Structure
+
+```text
+docs/
+  index.html              Public website, Store, Store Mods, and shared UI
+  admin/index.html        Store Creator Portal
+  store/themes.json       Static Store catalogue
+  store-mods/mods.json    Static Mods catalogue
+
+backend/
+  server.py               FastAPI routes and upload validation
+  store_service.py        Submission saving, metadata, archive handling
+
+assets/
+  Store/submissions/      Uploaded package assets when using the backend
 ```
 
-## 🤝 Contributing
+## Local Development
 
-We welcome all contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- How to add new emulators
-- How to add new system tabs
-- Code style guidelines
-- Testing procedures
+The public website can be viewed from the `docs` folder as a static site. Backend upload features require the Python API.
 
-## 💬 Community & Contact
+Install backend dependencies:
 
-**Join the Discord Server:**
-- Discord: https://discord.gg/PVFJ64QA
-- For support, questions, or to contribute
-- For commercial use inquiries, message asking to speak to the owner
+```powershell
+cd "D:\PROJECTS\Vortex-Prime-emu"
+pip install -r backend\requirements.txt
+```
 
-**Need help? Use the Dashboard Help Tab:**
-1. Open **System Settings → Help & Support** inside the dashboard.
-2. Upload a **mandatory screenshot** of the issue (15 MB max). This unlocks Discord chat + voice help.
-3. (Optional) Attach a **short video clip** (≤ 5 minutes / 200 MB) if you want to show extra context.
-4. The app generates a ticket ID—mention it in the embedded Discord bugs chat or in the live Jitsi voice room.
-5. Voice support runs on the built-in Jitsi room, so you can talk directly with Budm4n or the team hands-free.
+Run the backend:
 
-**GitHub:**
-- Repository: https://github.com/rileyadams05/Vortex-Prime-emu
-- Issues: Report bugs or request features
+```powershell
+cd "D:\PROJECTS\Vortex-Prime-emu"
+python backend\server.py
+```
 
-## 📜 License
+When the site is opened on `localhost`, it can use the local backend API for dynamic store data and uploads.
 
-Vortex Prime is licensed under a custom open-source license:
+## Publishing To GitHub Pages
 
-### Free Use (No Restrictions)
-- ✅ Personal use - completely free
-- ✅ Educational use - completely free
-- ✅ Non-profit use - completely free
-- ✅ Modify and redistribute - as long as it stays free
-- ⚠️ **Credit required** - You must credit the original author
+After editing the site or exported JSON files, publish with:
 
-### Commercial Use (Requires Permission)
-- ❌ **Cannot sell** without permission
-- ❌ **Cannot monetize** without permission
-- 📧 **Must contact author first** via Discord
-- 💰 **Revenue sharing required** if approved
-- 🏆 **Prominent credit required**
+```powershell
+cd "D:\PROJECTS\Vortex-Prime-emu"
+git status
+git add docs backend README.md
+git commit -m "Update Vortex Prime Store"
+git push origin main
+```
 
-**Full license details:** See [LICENSE](LICENSE)
+GitHub Pages will rebuild from the repository after the push.
 
-**TL;DR:** Free for personal use with credit. Commercial use requires contacting B U D M 4 N via Discord for permission and revenue sharing agreement.
+## Community
 
----
+Join the Discord server for support, testing, feedback, and project discussion:
 
-<p align="center">
-  <em>Created by <strong>B U D M 4 N</strong></em><br>
-  <em>Join the community: <a href="https://discord.gg/PVFJ64QA">Discord Server</a></em>
-</p>
+https://discord.gg/PVFJ64QA
+
+## Status
+
+Vortex Prime Store is still being actively built. Current work is focused on:
+
+- Improving package detail pages
+- Expanding creator tools
+- Making publishing easier
+- Improving validation for platform-specific uploads
+- Adding moderation-friendly community contribution flows
+
+## License
+
+See [LICENSE](LICENSE) for license details.

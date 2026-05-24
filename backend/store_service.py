@@ -279,11 +279,15 @@ async def save_submission(
     icon_ext: Optional[str] = None,
     preview_bytes: Optional[bytes] = None,
     preview_ext: Optional[str] = None,
+    readme_bytes: Optional[bytes] = None,
+    readme_filename: Optional[str] = None,
     download_url: str = "",
     code: str = None,
     submission_type: str = "store",
     file_type: str = "pkg",
     allowed_extensions: list = None,
+    youtube_videos: list = None,
+    suggested_links: list = None,
     extract_contents: bool = False,
     db=None,
 ) -> dict:
@@ -321,6 +325,23 @@ async def save_submission(
         preview_path.write_bytes(preview_bytes)
         preview_url = f"/assets/Store/submissions/{submission_id}/preview.{ext}"
 
+    readme_data = None
+    if readme_bytes and readme_filename:
+        readme_ext = Path(readme_filename).suffix.lower()
+        safe_readme_name = f"readme{readme_ext}"
+        readme_path = folder / safe_readme_name
+        readme_path.write_bytes(readme_bytes)
+        try:
+            readme_content = readme_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            readme_content = readme_bytes.decode("utf-8", errors="replace")
+        readme_data = {
+            "filename": readme_filename,
+            "format": "text" if readme_ext == ".txt" else "markdown",
+            "url": f"/assets/Store/submissions/{submission_id}/{safe_readme_name}",
+            "content": readme_content,
+        }
+
     metadata = {
         "id": submission_id,
         "code": code,
@@ -334,8 +355,20 @@ async def save_submission(
         "tags": tags or [],
         "icon": icon_url,
         "preview": preview_url,
+        "readme": readme_data,
         "zip_file": zip_url,
         "download_url": download_url,
+        "youtubeVideos": youtube_videos or [],
+        "media": [
+            {
+                "type": "youtube",
+                "title": item.get("title") or "YouTube Video",
+                "url": item.get("url") or "",
+            }
+            for item in (youtube_videos or [])
+            if isinstance(item, dict) and item.get("url")
+        ],
+        "suggestedLinks": suggested_links or [],
         "type": submission_type,
         "fileType": file_type,
         "allowedExtensions": allowed_extensions or [".pkg"],

@@ -121,6 +121,20 @@
     .preview-thumb { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); margin-bottom: 0.5rem; }
     .preview-large { width: 100%; height: 140px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); margin-bottom: 0.5rem; }
     .upload-hint-box { font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem; }
+    .subsection { grid-column: 1 / -1; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.02); padding: 1rem; }
+    .subsection-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .85rem; }
+    .subsection-head h3 { font-size: .95rem; }
+    .subsection-head p { color: var(--muted); font-size: .75rem; margin-top: .2rem; }
+    .media-editor-list { display: grid; gap: .75rem; }
+    .media-editor-item { border: 1px solid rgba(255,255,255,.09); border-radius: 10px; padding: .85rem; background: rgba(0,0,0,.18); }
+    .media-editor-grid { display: grid; grid-template-columns: 160px 1fr; gap: .65rem; }
+    .media-editor-grid .full { grid-column: 1 / -1; }
+    .media-editor-actions { display: flex; justify-content: flex-end; margin-top: .65rem; }
+    .mini-empty { color: var(--muted); font-size: .8rem; border: 1px dashed var(--border); border-radius: 10px; padding: .85rem; }
+    .readme-preview { max-height: 160px; overflow: auto; text-align: left; white-space: pre-wrap; color: var(--muted); font-size: .78rem; line-height: 1.5; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: .65rem; background: rgba(0,0,0,.18); width: 100%; }
+    select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; width: 100%; }
+    select:focus { border-color: var(--primary); }
+    @media (max-width: 640px) { .media-editor-grid { grid-template-columns: 1fr; } .media-editor-grid .full { grid-column: auto; } }
 
     /* Auth gate overlay */
     .auth-overlay { position: fixed; inset: 0; background: rgba(9,9,11,.88); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 99999; }
@@ -485,9 +499,13 @@
         download_url: g('download_url'),
         platform,
         updated: g('updated') || undefined,
+        readme: pkg.readme,
         type: uploadConfig.type,
         fileType: rules.fileType,
         allowedExtensions: rules.allowedExtensions,
+        youtubeVideos: normalizeYoutubeVideos(pkg).filter(item => item && item.url),
+        media: normalizeYoutubeVideos(pkg).filter(item => item && item.url).map(item => ({ type: 'youtube', title: item.title || 'YouTube Video', url: item.url })),
+        suggestedLinks: normalizeSuggestedLinks(pkg).filter(item => item && item.url),
       };
       if (uploadMode === 'mods') {
         delete next.category;
@@ -523,6 +541,101 @@
     return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  function normalizeYoutubeVideos(pkg) {
+    const videos = Array.isArray(pkg.youtubeVideos) ? pkg.youtubeVideos : [];
+    if (videos.length) return videos;
+    const mediaVideos = Array.isArray(pkg.media) ? pkg.media.filter(item => item && item.type === 'youtube') : [];
+    return mediaVideos.map(item => ({ title: item.title || 'YouTube Video', url: item.url || '', submittedBy: item.submittedBy || '', status: item.status || 'approved' }));
+  }
+
+  function normalizeSuggestedLinks(pkg) {
+    return Array.isArray(pkg.suggestedLinks) ? pkg.suggestedLinks : [];
+  }
+
+  function buildYoutubeEditor(pkg, i) {
+    const videos = normalizeYoutubeVideos(pkg);
+    const rows = videos.length ? videos.map((item, videoIndex) => `
+      <div class="media-editor-item">
+        <div class="media-editor-grid">
+          <label class="field">
+            Title
+            <input type="text" value="${esc(item.title || '')}" placeholder="Install Guide" oninput="updateYoutubeVideo(${i}, ${videoIndex}, 'title', this.value)">
+          </label>
+          <label class="field">
+            Submitted By
+            <input type="text" value="${esc(item.submittedBy || '')}" placeholder="Uploader or creator" oninput="updateYoutubeVideo(${i}, ${videoIndex}, 'submittedBy', this.value)">
+          </label>
+          <label class="field full">
+            YouTube Link
+            <input type="url" value="${esc(item.url || '')}" placeholder="https://www.youtube.com/watch?v=..." oninput="updateYoutubeVideo(${i}, ${videoIndex}, 'url', this.value)">
+          </label>
+        </div>
+        <div class="media-editor-actions">
+          <button class="btn-danger" type="button" onclick="removeYoutubeVideo(${i}, ${videoIndex})">Remove Video</button>
+        </div>
+      </div>
+    `).join('') : '<div class="mini-empty">No YouTube videos yet. Paste YouTube links here; do not upload video files.</div>';
+
+    return `
+      <div class="subsection">
+        <div class="subsection-head">
+          <div>
+            <h3>YouTube Videos</h3>
+            <p>Paste YouTube watch, youtu.be, or Shorts links. Existing icon and preview image uploads stay unchanged.</p>
+          </div>
+          <button class="btn-secondary" type="button" onclick="addYoutubeVideo(${i})">+ Add YouTube Link</button>
+        </div>
+        <div class="media-editor-list">${rows}</div>
+      </div>
+    `;
+  }
+
+  function buildSuggestedLinksEditor(pkg, i) {
+    const links = normalizeSuggestedLinks(pkg);
+    const rows = links.length ? links.map((item, linkIndex) => `
+      <div class="media-editor-item">
+        <div class="media-editor-grid">
+          <label class="field">
+            Status
+            <select onchange="updateSuggestedLink(${i}, ${linkIndex}, 'status', this.value)">
+              <option value="pending" ${item.status === 'pending' ? 'selected' : ''}>pending</option>
+              <option value="approved" ${item.status === 'approved' ? 'selected' : ''}>approved</option>
+              <option value="rejected" ${item.status === 'rejected' ? 'selected' : ''}>rejected</option>
+            </select>
+          </label>
+          <label class="field">
+            Submitted By
+            <input type="text" value="${esc(item.submittedBy || '')}" placeholder="Username" oninput="updateSuggestedLink(${i}, ${linkIndex}, 'submittedBy', this.value)">
+          </label>
+          <label class="field">
+            Video Title
+            <input type="text" value="${esc(item.title || '')}" placeholder="Community Install Guide" oninput="updateSuggestedLink(${i}, ${linkIndex}, 'title', this.value)">
+          </label>
+          <label class="field">
+            YouTube Link
+            <input type="url" value="${esc(item.url || '')}" placeholder="https://youtu.be/..." oninput="updateSuggestedLink(${i}, ${linkIndex}, 'url', this.value)">
+          </label>
+        </div>
+        <div class="media-editor-actions">
+          <button class="btn-danger" type="button" onclick="removeSuggestedLink(${i}, ${linkIndex})">Remove Link</button>
+        </div>
+      </div>
+    `).join('') : '<div class="mini-empty">No suggested links yet. Add pending links here now; only approved links display publicly.</div>';
+
+    return `
+      <div class="subsection">
+        <div class="subsection-head">
+          <div>
+            <h3>Community Video Suggestions</h3>
+            <p>Videos added by other users. Only approved YouTube links show publicly.</p>
+          </div>
+          <button class="btn-secondary" type="button" onclick="addSuggestedLink(${i})">+ Add Suggested Video</button>
+        </div>
+        <div class="media-editor-list">${rows}</div>
+      </div>
+    `;
+  }
+
   function buildCard(pkg, i) {
     const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
     const categoryValue = uploadMode === 'mods' ? 'Homebrew Apps' : (pkg.category || 'Homebrew Apps');
@@ -553,6 +666,16 @@
           <div class="field full">
             <label>Description</label>
             <textarea data-field="description" placeholder="Short overview of the package..." oninput="onFieldInput(${i},'description',this.value)">${esc(pkg.description)}</textarea>
+          </div>
+          <div class="field full">
+            <label>README / Markdown Description</label>
+            <div class="upload-zone" onclick="document.getElementById('readme-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'readme_file')">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm1 7V3.5L19.5 9H15zM8 13h8v2H8v-2zm0 4h8v2H8v-2zm0-8h4v2H8V9z"/></svg>
+              <span class="file-name" id="readme-name-${i}">${pkg.readme?.filename ? esc(pkg.readme.filename) : 'Click or drop README file'}</span>
+              <span class="upload-hint-box">Upload README.txt, README.md, or Markdown instructions to show on the public details page.</span>
+              ${pkg.readme?.content ? `<div class="readme-preview">${esc(pkg.readme.content).slice(0, 1000)}</div>` : ''}
+              <input type="file" id="readme-file-${i}" accept=".txt,.md,.markdown,text/plain,text/markdown" style="display:none" onchange="handleFileSelect(${i}, 'readme_file', this)">
+            </div>
           </div>
           <div class="field">
             <label>Original Creator / Author Name *</label>
@@ -621,6 +744,8 @@
             <input type="text" data-field="download_url" value="${esc(pkg.download_url)}" placeholder="https://..." oninput="onFieldInput(${i},'download_url',this.value)">
             <span class="upload-hint-box">Optional. Use this to redirect downloads to an external file or source page instead.</span>
           </div>
+          ${buildYoutubeEditor(pkg, i)}
+          ${buildSuggestedLinksEditor(pkg, i)}
         </div>
         <div class="card-actions">
           <button class="btn-danger" style="margin-right:auto;" onclick="deleteFromServer(${i})">Delete from Server</button>
@@ -716,6 +841,48 @@
     }
   };
 
+  window.addYoutubeVideo = function(i) {
+    collectAll();
+    packages[i].youtubeVideos = normalizeYoutubeVideos(packages[i]);
+    packages[i].youtubeVideos.push({ title: 'YouTube Video', url: '', submittedBy: '', status: 'approved' });
+    markDirty();
+    render();
+  };
+
+  window.updateYoutubeVideo = function(i, videoIndex, field, value) {
+    packages[i].youtubeVideos = normalizeYoutubeVideos(packages[i]);
+    packages[i].youtubeVideos[videoIndex] = { ...(packages[i].youtubeVideos[videoIndex] || {}), [field]: value, status: 'approved' };
+    markDirty();
+  };
+
+  window.removeYoutubeVideo = function(i, videoIndex) {
+    collectAll();
+    packages[i].youtubeVideos = normalizeYoutubeVideos(packages[i]).filter((_, index) => index !== videoIndex);
+    markDirty();
+    render();
+  };
+
+  window.addSuggestedLink = function(i) {
+    collectAll();
+    packages[i].suggestedLinks = normalizeSuggestedLinks(packages[i]);
+    packages[i].suggestedLinks.push({ title: '', url: '', submittedBy: '', status: 'pending' });
+    markDirty();
+    render();
+  };
+
+  window.updateSuggestedLink = function(i, linkIndex, field, value) {
+    packages[i].suggestedLinks = normalizeSuggestedLinks(packages[i]);
+    packages[i].suggestedLinks[linkIndex] = { ...(packages[i].suggestedLinks[linkIndex] || {}), [field]: value };
+    markDirty();
+  };
+
+  window.removeSuggestedLink = function(i, linkIndex) {
+    collectAll();
+    packages[i].suggestedLinks = normalizeSuggestedLinks(packages[i]).filter((_, index) => index !== linkIndex);
+    markDirty();
+    render();
+  };
+
   // â”€â”€ Modern Upload Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window.handleFileSelect = function(i, field, input) {
     const file = input.files[0];
@@ -739,6 +906,32 @@
       toast(rules.invalidMessage, 'error');
       const input = document.getElementById(`zip-file-${i}`);
       if (input) input.value = '';
+      return;
+    }
+    if (field === 'readme_file') {
+      const allowedReadme = ['.txt', '.md', '.markdown'];
+      if (!allowedReadme.some(ext => lowerName.endsWith(ext))) {
+        toast('README files must be TXT, MD, or MARKDOWN.', 'error');
+        return;
+      }
+      if (file.size > 1024 * 1024) {
+        toast('README files must be 1 MB or smaller.', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        const content = String(e.target.result || '');
+        packages[i].readme = {
+          filename,
+          format: lowerName.endsWith('.txt') ? 'text' : 'markdown',
+          content
+        };
+        packages[i].readme_file_file = file;
+        markDirty();
+        render();
+        toast(`README ${filename} selected.`);
+      };
+      reader.readAsText(file);
       return;
     }
     const path = '/uploads/' + filename;
@@ -794,10 +987,13 @@
       fd.append('type', uploadConfig.type);
       fd.append('fileType', pkg.fileType || getUploadRules(pkg.category, pkg.platform).fileType);
       fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category, pkg.platform).allowedExtensions));
+      fd.append('youtubeVideos', JSON.stringify(normalizeYoutubeVideos(pkg).filter(item => item.url)));
+      fd.append('suggestedLinks', JSON.stringify(normalizeSuggestedLinks(pkg).filter(item => item.url)));
       
       if (pkg.zip_file_file) fd.append('theme', pkg.zip_file_file);
       if (pkg.icon_file_file) fd.append('icon', pkg.icon_file_file);
       if (pkg.preview_file_file) fd.append('preview', pkg.preview_file_file);
+      if (pkg.readme_file_file) fd.append('readme', pkg.readme_file_file);
 
       const res = await fetch(`${API_BASE}/store/upload`, {
         method: 'POST',
@@ -937,8 +1133,16 @@
       if (pkg.preview) out.preview = pkg.preview;
       if (pkg.zip_file) out.zip_file = pkg.zip_file;
       if (pkg.download_url) out.download_url = pkg.download_url;
+      if (pkg.readme && pkg.readme.content) out.readme = pkg.readme;
       if (uploadMode !== 'mods' && pkg.category) out.category = pkg.category;
       if (pkg.updated) out.updated = pkg.updated.includes('T') && !pkg.updated.endsWith('Z') ? pkg.updated + 'Z' : pkg.updated;
+      const youtubeVideos = normalizeYoutubeVideos(pkg).filter(item => item.url);
+      if (youtubeVideos.length) {
+        out.youtubeVideos = youtubeVideos;
+        out.media = youtubeVideos.map(item => ({ type: 'youtube', title: item.title || 'YouTube Video', url: item.url }));
+      }
+      const suggestedLinks = normalizeSuggestedLinks(pkg).filter(item => item.url);
+      if (suggestedLinks.length) out.suggestedLinks = suggestedLinks;
       const rules = getUploadRules(uploadMode === 'mods' ? 'Homebrew Apps' : (pkg.category || 'Homebrew Apps'), pkg.platform || 'PS4');
       out.type = uploadConfig.type;
       out.fileType = rules.fileType;

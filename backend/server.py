@@ -772,10 +772,13 @@ async def upload_store_theme(
     type: str = Form("store"),
     fileType: str = Form("pkg"),
     allowedExtensions: str = Form(""),
+    youtubeVideos: str = Form(""),
+    suggestedLinks: str = Form(""),
     access_token: str = Form(""),
     theme: UploadFile = File(...),
     icon: UploadFile = File(None),
     preview: UploadFile = File(None),
+    readme: UploadFile = File(None),
 ):
     """Accept a community package submission from the website."""
     # Verify Discord token when provided
@@ -850,6 +853,17 @@ async def upload_store_theme(
         preview_bytes = await preview.read()
         preview_ext = Path(preview.filename).suffix
 
+    readme_bytes = None
+    readme_filename = None
+    if readme and readme.filename:
+        readme_ext = Path(readme.filename).suffix.lower()
+        if readme_ext not in {".txt", ".md", ".markdown"}:
+            raise HTTPException(status_code=400, detail="README files must be TXT, MD, or MARKDOWN.")
+        readme_bytes = await readme.read()
+        if len(readme_bytes) > 1024 * 1024:
+            raise HTTPException(status_code=413, detail="README files must be 1 MB or smaller.")
+        readme_filename = readme.filename
+
     # Parse tags
     tag_list = []
     if tags:
@@ -857,6 +871,20 @@ async def upload_store_theme(
             tag_list = json.loads(tags)
         except:
             tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+
+    youtube_video_list = []
+    if youtubeVideos:
+        try:
+            youtube_video_list = json.loads(youtubeVideos)
+        except:
+            youtube_video_list = []
+
+    suggested_link_list = []
+    if suggestedLinks:
+        try:
+            suggested_link_list = json.loads(suggestedLinks)
+        except:
+            suggested_link_list = []
 
     result = await store_service.save_submission(
         name=name,
@@ -872,11 +900,15 @@ async def upload_store_theme(
         icon_ext=icon_ext,
         preview_bytes=preview_bytes,
         preview_ext=preview_ext,
+        readme_bytes=readme_bytes,
+        readme_filename=readme_filename,
         download_url=download_url,
         code=code,
         submission_type=submission_type,
         file_type=file_type,
         allowed_extensions=allowed_extensions,
+        youtube_videos=youtube_video_list,
+        suggested_links=suggested_link_list,
         extract_contents=should_extract_archive,
         db=db if mongo_available else None,
     )

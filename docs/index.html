@@ -1023,6 +1023,231 @@
             opacity: 0.3;
         }
 
+        .theme-view-details {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255,255,255,0.06);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-view-details:hover {
+            border-color: var(--color-primary);
+            background: rgba(16,185,129,0.1);
+        }
+
+        .item-detail-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+
+        .item-detail-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .item-detail-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.78);
+            backdrop-filter: blur(8px);
+        }
+
+        .item-detail-panel {
+            position: relative;
+            width: min(1040px, 100%);
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            padding: 1.25rem;
+        }
+
+        .item-detail-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+
+        .item-detail-header {
+            padding-right: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .item-detail-header h3 {
+            margin: 0 0 0.35rem;
+            font-size: 1.5rem;
+        }
+
+        .item-detail-header p {
+            color: var(--color-text-secondary);
+            margin: 0;
+            line-height: 1.55;
+        }
+
+        .media-gallery {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .media-main {
+            aspect-ratio: 16 / 9;
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .media-main img,
+        .media-main iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            object-fit: cover;
+        }
+
+        .media-thumbs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+            gap: 0.65rem;
+        }
+
+        .media-thumb {
+            min-height: 74px;
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: var(--color-text);
+            cursor: pointer;
+            overflow: hidden;
+            padding: 0;
+            text-align: left;
+        }
+
+        .media-thumb img {
+            width: 100%;
+            height: 74px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .media-thumb span {
+            display: block;
+            padding: 0.45rem 0.55rem;
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .media-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 0.9rem;
+        }
+
+        .media-links a {
+            color: var(--color-primary-light);
+            border: 1px solid var(--color-border);
+            border-radius: 999px;
+            padding: 0.45rem 0.75rem;
+            text-decoration: none;
+            font-size: 0.82rem;
+        }
+
+        .suggest-video-form {
+            margin-top: 1rem;
+            border-top: 1px solid var(--color-border);
+            padding-top: 1rem;
+            display: grid;
+            gap: 0.65rem;
+        }
+
+        .suggest-video-form input {
+            width: 100%;
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text);
+            padding: 0.7rem 0.85rem;
+            font: inherit;
+        }
+
+        .suggest-video-form button {
+            justify-self: start;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .readme-section {
+            margin-top: 1rem;
+            border-top: 1px solid var(--color-border);
+            padding-top: 1rem;
+        }
+
+        .readme-section h4 {
+            margin: 0 0 0.65rem;
+            font-size: 1rem;
+        }
+
+        .readme-body {
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 1rem;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            max-height: 360px;
+            overflow: auto;
+        }
+
+        .readme-body h1,
+        .readme-body h2,
+        .readme-body h3 {
+            color: var(--color-text);
+            margin: 0.75rem 0 0.4rem;
+        }
+
+        .readme-body p { margin: 0.45rem 0; }
+        .readme-body ul { padding-left: 1.35rem; margin: 0.45rem 0; }
+        .readme-body li { margin: 0.25rem 0; }
+        .readme-body a { color: var(--color-primary-light); }
+        .readme-body code { color: var(--color-primary-light); }
+
         .theme-icon {
             position: absolute;
             bottom: -32px;
@@ -2121,6 +2346,13 @@
                     </div>
                 </section>
             </div>
+            <div class="item-detail-modal" id="itemDetailModal" aria-hidden="true">
+                <div class="item-detail-backdrop" id="itemDetailBackdrop"></div>
+                <section class="item-detail-panel" role="dialog" aria-modal="true" aria-labelledby="itemDetailTitle">
+                    <button class="item-detail-close" id="itemDetailCloseBtn" type="button" aria-label="Close item details">×</button>
+                    <div id="itemDetailContent"></div>
+                </section>
+            </div>
             <script>
                 (function () {
                     let deferredInstallPrompt = null;
@@ -2146,6 +2378,10 @@
                     const profileSaveBtn = document.getElementById('profileSaveBtn');
                     const profileRefreshUploadsBtn = document.getElementById('profileRefreshUploadsBtn');
                     const profileUploadsList = document.getElementById('profileUploadsList');
+                    const itemDetailModal = document.getElementById('itemDetailModal');
+                    const itemDetailBackdrop = document.getElementById('itemDetailBackdrop');
+                    const itemDetailCloseBtn = document.getElementById('itemDetailCloseBtn');
+                    const itemDetailContent = document.getElementById('itemDetailContent');
 
                     function loadStoredUser() {
                         try {
@@ -2419,6 +2655,8 @@
 
                     if (profileBackdrop) profileBackdrop.addEventListener('click', closeProfilePanel);
                     if (profileCloseBtn) profileCloseBtn.addEventListener('click', closeProfilePanel);
+                    if (itemDetailBackdrop) itemDetailBackdrop.addEventListener('click', closeItemDetails);
+                    if (itemDetailCloseBtn) itemDetailCloseBtn.addEventListener('click', closeItemDetails);
                     if (profileSaveBtn) profileSaveBtn.addEventListener('click', saveProfilePanel);
                     if (profileAvatarFileInput) {
                         profileAvatarFileInput.addEventListener('change', () => {
@@ -2487,6 +2725,7 @@
                     const STORE_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/themes` : '/store/themes.json';
                     const MODS_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/mods` : '/store-mods/mods.json';
                     const CARDS_PER_PAGE = 10;
+                    const SUGGESTED_VIDEO_STORAGE_KEY = 'vpSuggestedYoutubeVideos';
 
                     const storeGrid = document.getElementById('storeGrid');
                     const noResults = document.getElementById('storeNoResults');
@@ -2657,6 +2896,197 @@
                         return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
                     }
 
+                    function getYoutubeId(url) {
+                        const value = String(url || '').trim();
+                        if (!value) return '';
+                        try {
+                            const parsed = new URL(value);
+                            const host = parsed.hostname.replace(/^www\./, '');
+                            if (host === 'youtu.be') return parsed.pathname.split('/').filter(Boolean)[0] || '';
+                            if (host.endsWith('youtube.com')) {
+                                if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/').filter(Boolean)[1] || '';
+                                if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/').filter(Boolean)[1] || '';
+                                return parsed.searchParams.get('v') || '';
+                            }
+                        } catch (error) {
+                            const match = value.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([A-Za-z0-9_-]{6,})/);
+                            return match ? match[1] : '';
+                        }
+                        return '';
+                    }
+
+                    function loadSuggestedVideos() {
+                        try {
+                            return JSON.parse(localStorage.getItem(SUGGESTED_VIDEO_STORAGE_KEY) || '{}');
+                        } catch (error) {
+                            return {};
+                        }
+                    }
+
+                    function saveSuggestedVideo(itemKey, video) {
+                        const all = loadSuggestedVideos();
+                        all[itemKey] = Array.isArray(all[itemKey]) ? all[itemKey] : [];
+                        all[itemKey].push(video);
+                        localStorage.setItem(SUGGESTED_VIDEO_STORAGE_KEY, JSON.stringify(all));
+                    }
+
+                    function itemKey(item) {
+                        return item.id || item.code || item.name || 'item';
+                    }
+
+                    function getPublicVideos(item) {
+                        const official = Array.isArray(item.youtubeVideos) ? item.youtubeVideos : [];
+                        const mediaVideos = Array.isArray(item.media)
+                            ? item.media.filter(entry => entry && entry.type === 'youtube')
+                            : [];
+                        const suggested = Array.isArray(item.suggestedLinks)
+                            ? item.suggestedLinks.filter(entry => entry && entry.status === 'approved' && getYoutubeId(entry.url))
+                            : [];
+                        const localSuggested = (loadSuggestedVideos()[itemKey(item)] || []).filter(entry => entry.status === 'pending');
+                        return [...official, ...mediaVideos, ...suggested, ...localSuggested]
+                            .filter(entry => entry && entry.url && getYoutubeId(entry.url))
+                            .map(entry => ({
+                                type: 'youtube',
+                                title: entry.title || 'YouTube Video',
+                                url: entry.url,
+                                submittedBy: entry.submittedBy || ''
+                            }));
+                    }
+
+                    function getGuideLinks(item) {
+                        return Array.isArray(item.suggestedLinks)
+                            ? item.suggestedLinks.filter(entry => entry && entry.status === 'approved' && entry.url && !getYoutubeId(entry.url))
+                            : [];
+                    }
+
+                    function getGalleryItems(item) {
+                        const gallery = [];
+                        if ((item.preview || '').trim()) {
+                            gallery.push({ type: 'image', title: 'Preview Image', url: item.preview });
+                        }
+                        getPublicVideos(item).forEach(video => gallery.push(video));
+                        return gallery;
+                    }
+
+                    function renderMediaMain(media) {
+                        if (!media) {
+                            return '<div class="theme-preview-placeholder">🎨</div>';
+                        }
+                        if (media.type === 'youtube') {
+                            const id = getYoutubeId(media.url);
+                            return `<iframe src="https://www.youtube.com/embed/${escapeAttribute(id)}" title="${escapeAttribute(media.title || 'YouTube Video')}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+                        }
+                        return `<img src="${escapeAttribute(media.url)}" alt="${escapeAttribute(media.title || 'Preview Image')}">`;
+                    }
+
+                    function renderReadmeContent(readme) {
+                        const content = readme && readme.content ? String(readme.content) : '';
+                        if (!content) return '';
+                        if (readme.format === 'text') {
+                            return `<pre class="readme-body">${escapeHtml(content)}</pre>`;
+                        }
+                        const inline = (value) => escapeHtml(value)
+                            .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/`([^`]+)`/g, '<code>$1</code>');
+                        const lines = content.replace(/\r\n/g, '\n').split('\n');
+                        const output = [];
+                        let listOpen = false;
+                        const closeList = () => {
+                            if (listOpen) {
+                                output.push('</ul>');
+                                listOpen = false;
+                            }
+                        };
+                        lines.forEach((line) => {
+                            if (/^\s*[-*]\s+/.test(line)) {
+                                if (!listOpen) {
+                                    output.push('<ul>');
+                                    listOpen = true;
+                                }
+                                output.push(`<li>${inline(line.replace(/^\s*[-*]\s+/, ''))}</li>`);
+                                return;
+                            }
+                            closeList();
+                            if (/^###\s+/.test(line)) output.push(`<h3>${inline(line.replace(/^###\s+/, ''))}</h3>`);
+                            else if (/^##\s+/.test(line)) output.push(`<h2>${inline(line.replace(/^##\s+/, ''))}</h2>`);
+                            else if (/^#\s+/.test(line)) output.push(`<h1>${inline(line.replace(/^#\s+/, ''))}</h1>`);
+                            else if (line.trim()) output.push(`<p>${inline(line)}</p>`);
+                            else output.push('');
+                        });
+                        closeList();
+                        return `<div class="readme-body">${output.join('')}</div>`;
+                    }
+
+                    function renderItemDetails(item) {
+                        if (!itemDetailContent) return;
+                        const gallery = getGalleryItems(item);
+                        const links = getGuideLinks(item);
+                        const first = gallery[0];
+                        const readmeMarkup = renderReadmeContent(item.readme);
+                        itemDetailContent.innerHTML = `
+                            <div class="item-detail-header">
+                                <h3 id="itemDetailTitle">${escapeHtml(item.name || 'Untitled Package')}</h3>
+                                <p>${escapeHtml(item.description || 'Package details coming soon.')}</p>
+                            </div>
+                            <div class="media-gallery">
+                                <div class="media-main" id="mediaMain">${renderMediaMain(first)}</div>
+                                ${gallery.length > 1 ? `<div class="media-thumbs">${gallery.map((media, index) => {
+                                    const youtubeId = media.type === 'youtube' ? getYoutubeId(media.url) : '';
+                                    const thumb = media.type === 'youtube'
+                                        ? `https://img.youtube.com/vi/${escapeAttribute(youtubeId)}/hqdefault.jpg`
+                                        : media.url;
+                                    return `<button class="media-thumb" type="button" data-media-index="${index}">
+                                        <img src="${escapeAttribute(thumb)}" alt="${escapeAttribute(media.title || 'Media')}">
+                                        <span>${escapeHtml(media.type === 'youtube' ? `Video: ${media.title || 'YouTube Video'}` : (media.title || 'Preview Image'))}</span>
+                                    </button>`;
+                                }).join('')}</div>` : ''}
+                            </div>
+                            ${links.length ? `<div class="media-links">${links.map(link => `<a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.title || 'Community Link')}</a>`).join('')}</div>` : ''}
+                            ${readmeMarkup ? `<div class="readme-section"><h4>${escapeHtml(item.readme?.filename || 'README')}</h4>${readmeMarkup}</div>` : ''}
+                            <div class="suggest-video-form">
+                                <strong>Suggest a YouTube video</strong>
+                                <input id="suggestVideoTitle" type="text" placeholder="Video title">
+                                <input id="suggestVideoUrl" type="url" placeholder="https://www.youtube.com/watch?v=...">
+                                <button id="suggestVideoBtn" type="button">Add Suggested Video</button>
+                            </div>
+                        `;
+                        itemDetailContent.querySelectorAll('.media-thumb').forEach(button => {
+                            button.addEventListener('click', () => {
+                                const media = gallery[Number(button.dataset.mediaIndex)];
+                                const main = document.getElementById('mediaMain');
+                                if (main) main.innerHTML = renderMediaMain(media);
+                            });
+                        });
+                        const suggestButton = document.getElementById('suggestVideoBtn');
+                        if (suggestButton) {
+                            suggestButton.addEventListener('click', () => {
+                                const title = document.getElementById('suggestVideoTitle')?.value.trim() || 'Community Video';
+                                const url = document.getElementById('suggestVideoUrl')?.value.trim() || '';
+                                if (!getYoutubeId(url)) {
+                                    alert('Please enter a valid YouTube link.');
+                                    return;
+                                }
+                                saveSuggestedVideo(itemKey(item), { title, url, submittedBy: currentUser?.name || 'Community', status: 'pending' });
+                                alert('Video suggestion saved as pending on this browser. Admin approval is needed before it appears publicly for everyone.');
+                                renderItemDetails(item);
+                            });
+                        }
+                    }
+
+                    function openItemDetails(item) {
+                        if (!itemDetailModal) return;
+                        renderItemDetails(item);
+                        itemDetailModal.classList.add('active');
+                        itemDetailModal.setAttribute('aria-hidden', 'false');
+                    }
+
+                    function closeItemDetails() {
+                        if (!itemDetailModal) return;
+                        itemDetailModal.classList.remove('active');
+                        itemDetailModal.setAttribute('aria-hidden', 'true');
+                    }
+
                     function createCard(theme, positionNumber) {
                         const card = document.createElement('div');
                         card.className = 'theme-card';
@@ -2748,9 +3178,19 @@
                                         ${copyButton}
                                     </div>
                                     ${downloadLink}
+                                    <button class="theme-view-details" type="button">View Details</button>
                                 </div>
                             </div>
                         `;
+
+                        const detailsButton = card.querySelector('.theme-view-details');
+                        if (detailsButton) {
+                            detailsButton.addEventListener('click', (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                openItemDetails(theme);
+                            });
+                        }
 
                         return card;
                     }
@@ -3160,6 +3600,7 @@
                         if (event.key === 'Escape') {
                             closeModal();
                             closeProfilePanel();
+                            closeItemDetails();
                         }
                     });
 
