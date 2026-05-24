@@ -193,7 +193,7 @@ opacity:0.7;
 		<script>
 			window.applicationCache.ondownloading=function(){document.getElementById("progress").innerHTML="Page Caching Started!!";};
 			window.applicationCache.onprogress=function(a){document.getElementById("progress").innerHTML=(Math.round(100*(a.loaded/a.total)))+"%";};
-			window.applicationCache.oncached=function(){document.getElementById("progress").innerHTML="Page Cached Successfully!!";setTimeout(function(){document.getElementById("progress").innerHTML="Reopen the Page !!"; }, 1500);localStorage.cachedB="yes";};
+			window.applicationCache.oncached=function(){document.getElementById("progress").innerHTML="Host cached successfully.";localStorage.cachedB="yes";};
 			window.applicationCache.onnoupdate=function(){localStorage.cachedB="yes";};
             window.applicationCache.onerror=function(){localStorage.cachedB="yes";};
 		</script>
@@ -232,6 +232,7 @@ var payload_buffer = chain.syscall(477, 0, 0x300000, 7, 0x1002, -1, 0);
 }
 
 function jbdone() {
+hideVortexMenus();
 window.progress.innerHTML="Jailbreak successful. Loading GoldHEN...";
 localStorage.setItem('fanthreshold', tempC.value);
 for(var i=50; i<=80; i=i+5){
@@ -242,11 +243,33 @@ for(var i=50; i<=80; i=i+5){
 	option.value = i;
 }
 tempC.value=60;
-all.style.display = "block";
+}
+
+function hideVortexMenus() {
+var sections = ["all", "gtav", "Linuxs", "Tools", "Dumpers", "creditsSection"];
+for (var i = 0; i < sections.length; i++) {
+    var section = document.getElementById(sections[i]);
+    if (section) section.style.display = "none";
+}
+}
+
+function showVortexSuccess(showAlert) {
+hideVortexMenus();
+window.progress.innerHTML = "GoldHEN loaded successfully.";
+var screen = document.getElementById("vortexSuccess");
+if (screen) screen.style.display = "block";
+if (showAlert && !window.vortexSuccessShown) {
+    window.vortexSuccessShown = true;
+    alert("GoldHEN loaded successfully.\n\nRemove the USB drive now.\n\nYou can now press the PS button and close the browser.");
+}
 }
 
 function allset() {
-window.progress.innerHTML= LoadedMSG
+if (String(LoadedMSG).toLowerCase().indexOf("goldhen") !== -1) {
+    showVortexSuccess(true);
+} else {
+    window.progress.innerHTML= LoadedMSG
+}
 }
 
 function Binset() {
@@ -795,6 +818,11 @@ Tools.style.display = "none";
 <body onload="if(localStorage.cachedB=='yes')setTimeout(poc,50);" style='background-color:#1A1920'>
 <h1 style='text-shadow: 4px 4px 4px black;font-size:30px;text-align:center;text-shadow: 4px 4px 4px black;color:yellow;margin-top:1%;'>Vortex Prime GoldHEN Host - 9.00</h1>
 <h1 id=progress style='font-size:25px;text-align:center;text-shadow: 4px 4px 4px black;color:white;'>Running exploit... please wait.</h1>
+<div id=vortexSuccess style="display:none;text-align:center;margin-top:6%;text-shadow: 4px 4px 4px black;color:white;">
+<h2 style="font-size:34px;color:#00ff99;margin-bottom:22px;">GoldHEN loaded successfully.</h2>
+<p style="font-size:26px;margin:12px 0;">Remove the USB drive now.</p>
+<p style="font-size:26px;margin:12px 0;">You can now press the PS button and close the browser.</p>
+</div>
 <div id=all style="text-align:center;display:none">
 <button id="button-Payload" onMouseOver="progress.innerHTML='GoldHen v2.1.2 by SISTR0 for PS4 9.00 Fw'" onmouseout="progress.innerHTML='Status'" type="button" onclick="goldhen212()" style='font-size:20px;text-align:center;text-shadow: 4px 4px 4px black;color:#CEC52A' > GoldHenV2.1.2</button>
 <button id="button-Payload" onMouseOver="progress.innerHTML='GoldHen v2.2.4 by SISTR0 for PS4 9.00 Fw'" onmouseout="progress.innerHTML='Status'" type="button" onclick="goldhen224()" style='font-size:20px;text-align:center;text-shadow: 4px 4px 4px black;color:#CEC52A' > GoldHenV2.2.4</button>
@@ -900,7 +928,7 @@ Tools.style.display = "none";
 <button id="button-Payload" onMouseOver="progress.innerHTML='module dumper'" onmouseout="progress.innerHTML='Status'" type="button" onclick="load_ModuleDumper()" style='font-size:20px;text-align:center;text-shadow: 4px 4px 4px black;color:white' > Module Dumper </button>
 <br><br><br>
 </div>
-<div class="content" >
+<div class="content" id="creditsSection" >
  	    <div class="text" >
  	        <br><div class="vortex-credits" style="text-align:center;text-shadow: 4px 4px 4px black;color:white;font-size:24px;line-height:1.55;">
   <span class="yellow">Credits:</span><br>
@@ -1583,8 +1611,7 @@ function kernel() {
             chain.fcall(patch_buffer, p.read8(KERNEL_BASE_PTR));
             chain.fcall(window.syscalls[73], patch_buffer, 0x4000);
             chain.run();
-            window.progress.innerHTML = "Jailbreak successful / GoldHEN loaded.";
-            alert("Jailbreak successful / GoldHEN loaded.\n\nRemove USB drive now.");
+            window.progress.innerHTML = "Jailbreak successful. Loading GoldHEN...";
             setTimeout(jbdone, 50);
         }
         else
