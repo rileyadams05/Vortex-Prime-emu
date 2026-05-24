@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png">
+  <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png">
+  <link rel="icon" href="/favicon-192x192.png" sizes="192x192" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta property="og:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
+  <title>Completing Google sign-in…</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #09090b;
+        --card: #111111;
+        --border: #1f2937;
+        --text: #f9fafb;
+        --muted: #9ca3af;
+        --accent: #3b82f6;
+        --success: #22c55e;
+        --error: #f87171;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: radial-gradient(1200px 800px at 50% 0%, rgba(59, 130, 246, 0.12), transparent 60%),
+          radial-gradient(1000px 700px at 80% 90%, rgba(34, 197, 94, 0.12), transparent 55%), var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+      }
+      .card {
+        width: min(420px, 100%);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 2rem 2.25rem;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.35);
+        text-align: center;
+      }
+      .spinner {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 1.5rem auto;
+        border-radius: 50%;
+        border: 4px solid rgba(59, 130, 246, 0.2);
+        border-top-color: var(--accent);
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      h1 {
+        margin: 0 0 0.75rem;
+        font-size: 1.35rem;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .status {
+        margin-top: 1.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+      }
+      .status.success {
+        color: var(--success);
+      }
+      .status.error {
+        color: var(--error);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <h1>Completing sign-in…</h1>
+      <p>Hang tight while we finish verifying your Google account.</p>
+      <div id="status" class="status">Authorizing with Google…</div>
+    </div>
+
+    <script>
+      const statusEl = document.getElementById('status');
+
+      function updateStatus(message, variant) {
+        statusEl.textContent = message;
+        statusEl.classList.remove('success', 'error');
+        if (variant) statusEl.classList.add(variant);
+      }
+
+      async function finalizeLogin() {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+
+        if (!code || !state) {
+          updateStatus('Missing Google authorization parameters.', 'error');
+          setTimeout(() => (window.location.href = '/admin/'), 1600);
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/google/callback', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ code, state })
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (res.ok && data && data.authenticated) {
+            updateStatus('Signed in! Redirecting to the Store Creator Portal…', 'success');
+            setTimeout(() => (window.location.href = '/admin/?authed=1'), 600);
+          } else {
+            updateStatus('Unable to verify Google sign-in. Please try again.', 'error');
+            setTimeout(() => (window.location.href = '/admin/'), 1600);
+          }
+        } catch (error) {
+          console.error(error);
+          updateStatus('Authentication service is unavailable. Please try again.', 'error');
+          setTimeout(() => (window.location.href = '/admin/'), 2000);
+        }
+      }
+
+      finalizeLogin();
+    </script>
+  </body>
+</html>
