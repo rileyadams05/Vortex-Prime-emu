@@ -480,6 +480,7 @@
     packages = Array.from(cards).map(card => {
       const idx = card.dataset.idx;
       const g = (name) => (card.querySelector(`[data-field="${name}"]`) || {}).value || '';
+      const checked = (name) => Boolean(card.querySelector(`[data-field="${name}"]`)?.checked);
       const tagChips = card.querySelectorAll('.tag-chip');
       const tags = Array.from(tagChips).map(c => c.dataset.tag).filter(Boolean);
       const pkg = packages[idx] || {};
@@ -487,7 +488,7 @@
       const platform = g('platform') || 'PS4';
       const rules = getUploadRules(category || 'Homebrew Apps', platform);
       const fileTypeValue = (g('fileType') || pkg.fileType || rules.fileType || '').toLowerCase();
-      const consoleInstallEnabled = g('consoleInstallEnabled') === 'true';
+      const consoleInstallEnabled = uploadMode !== 'mods' && checked('consoleInstallEnabled');
       const consoleMethod = g('consoleMethod') || 'none';
       const requiresConsoleIp = g('requiresConsoleIp') !== 'false';
       const publicPackageUrl = g('download_url') || g('zip_file');
@@ -653,12 +654,12 @@
               ${['pkg','zip','7z','rar','vpk','iso','cso','other'].map(value => `<option value="${value}" ${fileType === value ? 'selected' : ''}>${value.toUpperCase()}</option>`).join('')}
             </select>
           </label>
-          <label class="field">
-            Enable website console install/send
-            <select data-field="consoleInstallEnabled" onchange="onFieldInput(${i},'consoleInstallEnabled',this.value)">
-              <option value="false" ${!enabled ? 'selected' : ''}>No</option>
-              <option value="true" ${enabled ? 'selected' : ''}>Yes</option>
-            </select>
+          <label class="field full" style="display:flex;align-items:flex-start;gap:.65rem;line-height:1.35;">
+            <input type="checkbox" data-field="consoleInstallEnabled" ${enabled ? 'checked' : ''} onchange="onFieldInput(${i},'consoleInstallEnabled',this.checked)" style="width:18px;height:18px;margin-top:.12rem;accent-color:var(--accent);">
+            <span>
+              Enable website console install/send
+              <small style="display:block;color:var(--muted);font-weight:600;margin-top:.2rem;">Tick this if you want people to install or send this package directly to their console from Vortex Prime.</small>
+            </span>
           </label>
           <label class="field">
             Console Method
@@ -880,6 +881,16 @@
   window.onFieldInput = function(i, field, value) {
     packages[i][field] = value;
     markDirty();
+    if (field === 'consoleInstallEnabled') {
+      packages[i].consoleInstall = {
+        ...(packages[i].consoleInstall || {}),
+        enabled: Boolean(value),
+        platform: normalizePlatformForInstall(packages[i].platform),
+        method: packages[i].consoleMethod || getConsoleMethodForPackage(packages[i]),
+        requiresConsoleIp: packages[i].requiresConsoleIp !== false,
+      };
+      return;
+    }
     if (field === 'category' || field === 'platform') {
       const rules = getUploadRules(packages[i].category || 'Homebrew Apps', packages[i].platform || 'PS4');
       packages[i].fileType = rules.fileType;
@@ -1020,6 +1031,13 @@
     collectAll();
     const pkg = packages[i];
     if (!pkg.name) return toast('Package Title is required.', 'error');
+    if (uploadMode !== 'mods' && !pkg.consoleInstall?.enabled) {
+      const proceed = confirm('Website console install/send is not enabled for this package. Users will only get the normal download/manual install fallback. Do you want to upload it anyway?');
+      if (!proceed) {
+        toast('Upload cancelled. Tick console install/send if you want to enable it.', 'error');
+        return;
+      }
+    }
     if (!IS_LOCAL_BACKEND) {
       toast('Server upload requires running the local API backend. Use "Save Package File" and commit the JSON instead.', 'error');
       return;
