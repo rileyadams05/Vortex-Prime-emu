@@ -198,7 +198,6 @@
 <div id="saveBar">
   <span class="save-hint" id="saveHint">Your changes are saved locally as you work. Ready to publish?</span>
   <div style="display: flex; gap: 0.75rem;">
-    <button class="btn-secondary" onclick="exportBackup()">Backup JSON</button>
     <button class="btn-success" onclick="submitAll()" id="submitAllBtn">Upload All to Store</button>
   </div>
 </div>
@@ -966,7 +965,7 @@
   }
 
   const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const API_BASE = IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '';
+  const API_BASE = window.VORTEX_API_BASE || (IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '/api');
 
   window.submitToStore = async function(i, btn) {
     collectAll();
@@ -979,11 +978,6 @@
         return;
       }
     }
-    if (!IS_LOCAL_BACKEND) {
-      toast('Server upload requires running the local API backend. Use "Save Package File" and commit the JSON instead.', 'error');
-      return;
-    }
-    
     const oldText = btn.textContent;
     btn.textContent = 'Uploading...';
     btn.disabled = true;
@@ -1022,8 +1016,8 @@
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Upload failed');
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Upload server returned ${res.status}`);
       }
 
       toast(`Successfully uploaded ${pkg.name}!`);
@@ -1031,7 +1025,10 @@
       // Reload to get new IDs/States
       setTimeout(() => location.reload(), 1500);
     } catch (err) {
-      toast(err.message, 'error');
+      const message = err instanceof TypeError
+        ? 'Live upload server is not reachable. The website API must be deployed for direct uploads.'
+        : err.message;
+      toast(message, 'error');
     } finally {
       btn.textContent = oldText;
       btn.disabled = false;
@@ -1041,20 +1038,19 @@
   window.deleteFromServer = async function(i) {
     const pkg = packages[i];
     if (!pkg.id) return toast('This package is not yet on the server.', 'error');
-    if (!IS_LOCAL_BACKEND) {
-      toast('Server removal is only available when the local API backend is running.', 'error');
-      return;
-    }
 
     try {
       const res = await fetch(`${API_BASE}/store/themes/${pkg.id}`, {
         method: 'DELETE'
       });
-      if (!res.ok) throw new Error('Deletion failed');
+      if (!res.ok) throw new Error(`Delete server returned ${res.status}`);
       toast('Package removed from store.');
       location.reload();
     } catch (err) {
-      toast(err.message, 'error');
+      const message = err instanceof TypeError
+        ? 'Live upload server is not reachable. The website API must be deployed for direct changes.'
+        : err.message;
+      toast(message, 'error');
     }
   };
 
@@ -1132,7 +1128,7 @@
     packages.splice(i, 1);
     markDirty();
     render();
-    toast(`${uploadMode === 'mods' ? 'Mod' : 'Package'} removed. Click Save Package File to apply.`, 'success');
+    toast(`${uploadMode === 'mods' ? 'Mod' : 'Package'} removed locally. Use Upload All to publish changes.`, 'success');
   };
 
   // â”€â”€ Sorting and Ordering is now automatic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1151,7 +1147,7 @@
           const data = JSON.parse(e.target.result);
           packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
           dirty = false;
-          document.getElementById('saveHint').textContent = `Loaded ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) from ${file.name} - click Save Package File when done.`;
+          document.getElementById('saveHint').textContent = `Loaded ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) from ${file.name}. Use Upload All to publish changes.`;
           render();
           toast(`Loaded ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s).`);
         } catch {
@@ -1278,8 +1274,8 @@
         packages.splice(index, 1);
         markDirty();
         render();
-        document.getElementById('saveHint').textContent = `Removed ${label}. Click Save Package File, replace ${uploadConfig.jsonPath}, then push to publish.`;
-        toast(`${uploadMode === 'mods' ? 'Mod' : 'Package'} removed. Save the package file to apply.`, 'success');
+        document.getElementById('saveHint').textContent = `Removed ${label}. Use Upload All to publish changes.`;
+        toast(`${uploadMode === 'mods' ? 'Mod' : 'Package'} removed locally.`, 'success');
       } else {
         render();
       }
@@ -1305,35 +1301,25 @@
   // â”€â”€ Auto-load themes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const liveDataUrl = uploadMode === 'mods' ? `${API_BASE}/store/mods` : `${API_BASE}/store/themes`;
   const staticDataUrl = uploadMode === 'mods' ? '../store-mods/mods.json' : '../store/themes.json';
-  if (IS_LOCAL_BACKEND) {
-    fetch(liveDataUrl, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => {
-        packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : (Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []));
-        document.getElementById('saveHint').textContent =
-          `Connected to live ${uploadMode === 'mods' ? 'mods' : 'store'}. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
-        applyProfileActionOrRender();
-      })
-      .catch(() => {
-        fetch(staticDataUrl, { cache: 'no-store' })
-          .then(r => r.ok ? r.json() : Promise.reject())
-          .then(data => {
-            packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
-            applyProfileActionOrRender();
-          })
-          .catch(() => applyProfileActionOrRender());
-      });
-  } else {
-    fetch(staticDataUrl, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => {
-        packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
-        document.getElementById('saveHint').textContent =
-          `Loaded static catalogue. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
-        applyProfileActionOrRender();
-      })
-      .catch(() => applyProfileActionOrRender());
-  }
+  fetch(liveDataUrl, { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : (Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []));
+      document.getElementById('saveHint').textContent =
+        `Connected to live ${uploadMode === 'mods' ? 'mods' : 'store'}. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
+      applyProfileActionOrRender();
+    })
+    .catch(() => {
+      fetch(staticDataUrl, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
+          document.getElementById('saveHint').textContent =
+            `Live upload API unavailable. Showing static catalogue with ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s).`;
+          applyProfileActionOrRender();
+        })
+        .catch(() => applyProfileActionOrRender());
+    });
 
 })();
 </script>
