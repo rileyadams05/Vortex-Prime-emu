@@ -637,14 +637,11 @@
       ['ps5-direct-package', 'ps5-direct-package'],
       ['ps3-webman-mod', 'ps3-webman-mod'],
     ].map(([value, label]) => `<option value="${value}" ${method === value ? 'selected' : ''}>${label}</option>`).join('');
-    const instructions = pkg.installInstructions || {};
-
     return `
       <div class="subsection">
         <div class="subsection-head">
           <div>
             <h3>Console Package Installer</h3>
-            <p>Built into Vortex Prime. Enables Install to PS4, Install to PS5, or Send to PS3 from the public package page.</p>
           </div>
         </div>
         <div class="media-editor-grid">
@@ -658,7 +655,6 @@
             <input type="checkbox" data-field="consoleInstallEnabled" ${enabled ? 'checked' : ''} onchange="onFieldInput(${i},'consoleInstallEnabled',this.checked)" style="width:18px;height:18px;margin-top:.12rem;accent-color:var(--accent);">
             <span>
               Enable website console install/send
-              <small style="display:block;color:var(--muted);font-weight:600;margin-top:.2rem;">Tick this if you want people to install or send this package directly to their console from Vortex Prime.</small>
             </span>
           </label>
           <label class="field">
@@ -674,28 +670,7 @@
               <option value="false" ${(install.requiresConsoleIp === false) ? 'selected' : ''}>No</option>
             </select>
           </label>
-          <label class="field full">
-            USB install instructions
-            <textarea data-field="usbInstructions" rows="3" placeholder="USB install instructions..." oninput="onFieldInput(${i},'usbInstructions',this.value)">${esc(instructions.usb || pkg.usbInstructions || '')}</textarea>
-          </label>
-          <label class="field full">
-            Network install instructions
-            <textarea data-field="networkInstructions" rows="3" placeholder="Network install instructions..." oninput="onFieldInput(${i},'networkInstructions',this.value)">${esc(instructions.network || pkg.networkInstructions || '')}</textarea>
-          </label>
-          <label class="field full">
-            Notes
-            <textarea data-field="installNotes" rows="3" placeholder="Extra notes..." oninput="onFieldInput(${i},'installNotes',this.value)">${esc(instructions.notes || pkg.installNotes || '')}</textarea>
-          </label>
-          <label class="field">
-            External Guide URL
-            <input type="url" data-field="externalGuideUrl" value="${esc(pkg.externalGuideUrl || '')}" placeholder="https://..." oninput="onFieldInput(${i},'externalGuideUrl',this.value)">
-          </label>
-          <label class="field">
-            YouTube Guide URL
-            <input type="url" data-field="youtubeGuideUrl" value="${esc(pkg.youtubeGuideUrl || '')}" placeholder="https://youtu.be/..." oninput="onFieldInput(${i},'youtubeGuideUrl',this.value)">
-          </label>
         </div>
-        <span class="upload-hint-box">PS4 PKG can use ps4-direct-package. PS5 PKG can use ps5-direct-package when enabled. PS3 PKG can use ps3-webman-mod. PS Vita and PSP stay manual for now.</span>
       </div>
     `;
   }
@@ -730,10 +705,6 @@
           <div class="field">
             <label>Store Code</label>
             <input type="text" data-field="code" value="${esc(pkg.code || '')}" placeholder="example-package" oninput="onFieldInput(${i},'code',this.value)">
-          </div>
-          <div class="field full">
-            <label>Description</label>
-            <textarea data-field="description" rows="3" placeholder="Package description..." oninput="onFieldInput(${i},'description',this.value)">${esc(pkg.description || '')}</textarea>
           </div>
           <div class="field full">
             <label>README / Markdown Description</label>
