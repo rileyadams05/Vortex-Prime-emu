@@ -1,12 +1,16 @@
 from pathlib import Path
+import ipaddress
 import json
 import logging
 import os
+from urllib.parse import quote
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, File, Form, HTTPException, UploadFile
+import httpx
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request as StarletteRequest
@@ -24,6 +28,13 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+ALLOWED_CONSOLE_METHODS = {
+    "ps4": {"ps4-direct-package"},
+    "ps5": {"ps5-direct-package"},
+    "ps3": {"ps3-webman-mod"},
+}
+SUPPORTED_CONSOLE_FILE_TYPES = {".pkg"}
 
 try:
     mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
@@ -84,6 +95,119 @@ def _parse_youtube_videos(youtube_videos: str) -> list[dict]:
         return []
 
 
+class ConsolePackageRequest(BaseModel):
+    platform: str
+    method: str
+    consoleIp: str
+    packageUrl: str
+
+
+def _normalized_platform(platform: str) -> str:
+    value = (platform or "").strip().lower().replace("playstation ", "ps")
+    if value in {"ps4", "ps5", "ps3"}:
+        return value
+    raise HTTPException(status_code=400, detail="Unsupported console platform.")
+
+
+def _validate_console_method(platform: str, method: str) -> str:
+    value = (method or "").strip().lower()
+    if value not in ALLOWED_CONSOLE_METHODS.get(platform, set()):
+        raise HTTPException(status_code=400, detail="Unsupported console install method for this platform.")
+    return value
+
+
+def _validate_private_console_ip(console_ip: str) -> str:
+    try:
+        parsed = ipaddress.ip_address((console_ip or "").strip())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Enter a valid console IP address.") from exc
+
+    if not isinstance(parsed, ipaddress.IPv4Address) or not parsed.is_private:
+        raise HTTPException(status_code=400, detail="Console IP must be a private LAN address.")
+
+    if parsed.is_loopback or parsed.is_link_local or parsed.is_multicast or parsed.is_unspecified:
+        raise HTTPException(status_code=400, detail="Console IP must be a private LAN address.")
+
+    return str(parsed)
+
+
+def _validate_package_url(package_url: str) -> str:
+    value = (package_url or "").strip()
+    if not value:
+        raise HTTPException(status_code=400, detail="Package URL is required.")
+
+    try:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(value)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Enter a valid package URL.") from exc
+
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise HTTPException(status_code=400, detail="Package URL must be HTTP or HTTPS.")
+
+    if Path(parsed.path).suffix.lower() not in SUPPORTED_CONSOLE_FILE_TYPES:
+        raise HTTPException(status_code=400, detail="Console package sending only supports PKG files.")
+
+    return value
+
+
+async def _send_ps_direct_package(platform: str, console_ip: str, package_url: str) -> dict:
+    async with httpx.AsyncClient(timeout=8.0) as client:
+        try:
+            response = await client.post(
+                f"http://{console_ip}:12800/api/install",
+                content=json.dumps({"type": "direct", "packages": [package_url]}),
+                headers={"Content-Type": "application/json"},
+            )
+            body = response.text
+            if response.is_success and ("success" in body.lower() or body.strip() in {"", "{}"}):
+                return {"ok": True, "message": f"Install request sent to {platform.upper()}. Check your console."}
+        except httpx.RequestError:
+            body = ""
+
+        try:
+            files = {
+                "file": ("", b"", "application/octet-stream"),
+                "url": (None, package_url),
+            }
+            response = await client.post(f"http://{console_ip}:12800/upload", files=files)
+            body = response.text
+            if response.is_success and "success" in body.lower():
+                return {"ok": True, "message": f"Install request sent to {platform.upper()}. Check your console."}
+        except httpx.RequestError:
+            pass
+
+    return {
+        "ok": False,
+        "message": "Could not connect to console. Make sure the console is on the same network and the required console service is enabled.",
+    }
+
+
+async def _send_ps3_webman_package(console_ip: str, package_url: str) -> dict:
+    encoded_url = quote(package_url, safe="")
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            await client.get(f"http://{console_ip}/", timeout=4.0)
+        except httpx.RequestError:
+            return {
+                "ok": False,
+                "message": "Could not send package to PS3. Make sure your PS3 is on the same network, HEN/CFW is enabled, and webMAN-MOD is running. You can still download the PKG and install it manually from Package Manager.",
+            }
+
+        try:
+            response = await client.get(f"http://{console_ip}/xmb.ps3/install.ps3?url={encoded_url}")
+            if response.status_code < 400:
+                return {"ok": True, "message": "Package request sent to PS3. Check your PS3."}
+        except httpx.RequestError:
+            pass
+
+    return {
+        "ok": False,
+        "message": "Could not send package to PS3. Make sure your PS3 is on the same network, HEN/CFW is enabled, and webMAN-MOD is running. You can still download the PKG and install it manually from Package Manager.",
+    }
+
+
 def _archive_rules(submission_type: str, platform: str, category: str, filename: str) -> tuple[str, str, list[str], bool]:
     platform_key = (platform or "").lower()
     category_key = (category or "").lower()
@@ -129,6 +253,7 @@ async def root():
 @api_router.post("/store/upload")
 async def upload_store_package(
     name: str = Form(...),
+    description: str = Form(""),
     discord_id: str = Form(...),
     author: str = Form(...),
     platform: str = Form("PS4"),
@@ -137,6 +262,14 @@ async def upload_store_package(
     download_url: str = Form(""),
     code: str = Form(None),
     type: str = Form("store"),
+    consoleInstallEnabled: str = Form("false"),
+    consoleMethod: str = Form("none"),
+    requiresConsoleIp: str = Form("true"),
+    usbInstructions: str = Form(""),
+    networkInstructions: str = Form(""),
+    installNotes: str = Form(""),
+    externalGuideUrl: str = Form(""),
+    youtubeGuideUrl: str = Form(""),
     youtubeVideos: str = Form(""),
     access_token: str = Form(""),
     theme: UploadFile = File(...),
@@ -194,7 +327,7 @@ async def upload_store_package(
 
     return await store_service.save_submission(
         name=name,
-        description="",
+        description=description,
         discord_id=discord_id,
         author=author,
         zip_bytes=package_bytes,
@@ -213,6 +346,14 @@ async def upload_store_package(
         submission_type=submission_type,
         file_type=file_type,
         allowed_extensions=allowed_extensions,
+        console_install_enabled=consoleInstallEnabled.lower() in {"1", "true", "yes", "on"},
+        console_method=consoleMethod,
+        requires_console_ip=requiresConsoleIp.lower() not in {"0", "false", "no", "off"},
+        usb_instructions=usbInstructions,
+        network_instructions=networkInstructions,
+        install_notes=installNotes,
+        external_guide_url=externalGuideUrl,
+        youtube_guide_url=youtubeGuideUrl,
         youtube_videos=_parse_youtube_videos(youtubeVideos),
         extract_contents=should_extract_archive,
         db=db if mongo_available else None,
@@ -238,6 +379,22 @@ async def delete_store_package(submission_id: str, discord_id: str):
     if not ok:
         raise HTTPException(status_code=403, detail="Unauthorized or package not found")
     return {"status": "deleted"}
+
+
+@api_router.post("/console-package/send")
+async def send_console_package(request: ConsolePackageRequest):
+    platform = _normalized_platform(request.platform)
+    method = _validate_console_method(platform, request.method)
+    console_ip = _validate_private_console_ip(request.consoleIp)
+    package_url = _validate_package_url(request.packageUrl)
+
+    if method in {"ps4-direct-package", "ps5-direct-package"}:
+        return await _send_ps_direct_package(platform, console_ip, package_url)
+
+    if method == "ps3-webman-mod":
+        return await _send_ps3_webman_package(console_ip, package_url)
+
+    raise HTTPException(status_code=400, detail="Unsupported console install method.")
 
 
 app.include_router(api_router)

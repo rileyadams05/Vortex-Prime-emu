@@ -1,0 +1,5 @@
+DirectPackageInstaller/
+webMAN-MOD/
+.env
+.env.*
+*.log

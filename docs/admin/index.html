@@ -57,8 +57,8 @@
     .field { display: flex; flex-direction: column; gap: .4rem; }
     .field.full { grid-column: 1 / -1; }
     label { font-size: .8rem; font-weight: 500; color: var(--muted); }
-    input, textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; transition: border-color .2s; width: 100%; }
-    input:focus, textarea:focus { border-color: var(--primary); }
+    input, textarea, select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; transition: border-color .2s; width: 100%; }
+    input:focus, textarea:focus, select:focus { border-color: var(--primary); }
     textarea { resize: vertical; min-height: 80px; }
     .tags-input { display: flex; flex-wrap: wrap; gap: .4rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: .5rem .75rem; min-height: 42px; cursor: text; }
     .tags-input.focused { border-color: var(--primary); }
@@ -486,10 +486,17 @@
       const category = uploadMode === 'mods' ? '' : (g('category') || 'Homebrew Apps');
       const platform = g('platform') || 'PS4';
       const rules = getUploadRules(category || 'Homebrew Apps', platform);
+      const fileTypeValue = (g('fileType') || pkg.fileType || rules.fileType || '').toLowerCase();
+      const consoleInstallEnabled = g('consoleInstallEnabled') === 'true';
+      const consoleMethod = g('consoleMethod') || 'none';
+      const requiresConsoleIp = g('requiresConsoleIp') !== 'false';
+      const publicPackageUrl = g('download_url') || g('zip_file');
       const next = {
         ...pkg,
         id: card.dataset.id || pkg.id,
         name: g('name'),
+        code: g('code'),
+        description: g('description'),
         creator: g('creator'),
         tags,
         icon: g('icon'),
@@ -500,8 +507,27 @@
         updated: g('updated') || undefined,
         readme: pkg.readme,
         type: uploadConfig.type,
-        fileType: rules.fileType,
+        fileType: fileTypeValue,
         allowedExtensions: rules.allowedExtensions,
+        download: {
+          enabled: Boolean(publicPackageUrl),
+          url: publicPackageUrl,
+          type: fileTypeValue,
+        },
+        consoleInstall: {
+          enabled: consoleInstallEnabled,
+          platform: normalizePlatformForInstall(platform),
+          method: consoleMethod,
+          url: publicPackageUrl,
+          requiresConsoleIp,
+        },
+        installInstructions: {
+          usb: g('usbInstructions'),
+          network: g('networkInstructions'),
+          notes: g('installNotes'),
+        },
+        externalGuideUrl: g('externalGuideUrl'),
+        youtubeGuideUrl: g('youtubeGuideUrl'),
         youtubeVideos: normalizeYoutubeVideos(pkg).filter(item => item && item.url),
         media: normalizeYoutubeVideos(pkg).filter(item => item && item.url).map(item => ({ type: 'youtube', title: item.title || 'YouTube Video', url: item.url })),
       };
@@ -584,6 +610,95 @@
     `;
   }
 
+  function normalizePlatformForInstall(platform) {
+    return String(platform || '').trim().toLowerCase().replace('playstation ', 'ps');
+  }
+
+  function getConsoleMethodForPackage(pkg) {
+    const platform = normalizePlatformForInstall(pkg.platform);
+    const fileType = String(pkg.fileType || '').toLowerCase();
+    if (platform === 'ps4' && fileType === 'pkg') return 'ps4-direct-package';
+    if (platform === 'ps5' && fileType === 'pkg') return 'ps5-direct-package';
+    if (platform === 'ps3' && fileType === 'pkg') return 'ps3-webman-mod';
+    return 'none';
+  }
+
+  function buildConsoleInstallEditor(pkg, i, rules) {
+    if (uploadMode === 'mods') return '';
+    const fileType = String(pkg.fileType || rules.fileType || 'pkg').toLowerCase();
+    const methodAllowed = getConsoleMethodForPackage({ ...pkg, fileType });
+    const install = pkg.consoleInstall || {};
+    const enabled = Boolean(install.enabled || pkg.consoleInstallEnabled);
+    const method = install.method || pkg.consoleMethod || methodAllowed;
+    const methodOptions = [
+      ['none', 'none'],
+      ['ps4-direct-package', 'ps4-direct-package'],
+      ['ps5-direct-package', 'ps5-direct-package'],
+      ['ps3-webman-mod', 'ps3-webman-mod'],
+    ].map(([value, label]) => `<option value="${value}" ${method === value ? 'selected' : ''}>${label}</option>`).join('');
+    const instructions = pkg.installInstructions || {};
+
+    return `
+      <div class="subsection">
+        <div class="subsection-head">
+          <div>
+            <h3>Console Package Installer</h3>
+            <p>Built into Vortex Prime. Enables Install to PS4, Install to PS5, or Send to PS3 from the public package page.</p>
+          </div>
+        </div>
+        <div class="media-editor-grid">
+          <label class="field">
+            File Type
+            <select data-field="fileType" onchange="onFieldInput(${i},'fileType',this.value)">
+              ${['pkg','zip','7z','rar','vpk','iso','cso','other'].map(value => `<option value="${value}" ${fileType === value ? 'selected' : ''}>${value.toUpperCase()}</option>`).join('')}
+            </select>
+          </label>
+          <label class="field">
+            Enable website console install/send
+            <select data-field="consoleInstallEnabled" onchange="onFieldInput(${i},'consoleInstallEnabled',this.value)">
+              <option value="false" ${!enabled ? 'selected' : ''}>No</option>
+              <option value="true" ${enabled ? 'selected' : ''}>Yes</option>
+            </select>
+          </label>
+          <label class="field">
+            Console Method
+            <select data-field="consoleMethod" onchange="onFieldInput(${i},'consoleMethod',this.value)">
+              ${methodOptions}
+            </select>
+          </label>
+          <label class="field">
+            Requires Console IP
+            <select data-field="requiresConsoleIp" onchange="onFieldInput(${i},'requiresConsoleIp',this.value)">
+              <option value="true" ${(install.requiresConsoleIp ?? true) ? 'selected' : ''}>Yes</option>
+              <option value="false" ${(install.requiresConsoleIp === false) ? 'selected' : ''}>No</option>
+            </select>
+          </label>
+          <label class="field full">
+            USB install instructions
+            <textarea data-field="usbInstructions" rows="3" placeholder="USB install instructions..." oninput="onFieldInput(${i},'usbInstructions',this.value)">${esc(instructions.usb || pkg.usbInstructions || '')}</textarea>
+          </label>
+          <label class="field full">
+            Network install instructions
+            <textarea data-field="networkInstructions" rows="3" placeholder="Network install instructions..." oninput="onFieldInput(${i},'networkInstructions',this.value)">${esc(instructions.network || pkg.networkInstructions || '')}</textarea>
+          </label>
+          <label class="field full">
+            Notes
+            <textarea data-field="installNotes" rows="3" placeholder="Extra notes..." oninput="onFieldInput(${i},'installNotes',this.value)">${esc(instructions.notes || pkg.installNotes || '')}</textarea>
+          </label>
+          <label class="field">
+            External Guide URL
+            <input type="url" data-field="externalGuideUrl" value="${esc(pkg.externalGuideUrl || '')}" placeholder="https://..." oninput="onFieldInput(${i},'externalGuideUrl',this.value)">
+          </label>
+          <label class="field">
+            YouTube Guide URL
+            <input type="url" data-field="youtubeGuideUrl" value="${esc(pkg.youtubeGuideUrl || '')}" placeholder="https://youtu.be/..." oninput="onFieldInput(${i},'youtubeGuideUrl',this.value)">
+          </label>
+        </div>
+        <span class="upload-hint-box">PS4 PKG can use ps4-direct-package. PS5 PKG can use ps5-direct-package when enabled. PS3 PKG can use ps3-webman-mod. PS Vita and PSP stay manual for now.</span>
+      </div>
+    `;
+  }
+
   function buildCard(pkg, i) {
     const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
     const categoryValue = uploadMode === 'mods' ? 'Homebrew Apps' : (pkg.category || 'Homebrew Apps');
@@ -610,6 +725,14 @@
           <div class="field">
             <label>Package Title *</label>
             <input type="text" data-field="name" value="${esc(pkg.name)}" placeholder="Example" oninput="onFieldInput(${i},'name',this.value)">
+          </div>
+          <div class="field">
+            <label>Store Code</label>
+            <input type="text" data-field="code" value="${esc(pkg.code || '')}" placeholder="example-package" oninput="onFieldInput(${i},'code',this.value)">
+          </div>
+          <div class="field full">
+            <label>Description</label>
+            <textarea data-field="description" rows="3" placeholder="Package description..." oninput="onFieldInput(${i},'description',this.value)">${esc(pkg.description || '')}</textarea>
           </div>
           <div class="field full">
             <label>README / Markdown Description</label>
@@ -688,6 +811,7 @@
             <input type="text" data-field="download_url" value="${esc(pkg.download_url)}" placeholder="https://..." oninput="onFieldInput(${i},'download_url',this.value)">
             <span class="upload-hint-box">Optional. Use this to redirect downloads to an external file or source page instead.</span>
           </div>
+          ${buildConsoleInstallEditor(pkg, i, rules)}
           ${buildYoutubeEditor(pkg, i)}
         </div>
         <div class="card-actions">
@@ -760,6 +884,7 @@
       const rules = getUploadRules(packages[i].category || 'Homebrew Apps', packages[i].platform || 'PS4');
       packages[i].fileType = rules.fileType;
       packages[i].allowedExtensions = rules.allowedExtensions;
+      packages[i].consoleMethod = getConsoleMethodForPackage(packages[i]);
       if (packages[i].zip_file) {
         const lowerName = packages[i].zip_file.toLowerCase();
         const isAllowed = rules.allowedExtensions.some(ext => lowerName.endsWith(ext));
@@ -769,6 +894,13 @@
           toast(rules.invalidMessage, 'error');
         }
       }
+      render();
+      const newCard = document.getElementById('pkg-' + i);
+      if (newCard) newCard.classList.add('open');
+      return;
+    }
+    if (field === 'fileType') {
+      packages[i].consoleMethod = getConsoleMethodForPackage(packages[i]);
       render();
       const newCard = document.getElementById('pkg-' + i);
       if (newCard) newCard.classList.add('open');
@@ -900,14 +1032,25 @@
     try {
       const fd = new FormData();
       fd.append('name', pkg.name);
+      fd.append('description', pkg.description || '');
+      fd.append('discord_id', currentUser?.sub || currentUser?.email || 'local-admin');
       fd.append('author', pkg.creator || pkg.author || 'Community');
       fd.append('platform', pkg.platform);
       if (pkg.category) fd.append('category', pkg.category);
       fd.append('tags', JSON.stringify(pkg.tags));
       fd.append('download_url', pkg.download_url);
+      if (pkg.code) fd.append('code', pkg.code);
       fd.append('type', uploadConfig.type);
       fd.append('fileType', pkg.fileType || getUploadRules(pkg.category, pkg.platform).fileType);
       fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category, pkg.platform).allowedExtensions));
+      fd.append('consoleInstallEnabled', String(pkg.consoleInstall?.enabled || pkg.consoleInstallEnabled || false));
+      fd.append('consoleMethod', pkg.consoleInstall?.method || pkg.consoleMethod || 'none');
+      fd.append('requiresConsoleIp', String(pkg.consoleInstall?.requiresConsoleIp ?? pkg.requiresConsoleIp ?? true));
+      fd.append('usbInstructions', pkg.installInstructions?.usb || pkg.usbInstructions || '');
+      fd.append('networkInstructions', pkg.installInstructions?.network || pkg.networkInstructions || '');
+      fd.append('installNotes', pkg.installInstructions?.notes || pkg.installNotes || '');
+      fd.append('externalGuideUrl', pkg.externalGuideUrl || '');
+      fd.append('youtubeGuideUrl', pkg.youtubeGuideUrl || '');
       fd.append('youtubeVideos', JSON.stringify(normalizeYoutubeVideos(pkg).filter(item => item.url)));
       
       if (pkg.zip_file_file) fd.append('theme', pkg.zip_file_file);
@@ -980,7 +1123,36 @@
     if (isUserAction) collectAll();
     const now = new Date().toISOString();
     const rules = getUploadRules('Homebrew Apps', 'PS4');
-    const newPackage = { name: '', creator: '', tags: [], icon: '', preview: '', zip_file: '', download_url: '', platform: 'PS4', updated: now, type: uploadConfig.type, fileType: rules.fileType, allowedExtensions: rules.allowedExtensions };
+    const newPackage = {
+      name: '',
+      code: '',
+      description: '',
+      creator: '',
+      tags: [],
+      icon: '',
+      preview: '',
+      zip_file: '',
+      download_url: '',
+      platform: 'PS4',
+      updated: now,
+      type: uploadConfig.type,
+      fileType: rules.fileType,
+      allowedExtensions: rules.allowedExtensions,
+      consoleInstall: {
+        enabled: false,
+        platform: 'ps4',
+        method: 'ps4-direct-package',
+        url: '',
+        requiresConsoleIp: true,
+      },
+      installInstructions: {
+        usb: '',
+        network: '',
+        notes: '',
+      },
+      externalGuideUrl: '',
+      youtubeGuideUrl: '',
+    };
     if (uploadMode !== 'mods') newPackage.category = 'Homebrew Apps';
     packages.push(newPackage);
     if (isUserAction) markDirty();
@@ -1046,12 +1218,40 @@
     const clean = sorted.map(pkg => {
       const out = {};
       if (pkg.name) out.name = pkg.name;
+      if (pkg.code) out.code = pkg.code;
+      if (pkg.description) out.description = pkg.description;
       if (pkg.creator) out.creator = pkg.creator;
       out.tags = Array.isArray(pkg.tags) ? pkg.tags.filter(Boolean) : [];
       if (pkg.icon) out.icon = pkg.icon;
       if (pkg.preview) out.preview = pkg.preview;
       if (pkg.zip_file) out.zip_file = pkg.zip_file;
       if (pkg.download_url) out.download_url = pkg.download_url;
+      const packageUrl = pkg.download_url || pkg.zip_file || '';
+      if (packageUrl) {
+        out.download = {
+          enabled: true,
+          url: packageUrl,
+          type: pkg.fileType || 'pkg',
+        };
+      }
+      if (uploadMode !== 'mods' && pkg.consoleInstall) {
+        out.consoleInstall = {
+          enabled: Boolean(pkg.consoleInstall.enabled),
+          platform: pkg.consoleInstall.platform || normalizePlatformForInstall(pkg.platform),
+          method: pkg.consoleInstall.method || 'none',
+          url: pkg.consoleInstall.url || packageUrl,
+          requiresConsoleIp: pkg.consoleInstall.requiresConsoleIp !== false,
+        };
+      }
+      if (uploadMode !== 'mods' && pkg.installInstructions) {
+        out.installInstructions = {
+          usb: pkg.installInstructions.usb || '',
+          network: pkg.installInstructions.network || '',
+          notes: pkg.installInstructions.notes || '',
+        };
+      }
+      if (pkg.externalGuideUrl) out.externalGuideUrl = pkg.externalGuideUrl;
+      if (pkg.youtubeGuideUrl) out.youtubeGuideUrl = pkg.youtubeGuideUrl;
       if (pkg.readme && pkg.readme.content) out.readme = pkg.readme;
       if (uploadMode !== 'mods' && pkg.category) out.category = pkg.category;
       if (pkg.updated) out.updated = pkg.updated.includes('T') && !pkg.updated.endsWith('Z') ? pkg.updated + 'Z' : pkg.updated;
@@ -1062,7 +1262,7 @@
       }
       const rules = getUploadRules(uploadMode === 'mods' ? 'Homebrew Apps' : (pkg.category || 'Homebrew Apps'), pkg.platform || 'PS4');
       out.type = uploadConfig.type;
-      out.fileType = rules.fileType;
+      out.fileType = pkg.fileType || rules.fileType;
       out.allowedExtensions = rules.allowedExtensions;
       return out;
     });

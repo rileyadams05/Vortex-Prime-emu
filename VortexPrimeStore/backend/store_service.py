@@ -286,6 +286,14 @@ async def save_submission(
     submission_type: str = "store",
     file_type: str = "pkg",
     allowed_extensions: list = None,
+    console_install_enabled: bool = False,
+    console_method: str = "none",
+    requires_console_ip: bool = True,
+    usb_instructions: str = "",
+    network_instructions: str = "",
+    install_notes: str = "",
+    external_guide_url: str = "",
+    youtube_guide_url: str = "",
     youtube_videos: list = None,
     extract_contents: bool = False,
     db=None,
@@ -341,6 +349,17 @@ async def save_submission(
             "content": readme_content,
         }
 
+    public_download_url = download_url or zip_url
+    normalized_platform = (platform or "").strip().lower().replace("playstation ", "ps")
+    normalized_file_type = (file_type or "").strip().lower()
+    normalized_method = (console_method or "none").strip().lower()
+    method_allowed = (
+        (normalized_platform == "ps4" and normalized_file_type == "pkg" and normalized_method == "ps4-direct-package")
+        or (normalized_platform == "ps5" and normalized_file_type == "pkg" and normalized_method == "ps5-direct-package")
+        or (normalized_platform == "ps3" and normalized_file_type == "pkg" and normalized_method == "ps3-webman-mod")
+    )
+    console_install_enabled = bool(console_install_enabled and method_allowed and public_download_url)
+
     metadata = {
         "id": submission_id,
         "code": code,
@@ -357,6 +376,25 @@ async def save_submission(
         "readme": readme_data,
         "zip_file": zip_url,
         "download_url": download_url,
+        "download": {
+            "enabled": bool(public_download_url),
+            "url": public_download_url,
+            "type": normalized_file_type,
+        },
+        "consoleInstall": {
+            "enabled": console_install_enabled,
+            "platform": normalized_platform,
+            "method": normalized_method if console_install_enabled else "none",
+            "url": public_download_url if console_install_enabled else "",
+            "requiresConsoleIp": requires_console_ip,
+        },
+        "installInstructions": {
+            "usb": usb_instructions,
+            "network": network_instructions,
+            "notes": install_notes,
+        },
+        "externalGuideUrl": external_guide_url,
+        "youtubeGuideUrl": youtube_guide_url,
         "youtubeVideos": youtube_videos or [],
         "media": [
             {

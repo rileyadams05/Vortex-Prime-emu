@@ -1231,6 +1231,105 @@
         .readme-body a { color: var(--color-primary-light); }
         .readme-body code { color: var(--color-primary-light); }
 
+        .console-installer {
+            margin-top: 1rem;
+            border: 1px solid rgba(16, 185, 129, 0.28);
+            border-radius: 12px;
+            padding: 1rem;
+            background: rgba(16, 185, 129, 0.06);
+        }
+
+        .console-installer h4 {
+            margin: 0 0 0.35rem;
+            font-size: 1rem;
+        }
+
+        .console-installer p {
+            color: var(--color-text-secondary);
+            margin: 0 0 0.75rem;
+            line-height: 1.5;
+        }
+
+        .console-installer-grid {
+            display: grid;
+            grid-template-columns: minmax(160px, 0.6fr) minmax(220px, 1fr);
+            gap: 0.75rem;
+        }
+
+        .console-installer label {
+            display: grid;
+            gap: 0.35rem;
+            color: var(--color-text-secondary);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .console-installer input {
+            width: 100%;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-bg-dark);
+            color: var(--color-text);
+            padding: 0.62rem 0.72rem;
+            font: inherit;
+        }
+
+        .console-installer-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            margin-top: 0.85rem;
+        }
+
+        .console-send-button,
+        .console-download-button {
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 0.72rem 0.95rem;
+            color: #fff;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .console-send-button {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        }
+
+        .console-download-button {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .console-install-status {
+            margin-top: 0.8rem;
+            color: var(--color-text-secondary);
+            font-size: 0.86rem;
+            min-height: 1.2rem;
+        }
+
+        .install-guides {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.9rem;
+        }
+
+        .install-guide-card {
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            background: rgba(0,0,0,0.18);
+        }
+
+        .install-guide-card strong {
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        @media (max-width: 760px) {
+            .console-installer-grid { grid-template-columns: 1fr; }
+        }
+
         .theme-icon {
             position: absolute;
             bottom: -32px;
@@ -2704,7 +2803,7 @@
                     }
 
                     const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                    const API_BASE = IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '';
+                    const API_BASE = window.VORTEX_API_BASE || (IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '/api');
                     const STORE_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/themes` : '/store/themes.json';
                     const MODS_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/mods` : '/store-mods/mods.json';
                     const CARDS_PER_PAGE = 10;
@@ -2917,7 +3016,184 @@
                     }
 
                     function getGuideLinks(item) {
-                        return [];
+                        const links = [];
+                        if ((item.externalGuideUrl || '').trim()) {
+                            links.push({ title: 'Install Guide', url: item.externalGuideUrl });
+                        }
+                        if ((item.youtubeGuideUrl || '').trim()) {
+                            links.push({ title: 'YouTube Guide', url: item.youtubeGuideUrl });
+                        }
+                        return links;
+                    }
+
+                    function getPackageDownloadUrl(item) {
+                        return (
+                            item?.consoleInstall?.url ||
+                            item?.download?.url ||
+                            item?.download_url ||
+                            item?.zip_file ||
+                            ''
+                        ).trim();
+                    }
+
+                    function normalizeConsolePlatform(platform) {
+                        const value = String(platform || '').trim().toLowerCase().replace('playstation ', 'ps');
+                        return ['ps3', 'ps4', 'ps5'].includes(value) ? value : '';
+                    }
+
+                    function getConsoleInstallConfig(item) {
+                        const install = item.consoleInstall || {};
+                        const platform = normalizeConsolePlatform(install.platform || item.platform);
+                        const method = String(install.method || '').trim().toLowerCase();
+                        const packageUrl = getPackageDownloadUrl(item);
+                        const enabled = Boolean(install.enabled && platform && method && packageUrl && packageUrl.toLowerCase().split('?')[0].endsWith('.pkg'));
+                        if (!enabled) return null;
+                        const expected = {
+                            ps4: 'ps4-direct-package',
+                            ps5: 'ps5-direct-package',
+                            ps3: 'ps3-webman-mod'
+                        }[platform];
+                        if (method !== expected) return null;
+                        return { platform, method, packageUrl };
+                    }
+
+                    function getConsoleButtonText(platform) {
+                        if (platform === 'ps4') return 'Install to PS4';
+                        if (platform === 'ps5') return 'Install to PS5';
+                        if (platform === 'ps3') return 'Send to PS3';
+                        return 'Install to Console';
+                    }
+
+                    function getConsoleInstallerId(item) {
+                        return `console-${itemKey(item).replace(/[^A-Za-z0-9_-]/g, '-')}`;
+                    }
+
+                    function getConsoleIntro(platform) {
+                        if (platform === 'ps3') {
+                            return 'Built into Vortex Prime. Send this PKG to your PS3 through webMAN-MOD style network support.';
+                        }
+                        return `Built into Vortex Prime. Send this PKG install request directly to your ${platform.toUpperCase()}.`;
+                    }
+
+                    function renderInstructionCards(item, platform) {
+                        const instructions = item.installInstructions || {};
+                        const cards = [];
+                        const usb = instructions.usb || (platform === 'ps3'
+                            ? 'Download the PKG, copy it to a USB drive, then install it from Package Manager.'
+                            : 'Download the PKG and install it using your usual console package workflow.');
+                        const network = instructions.network || (platform === 'ps3'
+                            ? 'Make sure your PS3 is on the same network, HEN/CFW is enabled, and webMAN-MOD is running.'
+                            : 'Make sure your console is on the same network and the supported package install service is enabled.');
+                        cards.push(`<div class="install-guide-card"><strong>USB install guide</strong><p>${escapeHtml(usb)}</p></div>`);
+                        cards.push(`<div class="install-guide-card"><strong>Network install guide</strong><p>${escapeHtml(network)}</p></div>`);
+                        if (instructions.notes) {
+                            cards.push(`<div class="install-guide-card"><strong>Notes</strong><p>${escapeHtml(instructions.notes)}</p></div>`);
+                        }
+                        return `<div class="install-guides">${cards.join('')}</div>`;
+                    }
+
+                    function renderConsoleInstaller(item) {
+                        const config = getConsoleInstallConfig(item);
+                        const packageUrl = getPackageDownloadUrl(item);
+                        const platform = normalizeConsolePlatform(item.platform);
+                        const downloadButton = packageUrl
+                            ? `<a class="console-download-button" href="${escapeAttribute(packageUrl)}" target="_blank" rel="noopener">Download PKG</a>`
+                            : '';
+                        if (!config) {
+                            const manualCopyText = String(item.platform || '').toLowerCase().includes('vita')
+                                ? 'Download File is available. Use VitaShell to copy or install the package on your PS Vita.'
+                                : String(item.platform || '').toLowerCase().includes('psp')
+                                    ? 'Download File is available. Copy or extract the files to the correct PSP folder for the content type.'
+                                    : 'Download PKG is available as a manual fallback.';
+                            return packageUrl ? `
+                                <div class="console-installer">
+                                    <h4>Package Download</h4>
+                                    <p>${escapeHtml(manualCopyText)}</p>
+                                    <div class="console-installer-actions">${downloadButton}</div>
+                                    ${renderInstructionCards(item, platform)}
+                                </div>
+                            ` : '';
+                        }
+
+                        const id = getConsoleInstallerId(item);
+                        const buttonText = getConsoleButtonText(config.platform);
+                        const ps3Extra = config.platform === 'ps3' ? ' via webMAN-MOD' : '';
+                        return `
+                            <div class="console-installer" data-console-installer="${id}">
+                                <h4>Send Package to Console</h4>
+                                <p>${escapeHtml(getConsoleIntro(config.platform))}</p>
+                                <div class="console-installer-grid">
+                                    <label>
+                                        Console IP address
+                                        <input id="${id}-ip" type="text" inputmode="numeric" placeholder="192.168.0.50" autocomplete="off">
+                                    </label>
+                                    <label>
+                                        Package URL
+                                        <input id="${id}-url" type="text" value="${escapeAttribute(config.packageUrl)}" readonly>
+                                    </label>
+                                </div>
+                                <div class="console-installer-actions">
+                                    <button class="console-send-button" id="${id}-send" type="button">${escapeHtml(buttonText + ps3Extra)}</button>
+                                    ${downloadButton}
+                                </div>
+                                <div class="console-install-status" id="${id}-status">Enter your console IP address to begin.</div>
+                                ${renderInstructionCards(item, config.platform)}
+                            </div>
+                        `;
+                    }
+
+                    async function sendConsolePackage(config, consoleIp, statusEl) {
+                        const platformLabel = config.platform.toUpperCase();
+                        const statusSteps = config.platform === 'ps3'
+                            ? ['Connecting to PS3...', 'Checking webMAN-MOD...', 'Sending package request...']
+                            : [`Connecting to ${platformLabel}...`, 'Sending package URL...', 'Install request sent. Check your console.'];
+                        statusEl.textContent = statusSteps[0];
+
+                        setTimeout(() => { statusEl.textContent = statusSteps[1]; }, 250);
+                        const response = await fetch(`${API_BASE}/console-package/send`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                platform: config.platform,
+                                method: config.method,
+                                consoleIp,
+                                packageUrl: config.packageUrl,
+                            }),
+                        });
+                        setTimeout(() => { statusEl.textContent = statusSteps[2]; }, 500);
+                        const result = await response.json().catch(() => ({}));
+                        if (!response.ok || result.ok === false) {
+                            statusEl.textContent = result.message || 'Could not connect to console. Make sure the console is on the same network and the required console service is enabled.';
+                            return;
+                        }
+                        statusEl.textContent = result.message || 'Package request sent to console.';
+                    }
+
+                    function attachConsoleInstaller(item) {
+                        const config = getConsoleInstallConfig(item);
+                        if (!config) return;
+                        const id = getConsoleInstallerId(item);
+                        const button = document.getElementById(`${id}-send`);
+                        const ipInput = document.getElementById(`${id}-ip`);
+                        const status = document.getElementById(`${id}-status`);
+                        if (!button || !ipInput || !status) return;
+                        button.addEventListener('click', async () => {
+                            const consoleIp = ipInput.value.trim();
+                            if (!consoleIp) {
+                                status.textContent = 'Enter your console IP address first.';
+                                return;
+                            }
+                            button.disabled = true;
+                            try {
+                                await sendConsolePackage(config, consoleIp, status);
+                            } catch (error) {
+                                status.textContent = config.platform === 'ps3'
+                                    ? 'Could not send package to PS3. Make sure your PS3 is on the same network, HEN/CFW is enabled, and webMAN-MOD is running. You can still download the PKG and install it manually from Package Manager.'
+                                    : 'Could not connect to console. Make sure the console is on the same network and the required console service is enabled.';
+                            } finally {
+                                button.disabled = false;
+                            }
+                        });
                     }
 
                     function getGalleryItems(item) {
@@ -2985,6 +3261,7 @@
                         const links = getGuideLinks(item);
                         const first = gallery[0];
                         const readmeMarkup = renderReadmeContent(item.readme);
+                        const consoleInstallerMarkup = renderConsoleInstaller(item);
                         itemDetailContent.innerHTML = `
                             <div class="item-detail-header">
                                 <h3 id="itemDetailTitle">${escapeHtml(item.name || 'Untitled Package')}</h3>
@@ -3003,6 +3280,7 @@
                                 }).join('')}</div>` : ''}
                             </div>
                             ${links.length ? `<div class="media-links">${links.map(link => `<a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.title || 'Community Link')}</a>`).join('')}</div>` : ''}
+                            ${consoleInstallerMarkup}
                             ${readmeMarkup ? `<div class="readme-section"><h4>${escapeHtml(item.readme?.filename || 'README')}</h4>${readmeMarkup}</div>` : ''}
                         `;
                         itemDetailContent.querySelectorAll('.media-thumb').forEach(button => {
@@ -3012,6 +3290,7 @@
                                 if (main) main.innerHTML = renderMediaMain(media);
                             });
                         });
+                        attachConsoleInstaller(item);
                     }
 
                     function openItemDetails(item) {
