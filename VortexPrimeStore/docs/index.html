@@ -1274,6 +1274,22 @@
             font: inherit;
         }
 
+        .console-remember-ip {
+            display: flex !important;
+            align-items: center;
+            gap: 0.45rem !important;
+            margin-top: 0.65rem;
+            color: var(--color-text-secondary);
+            font-size: 0.82rem !important;
+            font-weight: 700;
+        }
+
+        .console-remember-ip input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--color-primary);
+        }
+
         .console-installer-actions {
             display: flex;
             flex-wrap: wrap;
@@ -3068,6 +3084,34 @@
                         return `console-${itemKey(item).replace(/[^A-Za-z0-9_-]/g, '-')}`;
                     }
 
+                    function getSavedConsoleIpKey(platform) {
+                        return `vortexPrime.consoleIp.${platform}`;
+                    }
+
+                    function getSavedConsoleIp(platform) {
+                        try {
+                            return localStorage.getItem(getSavedConsoleIpKey(platform)) || '';
+                        } catch (error) {
+                            return '';
+                        }
+                    }
+
+                    function saveConsoleIp(platform, consoleIp) {
+                        try {
+                            localStorage.setItem(getSavedConsoleIpKey(platform), consoleIp);
+                        } catch (error) {
+                            // Local storage can be disabled by the browser; sending should still work.
+                        }
+                    }
+
+                    function clearSavedConsoleIp(platform) {
+                        try {
+                            localStorage.removeItem(getSavedConsoleIpKey(platform));
+                        } catch (error) {
+                            // Local storage can be disabled by the browser; sending should still work.
+                        }
+                    }
+
                     function getConsoleIntro(platform) {
                         if (platform === 'ps3') {
                             return 'Built into Vortex Prime. Send this PKG to your PS3 through webMAN-MOD style network support.';
@@ -3118,6 +3162,8 @@
                         const id = getConsoleInstallerId(item);
                         const buttonText = getConsoleButtonText(config.platform);
                         const ps3Extra = config.platform === 'ps3' ? ' via webMAN-MOD' : '';
+                        const savedIp = getSavedConsoleIp(config.platform);
+                        const rememberLabel = `Remember this ${config.platform.toUpperCase()} IP for next time`;
                         return `
                             <div class="console-installer" data-console-installer="${id}">
                                 <h4>Send Package to Console</h4>
@@ -3125,18 +3171,22 @@
                                 <div class="console-installer-grid">
                                     <label>
                                         Console IP address
-                                        <input id="${id}-ip" type="text" inputmode="numeric" placeholder="192.168.0.50" autocomplete="off">
+                                        <input id="${id}-ip" type="text" inputmode="numeric" placeholder="192.168.0.50" autocomplete="off" value="${escapeAttribute(savedIp)}">
                                     </label>
                                     <label>
                                         Package URL
                                         <input id="${id}-url" type="text" value="${escapeAttribute(config.packageUrl)}" readonly>
                                     </label>
                                 </div>
+                                <label class="console-remember-ip">
+                                    <input id="${id}-remember" type="checkbox" ${savedIp ? 'checked' : ''}>
+                                    <span>${escapeHtml(rememberLabel)}</span>
+                                </label>
                                 <div class="console-installer-actions">
                                     <button class="console-send-button" id="${id}-send" type="button">${escapeHtml(buttonText + ps3Extra)}</button>
                                     ${downloadButton}
                                 </div>
-                                <div class="console-install-status" id="${id}-status">Enter your console IP address to begin.</div>
+                                <div class="console-install-status" id="${id}-status">${savedIp ? 'Saved console IP loaded. Ready when you are.' : 'Enter your console IP address to begin.'}</div>
                                 ${renderInstructionCards(item, config.platform)}
                             </div>
                         `;
@@ -3175,13 +3225,29 @@
                         const id = getConsoleInstallerId(item);
                         const button = document.getElementById(`${id}-send`);
                         const ipInput = document.getElementById(`${id}-ip`);
+                        const rememberInput = document.getElementById(`${id}-remember`);
                         const status = document.getElementById(`${id}-status`);
                         if (!button || !ipInput || !status) return;
+                        rememberInput?.addEventListener('change', () => {
+                            const consoleIp = ipInput.value.trim();
+                            if (rememberInput.checked && consoleIp) {
+                                saveConsoleIp(config.platform, consoleIp);
+                                status.textContent = 'Console IP saved for next time.';
+                            } else if (!rememberInput.checked) {
+                                clearSavedConsoleIp(config.platform);
+                                status.textContent = 'Saved console IP cleared.';
+                            }
+                        });
                         button.addEventListener('click', async () => {
                             const consoleIp = ipInput.value.trim();
                             if (!consoleIp) {
                                 status.textContent = 'Enter your console IP address first.';
                                 return;
+                            }
+                            if (rememberInput?.checked) {
+                                saveConsoleIp(config.platform, consoleIp);
+                            } else {
+                                clearSavedConsoleIp(config.platform);
                             }
                             button.disabled = true;
                             try {
