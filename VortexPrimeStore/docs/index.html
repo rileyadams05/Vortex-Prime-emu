@@ -1457,26 +1457,6 @@
             text-transform: uppercase;
         }
 
-        .theme-code-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--color-text-muted);
-        }
-
-        .theme-code {
-            display: flex;
-            align-items: stretch;
-            gap: 0.75rem;
-            justify-content: space-between;
-            background: var(--color-bg-dark);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
         /* TV Optimized Layout Overrides */
         @media (min-width: 1700px) {
             :root {
@@ -1508,48 +1488,6 @@
             align-items: center;
             justify-content: center;
             z-index: 3;
-        }
-
-        .theme-code-body {
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-        }
-
-        .theme-code code {
-            flex: 1;
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 0.85rem;
-            color: var(--color-primary-light);
-            letter-spacing: 0.5px;
-            word-break: break-all;
-        }
-
-        .theme-code-copy {
-            background: var(--color-bg-elevated);
-            border: none;
-            color: var(--color-text-muted);
-            padding: 0.375rem 0.625rem;
-            border-radius: 999px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .theme-code-copy:hover {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .theme-code-copy:hover {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .theme-code-copy[disabled] {
-            cursor: not-allowed;
-            opacity: 0.6;
         }
 
         .theme-meta {
@@ -3400,17 +3338,12 @@
                         const resolvedDownload = downloadUrl || zipFile;
                         const safeDownload = resolvedDownload ? escapeAttribute(resolvedDownload) : '#';
                         const hasDownload = Boolean(resolvedDownload);
-                        const hasCode = Boolean((theme.code || '').trim());
-                        const codeDisplay = hasCode ? escapeHtml(theme.code) : 'Not available yet';
                         const isMod = theme.type === 'mod' || theme.fileType === 'archive';
                         const hostedDownloadLabel = isMod ? 'Download Archive' : 'Download PKG';
                         const hostedStatusLabel = isMod
                             ? 'Mod archive hosted by Vortex Prime'
                             : 'PKG package hosted by Vortex Prime';
 
-                        const copyButton = hasCode
-                            ? `<button class="theme-code-copy" onclick="copyCode(this, '${escapeAttribute((theme.code || '').trim())}')">Copy</button>`
-                            : '<button class="theme-code-copy" disabled>Copy</button>';
 
                         const downloadLink = hasDownload
                             ? `<a class="theme-download" href="${safeDownload}" target="_blank" rel="noopener">${downloadUrl ? 'Redirect to Download' : hostedDownloadLabel}</a>`
@@ -3454,13 +3387,6 @@
                                 </div>
                                 ${downloadStatus}
                                 <div class="theme-actions">
-                                    <div class="theme-code">
-                                        <div class="theme-code-body">
-                                            <span class="theme-code-label">Store Code</span>
-                                            <code>${codeDisplay}</code>
-                                        </div>
-                                        ${copyButton}
-                                    </div>
                                     ${downloadLink}
                                     <div class="theme-card-actions">
                                         <button class="theme-view-details" type="button">View Details</button>

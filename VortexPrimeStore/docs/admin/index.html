@@ -496,7 +496,6 @@
         ...pkg,
         id: card.dataset.id || pkg.id,
         name: g('name'),
-        code: g('code'),
         description: g('description'),
         creator: g('creator'),
         tags,
@@ -701,10 +700,6 @@
           <div class="field">
             <label>Package Title *</label>
             <input type="text" data-field="name" value="${esc(pkg.name)}" placeholder="Example" oninput="onFieldInput(${i},'name',this.value)">
-          </div>
-          <div class="field">
-            <label>Store Code</label>
-            <input type="text" data-field="code" value="${esc(pkg.code || '')}" placeholder="example-package" oninput="onFieldInput(${i},'code',this.value)">
           </div>
           <div class="field full">
             <label>README / Markdown Description</label>
@@ -1028,7 +1023,6 @@
       if (pkg.category) fd.append('category', pkg.category);
       fd.append('tags', JSON.stringify(pkg.tags));
       fd.append('download_url', pkg.download_url);
-      if (pkg.code) fd.append('code', pkg.code);
       fd.append('type', uploadConfig.type);
       fd.append('fileType', pkg.fileType || getUploadRules(pkg.category, pkg.platform).fileType);
       fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category, pkg.platform).allowedExtensions));
@@ -1114,7 +1108,6 @@
     const rules = getUploadRules('Homebrew Apps', 'PS4');
     const newPackage = {
       name: '',
-      code: '',
       description: '',
       creator: '',
       tags: [],
@@ -1207,7 +1200,6 @@
     const clean = sorted.map(pkg => {
       const out = {};
       if (pkg.name) out.name = pkg.name;
-      if (pkg.code) out.code = pkg.code;
       if (pkg.description) out.description = pkg.description;
       if (pkg.creator) out.creator = pkg.creator;
       out.tags = Array.isArray(pkg.tags) ? pkg.tags.filter(Boolean) : [];
