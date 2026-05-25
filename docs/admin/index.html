@@ -489,8 +489,8 @@
       const rules = getUploadRules(category || 'Homebrew Apps', platform);
       const fileTypeValue = (g('fileType') || pkg.fileType || rules.fileType || '').toLowerCase();
       const consoleInstallEnabled = uploadMode !== 'mods' && checked('consoleInstallEnabled');
-      const consoleMethod = g('consoleMethod') || 'none';
-      const requiresConsoleIp = g('requiresConsoleIp') !== 'false';
+      const consoleMethod = getConsoleMethodForPackage({ ...pkg, platform, fileType: fileTypeValue });
+      const requiresConsoleIp = true;
       const publicPackageUrl = g('download_url') || g('zip_file');
       const next = {
         ...pkg,
@@ -627,15 +627,9 @@
     if (uploadMode === 'mods') return '';
     const fileType = String(pkg.fileType || rules.fileType || 'pkg').toLowerCase();
     const methodAllowed = getConsoleMethodForPackage({ ...pkg, fileType });
+    if (fileType !== 'pkg' || methodAllowed === 'none') return '';
     const install = pkg.consoleInstall || {};
     const enabled = Boolean(install.enabled || pkg.consoleInstallEnabled);
-    const method = install.method || pkg.consoleMethod || methodAllowed;
-    const methodOptions = [
-      ['none', 'none'],
-      ['ps4-direct-package', 'ps4-direct-package'],
-      ['ps5-direct-package', 'ps5-direct-package'],
-      ['ps3-webman-mod', 'ps3-webman-mod'],
-    ].map(([value, label]) => `<option value="${value}" ${method === value ? 'selected' : ''}>${label}</option>`).join('');
     return `
       <div class="subsection">
         <div class="subsection-head">
@@ -644,30 +638,11 @@
           </div>
         </div>
         <div class="media-editor-grid">
-          <label class="field">
-            File Type
-            <select data-field="fileType" onchange="onFieldInput(${i},'fileType',this.value)">
-              ${['pkg','zip','7z','rar','vpk','iso','cso','other'].map(value => `<option value="${value}" ${fileType === value ? 'selected' : ''}>${value.toUpperCase()}</option>`).join('')}
-            </select>
-          </label>
           <label class="field full" style="display:flex;align-items:flex-start;gap:.65rem;line-height:1.35;">
             <input type="checkbox" data-field="consoleInstallEnabled" ${enabled ? 'checked' : ''} onchange="onFieldInput(${i},'consoleInstallEnabled',this.checked)" style="width:18px;height:18px;margin-top:.12rem;accent-color:var(--accent);">
             <span>
               Enable website console install/send
             </span>
-          </label>
-          <label class="field">
-            Console Method
-            <select data-field="consoleMethod" onchange="onFieldInput(${i},'consoleMethod',this.value)">
-              ${methodOptions}
-            </select>
-          </label>
-          <label class="field">
-            Requires Console IP
-            <select data-field="requiresConsoleIp" onchange="onFieldInput(${i},'requiresConsoleIp',this.value)">
-              <option value="true" ${(install.requiresConsoleIp ?? true) ? 'selected' : ''}>Yes</option>
-              <option value="false" ${(install.requiresConsoleIp === false) ? 'selected' : ''}>No</option>
-            </select>
           </label>
         </div>
       </div>
@@ -852,8 +827,8 @@
         ...(packages[i].consoleInstall || {}),
         enabled: Boolean(value),
         platform: normalizePlatformForInstall(packages[i].platform),
-        method: packages[i].consoleMethod || getConsoleMethodForPackage(packages[i]),
-        requiresConsoleIp: packages[i].requiresConsoleIp !== false,
+        method: getConsoleMethodForPackage(packages[i]),
+        requiresConsoleIp: true,
       };
       return;
     }
@@ -997,7 +972,7 @@
     collectAll();
     const pkg = packages[i];
     if (!pkg.name) return toast('Package Title is required.', 'error');
-    if (uploadMode !== 'mods' && !pkg.consoleInstall?.enabled) {
+    if (uploadMode !== 'mods' && getConsoleMethodForPackage(pkg) !== 'none' && !pkg.consoleInstall?.enabled) {
       const proceed = confirm('Website console install/send is not enabled for this package. Users will only get the normal download/manual install fallback. Do you want to upload it anyway?');
       if (!proceed) {
         toast('Upload cancelled. Tick console install/send if you want to enable it.', 'error');
