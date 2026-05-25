@@ -2758,8 +2758,8 @@
 
                     const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                     const API_BASE = window.VORTEX_API_BASE || (IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '/api');
-                    const STORE_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/themes` : '/store/themes.json';
-                    const MODS_DATA_URL = IS_LOCAL_BACKEND ? `${API_BASE}/store/mods` : '/store-mods/mods.json';
+                    const STORE_DATA_URL = `${API_BASE}/store/themes`;
+                    const MODS_DATA_URL = `${API_BASE}/store/mods`;
                     const CARDS_PER_PAGE = 10;
 
                     const storeGrid = document.getElementById('storeGrid');
@@ -3802,7 +3802,15 @@
                             modItems = Array.isArray(data.mods) ? data.mods : [];
                         } catch (error) {
                             console.warn('Mods catalogue load failed:', error);
-                            modItems = [];
+                            try {
+                                const fb = await fetch('store-mods/mods.json', { cache: 'no-store' });
+                                if (fb.ok) {
+                                    const data = await fb.json();
+                                    modItems = Array.isArray(data.mods) ? data.mods : [];
+                                }
+                            } catch (e) {
+                                modItems = [];
+                            }
                         }
 
                         applyModsFilters();

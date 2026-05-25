@@ -1,0 +1,12 @@
+name = "vortex-prime-store-api"
+main = "worker.js"
+compatibility_date = "2026-05-25"
+workers_dev = true
+
+routes = [
+  { pattern = "vortex-prime-emu.com/api/*", zone_name = "vortex-prime-emu.com" }
+]
+
+[[r2_buckets]]
+binding = "VORTEX_UPLOADS"
+bucket_name = "vortex-prime-store-uploads"
