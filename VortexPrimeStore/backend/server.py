@@ -291,7 +291,7 @@ async def upload_store_package(
 
     package_bytes = await theme.read()
     if len(package_bytes) > store_service.MAX_ZIP_SIZE:
-        raise HTTPException(status_code=413, detail="File exceeds 50 MB limit")
+        raise HTTPException(status_code=413, detail="File exceeds 5 GB limit")
 
     if should_extract_archive:
         try:

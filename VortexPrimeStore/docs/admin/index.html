@@ -490,7 +490,7 @@
       const consoleInstallEnabled = uploadMode !== 'mods' && checked('consoleInstallEnabled');
       const consoleMethod = getConsoleMethodForPackage({ ...pkg, platform, fileType: fileTypeValue });
       const requiresConsoleIp = true;
-      const publicPackageUrl = g('download_url') || g('zip_file');
+      const publicPackageUrl = g('download_url') || pkg.download_url || g('zip_file') || pkg.zip_file || '';
       const next = {
         ...pkg,
         id: card.dataset.id || pkg.id,
@@ -498,10 +498,10 @@
         description: g('description'),
         creator: g('creator'),
         tags,
-        icon: g('icon'),
-        preview: g('preview'),
-        zip_file: g('zip_file'),
-        download_url: g('download_url'),
+        icon: g('icon') || pkg.icon || '',
+        preview: g('preview') || pkg.preview || '',
+        zip_file: g('zip_file') || pkg.zip_file || '',
+        download_url: g('download_url') || pkg.download_url || '',
         platform,
         updated: g('updated') || undefined,
         readme: pkg.readme,
@@ -939,10 +939,12 @@
       reader.readAsText(file);
       return;
     }
-    const path = '/uploads/' + filename;
-    
+    const previewUrl = (field === 'icon' || field === 'preview')
+      ? URL.createObjectURL(file)
+      : '/uploads/' + filename;
+
     // Update internal data
-    packages[i][field] = path;
+    packages[i][field] = previewUrl;
     packages[i][field + '_file'] = file;
     
     markDirty();
@@ -967,10 +969,26 @@
   const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const API_BASE = window.VORTEX_API_BASE || (IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '/api');
 
+  async function ensureUploadApiAvailable() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    try {
+      const res = await fetch(`${API_BASE}/`, { cache: 'no-store', signal: controller.signal });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   window.submitToStore = async function(i, btn) {
     collectAll();
     const pkg = packages[i];
     if (!pkg.name) return toast('Package Title is required.', 'error');
+    if (!pkg.zip_file_file && !pkg.zip_file && !pkg.download_url) {
+      return toast(`${uploadMode === 'mods' ? 'Mod archive' : 'Package file'} is required. Preview image, tags, YouTube videos, and external redirect URL are optional.`, 'error');
+    }
     if (uploadMode !== 'mods' && getConsoleMethodForPackage(pkg) !== 'none' && !pkg.consoleInstall?.enabled) {
       const proceed = confirm('Website console install/send is not enabled for this package. Users will only get the normal download/manual install fallback. Do you want to upload it anyway?');
       if (!proceed) {
@@ -983,6 +1001,10 @@
     btn.disabled = true;
 
     try {
+      if (!(await ensureUploadApiAvailable())) {
+        throw new Error('Live upload server is not reachable. The website API must be deployed for direct uploads.');
+      }
+
       const fd = new FormData();
       fd.append('name', pkg.name);
       fd.append('description', pkg.description || '');
@@ -990,8 +1012,8 @@
       fd.append('author', pkg.creator || pkg.author || 'Community');
       fd.append('platform', pkg.platform);
       if (pkg.category) fd.append('category', pkg.category);
-      fd.append('tags', JSON.stringify(pkg.tags));
-      fd.append('download_url', pkg.download_url);
+      fd.append('tags', JSON.stringify(pkg.tags || []));
+      fd.append('download_url', pkg.download_url || '');
       fd.append('type', uploadConfig.type);
       fd.append('fileType', pkg.fileType || getUploadRules(pkg.category, pkg.platform).fileType);
       fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category, pkg.platform).allowedExtensions));

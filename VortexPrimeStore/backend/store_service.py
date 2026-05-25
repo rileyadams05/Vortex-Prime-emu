@@ -16,7 +16,7 @@ ASSETS_DIR = Path(__file__).parent.parent / "assets"
 STORE_SUBMISSIONS_DIR = ASSETS_DIR / "Store" / "submissions"
 STORE_SUBMISSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
-MAX_ZIP_SIZE = 50 * 1024 * 1024   # 50 MB
+MAX_ZIP_SIZE = 5 * 1024 * 1024 * 1024   # 5 GB
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 XBOX_360_ALLOWED_ARCHIVE_EXTENSIONS = [".zip", ".7z", ".rar"]
 XBOX_360_ALLOWED_INTERNAL_EXTENSIONS = {".xex", ".ini", ".txt"}
