@@ -1,0 +1,56 @@
+name: 🐛 Bug report
+labels: Bug
+description: Describe a bug with a project
+body:
+  - type: checkboxes
+    id: initial-checklist
+    attributes:
+      label: Initial checklist
+      options:
+        - label:
+            I understand this is a bug report and questions should be posted in
+            the [Community Forum](https://community.transloadit.com/)
+          required: true
+        - label:
+            I searched
+            [issues](https://github.com/transloadit/uppy/issues?q=is%3Aissue)
+            and couldn’t find anything (or linked relevant results below)
+          required: true
+  - type: input
+    id: runnable-example
+    attributes:
+      label: Link to runnable example
+      description: |
+        Link to repository or sandbox with runnable example of the issue.
+        Alternatively, use the next section *Steps to reproduce*.
+
+        Starters:
+
+        - [Uppy Dashboard](https://stackblitz.com/edit/vitejs-vite-zaqyaf?file=main.js)
+        - [Uppy React](https://stackblitz.com/edit/vitejs-vite-vehvbq?file=src%2FApp.tsx)
+        - [Uppy Vue](https://stackblitz.com/edit/vitejs-vite-ubjwys?file=src%2FApp.vue)
+    validations:
+      required: false
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description:
+        How did this happen? Please provide a [minimal, reproducible
+        example](https://stackoverflow.com/help/minimal-reproducible-example).
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What should happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: What happens instead?
+    validations:
+      required: true

@@ -1,0 +1,22 @@
+{
+  "name": "@uppy-dev/dev",
+  "version": "0.0.0",
+  "aliasify": {
+    "aliases": {
+      "@uppy": "../../packages/@uppy"
+    }
+  },
+  "dependencies": {
+    "@uppy/companion": "workspace:^"
+  },
+  "devDependencies": {
+    "vite": "^7.1.11"
+  },
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --clearScreen false",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}

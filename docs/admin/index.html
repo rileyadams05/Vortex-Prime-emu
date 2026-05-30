@@ -117,10 +117,19 @@
     .upload-zone svg { width: 24px; height: 24px; fill: var(--muted); margin-bottom: 4px; }
     .upload-zone span { font-size: 0.75rem; color: var(--muted); }
     .upload-zone .file-name { font-weight: 600; color: var(--primary); font-size: 0.85rem; word-break: break-all; }
+    .upload-zone.upload-disabled { opacity: 0.6; pointer-events: none; }
     .preview-wrap { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
     .preview-thumb { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); margin-bottom: 0.5rem; }
     .preview-large { width: 100%; height: 140px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); margin-bottom: 0.5rem; }
     .upload-hint-box { font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem; }
+    .upload-progress { width: 100%; margin-top: 0.6rem; display: none; text-align: left; }
+    .upload-progress.is-active { display: block; }
+    .upload-progress__track { width: 100%; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 0.35rem; }
+    .upload-progress__bar { height: 100%; width: 0%; background: var(--primary); transition: width .2s ease, background .2s ease; }
+    .upload-progress[data-state="error"] .upload-progress__bar { background: var(--danger); }
+    .upload-progress__label { display: block; font-size: 0.7rem; color: rgba(255,255,255,0.65); }
+    .upload-progress[data-state="complete"] .upload-progress__label { color: #6ee7b7; }
+    .upload-progress[data-state="error"] .upload-progress__label { color: #fca5a5; }
     .subsection { grid-column: 1 / -1; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.02); padding: 1rem; }
     .subsection-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .85rem; }
     .subsection-head h3 { font-size: .95rem; }
@@ -204,12 +213,14 @@
 
 <div class="toast" id="toast"></div>
 
+<script type="module" src="../assets/js/admin-portal.js"></script>
 <script>
 (function () {
   let packages = [];
   let dirty = false;
   const params = new URLSearchParams(window.location.search);
   const uploadMode = params.get('type') === 'mods' ? 'mods' : 'store';
+  let uploadManager = null;
   const uploadConfig = uploadMode === 'mods'
     ? {
         type: 'mod',
@@ -303,13 +314,16 @@
     };
   }
 
-  const GOOGLE_CLIENT_ID = '1031854944297-5fnr5ag53nnviq0av9htnctq733uae0k.apps.googleusercontent.com';
-  const USER_STORAGE_KEY = 'vpGoogleAuthUser';
+  const BACKEND_NOT_CONFIGURED_MESSAGE = 'Upload backend is not configured yet.';
 
-  let googleTokenClient = null;
+  let backendApi = null;
+  let backendStatus = { configured: false, message: BACKEND_NOT_CONFIGURED_MESSAGE };
   let currentUser = null;
+  let currentIsAdmin = false;
 
   const authGate = document.getElementById('authGate');
+  const authTitle = document.getElementById('authTitle');
+  const authDesc = document.querySelector('#authGate .auth-desc');
   const userBadge = document.getElementById('userBadge');
   const userNameEl = document.getElementById('userName');
   const userAvatarEl = document.getElementById('userAvatar');
@@ -327,6 +341,8 @@
   if (toolbarTitle) toolbarTitle.textContent = uploadMode === 'mods' ? 'Mods' : 'Packages';
   if (submitAllBtn) submitAllBtn.textContent = uploadMode === 'mods' ? 'Upload All Mods' : 'Upload All to Store';
 
+  let packagesLoadedOnce = false;
+
   function setStatus(message, variant = '') {
     if (!authStatus) return;
     authStatus.textContent = message;
@@ -334,130 +350,213 @@
     if (variant) authStatus.classList.add(variant);
   }
 
-  function loadStoredUser() {
+  function syncBackendStatus() {
     try {
-      return JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+      const adapter = window.VortexUploadAdapter;
+      if (adapter && typeof adapter.getBackendStatus === 'function') {
+        const next = adapter.getBackendStatus();
+        if (next) {
+          backendStatus = { ...backendStatus, ...next };
+        }
+      }
     } catch (error) {
-      return null;
+      console.warn('Unable to retrieve backend status', error);
     }
   }
 
-  function persistUser(user) {
-    if (!user) {
-      localStorage.removeItem(USER_STORAGE_KEY);
+     function updateAuthUi({ user, isAdmin, message }) {
+    syncBackendStatus();
+    currentUser = user || null;
+    currentIsAdmin = Boolean(isAdmin);
+
+    const statusMessage = message || backendStatus?.message || BACKEND_NOT_CONFIGURED_MESSAGE;
+
+    if (authGate) authGate.style.display = 'none';
+
+    if (authTitle) {
+      authTitle.textContent = backendStatus?.configured ? 'Admin access ready' : 'Admin backend not configured';
+    }
+
+    if (authDesc) {
+      authDesc.textContent = backendStatus?.configured
+        ? 'Manage store entries below.'
+        : 'Click Authorise Google Drive to connect storage.';
+    }
+
+    if (signInBtn) {
+      if (backendStatus?.configured) {
+        signInBtn.disabled = true;
+        signInBtn.textContent = 'Google Drive authorised';
+      } else {
+        signInBtn.disabled = false;
+        signInBtn.textContent = 'Authorise Google Drive';
+      }
+    }
+
+    if (logoutBtn) {
+      logoutBtn.disabled = true;
+    }
+
+    if (userBadge) {
+      userBadge.style.display = 'none';
+      userBadge.removeAttribute('title');
+    }
+
+    if (userNameEl) userNameEl.textContent = '';
+
+    if (userAvatarEl) {
+      userAvatarEl.style.display = 'none';
+      userAvatarEl.removeAttribute('src');
+    }
+
+    if (authStatus) {
+      authStatus.classList.remove('success', 'error');
+      const variant = backendStatus?.configured ? 'success' : 'error';
+      authStatus.classList.add(variant);
+      authStatus.textContent = statusMessage;
+    }
+
+    const locked = !backendStatus?.configured;
+    if (submitAllBtn) submitAllBtn.disabled = locked;
+    document.body.classList.remove('admin-locked');
+  }
+
+  function attachBackendListeners(api) {
+    if (!api) return;
+
+    backendApi = api;
+
+    syncBackendStatus();
+
+    if (typeof api.onAuthChanged === 'function') {
+      api.onAuthChanged((authState) => {
+        syncBackendStatus();
+        const authMessage = authState?.message || backendStatus.message;
+        updateAuthUi({ ...(authState || {}), message: authMessage });
+        if (backendStatus.configured && !packagesLoadedOnce) {
+          refreshPackages(true);
+        }
+      });
+    } else {
+      updateAuthUi({ user: null, isAdmin: backendStatus.configured, message: backendStatus.message });
+      if (backendStatus.configured && !packagesLoadedOnce) {
+        refreshPackages(true);
+      }
+    }
+  }
+
+  function ensureBackendReady() {
+    if (backendApi) {
+      return Promise.resolve(backendApi);
+    }
+
+    return new Promise((resolve, reject) => {
+      const adminModule = window.AdminBackend;
+      if (adminModule && typeof adminModule.onReady === 'function') {
+        adminModule.onReady((api) => {
+          attachBackendListeners(api);
+          resolve(api);
+        });
+      } else {
+        reject(new Error('Upload backend adapter did not load.'));
+      }
+    });
+  }
+
+  function handleBackendInitError(error) {
+    console.error('Admin backend init failed', error);
+    const message = error && error.message ? error.message : BACKEND_NOT_CONFIGURED_MESSAGE;
+    setStatus(message, 'error');
+  }
+
+  async function pollBackendAuthorisation(maxAttempts = 10, delayMs = 2500) {
+    const api = backendApi || window.AdminBackend;
+    if (!api) return false;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      try {
+        if (typeof api.refresh === 'function') {
+          await api.refresh();
+        } else if (typeof api.onReady === 'function') {
+          await ensureBackendReady();
+        }
+        syncBackendStatus();
+        if (backendStatus.configured) {
+          setStatus('Admin access ready.', 'success');
+          toast('Google Drive storage authorised.', 'success');
+          return true;
+        }
+      } catch (error) {
+        console.warn('Backend status poll failed', error);
+      }
+    }
+    return false;
+  }
+
+  async function requestAdminSignIn() {
+    const api = backendApi || window.AdminBackend;
+    if (!api || typeof api.signInWithGoogle !== 'function') {
+      toast('Backend module not ready yet. Please reload this page.', 'error');
       return;
     }
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  }
-
-  function applyUser(user) {
-    currentUser = user || null;
-    if (user && authGate) {
-      authGate.style.display = 'none';
-      if (userBadge) {
-        userBadge.style.display = 'inline-flex';
-        if (userNameEl) userNameEl.textContent = user.name || user.email || 'Google User';
-        if (userAvatarEl) {
-          if (user.picture) {
-            userAvatarEl.style.display = 'block';
-            userAvatarEl.src = user.picture;
-          } else {
-            userAvatarEl.style.display = 'none';
-            userAvatarEl.removeAttribute('src');
-          }
-        }
-        if (userBadge && user.email) {
-          userBadge.title = user.email;
-        } else if (userBadge) {
-          userBadge.removeAttribute('title');
-        }
+    try {
+      setStatus('Open the Google authorisation window to connect Drive…');
+      const url = await api.signInWithGoogle();
+      toast('A Google window should appear. Approve Drive access, then return here.', 'info');
+      const authorised = await pollBackendAuthorisation();
+      if (!authorised) {
+        setStatus('Waiting for Google authorisation. Complete the popup and refresh.', 'error');
+        toast('Still waiting for Google authorisation. Complete the popup or reopen authorisation.', 'error');
+      } else {
+        refreshPackages(true);
       }
-      setStatus(`Signed in as ${user.email || user.name || 'Google User'}.`, 'success');
-    } else {
-      if (authGate) authGate.style.display = 'flex';
-      if (userBadge) userBadge.style.display = 'none';
-      setStatus('All editing actions are disabled while locked.');
+    } catch (error) {
+      console.error('Google authorisation failed', error);
+      const message = error?.message || 'Google authorisation failed. Try again.';
+      setStatus(message, 'error');
+      toast(message, 'error');
     }
   }
 
-  function ensureTokenClient() {
-    if (!window.google || !google.accounts || !google.accounts.oauth2) {
-      setStatus('Google sign-in is still loading. Please try again in a moment.', 'error');
-      return null;
-    }
-    if (!googleTokenClient) {
-      googleTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'openid email profile',
-        ux_mode: 'popup',
-        callback: () => {}
-      });
-    }
-    return googleTokenClient;
+  function requestSignOut() {
+    setStatus('Sign-out is disabled until a storage backend is configured.', 'error');
+    toast('Sign-out is disabled because no upload backend is configured.', 'info');
   }
-
-  async function fetchGoogleProfile(accessToken) {
-    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    if (!response.ok) {
-      throw new Error('Failed to verify Google account');
-    }
-    const profile = await response.json();
-    return {
-      sub: profile.sub,
-      name: profile.name || profile.given_name || profile.email || 'Google User',
-      email: profile.email || null,
-      picture: profile.picture || ''
-    };
-  }
-
-  function startGoogleSignIn() {
-    const client = ensureTokenClient();
-    if (!client) return;
-    setStatus('Opening Google sign-in…');
-    client.callback = async (tokenResponse) => {
-      try {
-        if (!tokenResponse || !tokenResponse.access_token) {
-          throw new Error('Google did not return an access token');
-        }
-        const profile = await fetchGoogleProfile(tokenResponse.access_token);
-        persistUser(profile);
-        applyUser(profile);
-      } catch (error) {
-        console.error(error);
-        setStatus('Unable to complete Google sign-in. Please try again.', 'error');
-      }
-    };
-    client.requestAccessToken({ prompt: currentUser ? '' : 'consent' });
-  }
-
-  function signOut() {
-    if (currentUser && window.google && google.accounts && google.accounts.oauth2 && typeof google.accounts.oauth2.revoke === 'function') {
-      const hint = currentUser.email || currentUser.sub || undefined;
-      if (hint) google.accounts.oauth2.revoke(hint, () => {});
-    }
-    persistUser(null);
-    applyUser(null);
-  }
-
   if (signInBtn) {
-    signInBtn.addEventListener('click', (event) => {
+
+    signInBtn.addEventListener('click', async (event) => {
+
       event.preventDefault();
-      startGoogleSignIn();
+
+      await requestAdminSignIn();
+
     });
+
   }
+
+
 
   if (logoutBtn) {
+
     logoutBtn.addEventListener('click', (event) => {
+
       event.preventDefault();
-      signOut();
+
+      requestSignOut();
+
     });
+
   }
 
-  applyUser(loadStoredUser());
 
-  // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  setStatus(BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
+
+  ensureBackendReady().catch(handleBackendInitError);
+
+
+
+  // ── Toast ──────────────────────────────────────────────────────
   function toast(msg, type = 'success') {
     const el = document.getElementById('toast');
     el.textContent = msg;
@@ -466,14 +565,14 @@
     el._t = setTimeout(() => el.classList.remove('show'), 3200);
   }
 
-  // â”€â”€ Dirty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Dirty state ───────────────────────────────────────────────
   function markDirty() {
     dirty = true;
     const hint = document.getElementById('saveHint');
     hint.innerHTML = `<span class="dirty-dot"></span>Unsaved changes - click ${uploadMode === 'mods' ? 'Upload Mods' : 'Upload to Store'} when ready.`;
   }
 
-  // â”€â”€ Collect current field values into packages array â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Collect current field values into packages array ──────────
   function collectAll() {
     const cards = document.querySelectorAll('.pkg-card');
     packages = Array.from(cards).map(card => {
@@ -558,6 +657,7 @@
     badge.textContent = packages.length + ' package' + (packages.length !== 1 ? 's' : '');
     list.innerHTML = packages.map((pkg, i) => buildCard(pkg, i)).join('');
     attachTagListeners();
+    attachUploaders();
   }
 
   function esc(str) {
@@ -677,12 +777,16 @@
           </div>
           <div class="field full">
             <label>README / Markdown Description</label>
-            <div class="upload-zone" onclick="document.getElementById('readme-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'readme_file')">
+            <div class="upload-zone" id="readme-zone-${i}" data-upload-field="readme_file" data-card-index="${i}">
               <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm1 7V3.5L19.5 9H15zM8 13h8v2H8v-2zm0 4h8v2H8v-2zm0-8h4v2H8V9z"/></svg>
-              <span class="file-name" id="readme-name-${i}">${pkg.readme?.filename ? esc(pkg.readme.filename) : 'Click or drop README file'}</span>
+              <span class="file-name" id="readme-name-${i}" data-upload-label data-default-text="Click or drop README file">${pkg.readme?.filename ? esc(pkg.readme.filename) : 'Click or drop README file'}</span>
               <span class="upload-hint-box">Upload README.txt, README.md, or Markdown instructions to show on the public details page.</span>
               ${pkg.readme?.content ? `<div class="readme-preview">${esc(pkg.readme.content).slice(0, 1000)}</div>` : ''}
-              <input type="file" id="readme-file-${i}" accept=".txt,.md,.markdown,text/plain,text/markdown" style="display:none" onchange="handleFileSelect(${i}, 'readme_file', this)">
+              <input type="file" id="readme-file-${i}" data-upload-input="readme_file" accept=".txt,.md,.markdown,text/plain,text/markdown" style="display:none">
+              <div class="upload-progress" id="readme-progress-${i}" data-progress-id="readme_file-${i}">
+                <div class="upload-progress__track"><div class="upload-progress__bar"></div></div>
+                <span class="upload-progress__label">Ready</span>
+              </div>
             </div>
           </div>
           <div class="field">
@@ -717,34 +821,46 @@
           </div>
           <div class="field">
             <label>Icon Image (PNG, JPG, WEBP)</label>
-            <div class="upload-zone" onclick="document.getElementById('icon-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'icon')">
+            <div class="upload-zone" id="icon-zone-${i}" data-upload-field="icon" data-card-index="${i}">
               <div class="preview-wrap" id="icon-preview-wrap-${i}">
                 ${pkg.icon ? `<img src="${esc(pkg.icon)}" class="preview-thumb">` : `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>`}
-                <span class="file-name">${pkg.icon ? (pkg.icon.startsWith('data:') ? 'Image uploaded' : esc(pkg.icon.split('/').pop())) : 'Click or drop icon'}</span>
+                <span class="file-name" data-upload-label data-default-text="Click or drop icon">${pkg.icon ? (pkg.icon.startsWith('data:') ? 'Image uploaded' : esc(pkg.icon.split('/').pop())) : 'Click or drop icon'}</span>
               </div>
-              <input type="file" id="icon-file-${i}" accept="image/*" style="display:none" onchange="handleFileSelect(${i}, 'icon', this)">
+              <input type="file" id="icon-file-${i}" data-upload-input="icon" accept="image/*" style="display:none">
               <input type="hidden" data-field="icon" value="${esc(pkg.icon)}">
+              <div class="upload-progress" id="icon-progress-${i}" data-progress-id="icon-${i}">
+                <div class="upload-progress__track"><div class="upload-progress__bar"></div></div>
+                <span class="upload-progress__label">Ready</span>
+              </div>
             </div>
           </div>
           <div class="field">
             <label>Preview Image (PNG, JPG, WEBP)</label>
-            <div class="upload-zone" onclick="document.getElementById('preview-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'preview')">
+            <div class="upload-zone" id="preview-zone-${i}" data-upload-field="preview" data-card-index="${i}">
               <div class="preview-wrap" id="preview-preview-wrap-${i}">
                 ${pkg.preview ? `<img src="${esc(pkg.preview)}" class="preview-large">` : `<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`}
-                <span class="file-name">${pkg.preview ? (pkg.preview.startsWith('data:') ? 'Image uploaded' : esc(pkg.preview.split('/').pop())) : 'Click or drop preview image'}</span>
+                <span class="file-name" data-upload-label data-default-text="Click or drop preview image">${pkg.preview ? (pkg.preview.startsWith('data:') ? 'Image uploaded' : esc(pkg.preview.split('/').pop())) : 'Click or drop preview image'}</span>
               </div>
-              <input type="file" id="preview-file-${i}" accept="image/*" style="display:none" onchange="handleFileSelect(${i}, 'preview', this)">
+              <input type="file" id="preview-file-${i}" data-upload-input="preview" accept="image/*" style="display:none">
               <input type="hidden" data-field="preview" value="${esc(pkg.preview)}">
+              <div class="upload-progress" id="preview-progress-${i}" data-progress-id="preview-${i}">
+                <div class="upload-progress__track"><div class="upload-progress__bar"></div></div>
+                <span class="upload-progress__label">Ready</span>
+              </div>
             </div>
           </div>
           <div class="field">
             <label>${esc(rules.fileLabel)}</label>
-            <div class="upload-zone" onclick="document.getElementById('zip-file-${i}').click()" ondragover="this.classList.add('dragover');event.preventDefault()" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event, ${i}, 'zip_file')">
+            <div class="upload-zone" id="archive-zone-${i}" data-upload-field="zip_file" data-card-index="${i}" data-label-target="zip-name-${i}">
               <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
-              <span class="file-name" id="zip-name-${i}">${pkg.zip_file ? (pkg.zip_file.startsWith('blob:') ? 'File ready' : esc(pkg.zip_file.split('/').pop())) : esc(rules.dropText)}</span>
+              <span class="file-name" id="zip-name-${i}" data-upload-label data-default-text="${esc(rules.dropText)}">${pkg.zip_file ? (pkg.zip_file.startsWith('blob:') ? 'File ready' : esc(pkg.zip_file.split('/').pop())) : esc(rules.dropText)}</span>
               <span class="upload-hint-box">${esc(rules.helpText)}</span>
-              <input type="file" id="zip-file-${i}" accept="${esc(rules.accept)}" style="display:none" onchange="handleFileSelect(${i}, 'zip_file', this)">
+              <input type="file" id="zip-file-${i}" data-upload-input="zip_file" accept="${esc(rules.accept)}" style="display:none">
               <input type="hidden" data-field="zip_file" value="${esc(pkg.zip_file)}">
+              <div class="upload-progress" id="zip-progress-${i}" data-progress-id="zip_file-${i}">
+                <div class="upload-progress__track"><div class="upload-progress__bar"></div></div>
+                <span class="upload-progress__label">Ready</span>
+              </div>
             </div>
           </div>
           <div class="field">
@@ -889,200 +1005,285 @@
   };
 
   // â”€â”€ Modern Upload Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  window.handleFileSelect = function(i, field, input) {
-    const file = input.files[0];
-    if (!file) return;
-    processFile(i, field, file);
-  };
-
-  window.handleDrop = function(e, i, field) {
-    e.preventDefault();
-    e.currentTarget.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-    processFile(i, field, file);
-  };
-
-  function processFile(i, field, file) {
-    const filename = file.name;
-    const lowerName = filename.toLowerCase();
-    const rules = getUploadRules(packages[i]?.category || 'Homebrew Apps', packages[i]?.platform || 'PS4');
-    if (field === 'zip_file' && !rules.allowedExtensions.some(ext => lowerName.endsWith(ext))) {
-      toast(rules.invalidMessage, 'error');
-      const input = document.getElementById(`zip-file-${i}`);
-      if (input) input.value = '';
-      return;
+  function attachUploaders() {
+    if (!window.VortexUploadManager) return;
+    if (uploadManager) {
+      uploadManager.destroyAll();
     }
-    if (field === 'readme_file') {
-      const allowedReadme = ['.txt', '.md', '.markdown'];
-      if (!allowedReadme.some(ext => lowerName.endsWith(ext))) {
-        toast('README files must be TXT, MD, or MARKDOWN.', 'error');
-        return;
-      }
-      if (file.size > 1024 * 1024) {
-        toast('README files must be 1 MB or smaller.', 'error');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = e => {
-        const content = String(e.target.result || '');
-        packages[i].readme = {
-          filename,
-          format: lowerName.endsWith('.txt') ? 'text' : 'markdown',
-          content
-        };
-        packages[i].readme_file_file = file;
-        markDirty();
-        render();
-        toast(`README ${filename} selected.`);
+    uploadManager = window.VortexUploadManager.createUploadFieldManager({ toast });
+
+    const zones = document.querySelectorAll('[data-upload-field]');
+    zones.forEach(zone => {
+      const field = zone.getAttribute('data-upload-field');
+      const index = Number(zone.getAttribute('data-card-index'));
+      const inputId = field === 'zip_file'
+        ? `zip-file-${index}`
+        : field === 'readme_file'
+          ? `readme-file-${index}`
+          : `${field}-file-${index}`;
+      const input = document.getElementById(inputId);
+      const progress = document.querySelector(`[data-progress-id="${field}-${index}"]`);
+
+      const rules = getUploadRules(packages[index]?.category || 'Homebrew Apps', packages[index]?.platform || 'PS4');
+      const restrictions = {
+        allowedFileTypes: field === 'readme_file'
+          ? ['.txt', '.md', '.markdown']
+          : field === 'zip_file'
+            ? rules.allowedExtensions
+            : ['.png', '.jpg', '.jpeg', '.webp'],
+        maxFileSize: field === 'readme_file' ? 1024 * 1024 : undefined,
       };
-      reader.readAsText(file);
-      return;
-    }
-    const previewUrl = (field === 'icon' || field === 'preview')
-      ? URL.createObjectURL(file)
-      : '/uploads/' + filename;
 
-    // Update internal data
-    packages[i][field] = previewUrl;
-    packages[i][field + '_file'] = file;
-    
-    markDirty();
+      const labelEl = zone.querySelector('[data-upload-label]');
+      const defaultText = labelEl?.getAttribute('data-default-text') || labelEl?.textContent || '';
 
-    // Visual feedback
-    if (field === 'icon' || field === 'preview') {
-      const wrap = document.getElementById(`${field}-preview-wrap-${i}`);
-      const reader = new FileReader();
-      reader.onload = e => {
-        const imgClass = field === 'icon' ? 'preview-thumb' : 'preview-large';
-        wrap.innerHTML = `<img src="${e.target.result}" class="${imgClass}"><span class="file-name">${esc(filename)}</span>`;
-      };
-      reader.readAsDataURL(file);
-    } else if (field === 'zip_file') {
-      const nameEl = document.getElementById(`zip-name-${i}`);
-      if (nameEl) nameEl.textContent = filename;
-    }
+      uploadManager.mountField({
+        id: `${field}-${index}`,
+        target: zone,
+        input,
+        progressEl: progress,
+        restrictions,
+        onFileAdded(file) {
+          const pkg = packages[index];
+          if (!pkg) return;
 
-    toast(`File ${filename} selected.`);
+          if (field === 'readme_file') {
+            const reader = new FileReader();
+            reader.onload = e => {
+              const content = String(e.target.result || '');
+              pkg.readme = {
+                filename: file.name,
+                format: file.name.toLowerCase().endsWith('.txt') ? 'text' : 'markdown',
+                content,
+              };
+              pkg.readme_file_file = file.data;
+              markDirty();
+              render();
+            };
+            reader.readAsText(file.data);
+            return;
+          }
+
+          const previewWrap = (field === 'icon' || field === 'preview')
+            ? document.getElementById(`${field}-preview-wrap-${index}`)
+            : null;
+          if (field === 'icon' || field === 'preview') {
+            const imgClass = field === 'icon' ? 'preview-thumb' : 'preview-large';
+            const fileReader = new FileReader();
+            fileReader.onload = e => {
+              packages[index][field] = e.target.result;
+              if (previewWrap) {
+                previewWrap.innerHTML = `<img src="${e.target.result}" class="${imgClass}"><span class="file-name">${esc(file.name)}</span>`;
+              }
+            };
+            fileReader.readAsDataURL(file.data);
+          } else if (field === 'zip_file') {
+            packages[index].download_url = '';
+            const nameEl = document.getElementById(`zip-name-${index}`);
+            if (nameEl) nameEl.textContent = file.name;
+          }
+
+          if (field === 'zip_file') {
+            packages[index][field] = file.name;
+          }
+          packages[index][`${field}_file`] = file.data;
+          if (labelEl) labelEl.textContent = file.name;
+          markDirty();
+        },
+        onFileRemoved() {
+          const pkg = packages[index];
+          if (!pkg) return;
+          delete pkg[`${field}_file`];
+          if (field === 'readme_file') {
+            pkg.readme = null;
+          }
+          if (labelEl) labelEl.textContent = defaultText;
+        },
+      });
+    });
+  }
+  function getSaveHintElement() {
+    return document.getElementById('saveHint');
   }
 
-  const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const API_BASE = window.VORTEX_API_BASE || (IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '/api');
-  const HAS_CONFIGURED_API = Boolean(API_BASE);
+  function updateSaveHint(message) {
+    const hint = getSaveHintElement();
+    if (hint) {
+      hint.innerHTML = message;
+    }
+  }
 
-  async function ensureUploadApiAvailable() {
-    if (!HAS_CONFIGURED_API) return false;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    try {
-      const res = await fetch(`${API_BASE}/`, { cache: 'no-store', signal: controller.signal });
-      return res.ok;
-    } catch {
+  function formatCountLabel(count) {
+    const noun = uploadMode === 'mods' ? 'mod' : 'package';
+    return `${count} ${noun}${count === 1 ? '' : 's'}`;
+  }
+
+  function requireAdminAccess(reason = 'perform this action') {
+    if (!backendStatus.configured) {
+      toast(BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
       return false;
-    } finally {
-      clearTimeout(timeout);
+    }
+    if (!currentUser || !currentIsAdmin) {
+      toast(`Admin access required to ${reason}.`, 'error');
+      return false;
+    }
+    return true;
+  }
+
+  async function refreshPackages(force = false) {
+    if (!backendStatus.configured) {
+      packagesLoadedOnce = true;
+      updateSaveHint('Backend not configured — working in local draft mode.');
+      applyProfileActionOrRender();
+      return;
+    }
+
+    if (!backendApi) {
+      try {
+        await ensureBackendReady();
+      } catch (error) {
+        console.error('Failed to initialise upload backend', error);
+        toast(error.message || BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
+        return;
+      }
+    }
+
+    if (!backendApi) return;
+    if (packagesLoadedOnce && !force) return;
+    try {
+      const items = await backendApi.fetchItems(uploadMode);
+      packages = Array.isArray(items) ? items.map(item => ({ ...item })) : [];
+      packagesLoadedOnce = true;
+      dirty = false;
+      updateSaveHint(`Loaded ${formatCountLabel(packages.length)} from backend.`);
+      applyProfileActionOrRender();
+    } catch (error) {
+      console.error('Failed to load catalogue', error);
+      toast(error.message || BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
+    }
+  }
+
+  function beginButtonBusy(btn, label) {
+    if (!btn) return;
+    if (btn.dataset.originalText === undefined) {
+      btn.dataset.originalText = btn.textContent || '';
+    }
+    btn.disabled = true;
+    if (label) {
+      btn.textContent = label;
+    }
+  }
+
+  function endButtonBusy(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    if (btn.dataset.originalText !== undefined) {
+      btn.textContent = btn.dataset.originalText;
+      delete btn.dataset.originalText;
     }
   }
 
   window.submitToStore = async function(i, btn) {
+    if (!requireAdminAccess('upload content')) return;
     collectAll();
     const pkg = packages[i];
-    if (!pkg.name) return toast('Package Title is required.', 'error');
-    if (!pkg.zip_file_file && !pkg.zip_file && !pkg.download_url) {
-      return toast(`${uploadMode === 'mods' ? 'Mod archive' : 'Package file'} is required. Preview image, tags, YouTube videos, and external redirect URL are optional.`, 'error');
+    if (!pkg) return;
+    if (!pkg.name) {
+      toast('Package Title is required.', 'error');
+      return;
     }
+
+    const rules = getUploadRules(pkg.category || 'Homebrew Apps', pkg.platform || 'PS4');
+    const hasUploadFile = Boolean(pkg.zip_file_file);
+    const hasExistingDownload = Boolean(pkg.download_url);
+    if (!hasUploadFile && !hasExistingDownload) {
+      const label = uploadMode === 'mods' ? 'Mod archive' : (rules.fileLabel || 'Package file');
+      toast(`${label} is required. Preview image, tags, YouTube videos, and external links are optional.`, 'error');
+      return;
+    }
+
     if (uploadMode !== 'mods' && getConsoleMethodForPackage(pkg) !== 'none' && !pkg.consoleInstall?.enabled) {
-      const proceed = confirm('Website console install/send is not enabled for this package. Users will only get the normal download/manual install fallback. Do you want to upload it anyway?');
+      const proceed = confirm('Console install/send is disabled for this package. Users will receive the manual download only. Continue?');
       if (!proceed) {
-        toast('Upload cancelled. Tick console install/send if you want to enable it.', 'error');
+        toast('Upload cancelled. Enable console install/send to include installer.', 'error');
         return;
       }
     }
-    const oldText = btn.textContent;
-    btn.textContent = 'Uploading...';
-    btn.disabled = true;
+
+    const buttonEl = btn instanceof HTMLElement ? btn : null;
+    beginButtonBusy(buttonEl, 'Uploading…');
+
+    if (!backendStatus.configured) {
+      toast(BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
+      setStatus(BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
+      endButtonBusy(buttonEl);
+      return;
+    }
 
     try {
-      if (!(await ensureUploadApiAvailable())) {
-        throw new Error('Live upload is not connected yet. Deploy the Vortex backend API and set window.VORTEX_API_BASE, or run the local backend while testing.');
-      }
-
-      const fd = new FormData();
-      fd.append('name', pkg.name);
-      fd.append('description', pkg.description || '');
-      fd.append('discord_id', currentUser?.sub || currentUser?.email || 'local-admin');
-      fd.append('author', pkg.creator || pkg.author || 'Community');
-      fd.append('platform', pkg.platform);
-      if (pkg.category) fd.append('category', pkg.category);
-      fd.append('tags', JSON.stringify(pkg.tags || []));
-      fd.append('download_url', pkg.download_url || '');
-      fd.append('type', uploadConfig.type);
-      fd.append('fileType', pkg.fileType || getUploadRules(pkg.category, pkg.platform).fileType);
-      fd.append('allowedExtensions', JSON.stringify(pkg.allowedExtensions || getUploadRules(pkg.category, pkg.platform).allowedExtensions));
-      fd.append('consoleInstallEnabled', String(pkg.consoleInstall?.enabled || pkg.consoleInstallEnabled || false));
-      fd.append('consoleMethod', pkg.consoleInstall?.method || pkg.consoleMethod || 'none');
-      fd.append('requiresConsoleIp', String(pkg.consoleInstall?.requiresConsoleIp ?? pkg.requiresConsoleIp ?? true));
-      fd.append('usbInstructions', pkg.installInstructions?.usb || pkg.usbInstructions || '');
-      fd.append('networkInstructions', pkg.installInstructions?.network || pkg.networkInstructions || '');
-      fd.append('installNotes', pkg.installInstructions?.notes || pkg.installNotes || '');
-      fd.append('externalGuideUrl', pkg.externalGuideUrl || '');
-      fd.append('youtubeGuideUrl', pkg.youtubeGuideUrl || '');
-      fd.append('youtubeVideos', JSON.stringify(normalizeYoutubeVideos(pkg).filter(item => item.url)));
-      
-      if (pkg.zip_file_file) fd.append('theme', pkg.zip_file_file);
-      if (pkg.icon_file_file) fd.append('icon', pkg.icon_file_file);
-      if (pkg.preview_file_file) fd.append('preview', pkg.preview_file_file);
-      if (pkg.readme_file_file) fd.append('readme', pkg.readme_file_file);
-
-      const res = await fetch(`${API_BASE}/store/upload`, {
-        method: 'POST',
-        body: fd
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `Upload server returned ${res.status}`);
-      }
-
-      toast(`Successfully uploaded ${pkg.name}!`);
-      markDirty(false);
-      // Reload to get new IDs/States
-      setTimeout(() => location.reload(), 1500);
-    } catch (err) {
-      const message = err instanceof TypeError
-        ? 'Live upload is not connected yet. Deploy the Vortex backend API and set window.VORTEX_API_BASE, or run the local backend while testing.'
-        : err.message;
+      const api = await ensureBackendReady();
+      setStatus('Uploading to configured backend…');
+      const saved = await api.saveItem(uploadMode, pkg, currentUser);
+      packages[i] = { ...saved };
+      dirty = false;
+      toast(`Saved ${saved.name || 'entry'} successfully.`, 'success');
+      updateSaveHint(`Last saved ${new Date().toLocaleTimeString()} — ${formatCountLabel(packages.length)} synced.`);
+      render();
+    } catch (error) {
+      console.error('Upload failed', error);
+      const message = error && error.message ? error.message : BACKEND_NOT_CONFIGURED_MESSAGE;
       toast(message, 'error');
     } finally {
-      btn.textContent = oldText;
-      btn.disabled = false;
+      endButtonBusy(buttonEl);
+      setStatus(backendStatus.configured ? 'Admin access ready.' : BACKEND_NOT_CONFIGURED_MESSAGE, backendStatus.configured ? 'success' : 'error');
     }
   };
 
   window.deleteFromServer = async function(i) {
+    if (!requireAdminAccess('delete content')) return;
     const pkg = packages[i];
-    if (!pkg.id) return toast('This package is not yet on the server.', 'error');
+    if (!pkg) return;
+    if (!backendStatus.configured) {
+      toast(BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
+      return;
+    }
+
+    if (!pkg.id) {
+      toast('This entry is not yet published.', 'error');
+      return;
+    }
+
+    const confirmationLabel = pkg.name || 'Untitled';
+    if (!confirm(`Delete "${confirmationLabel}" from the configured backend? This removes it from the catalogue.`)) {
+      return;
+    }
 
     try {
-      const res = await fetch(`${API_BASE}/store/themes/${pkg.id}`, {
-        method: 'DELETE'
-      });
-      if (!res.ok) throw new Error(`Delete server returned ${res.status}`);
-      toast('Package removed from store.');
-      location.reload();
-    } catch (err) {
-      const message = err instanceof TypeError
-        ? 'Live upload is not connected yet. Deploy the Vortex backend API and set window.VORTEX_API_BASE, or run the local backend while testing.'
-        : err.message;
+      const api = await ensureBackendReady();
+      await api.deleteItem(uploadMode, pkg);
+      packages.splice(i, 1);
+      toast('Entry removed.', 'success');
+      updateSaveHint(`Loaded ${formatCountLabel(packages.length)} from backend.`);
+      render();
+    } catch (error) {
+      console.error('Delete failed', error);
+      const message = error && error.message ? error.message : BACKEND_NOT_CONFIGURED_MESSAGE;
       toast(message, 'error');
     }
   };
 
   window.submitAll = async function() {
+    if (!requireAdminAccess('upload all entries')) return;
     collectAll();
     const btn = document.getElementById('submitAllBtn');
-    for (let i = 0; i < packages.length; i++) {
-      await submitToStore(i, btn);
+    beginButtonBusy(btn, 'Uploading…');
+    try {
+      for (let i = 0; i < packages.length; i++) {
+        await submitToStore(i);
+      }
+      toast('All entries saved.', 'success');
+    } finally {
+      endButtonBusy(btn);
     }
   };
 
@@ -1134,6 +1335,7 @@
     packages.push(newPackage);
     if (isUserAction) markDirty();
     render();
+    attachUploaders();
     const newIdx = packages.length - 1;
     const newCard = document.getElementById('pkg-' + newIdx);
     if (newCard) {
@@ -1323,35 +1525,13 @@
   }
 
   // â”€â”€ Auto-load themes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const liveDataUrl = uploadMode === 'mods' ? `${API_BASE}/store/mods` : `${API_BASE}/store/themes`;
-  const staticDataUrl = uploadMode === 'mods' ? '../store-mods/mods.json' : '../store/themes.json';
-  function loadStaticCatalogue(messagePrefix = 'Static catalogue') {
-    fetch(staticDataUrl, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => {
-        packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : [];
-        document.getElementById('saveHint').textContent =
-          `${messagePrefix}. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
-        applyProfileActionOrRender();
-      })
-      .catch(() => applyProfileActionOrRender());
-  }
-
-  if (HAS_CONFIGURED_API) {
-    fetch(liveDataUrl, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => {
-        packages = Array.isArray(data[uploadConfig.jsonRoot]) ? data[uploadConfig.jsonRoot] : (Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []));
-        document.getElementById('saveHint').textContent =
-          `Connected to live ${uploadMode === 'mods' ? 'mods' : 'store'}. Total ${packages.length} ${uploadMode === 'mods' ? 'mod' : 'package'}(s) available.`;
-        applyProfileActionOrRender();
-      })
-      .catch(() => loadStaticCatalogue('Live upload API unavailable. Showing static catalogue'));
-  } else {
-    loadStaticCatalogue('Live upload API not configured. Showing static catalogue');
-  }
+  refreshPackages(true);
 
 })();
 </script>
 </body>
 </html>
+
+
+
+

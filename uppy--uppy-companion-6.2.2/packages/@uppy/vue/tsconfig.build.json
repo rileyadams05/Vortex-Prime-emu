@@ -1,0 +1,23 @@
+{
+  "extends": "../../../tsconfig.shared",
+  "compilerOptions": {
+    "outDir": "./lib",
+    "rootDir": "./src"
+  },
+  "include": ["./src/**/*.*"],
+  "exclude": ["./src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../core/tsconfig.build.json"
+    },
+    {
+      "path": "../components/tsconfig.build.json"
+    },
+    {
+      "path": "../dashboard/tsconfig.build.json"
+    },
+    {
+      "path": "../status-bar/tsconfig.build.json"
+    }
+  ]
+}

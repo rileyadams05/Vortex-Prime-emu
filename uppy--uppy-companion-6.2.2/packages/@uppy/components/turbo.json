@@ -1,0 +1,24 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build",
+        "@uppy/core#build",
+        "@uppy/image-editor#build",
+        "@uppy/screen-capture#build",
+        "@uppy/webcam#build"
+      ],
+      "outputs": ["lib/**"]
+    },
+    "build:css": {
+      "inputs": [
+        "src/input.css",
+        "../image-editor/src/cropper.scss",
+        "src/**/*.{js,ts,jsx,tsx}",
+        "tailwind.config.js"
+      ],
+      "outputs": ["dist/styles.css", "dist/image-editor.css"]
+    }
+  }
+}

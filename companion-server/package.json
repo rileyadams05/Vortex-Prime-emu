@@ -1,0 +1,24 @@
+{
+  "name": "vortex-companion-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "google:auth": "node scripts/google-auth.mjs",
+    "lint": "echo 'No lint configured'"
+  },
+  "dependencies": {
+    "@uppy/companion": "6.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.1",
+    "fs-extra": "^11.2.0",
+    "googleapis": "^131.0.0",
+    "multer": "^1.4.5-lts.1",
+    "nanoid": "^5.1.11",
+    "open": "^9.1.0"
+  }
+}

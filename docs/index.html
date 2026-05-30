@@ -180,6 +180,7 @@
             -moz-user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
+            user-select: none;
             -webkit-appearance: none;
             appearance: none;
             background-color: #131314;
@@ -2389,14 +2390,110 @@
                     <div id="itemDetailContent"></div>
                 </section>
             </div>
-            <script>
+            <script type="module" src="./assets/js/store-catalogue.js"></script>
+<script>
                 (function () {
                     let deferredInstallPrompt = null;
                     const installAppButton = document.getElementById('installAppButton');
-                    const GOOGLE_CLIENT_ID = '1031854944297-5fnr5ag53nnviq0av9htnctq733uae0k.apps.googleusercontent.com';
-                    const USER_STORAGE_KEY = 'vpGoogleAuthUser';
-                    let googleTokenClient = null;
+                    const CARDS_PER_PAGE = 10;
+                    const PROFILE_STORAGE_PREFIX = 'vpPublicProfile.';
+                    const readmeCache = new Map();
+
+                    let storeBackendApi = null;
+                    let authUnsubscribe = null;
                     let currentUser = null;
+
+                    function profileStorageKey(uid) {
+                        return `${PROFILE_STORAGE_PREFIX}${uid}`;
+                    }
+
+                    async function ensureStoreApi() {
+                        if (storeBackendApi) return storeBackendApi;
+                        if (window.VortexStoreBackend) {
+                            storeBackendApi = window.VortexStoreBackend;
+                            return storeBackendApi;
+                        }
+                        return Promise.reject(new Error('Store backend adapter did not initialise.'));
+                    }
+
+                    function loadProfileOverrides(user) {
+                        if (!user?.uid) return null;
+                        try {
+                            const raw = localStorage.getItem(profileStorageKey(user.uid));
+                            return raw ? JSON.parse(raw) : null;
+                        } catch (error) {
+                            return null;
+                        }
+                    }
+
+                    function persistProfileOverrides(user, overrides) {
+                        if (!user?.uid) return;
+                        try {
+                            if (overrides) {
+                                localStorage.setItem(profileStorageKey(user.uid), JSON.stringify(overrides));
+                            } else {
+                                localStorage.removeItem(profileStorageKey(user.uid));
+                            }
+                        } catch (error) {
+                            // Ignore storage quota errors.
+                        }
+                    }
+
+                    function resolveDisplayProfile(user) {
+                        if (!user) {
+                            return { displayName: '', photoURL: '' };
+                        }
+                        const overrides = loadProfileOverrides(user);
+                        const displayName = (overrides?.displayName || user.displayName || user.email || '').trim();
+                        const photoURL = (overrides?.photoURL || user.photoURL || '').trim();
+                        return { displayName, photoURL };
+                    }
+
+                    function applyMainUser(user) {
+                        currentUser = user || null;
+                        const profile = resolveDisplayProfile(user);
+                        if (user) {
+                            if (mainSignInBtn) mainSignInBtn.style.display = 'none';
+                            if (mainUserBadge) {
+                                mainUserBadge.style.display = 'inline-flex';
+                                mainUserBadge.title = user.email || profile.displayName || 'Signed-in user';
+                            }
+                            if (mainUserName) mainUserName.textContent = profile.displayName || 'Signed-in user';
+                            if (mainUserAvatar) {
+                                if (profile.photoURL) {
+                                    mainUserAvatar.src = profile.photoURL;
+                                    mainUserAvatar.style.display = 'block';
+                                } else {
+                                    mainUserAvatar.style.display = 'none';
+                                    mainUserAvatar.removeAttribute('src');
+                                }
+                            }
+                        } else {
+                            if (mainSignInBtn) mainSignInBtn.style.display = 'inline-flex';
+                            if (mainUserBadge) {
+                                mainUserBadge.style.display = 'none';
+                                mainUserBadge.removeAttribute('title');
+                            }
+                            if (mainUserName) mainUserName.textContent = '';
+                            if (mainUserAvatar) {
+                                mainUserAvatar.style.display = 'none';
+                                mainUserAvatar.removeAttribute('src');
+                            }
+                        }
+                    }
+
+                    async function startGoogleSignIn() {
+                        alert('Public store sign-in is disabled until a storage backend is configured.');
+                    }
+
+                    async function signOutMainUser() {
+                        alert('Sign-out is disabled because no store backend is configured.');
+                    }
+
+                    function profileAvatarFor(user) {
+                        const profile = resolveDisplayProfile(user);
+                        return profile.photoURL || '/favicon-96x96.png';
+                    }
 
                     const mainSignInBtn = document.getElementById('mainGoogleSignInBtn');
                     const mainUserBadge = document.getElementById('mainUserBadge');
@@ -2419,123 +2516,13 @@
                     const itemDetailCloseBtn = document.getElementById('itemDetailCloseBtn');
                     const itemDetailContent = document.getElementById('itemDetailContent');
 
-                    function loadStoredUser() {
-                        try {
-                            return JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
-                        } catch (error) {
-                            return null;
-                        }
-                    }
-
-                    function persistUser(user) {
-                        if (!user) {
-                            localStorage.removeItem(USER_STORAGE_KEY);
-                            return;
-                        }
-                        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-                    }
-
-                    function applyMainUser(user) {
-                        currentUser = user || null;
-                        if (user) {
-                            if (mainSignInBtn) mainSignInBtn.style.display = 'none';
-                            if (mainUserBadge) {
-                                mainUserBadge.style.display = 'inline-flex';
-                                mainUserBadge.title = user.email || user.name || 'Google User';
-                            }
-                            if (mainUserName) mainUserName.textContent = user.name || user.email || 'Google User';
-                            if (mainUserAvatar) {
-                                if (user.picture) {
-                                    mainUserAvatar.src = user.picture;
-                                    mainUserAvatar.style.display = 'block';
-                                } else {
-                                    mainUserAvatar.style.display = 'none';
-                                    mainUserAvatar.removeAttribute('src');
-                                }
-                            }
-                        } else {
-                            if (mainSignInBtn) mainSignInBtn.style.display = 'inline-flex';
-                            if (mainUserBadge) {
-                                mainUserBadge.style.display = 'none';
-                                mainUserBadge.removeAttribute('title');
-                            }
-                            if (mainUserName) mainUserName.textContent = '';
-                            if (mainUserAvatar) {
-                                mainUserAvatar.style.display = 'none';
-                                mainUserAvatar.removeAttribute('src');
-                            }
-                        }
-                    }
-
-                    function ensureTokenClient() {
-                        if (!window.google || !google.accounts || !google.accounts.oauth2) {
-                            alert('Google sign-in is still loading. Please try again in a moment.');
-                            return null;
-                        }
-                        if (!googleTokenClient) {
-                            googleTokenClient = google.accounts.oauth2.initTokenClient({
-                                client_id: GOOGLE_CLIENT_ID,
-                                scope: 'openid email profile',
-                                ux_mode: 'popup',
-                                callback: () => {}
-                            });
-                        }
-                        return googleTokenClient;
-                    }
-
-                    async function fetchGoogleProfile(accessToken) {
-                        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                            headers: { Authorization: `Bearer ${accessToken}` }
-                        });
-                        if (!response.ok) throw new Error('Failed to verify Google account');
-                        const profile = await response.json();
-                        return {
-                            sub: profile.sub,
-                            name: profile.name || profile.given_name || profile.email || 'Google User',
-                            email: profile.email || null,
-                            picture: profile.picture || ''
-                        };
-                    }
-
-                    function startGoogleSignIn() {
-                        const client = ensureTokenClient();
-                        if (!client) return;
-                        client.callback = async (tokenResponse) => {
-                            try {
-                                if (!tokenResponse || !tokenResponse.access_token) {
-                                    throw new Error('Google did not return an access token');
-                                }
-                                const profile = await fetchGoogleProfile(tokenResponse.access_token);
-                                persistUser(profile);
-                                applyMainUser(profile);
-                            } catch (error) {
-                                console.error(error);
-                                alert('Unable to complete Google sign-in. Please try again.');
-                            }
-                        };
-                        client.requestAccessToken({ prompt: currentUser ? '' : 'consent' });
-                    }
-
-                    function signOutMainUser() {
-                        if (currentUser && window.google && google.accounts && google.accounts.oauth2 && typeof google.accounts.oauth2.revoke === 'function') {
-                            const hint = currentUser.email || currentUser.sub || undefined;
-                            if (hint) google.accounts.oauth2.revoke(hint, () => {});
-                        }
-                        persistUser(null);
-                        applyMainUser(null);
-                        closeProfilePanel();
-                    }
-
-                    function profileAvatarFor(user) {
-                        return (user && user.picture) ? user.picture : '/favicon-96x96.png';
-                    }
-
                     function openProfilePanel() {
                         if (!currentUser || !profileModal) return;
+                        const profile = resolveDisplayProfile(currentUser);
                         if (profilePanelAvatar) profilePanelAvatar.src = profileAvatarFor(currentUser);
-                        if (profilePanelEmail) profilePanelEmail.textContent = currentUser.email || 'Google profile';
-                        if (profileNameInput) profileNameInput.value = currentUser.name || currentUser.email || '';
-                        if (profileAvatarInput) profileAvatarInput.value = currentUser.picture || '';
+                        if (profilePanelEmail) profilePanelEmail.textContent = currentUser.email || profile.displayName || '';
+                        if (profileNameInput) profileNameInput.value = profile.displayName || '';
+                        if (profileAvatarInput) profileAvatarInput.value = profile.photoURL || '';
                         profileModal.classList.add('active');
                         profileModal.setAttribute('aria-hidden', 'false');
                         renderProfileUploads();
@@ -2549,14 +2536,17 @@
 
                     function saveProfilePanel() {
                         if (!currentUser) return;
-                        const nextUser = {
-                            ...currentUser,
-                            name: (profileNameInput && profileNameInput.value.trim()) || currentUser.name || currentUser.email || 'Google User',
-                            picture: (profileAvatarInput && profileAvatarInput.value.trim()) || ''
+                        const overrides = {
+                            displayName: (profileNameInput && profileNameInput.value.trim()) || ''
                         };
-                        persistUser(nextUser);
-                        applyMainUser(nextUser);
-                        if (profilePanelAvatar) profilePanelAvatar.src = profileAvatarFor(nextUser);
+                        const avatarValue = (profileAvatarInput && profileAvatarInput.value.trim()) || '';
+                        overrides.photoURL = avatarValue || '';
+                        if (!overrides.displayName) {
+                            overrides.displayName = currentUser.displayName || currentUser.email || 'Signed-in user';
+                        }
+                        persistProfileOverrides(currentUser, overrides);
+                        applyMainUser(currentUser);
+                        if (profilePanelAvatar) profilePanelAvatar.src = profileAvatarFor(currentUser);
                         renderProfileUploads();
                     }
 
@@ -2566,10 +2556,11 @@
 
                     function packageBelongsToUser(item, user) {
                         if (!item || !user) return false;
+                        const profile = resolveDisplayProfile(user);
                         const userKeys = [
                             user.email,
-                            user.name,
-                            user.sub
+                            profile.displayName,
+                            user.uid
                         ].map(normalizeOwner).filter(Boolean);
                         const itemKeys = [
                             item.creator,
@@ -2604,34 +2595,20 @@
                         window.location.href = source === 'mods' ? '/admin/?type=mods' : '/admin/';
                     }
 
-                    async function deleteUserUpload(item) {
+                    function deleteUserUpload(item) {
                         if (!item) return;
                         const name = item.name || 'this upload';
                         if (!confirm(`Delete "${name}" from your uploads?`)) return;
-
-                        if (IS_LOCAL_BACKEND && item.id) {
-                            try {
-                                const owner = encodeURIComponent(currentUser.email || currentUser.sub || currentUser.name || '');
-                                const response = await fetch(`${API_BASE}/store/themes/${encodeURIComponent(item.id)}?discord_id=${owner}`, {
-                                    method: 'DELETE'
-                                });
-                                if (!response.ok) throw new Error('Server could not delete this upload.');
-                                await loadStoreCatalog();
-                                await loadModsCatalog();
-                                renderProfileUploads();
-                                return;
-                            } catch (error) {
-                                alert(error.message || 'Unable to delete this upload from the server.');
-                                return;
-                            }
-                        }
-
-                        alert('This hosted page cannot delete files directly. The creator portal will open so you can remove it and publish the updated store.');
+                        alert('To delete an upload, the creator portal will open so you can remove it and publish the updated store.');
                         openCreatorForUpload(item, 'delete');
                     }
 
                     function renderProfileUploads() {
-                        if (!profileUploadsList || !currentUser) return;
+                        if (!profileUploadsList) return;
+                        if (!currentUser) {
+                            profileUploadsList.innerHTML = '<div class="profile-empty">Sign in to view your uploads.</div>';
+                            return;
+                        }
                         const uploads = getUserUploads();
                         if (uploads.length === 0) {
                             profileUploadsList.innerHTML = '<div class="profile-empty">No uploads matched this profile yet. Packages match when their creator or author name is the same as your signed-in username.</div>';
@@ -2714,14 +2691,16 @@
                         });
                     }
 
-                    window.addEventListener('storage', (event) => {
-                        if (event.key === USER_STORAGE_KEY) {
-                            applyMainUser(loadStoredUser());
-                            if (profileModal && profileModal.classList.contains('active')) openProfilePanel();
+                    async function initStoreAuth() {
+                        applyMainUser(null);
+                        if (mainSignInBtn) {
+                            mainSignInBtn.setAttribute('disabled', 'disabled');
+                            mainSignInBtn.title = 'Backend not configured yet';
                         }
-                    });
-
-                    applyMainUser(loadStoredUser());
+                        if (profileUploadsList) {
+                            profileUploadsList.innerHTML = '<div class="profile-empty">Uploads will appear once the backend is configured.</div>';
+                        }
+                    }
 
                     if ('serviceWorker' in navigator) {
                         window.addEventListener('load', () => {
@@ -2755,12 +2734,6 @@
                             installAppButton.style.display = 'none';
                         });
                     }
-
-                    const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                    const API_BASE = window.VORTEX_API_BASE || (IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '/api');
-                    const STORE_DATA_URL = `${API_BASE}/store/themes`;
-                    const MODS_DATA_URL = `${API_BASE}/store/mods`;
-                    const CARDS_PER_PAGE = 10;
 
                     const storeGrid = document.getElementById('storeGrid');
                     const noResults = document.getElementById('storeNoResults');
@@ -3131,30 +3104,9 @@
                     }
 
                     async function sendConsolePackage(config, consoleIp, statusEl) {
-                        const platformLabel = config.platform.toUpperCase();
-                        const statusSteps = config.platform === 'ps3'
-                            ? ['Connecting to PS3...', 'Checking webMAN-MOD...', 'Sending package request...']
-                            : [`Connecting to ${platformLabel}...`, 'Sending package URL...', 'Install request sent. Check your console.'];
-                        statusEl.textContent = statusSteps[0];
-
-                        setTimeout(() => { statusEl.textContent = statusSteps[1]; }, 250);
-                        const response = await fetch(`${API_BASE}/console-package/send`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                platform: config.platform,
-                                method: config.method,
-                                consoleIp,
-                                packageUrl: config.packageUrl,
-                            }),
-                        });
-                        setTimeout(() => { statusEl.textContent = statusSteps[2]; }, 500);
-                        const result = await response.json().catch(() => ({}));
-                        if (!response.ok || result.ok === false) {
-                            statusEl.textContent = result.message || 'Could not connect to console. Make sure the console is on the same network and the required console service is enabled.';
-                            return;
-                        }
-                        statusEl.textContent = result.message || 'Package request sent to console.';
+                        consoleIp = consoleIp || '';
+                        statusEl.textContent = 'Direct console send is not available on the static site build. Download the PKG and install it manually on your console.';
+                        return Promise.resolve();
                     }
 
                     function attachConsoleInstaller(item) {
@@ -3220,11 +3172,15 @@
                         return `<img src="${escapeAttribute(media.url)}" alt="${escapeAttribute(media.title || 'Preview Image')}">`;
                     }
 
-                    function renderReadmeContent(readme) {
-                        const content = readme && readme.content ? String(readme.content) : '';
+                    function renderReadmeContent(readme, overrideContent) {
+                        const content = overrideContent != null
+                            ? String(overrideContent)
+                            : readme && readme.content
+                                ? String(readme.content)
+                                : '';
                         if (!content) return '';
-                        if (readme.format === 'text') {
-                            return `<pre class="readme-body">${escapeHtml(content)}</pre>`;
+                        if (readme && readme.format === 'text') {
+                            return `<pre>${escapeHtml(content)}</pre>`;
                         }
                         const inline = (value) => escapeHtml(value)
                             .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
@@ -3256,7 +3212,18 @@
                             else output.push('');
                         });
                         closeList();
-                        return `<div class="readme-body">${output.join('')}</div>`;
+                        return output.join('');
+                    }
+
+                    async function fetchReadmeContent(readme) {
+                        const url = readme && readme.url ? String(readme.url) : '';
+                        if (!url) return '';
+                        if (readmeCache.has(url)) return readmeCache.get(url);
+                        const response = await fetch(url, { cache: 'no-store' });
+                        if (!response.ok) throw new Error('Failed to load README');
+                        const text = await response.text();
+                        readmeCache.set(url, text);
+                        return text;
                     }
 
                     function renderItemDetails(item) {
@@ -3265,6 +3232,7 @@
                         const links = getGuideLinks(item);
                         const first = gallery[0];
                         const readmeMarkup = renderReadmeContent(item.readme);
+                        const hasReadme = item.readme && (readmeMarkup || item.readme.url);
                         const consoleInstallerMarkup = renderConsoleInstaller(item);
                         itemDetailContent.innerHTML = `
                             <div class="item-detail-header">
@@ -3285,7 +3253,7 @@
                             </div>
                             ${links.length ? `<div class="media-links">${links.map(link => `<a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.title || 'Community Link')}</a>`).join('')}</div>` : ''}
                             ${consoleInstallerMarkup}
-                            ${readmeMarkup ? `<div class="readme-section"><h4>${escapeHtml(item.readme?.filename || 'README')}</h4>${readmeMarkup}</div>` : ''}
+                            ${hasReadme ? `<div class="readme-section"><h4>${escapeHtml(item.readme?.filename || 'README')}</h4><div class="readme-body" data-readme-body>${readmeMarkup || '<p>Loading README…</p>'}</div></div>` : ''}
                         `;
                         itemDetailContent.querySelectorAll('.media-thumb').forEach(button => {
                             button.addEventListener('click', () => {
@@ -3295,6 +3263,19 @@
                             });
                         });
                         attachConsoleInstaller(item);
+                        if (hasReadme && !readmeMarkup && item.readme?.url) {
+                            const container = itemDetailContent.querySelector('[data-readme-body]');
+                            if (container) {
+                                fetchReadmeContent(item.readme)
+                                    .then((content) => {
+                                        const markup = renderReadmeContent(item.readme, content);
+                                        container.innerHTML = markup || '<p>README could not be displayed.</p>';
+                                    })
+                                    .catch(() => {
+                                        container.innerHTML = '<p>Unable to load README.</p>';
+                                    });
+                            }
+                        }
                     }
 
                     function openItemDetails(item) {
@@ -3774,20 +3755,12 @@
 
                     async function loadStoreCatalog() {
                         try {
-                            const response = await fetch(STORE_DATA_URL, { cache: 'no-store' });
-                            if (!response.ok) throw new Error('Failed to fetch store catalogue');
-                            const data = await response.json();
-                            // API returns {themes: [...]} or {dashboards: [...]}
-                            storeItems = Array.isArray(data.themes) ? data.themes : (Array.isArray(data.dashboards) ? data.dashboards : []);
+                            const api = await ensureStoreApi();
+                            const items = await api.loadStoreItems();
+                            storeItems = Array.isArray(items) ? items.filter(item => item && item.published !== false) : [];
                         } catch (error) {
-                            console.warn('Store catalogue dynamic load failed, trying static fallback:', error);
-                            try {
-                                const fb = await fetch('store/themes.json', { cache: 'no-store' });
-                                if (fb.ok) {
-                                    const data = await fb.json();
-                                    storeItems = Array.isArray(data.dashboards) ? data.dashboards : [];
-                                }
-                            } catch (e) {}
+                            console.error('Failed to load store catalogue', error);
+                            storeItems = [];
                         }
 
                         applyFilters();
@@ -3796,21 +3769,12 @@
 
                     async function loadModsCatalog() {
                         try {
-                            const response = await fetch(MODS_DATA_URL, { cache: 'no-store' });
-                            if (!response.ok) throw new Error('Failed to fetch mods catalogue');
-                            const data = await response.json();
-                            modItems = Array.isArray(data.mods) ? data.mods : [];
+                            const api = await ensureStoreApi();
+                            const items = await api.loadStoreMods();
+                            modItems = Array.isArray(items) ? items.filter(item => item && item.published !== false) : [];
                         } catch (error) {
-                            console.warn('Mods catalogue load failed:', error);
-                            try {
-                                const fb = await fetch('store-mods/mods.json', { cache: 'no-store' });
-                                if (fb.ok) {
-                                    const data = await fb.json();
-                                    modItems = Array.isArray(data.mods) ? data.mods : [];
-                                }
-                            } catch (e) {
-                                modItems = [];
-                            }
+                            console.error('Failed to load mods catalogue', error);
+                            modItems = [];
                         }
 
                         applyModsFilters();
@@ -3820,9 +3784,11 @@
                     if (document.readyState === 'loading') {
                         document.addEventListener('DOMContentLoaded', loadStoreCatalog);
                         document.addEventListener('DOMContentLoaded', loadModsCatalog);
+                        document.addEventListener('DOMContentLoaded', initStoreAuth);
                     } else {
                         loadStoreCatalog();
                         loadModsCatalog();
+                        initStoreAuth();
                     }
 
                     document.addEventListener('keydown', (event) => {
@@ -3856,3 +3822,4 @@
         <script type="module" src="/assets/js/security-gate.js"></script>
         </body>
         </html>
+

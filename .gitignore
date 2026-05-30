@@ -3,3 +3,7 @@ webMAN-MOD/
 .env
 .env.*
 *.log
+MY-google-ID.json
+companion-server/.env
+companion-server/data/
+companion-server/tmp/
