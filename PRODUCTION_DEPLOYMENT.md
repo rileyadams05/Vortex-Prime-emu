@@ -6,14 +6,14 @@ This project is designed to run publicly with GitHub Pages serving the frontend 
 
 - `docs/` — static frontend published to GitHub Pages.
 - `cloudflare/worker.js` — Cloudflare Worker implementing the production API.
-- `cloudflare/wrangler.toml` — Worker configuration (routes + R2 bindings).
+- `cloudflare/wrangler.toml` — Worker configuration for the production API route.
 - `.github/workflows/pages.yml` — publishes `docs/` to GitHub Pages whenever `main` changes.
-- `.github/workflows/cloudflare-worker.yml` — deploys the Worker + R2 bucket.
+- `.github/workflows/cloudflare-worker.yml` — deploys the Worker.
 
 ## 2. Required infrastructure
 
 1. **Cloudflare Pages custom domain**: `vortex-prime-emu.com` should point to the GitHub Pages site (already configured).
-2. **Cloudflare R2 bucket**: `vortex-prime-store-uploads`. The GitHub Action creates it automatically on the first run if it does not exist.
+2. **Google Drive storage**: a service account with access to dedicated folders for packages, mods, icons, previews, readmes, and the catalogue JSON file.
 3. **Cloudflare Worker route**: `vortex-prime-emu.com/api/*` mapped to the Worker defined in `cloudflare/worker.js`.
 
 ## 3. Cloudflare account secrets
@@ -21,9 +21,29 @@ This project is designed to run publicly with GitHub Pages serving the frontend 
 Add these repository secrets under **GitHub → Settings → Secrets and variables → Actions**:
 
 - `CF_ACCOUNT_ID` — Cloudflare Account ID.
-- `CF_API_TOKEN` — API token with **Workers Scripts**, **Workers Routes**, and **R2 Storage (Read/Write)** permissions.
+- `CF_API_TOKEN` — API token with **Workers Scripts** and **Workers Routes** permissions.
 
-The `cloudflare-worker.yml` workflow uses these secrets to create the R2 bucket and deploy the Worker automatically.
+The `cloudflare-worker.yml` workflow uses these secrets to deploy the Worker automatically.
+
+### Cloudflare Worker secrets
+
+In the Cloudflare dashboard (Workers → `vortex-prime-store-api` → Settings → Variables → Add binding → Secret text), add the following secrets using the real IDs from your Google Drive setup:
+
+```
+GOOGLE_SERVICE_ACCOUNT_EMAIL
+GOOGLE_PRIVATE_KEY
+DRIVE_DATABASE_FILE_ID
+DRIVE_PACKAGES_FOLDER_ID
+DRIVE_MODS_FOLDER_ID
+DRIVE_ICONS_FOLDER_ID
+DRIVE_PREVIEWS_FOLDER_ID
+DRIVE_READMES_FOLDER_ID
+```
+
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL` — Service account email with access to your Drive folders/files.
+- `GOOGLE_PRIVATE_KEY` — The PEM-formatted private key for that service account (copy it from the JSON key file; do **not** commit the JSON to git).
+- `DRIVE_DATABASE_FILE_ID` — File ID of `store-db.json` (copy from the Drive file URL).
+- `DRIVE_*_FOLDER_ID` — Folder IDs for each upload bucket (create the folders once, share them with the service account, and copy each ID from its URL).
 
 ## 4. Frontend configuration
 
@@ -40,7 +60,7 @@ You should not change these unless you move the backend.
 The Worker (`cloudflare/worker.js`):
 
 - Serves `/api/status`, `/api/catalogue/:mode`, `/api/uploads/:type`, `/api/assets/*`, and `/api/public/catalogue`.
-- Stores catalogue JSON and uploaded files in Cloudflare R2 (`vortex-prime-store-uploads`).
+- Stores catalogue JSON and uploaded files in Google Drive via the service account.
 - Enforces CORS for:
   - `https://vortex-prime-emu.com`
   - `https://rileyadams05.github.io`
@@ -52,7 +72,7 @@ If you expose the site on additional domains, add them to `ALLOWED_ORIGINS`.
 After pushing to `main`:
 
 1. **Deploy GitHub Pages** (`.github/workflows/pages.yml`) uploads `docs/` and updates the public site.
-2. **Deploy Cloudflare API** (`.github/workflows/cloudflare-worker.yml`) ensures the R2 bucket exists, then deploys the Worker using Wrangler.
+2. **Deploy Cloudflare API** (`.github/workflows/cloudflare-worker.yml`) deploys the Worker using Wrangler.
 
 Both workflows run automatically on every push to `main` (and can be triggered manually via the Actions tab).
 
@@ -77,14 +97,14 @@ Once the workflows finish:
    - `https://vortex-prime-emu.com/api/catalogue/store`
    - `https://vortex-prime-emu.com/api/catalogue/mods`
 4. Test uploads through the admin portal (`https://vortex-prime-emu.com/admin/`):
-   - Uploading packages stores files in R2 (`uploads/packages/...`).
-   - Preview/icon uploads appear under `uploads/previews` and `uploads/icons`.
-   - README uploads become `uploads/readmes` objects.
+   - Uploading packages creates files inside the Google Drive Packages folder.
+   - Preview/icon uploads appear inside the Icons/Previews folders.
+   - README uploads land in the Readmes folder and attach preview content to catalogue items.
 5. Verify catalogue changes appear in the public store after refresh.
 
 ## 9. Storage considerations
 
-Cloudflare R2 provides persistent object storage. Uploaded files remain available across Worker restarts. Catalogue JSON is also stored in R2, so Worker deployments do not wipe content.
+Google Drive provides persistent storage. Uploaded files remain available across Worker restarts. Catalogue JSON is stored in Drive, so Worker deployments do not wipe content.
 
 ## 10. Local development (optional)
 
@@ -92,9 +112,9 @@ For local testing you can still run the Companion Express server (`companion-ser
 
 ## 11. Troubleshooting
 
-- **Missing secrets**: the Worker deploy workflow will fail with `Failed to fetch auth token` or `No such binding`. Ensure `CF_ACCOUNT_ID` and `CF_API_TOKEN` are defined and the token has R2 + Workers permissions.
+- **Missing secrets**: the Worker deploy workflow will fail if `CF_ACCOUNT_ID`/`CF_API_TOKEN` are missing. The Worker itself will report missing Google Drive secrets on `/api/status`.
 - **CORS errors**: add the new frontend domain to `ALLOWED_ORIGINS` inside `cloudflare/worker.js` and redeploy.
-- **Uploads returning 404**: confirm the R2 bucket name is `vortex-prime-store-uploads` and the Worker route includes `/api/assets/*`.
+- **Uploads failing**: open `/api/status` and confirm all Drive secret checks pass. Ensure the service account has Editor access to every folder and the database file. If uploads work but files are private, verify `GOOGLE_PRIVATE_KEY` is correct and the service account is shared on the folders.
 - **Frontend still calling localhost**: ensure your production build of `docs/index.html` includes `<meta name="vortex-companion-base-url" content="https://vortex-prime-emu.com">`.
 
 With these pieces in place, the site runs entirely online. You can remove the local repository after verifying the public deployment.
