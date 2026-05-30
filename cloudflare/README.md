@@ -1,14 +1,12 @@
 # Vortex Prime Store API
 
-This Cloudflare Worker provides the live `/api` used by the Vortex Prime Store Creator Portal.
-
-It stores uploaded packages, icons, previews, and README files in Cloudflare R2, then serves the live store catalog from the same API.
+This Cloudflare Worker proxies the `/api` calls from the static site to the running Companion backend.
 
 ## Why Uploads 404 Right Now
 
 GitHub Pages can host the website files, but it cannot receive package uploads or save files.
 
-If `https://vortex-prime-emu.com/api/store/themes` returns 404, the Worker API has not been deployed or the route is not connected to the domain yet.
+If `https://vortex-prime-emu.com/api/status` returns 502, the Worker is not able to reach the upstream Companion origin.
 
 The Creator Portal becomes a proper live store only after this Worker is deployed.
 
@@ -16,7 +14,6 @@ The Creator Portal becomes a proper live store only after this Worker is deploye
 
 - A Cloudflare account with `vortex-prime-emu.com` added as a website.
 - Cloudflare Workers enabled.
-- Cloudflare R2 enabled.
 - A Cloudflare API token for deployment.
 - The GitHub repository secrets listed below.
 
@@ -24,13 +21,13 @@ You do not need users to download anything. This is only for deploying the websi
 
 Required Cloudflare resources:
 
-- R2 bucket: `vortex-prime-store-uploads`
 - Worker route: `vortex-prime-emu.com/api/*`
 
 Required GitHub Actions secrets:
 
 - `CF_API_TOKEN`
 - `CF_ACCOUNT_ID`
+- `CF_WORKER_COMPANION_ORIGIN`
 
 After those secrets exist, pushing to `main` deploys the Worker automatically.
 
@@ -47,6 +44,7 @@ In GitHub:
 ```text
 CF_ACCOUNT_ID
 CF_API_TOKEN
+CF_WORKER_COMPANION_ORIGIN
 ```
 
 `CF_ACCOUNT_ID` is your Cloudflare Account ID.
@@ -55,7 +53,8 @@ CF_API_TOKEN
 
 - Workers Scripts edit/deploy.
 - Workers Routes edit.
-- R2 bucket read/write.
+
+`CF_WORKER_COMPANION_ORIGIN` should contain the full URL of the running Companion backend (for example `https://companion.vortex-prime-emu.com`). The GitHub workflow copies this secret into the Worker as `COMPANION_ORIGIN`.
 
 ## Deploy From GitHub
 
@@ -94,13 +93,6 @@ Log in:
 wrangler login
 ```
 
-Create the R2 bucket:
-
-```powershell
-cd "D:\PROJECTS\Vortex-Prime-emu\cloudflare"
-wrangler r2 bucket create vortex-prime-store-uploads
-```
-
 Deploy the API:
 
 ```powershell
@@ -110,5 +102,5 @@ wrangler deploy
 Then test:
 
 ```powershell
-curl https://vortex-prime-emu.com/api/store/themes
+curl https://vortex-prime-emu.com/api/status
 ```

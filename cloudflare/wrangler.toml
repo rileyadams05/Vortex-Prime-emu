@@ -6,7 +6,3 @@ workers_dev = true
 routes = [
   { pattern = "vortex-prime-emu.com/api/*", zone_name = "vortex-prime-emu.com" }
 ]
-
-[[r2_buckets]]
-binding = "VORTEX_UPLOADS"
-bucket_name = "vortex-prime-store-uploads"
