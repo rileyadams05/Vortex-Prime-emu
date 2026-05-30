@@ -1,5 +1,6 @@
 // src/backend/config.js
 var DEFAULT_LOCAL_PORT = 4100;
+var PRODUCTION_BASE_URL = "https://vortex-prime-emu.com";
 function readGlobal(name) {
   if (typeof globalThis !== "undefined" && globalThis[name]) {
     return String(globalThis[name]);
@@ -26,15 +27,15 @@ function readStored() {
     return null;
   }
 }
-function buildLocalDefault() {
+function resolveDefaultBase() {
   if (typeof window === "undefined" || !(window == null ? void 0 : window.location)) {
-    return `http://localhost:${DEFAULT_LOCAL_PORT}`;
+    return PRODUCTION_BASE_URL;
   }
   const { protocol, hostname } = window.location;
   if (hostname === "localhost" || hostname === "127.0.0.1") {
     return `${protocol}//${hostname}:${DEFAULT_LOCAL_PORT}`;
   }
-  return `http://localhost:${DEFAULT_LOCAL_PORT}`;
+  return PRODUCTION_BASE_URL;
 }
 function getCompanionBaseUrl() {
   const fromGlobal = readGlobal("__VORTEX_COMPANION_BASE_URL__");
@@ -45,7 +46,7 @@ function getCompanionBaseUrl() {
   if (value) {
     return value.replace(/\/$/, "");
   }
-  return buildLocalDefault();
+  return resolveDefaultBase();
 }
 function buildApiUrl(path) {
   const base = getCompanionBaseUrl();

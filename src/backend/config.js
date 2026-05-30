@@ -1,4 +1,5 @@
 const DEFAULT_LOCAL_PORT = 4100;
+const PRODUCTION_BASE_URL = 'https://vortex-prime-emu.com';
 
 function readGlobal(name) {
   if (typeof globalThis !== 'undefined' && globalThis[name]) {
@@ -29,15 +30,15 @@ function readStored() {
   }
 }
 
-function buildLocalDefault() {
+function resolveDefaultBase() {
   if (typeof window === 'undefined' || !window?.location) {
-    return `http://localhost:${DEFAULT_LOCAL_PORT}`;
+    return PRODUCTION_BASE_URL;
   }
   const { protocol, hostname } = window.location;
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return `${protocol}//${hostname}:${DEFAULT_LOCAL_PORT}`;
   }
-  return `http://localhost:${DEFAULT_LOCAL_PORT}`;
+  return PRODUCTION_BASE_URL;
 }
 
 export function getCompanionBaseUrl() {
@@ -49,7 +50,7 @@ export function getCompanionBaseUrl() {
   if (value) {
     return value.replace(/\/$/, '');
   }
-  return buildLocalDefault();
+  return resolveDefaultBase();
 }
 
 export function buildApiUrl(path) {
@@ -87,4 +88,8 @@ export function openAuthWindow(path) {
     window.open(url, '_blank', 'noopener');
   }
   return url;
+}
+
+export function fetchCompanionStatus(options = {}) {
+  return fetchJson('/api/status', options);
 }

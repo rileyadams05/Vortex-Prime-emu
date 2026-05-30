@@ -1,12 +1,12 @@
 # Vortex Prime Store API
 
-This Cloudflare Worker proxies the `/api` calls from the static site to the running Companion backend.
+This Cloudflare Worker serves the production `/api` backend for the Vortex Prime Store using Cloudflare Workers + R2.
 
 ## Why Uploads 404 Right Now
 
 GitHub Pages can host the website files, but it cannot receive package uploads or save files.
 
-If `https://vortex-prime-emu.com/api/status` returns 502, the Worker is not able to reach the upstream Companion origin.
+If `https://vortex-prime-emu.com/api/status` returns anything other than JSON, the Worker or R2 storage is not deployed yet.
 
 The Creator Portal becomes a proper live store only after this Worker is deployed.
 
@@ -14,6 +14,7 @@ The Creator Portal becomes a proper live store only after this Worker is deploye
 
 - A Cloudflare account with `vortex-prime-emu.com` added as a website.
 - Cloudflare Workers enabled.
+- Cloudflare R2 enabled.
 - A Cloudflare API token for deployment.
 - The GitHub repository secrets listed below.
 
@@ -22,12 +23,12 @@ You do not need users to download anything. This is only for deploying the websi
 Required Cloudflare resources:
 
 - Worker route: `vortex-prime-emu.com/api/*`
+- R2 bucket: `vortex-prime-store-uploads`
 
 Required GitHub Actions secrets:
 
 - `CF_API_TOKEN`
 - `CF_ACCOUNT_ID`
-- `CF_WORKER_COMPANION_ORIGIN`
 
 After those secrets exist, pushing to `main` deploys the Worker automatically.
 
@@ -44,17 +45,11 @@ In GitHub:
 ```text
 CF_ACCOUNT_ID
 CF_API_TOKEN
-CF_WORKER_COMPANION_ORIGIN
 ```
 
 `CF_ACCOUNT_ID` is your Cloudflare Account ID.
 
-`CF_API_TOKEN` should allow:
-
-- Workers Scripts edit/deploy.
-- Workers Routes edit.
-
-`CF_WORKER_COMPANION_ORIGIN` should contain the full URL of the running Companion backend (for example `https://companion.vortex-prime-emu.com`). The GitHub workflow copies this secret into the Worker as `COMPANION_ORIGIN`.
+`CF_API_TOKEN` must allow Workers Scripts deploy, Workers Routes edit, and R2 read/write access.
 
 ## Deploy From GitHub
 
@@ -71,10 +66,12 @@ Then open GitHub Actions and run or re-run:
 Deploy Cloudflare API
 ```
 
-When it works, this URL should return JSON instead of 404:
+When it works, these URLs should return JSON instead of 404:
 
 ```text
-https://vortex-prime-emu.com/api/store/themes
+https://vortex-prime-emu.com/api/status
+https://vortex-prime-emu.com/api/catalogue/store
+https://vortex-prime-emu.com/api/catalogue/mods
 ```
 
 ## Manual Deploy From Your PC

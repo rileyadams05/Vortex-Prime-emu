@@ -15,12 +15,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure R2 bucket exists
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: cloudflare
+          command: r2 bucket create vortex-prime-store-uploads
+        continue-on-error: true
+
       - name: Deploy Worker API
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: cloudflare
-          secrets: |
-            COMPANION_ORIGIN=${{ secrets.CF_WORKER_COMPANION_ORIGIN }}
           command: deploy

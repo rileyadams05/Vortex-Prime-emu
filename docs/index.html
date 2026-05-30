@@ -82,6 +82,31 @@
             line-height: 1.6;
         }
 
+        .backend-status-banner {
+            position: sticky;
+            top: 110px;
+            z-index: 95;
+            margin: 0;
+            padding: 0.9rem 2rem;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(239, 68, 68, 0.25);
+            background: rgba(239, 68, 68, 0.12);
+            color: #fecaca;
+            display: block;
+        }
+
+        .backend-status-banner.success {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #d1fae5;
+        }
+
+        .backend-status-banner.info {
+            background: rgba(59, 130, 246, 0.12);
+            border-color: rgba(59, 130, 246, 0.25);
+            color: #bfdbfe;
+        }
+
         /* Animated Background */
         .bg-grid {
             position: fixed;
@@ -2043,6 +2068,8 @@
                 </div>
             </nav>
 
+            <div id="backendStatusBanner" class="backend-status-banner" hidden></div>
+
             <!-- Home Page -->
             <div class="page active" id="page-home">
                 <section class="hero">
@@ -2399,6 +2426,23 @@
                     const CARDS_PER_PAGE = 10;
                     const PROFILE_STORAGE_PREFIX = 'vpPublicProfile.';
                     const readmeCache = new Map();
+
+                    const backendStatusBanner = document.getElementById('backendStatusBanner');
+
+                    function showBackendStatus(message, variant = 'error') {
+                        if (!backendStatusBanner) return;
+                        backendStatusBanner.classList.remove('success', 'info');
+                        if (!message) {
+                            backendStatusBanner.hidden = true;
+                            backendStatusBanner.textContent = '';
+                            return;
+                        }
+                        backendStatusBanner.hidden = false;
+                        backendStatusBanner.textContent = message;
+                        if (variant && variant !== 'error') {
+                            backendStatusBanner.classList.add(variant);
+                        }
+                    }
 
                     let storeBackendApi = null;
                     let authUnsubscribe = null;
@@ -3758,9 +3802,16 @@
                         try {
                             const api = await ensureStoreApi();
                             const items = await api.loadStoreItems();
+                            const status = api.getStatus ? api.getStatus() : null;
+                            if (status?.configured) {
+                                showBackendStatus(null);
+                            } else if (status?.message) {
+                                showBackendStatus(status.message);
+                            }
                             storeItems = Array.isArray(items) ? items.filter(item => item && item.published !== false) : [];
                         } catch (error) {
                             console.error('Failed to load store catalogue', error);
+                            showBackendStatus(error?.message || 'Production Companion API is not configured yet. Deploy the backend and set the API URL.');
                             storeItems = [];
                         }
 
@@ -3772,9 +3823,16 @@
                         try {
                             const api = await ensureStoreApi();
                             const items = await api.loadStoreMods();
+                            const status = api.getStatus ? api.getStatus() : null;
+                            if (status?.configured) {
+                                showBackendStatus(null);
+                            } else if (status?.message) {
+                                showBackendStatus(status.message);
+                            }
                             modItems = Array.isArray(items) ? items.filter(item => item && item.published !== false) : [];
                         } catch (error) {
                             console.error('Failed to load mods catalogue', error);
+                            showBackendStatus(error?.message || 'Production Companion API is not configured yet. Deploy the backend and set the API URL.');
                             modItems = [];
                         }
 

@@ -4,6 +4,7 @@ webMAN-MOD/
 .env.*
 *.log
 MY-google-ID.json
+MY-google-ID.*
 companion-server/.env
 companion-server/data/
 companion-server/tmp/
