@@ -846,7 +846,7 @@
               <span class="file-name" id="readme-name-${i}" data-upload-label data-default-text="Click or drop README file">${pkg.readme?.filename ? esc(pkg.readme.filename) : 'Click or drop README file'}</span>
               <span class="upload-hint-box">Upload README.txt, README.md, or Markdown instructions to show on the public details page.</span>
               ${pkg.readme?.content ? `<div class="readme-preview">${esc(pkg.readme.content).slice(0, 1000)}</div>` : ''}
-              <input type="file" id="readme-file-${i}" data-upload-input="readme_file" accept=".txt,.md,.markdown,text/plain,text/markdown" style="display:none">
+              <input type="file" id="readme-file-${i}" data-upload-input="readme_file" accept=".txt,.md,.markdown,text/plain,text/markdown,text/x-markdown" style="display:none">
               <div class="upload-progress" id="readme-progress-${i}" data-progress-id="readme_file-${i}">
                 <div class="upload-progress__track"><div class="upload-progress__bar"></div></div>
                 <span class="upload-progress__label">Ready</span>
@@ -1091,7 +1091,7 @@
       const rules = getUploadRules(packages[index]?.category || 'Homebrew Apps', packages[index]?.platform || 'PS4');
       const restrictions = {
         allowedFileTypes: field === 'readme_file'
-          ? ['.txt', '.md', '.markdown']
+          ? ['.txt', '.md', '.markdown', 'text/plain', 'text/markdown', 'text/x-markdown']
           : field === 'zip_file'
             ? rules.allowedExtensions
             : ['.png', '.jpg', '.jpeg', '.webp'],
