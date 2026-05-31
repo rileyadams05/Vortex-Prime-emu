@@ -999,7 +999,7 @@
         </div>
         <div class="card-actions">
           <button class="btn-danger" style="margin-right:auto;" onclick="deleteFromServer(${i})">Delete from Server</button>
-          <button class="btn-primary" onclick="submitToStore(${i}, this)">Upload this ${uploadMode === 'mods' ? 'Mod' : 'Package'}</button>
+          <button class="btn-primary" onclick="submitToStore(${i}, this)">${pkg.id ? 'Update' : 'Upload'} this ${uploadMode === 'mods' ? 'Mod' : 'Package'}</button>
         </div>
       </div>
     </div>`;
