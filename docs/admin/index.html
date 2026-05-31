@@ -155,6 +155,7 @@
     .auth-desc { color: var(--muted); font-size: .9rem; line-height: 1.6; margin-bottom: 1rem; }
     .auth-actions { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
     .auth-actions a { text-decoration: none; display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1rem; border-radius: 8px; border: 1px solid var(--border); color: var(--text); background: var(--elevated); }
+    .google-signin-button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; }
     .auth-actions a.primary { background: #171717; border-color: var(--primary); color: #fff; }
     .auth-note { margin-top: .75rem; color: var(--muted); font-size: .85rem; transition: color .2s ease; }
     .auth-note.error { color: #fca5a5; }
@@ -185,7 +186,7 @@
     <div class="auth-title" id="authTitle">Admin access locked</div>
     <div class="auth-desc">This portal is disabled until you sign in with Google. Please sign in or create a Google account to continue.</div>
     <div class="auth-actions">
-      <button id="googleSignInBtn" class="primary" type="button">Continue with Google</button>
+      <div id="googleSignInBtn" class="google-signin-button"></div>
       <a href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">Create Google Account</a>
     </div>
     <div class="auth-note" id="authStatus">All editing actions are disabled while locked.</div>
@@ -321,6 +322,8 @@
   let backendStatus = { configured: false, message: BACKEND_NOT_CONFIGURED_MESSAGE };
   let currentUser = null;
   let currentIsAdmin = false;
+  let googleButtonRendered = false;
+  let googleInitInProgress = false;
 
   const authGate = document.getElementById('authGate');
   const authTitle = document.getElementById('authTitle');
@@ -365,61 +368,142 @@
     }
   }
 
-     function updateAuthUi({ user, isAdmin, message }) {
+  async function ensureGoogleButton(clientId) {
+    if (!signInBtn) return;
+    if (!clientId) {
+      signInBtn.innerHTML = '<button class="btn-secondary" type="button" disabled>Google sign-in unavailable</button>';
+      googleButtonRendered = false;
+      return;
+    }
+    if (googleButtonRendered || googleInitInProgress) return;
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      if (!googleInitInProgress) {
+        googleInitInProgress = true;
+        window.googleIdentityReady = () => {
+          googleInitInProgress = false;
+          ensureGoogleButton(clientId).catch(() => {});
+        };
+        const waitForGoogle = () => {
+          if (window.google && window.google.accounts && window.google.accounts.id) {
+            googleInitInProgress = false;
+            ensureGoogleButton(clientId).catch(() => {});
+          } else {
+            setTimeout(waitForGoogle, 150);
+          }
+        };
+        waitForGoogle();
+      }
+      return;
+    }
+    googleButtonRendered = true;
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: async (response) => {
+        try {
+          const adminModule = window.AdminBackend;
+          if (!adminModule || typeof adminModule.loginWithCredential !== 'function') {
+            throw new Error('Backend auth module not ready.');
+          }
+          await adminModule.loginWithCredential(response?.credential);
+          toast('Signed in with Google.', 'success');
+        } catch (error) {
+          console.error('Google sign-in failed', error);
+          toast(error?.message || 'Google sign-in failed. Try again.', 'error');
+        }
+      },
+    });
+    signInBtn.innerHTML = '';
+    window.google.accounts.id.renderButton(signInBtn, {
+      theme: 'filled_black',
+      size: 'large',
+      shape: 'pill',
+      text: 'signin_with',
+      width: 240,
+    });
+    window.google.accounts.id.prompt();
+  }
+
+  function updateAuthUi({ user, isAdmin, message, googleClientId }) {
     syncBackendStatus();
     currentUser = user || null;
     currentIsAdmin = Boolean(isAdmin);
 
+    if (googleClientId) {
+      ensureGoogleButton(googleClientId).catch(() => {});
+    }
+
     const statusMessage = message || backendStatus?.message || BACKEND_NOT_CONFIGURED_MESSAGE;
 
-    if (authGate) authGate.style.display = 'none';
-
-    if (authTitle) {
-      authTitle.textContent = backendStatus?.configured ? 'Admin access ready' : 'Admin backend not configured';
-    }
-
-    if (authDesc) {
-      authDesc.textContent = backendStatus?.configured
-        ? 'Manage store entries below.'
-        : 'Click Authorise Google Drive to connect storage.';
-    }
-
-    if (signInBtn) {
-      if (backendStatus?.configured) {
-        signInBtn.disabled = true;
-        signInBtn.textContent = 'Google Drive authorised';
-      } else {
-        signInBtn.disabled = false;
-        signInBtn.textContent = 'Authorise Google Drive';
+    if (!backendStatus?.configured) {
+      if (authGate) authGate.style.display = 'flex';
+      if (authTitle) authTitle.textContent = 'Admin backend not configured';
+      if (authDesc) authDesc.textContent = 'Configure Google Drive storage in the Worker before continuing.';
+      if (authStatus) {
+        authStatus.classList.remove('success');
+        authStatus.classList.add('error');
+        authStatus.textContent = statusMessage;
       }
+      if (submitAllBtn) submitAllBtn.disabled = true;
+      return;
+    }
+
+    if (!currentUser) {
+      if (authGate) authGate.style.display = 'flex';
+      if (authTitle) authTitle.textContent = 'Sign in required';
+      if (authDesc) authDesc.textContent = 'Use your Google account to upload packages. Downloading from the store stays public.';
+      if (authStatus) {
+        authStatus.classList.remove('success');
+        authStatus.classList.add('error');
+        authStatus.textContent = statusMessage || 'Sign in with Google to continue.';
+      }
+      if (submitAllBtn) submitAllBtn.disabled = true;
+    } else if (!currentIsAdmin) {
+      if (authGate) authGate.style.display = 'flex';
+      if (authTitle) authTitle.textContent = 'Admin approval required';
+      if (authDesc) authDesc.textContent = 'You are signed in, but admin approval is required to manage catalogue entries.';
+      if (authStatus) {
+        authStatus.classList.remove('success');
+        authStatus.classList.add('error');
+        authStatus.textContent = 'Contact the Vortex Prime team for admin access.';
+      }
+      if (submitAllBtn) submitAllBtn.disabled = true;
+    } else {
+      if (authGate) authGate.style.display = 'none';
+      if (authStatus) {
+        authStatus.classList.remove('error');
+        authStatus.classList.add('success');
+        authStatus.textContent = statusMessage || 'Admin access ready.';
+      }
+      if (submitAllBtn) submitAllBtn.disabled = false;
     }
 
     if (logoutBtn) {
-      logoutBtn.disabled = true;
+      logoutBtn.disabled = !currentUser;
     }
 
     if (userBadge) {
-      userBadge.style.display = 'none';
-      userBadge.removeAttribute('title');
+      if (currentUser) {
+        userBadge.style.display = 'flex';
+        userBadge.title = currentUser.email || '';
+      } else {
+        userBadge.style.display = 'none';
+        userBadge.removeAttribute('title');
+      }
     }
 
-    if (userNameEl) userNameEl.textContent = '';
+    if (userNameEl) {
+      userNameEl.textContent = currentUser?.name || currentUser?.email || '';
+    }
 
     if (userAvatarEl) {
-      userAvatarEl.style.display = 'none';
-      userAvatarEl.removeAttribute('src');
+      if (currentUser?.picture) {
+        userAvatarEl.style.display = 'block';
+        userAvatarEl.src = currentUser.picture;
+      } else {
+        userAvatarEl.style.display = 'none';
+        userAvatarEl.removeAttribute('src');
+      }
     }
-
-    if (authStatus) {
-      authStatus.classList.remove('success', 'error');
-      const variant = backendStatus?.configured ? 'success' : 'error';
-      authStatus.classList.add(variant);
-      authStatus.textContent = statusMessage;
-    }
-
-    const locked = !backendStatus?.configured;
-    if (submitAllBtn) submitAllBtn.disabled = locked;
-    document.body.classList.remove('admin-locked');
   }
 
   function attachBackendListeners(api) {
@@ -430,16 +514,16 @@
     syncBackendStatus();
 
     if (typeof api.onAuthChanged === 'function') {
-      api.onAuthChanged((authState) => {
+      api.onAuthChanged((state) => {
         syncBackendStatus();
-        const authMessage = authState?.message || backendStatus.message;
-        updateAuthUi({ ...(authState || {}), message: authMessage });
+        const authMessage = state?.message || backendStatus.message;
+        updateAuthUi({ ...(state || {}), message: authMessage, googleClientId: state?.googleClientId });
         if (backendStatus.configured && !packagesLoadedOnce) {
           refreshPackages(true);
         }
       });
     } else {
-      updateAuthUi({ user: null, isAdmin: backendStatus.configured, message: backendStatus.message });
+      updateAuthUi({ user: null, isAdmin: backendStatus.configured, message: backendStatus.message, googleClientId: api?.getGoogleClientId?.() });
       if (backendStatus.configured && !packagesLoadedOnce) {
         refreshPackages(true);
       }
@@ -495,58 +579,34 @@
   }
 
   async function requestAdminSignIn() {
-    const api = backendApi || window.AdminBackend;
-    if (!api || typeof api.signInWithGoogle !== 'function') {
-      toast('Backend module not ready yet. Please reload this page.', 'error');
-      return;
-    }
+    toast('Use the Google button above to sign in.', 'info');
+  }
+
+  async function requestSignOut(event) {
+    if (event) event.preventDefault();
     try {
-      setStatus('Open the Google authorisation window to connect Drive…');
-      const url = await api.signInWithGoogle();
-      toast('A Google window should appear. Approve Drive access, then return here.', 'info');
-      const authorised = await pollBackendAuthorisation();
-      if (!authorised) {
-        setStatus('Waiting for Google authorisation. Complete the popup and refresh.', 'error');
-        toast('Still waiting for Google authorisation. Complete the popup or reopen authorisation.', 'error');
-      } else {
-        refreshPackages(true);
+      const api = backendApi || window.AdminBackend;
+      if (!api || typeof api.logout !== 'function') {
+        throw new Error('Auth module not ready.');
       }
+      await api.logout();
+      toast('Signed out successfully.', 'success');
+      updateAuthUi({ user: null, isAdmin: false, message: 'Signed out.', googleClientId: api.getGoogleClientId?.() });
     } catch (error) {
-      console.error('Google authorisation failed', error);
-      const message = error?.message || 'Google authorisation failed. Try again.';
-      setStatus(message, 'error');
-      toast(message, 'error');
+      console.error('Failed to sign out', error);
+      toast(error?.message || 'Failed to sign out.', 'error');
     }
   }
 
-  function requestSignOut() {
-    setStatus('Sign-out is disabled until a storage backend is configured.', 'error');
-    toast('Sign-out is disabled because no upload backend is configured.', 'info');
-  }
   if (signInBtn) {
-
     signInBtn.addEventListener('click', async (event) => {
-
       event.preventDefault();
-
       await requestAdminSignIn();
-
     });
-
   }
-
-
 
   if (logoutBtn) {
-
-    logoutBtn.addEventListener('click', (event) => {
-
-      event.preventDefault();
-
-      requestSignOut();
-
-    });
-
+    logoutBtn.addEventListener('click', requestSignOut);
   }
 
 

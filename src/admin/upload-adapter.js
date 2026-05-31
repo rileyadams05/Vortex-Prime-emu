@@ -108,8 +108,11 @@ function uploadFileWithProgress(url, file, { metadata, onProgress } = {}) {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(body);
       } else {
-        const message = body?.error || `Upload failed with status ${xhr.status}.`;
-        reject(new Error(message));
+        const message = body?.error || body?.message || (xhr.status === 401 ? 'Sign in with Google to upload.' : `Upload failed with status ${xhr.status}.`);
+        const error = new Error(message);
+        error.status = xhr.status;
+        error.payload = body;
+        reject(error);
       }
     };
 
@@ -142,6 +145,9 @@ async function uploadBinary(type, file, { metadata = {}, replaceFileId, makePubl
     return await uploadFileWithProgress(url, file, { metadata: bodyMetadata, onProgress });
   } catch (error) {
     await refreshBackendStatus(true).catch(() => {});
+    if (error && typeof error === "object" && error.status === 401) {
+      error.message = "Sign in with Google to upload.";
+    }
     throw error;
   }
 }

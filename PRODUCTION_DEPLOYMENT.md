@@ -38,12 +38,18 @@ DRIVE_MODS_FOLDER_ID
 DRIVE_ICONS_FOLDER_ID
 DRIVE_PREVIEWS_FOLDER_ID
 DRIVE_READMES_FOLDER_ID
+GOOGLE_OAUTH_CLIENT_ID
+GOOGLE_ADMIN_EMAILS
+SESSION_SECRET
 ```
 
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` — Service account email with access to your Drive folders/files.
 - `GOOGLE_PRIVATE_KEY` — The PEM-formatted private key for that service account (copy it from the JSON key file; do **not** commit the JSON to git).
 - `DRIVE_DATABASE_FILE_ID` — File ID of `store-db.json` (copy from the Drive file URL).
 - `DRIVE_*_FOLDER_ID` — Folder IDs for each upload bucket (create the folders once, share them with the service account, and copy each ID from its URL).
+- `GOOGLE_OAUTH_CLIENT_ID` — Google OAuth 2.0 Web client ID used by Google Identity Services on the admin portal.
+- `GOOGLE_ADMIN_EMAILS` — Comma-separated Google accounts (or domains prefixed with `@`) that should have admin-level catalogue access. Anyone else who signs in can upload but cannot publish or delete catalogue entries.
+- `SESSION_SECRET` — Long random string for signing login cookies (minimum 32 characters).
 
 ## 4. Frontend configuration
 
@@ -59,7 +65,7 @@ You should not change these unless you move the backend.
 
 The Worker (`cloudflare/worker.js`):
 
-- Serves `/api/status`, `/api/catalogue/:mode`, `/api/uploads/:type`, `/api/assets/*`, and `/api/public/catalogue`.
+- Serves `/api/status`, `/api/catalogue/:mode`, `/api/uploads/:type`, `/api/auth/*`, and `/api/public/catalogue`.
 - Stores catalogue JSON and uploaded files in Google Drive via the service account.
 - Enforces CORS for:
   - `https://vortex-prime-emu.com`
@@ -100,11 +106,14 @@ Once the workflows finish:
    - Uploading packages creates files inside the Google Drive Packages folder.
    - Preview/icon uploads appear inside the Icons/Previews folders.
    - README uploads land in the Readmes folder and attach preview content to catalogue items.
+   - The portal requires a Google sign-in. Admin emails (from `GOOGLE_ADMIN_EMAILS`) can publish/delete catalogue entries. Other signed-in Google accounts can upload assets but cannot modify live catalogue data.
 5. Verify catalogue changes appear in the public store after refresh.
 
 ## 9. Storage considerations
 
 Google Drive provides persistent storage. Uploaded files remain available across Worker restarts. Catalogue JSON is stored in Drive, so Worker deployments do not wipe content.
+
+The permanent storage location is **My Drive → Vortex Prime Store**, which already contains the folders `Database`, `Icons`, `Mods`, `Packages`, `Previews`, and `Readmes`. Do not rename or recreate these folders—reference their existing IDs in the Worker secrets.
 
 ## 10. Local development (optional)
 
@@ -114,7 +123,8 @@ For local testing you can still run the Companion Express server (`companion-ser
 
 - **Missing secrets**: the Worker deploy workflow will fail if `CF_ACCOUNT_ID`/`CF_API_TOKEN` are missing. The Worker itself will report missing Google Drive secrets on `/api/status`.
 - **CORS errors**: add the new frontend domain to `ALLOWED_ORIGINS` inside `cloudflare/worker.js` and redeploy.
-- **Uploads failing**: open `/api/status` and confirm all Drive secret checks pass. Ensure the service account has Editor access to every folder and the database file. If uploads work but files are private, verify `GOOGLE_PRIVATE_KEY` is correct and the service account is shared on the folders.
+- **Uploads failing**: open `/api/status` and confirm all Drive secret checks pass. Ensure the service account has Editor access to every folder and the database file. If uploads fail with 401, sign in with Google again or verify `GOOGLE_OAUTH_CLIENT_ID` is correct.
+- **Admin actions rejected**: confirm the Google account is listed in `GOOGLE_ADMIN_EMAILS`. You can set whole domains with entries like `@yourteam.com`.
 - **Frontend still calling localhost**: ensure your production build of `docs/index.html` includes `<meta name="vortex-companion-base-url" content="https://vortex-prime-emu.com">`.
 
 With these pieces in place, the site runs entirely online. You can remove the local repository after verifying the public deployment.

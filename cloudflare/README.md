@@ -62,12 +62,18 @@ DRIVE_MODS_FOLDER_ID
 DRIVE_ICONS_FOLDER_ID
 DRIVE_PREVIEWS_FOLDER_ID
 DRIVE_READMES_FOLDER_ID
+GOOGLE_OAUTH_CLIENT_ID
+GOOGLE_ADMIN_EMAILS
+SESSION_SECRET
 ```
 
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` — The email for the service account that has Drive access.
 - `GOOGLE_PRIVATE_KEY` — The PEM private key for that service account (copy it from the JSON key file; do **not** commit the JSON to git).
 - `DRIVE_DATABASE_FILE_ID` — The file ID of `store-db.json` in Drive (copy from the file's URL).
 - `DRIVE_*_FOLDER_ID` — Folder IDs for each upload bucket (create folders once in Drive, copy the ID from the URL, and make sure the service account has at least writer access).
+- `GOOGLE_OAUTH_CLIENT_ID` — The OAuth 2.0 Web client ID used by Google Identity Services on the admin portal.
+- `GOOGLE_ADMIN_EMAILS` — Comma-separated list of Google accounts (or domains prefixed with `@`) that should have admin rights for catalogue management.
+- `SESSION_SECRET` — Random string used to sign auth cookies (at least 32 characters).
 
 ## Deploy From GitHub
 
@@ -91,6 +97,14 @@ https://vortex-prime-emu.com/api/status
 https://vortex-prime-emu.com/api/catalogue/store
 https://vortex-prime-emu.com/api/catalogue/mods
 ```
+
+## Google authentication setup
+
+1. Create a Google Cloud OAuth 2.0 Web client ID for `https://vortex-prime-emu.com` (and `https://rileyadams05.github.io` if you preview from GitHub Pages).
+2. Add the client ID value to the Worker secret `GOOGLE_OAUTH_CLIENT_ID`.
+3. List every Google account (emails separated by commas) that should have full admin privileges in `GOOGLE_ADMIN_EMAILS`. You can include whole domains with entries like `@yourteam.com`.
+4. Set `SESSION_SECRET` to a long random string so the Worker can sign authentication cookies securely.
+5. The admin portal uses Google Identity Services. Users sign in from the portal; the Worker verifies the ID token server-side and issues a secure session cookie. Upload endpoints require a signed-in Google user, and catalogue mutations require the email to match `GOOGLE_ADMIN_EMAILS`.
 
 ## Google Drive preparation
 

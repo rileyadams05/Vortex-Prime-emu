@@ -1,4 +1,4 @@
-import { openAuthWindow } from "../backend/config.js";
+import { buildApiUrl, fetchJson } from "../backend/config.js";
 import {
   refreshBackendStatus,
   ensureBackendConfigured,
@@ -16,6 +16,15 @@ const authCallbacks = new Set();
 
 let readyResolved = false;
 let initialisePromise = null;
+let authStatePromise = null;
+
+let authState = {
+  user: null,
+  isAdmin: false,
+  status: "initialising",
+  message: "Checking backend and authentication…",
+  googleClientId: null,
+};
 
 function invokeSafely(callback, payload) {
   if (typeof callback !== "function") return;
@@ -28,23 +37,20 @@ function invokeSafely(callback, payload) {
 
 function buildAuthState() {
   const status = getBackendStatus();
-  if (!status.configured) {
+  const configured = Boolean(status?.configured);
+  if (!configured) {
     return {
+      ...authState,
       user: null,
       isAdmin: false,
       status: "backend_not_configured",
-      message: status.message || NOT_CONFIGURED_MESSAGE,
+      message: status?.message || NOT_CONFIGURED_MESSAGE,
     };
   }
   return {
-    user: {
-      displayName: "Drive Admin",
-      email: "drive-admin@vortex-prime.local",
-      photoURL: null,
-    },
-    isAdmin: true,
-    status: "ready",
-    message: status.message || "Upload backend ready.",
+    ...authState,
+    status: authState.user ? "ready" : "requires_auth",
+    message: authState.message || (authState.user ? "Upload backend ready." : "Sign in with Google to continue."),
   };
 }
 
@@ -70,10 +76,12 @@ async function initialise(force = false) {
 
   initialisePromise = (async () => {
     await refreshBackendStatus(force);
+    await refreshAuthState(force);
     const status = getBackendStatus();
     AdminBackend.isConfigured = Boolean(status.configured);
-    AdminBackend.status = status.configured ? "ready" : "backend_not_configured";
-    AdminBackend.message = status.message || (status.configured ? "Upload backend ready." : NOT_CONFIGURED_MESSAGE);
+    const authInfo = buildAuthState();
+    AdminBackend.status = authInfo.status;
+    AdminBackend.message = authInfo.message;
     notifyAuth();
     notifyReady();
     return AdminBackend;
@@ -88,6 +96,7 @@ const AdminBackend = {
   isConfigured: false,
   status: "initialising",
   message: "Checking backend status…",
+  googleClientId: null,
   async refresh() {
     return initialise(true);
   },
@@ -111,21 +120,66 @@ const AdminBackend = {
     });
     return () => authCallbacks.delete(callback);
   },
+  getGoogleClientId() {
+    return authState.googleClientId;
+  },
+  getAuthState() {
+    return { ...buildAuthState() };
+  },
+  async loginWithCredential(credential) {
+    if (!credential) {
+      throw new Error("Google credential is required.");
+    }
+    const response = await fetch(buildApiUrl("/api/auth/login"), {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ credential }),
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => response.statusText || "Login failed");
+      throw new Error(text || "Google sign-in failed.");
+    }
+    await refreshAuthState(true);
+    notifyAuth();
+    return buildAuthState();
+  },
+  async logout() {
+    await fetch(buildApiUrl("/api/auth/logout"), {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => {});
+    await refreshAuthState(true);
+    notifyAuth();
+  },
   async signInWithGoogle() {
-    const url = openAuthWindow("/auth/google/start");
-    return url;
+    throw new Error("Google sign-in is handled by the page script.");
   },
   async signOut() {
-    return;
+    await AdminBackend.logout();
   },
   async fetchItems(mode) {
     await initialise();
     await ensureBackendConfigured();
+    if (!authState.user) {
+      throw new Error("Sign in with Google to view catalogue items.");
+    }
+    if (!authState.isAdmin) {
+      throw new Error("Admin access required to manage catalogue entries.");
+    }
     return mode === "mods" ? adapterLoadStoreMods() : adapterLoadStoreItems();
   },
   async saveItem(mode, item, currentUser) {
     await initialise();
     await ensureBackendConfigured();
+    if (!authState.user) {
+      throw new Error("Sign in with Google to upload content.");
+    }
+    if (!authState.isAdmin) {
+      throw new Error("Admin privileges required to update catalogue entries.");
+    }
     const saved = await adapterSaveStoreItem(mode, item, currentUser);
     await refreshBackendStatus().catch(() => {});
     AdminBackend.isConfigured = true;
@@ -136,11 +190,17 @@ const AdminBackend = {
   async deleteItem(mode, item) {
     await initialise();
     await ensureBackendConfigured();
+    if (!authState.user) {
+      throw new Error("Sign in with Google to manage catalogue content.");
+    }
+    if (!authState.isAdmin) {
+      throw new Error("Admin privileges required to delete catalogue entries.");
+    }
     await adapterDeleteStoreItem(mode, item);
   },
   isAdminEmail(email) {
     if (!email) return false;
-    return true;
+    return Boolean(authState?.isAdmin && authState.user?.email === email);
   },
   getStatus() {
     return getBackendStatus();
@@ -149,6 +209,41 @@ const AdminBackend = {
 
 if (typeof window !== "undefined") {
   window.AdminBackend = AdminBackend;
+}
+
+async function refreshAuthState(force = false) {
+  if (authStatePromise && !force) {
+    return authStatePromise;
+  }
+
+  authStatePromise = (async () => {
+    try {
+      const data = await fetchJson("/api/auth/config", { credentials: "include" });
+      const user = data?.user || null;
+      authState = {
+        user,
+        isAdmin: Boolean(user?.role === "admin"),
+        status: user ? "ready" : "requires_auth",
+        message: user ? "Signed in with Google." : "Google sign-in required to upload.",
+        googleClientId: data?.googleClientId || null,
+      };
+      AdminBackend.googleClientId = authState.googleClientId;
+    } catch (error) {
+      console.warn("Failed to refresh auth state", error);
+      authState = {
+        user: null,
+        isAdmin: false,
+        status: "auth_error",
+        message: error?.message || "Unable to check Google sign-in status.",
+        googleClientId: authState.googleClientId || null,
+      };
+    }
+    return authState;
+  })().finally(() => {
+    authStatePromise = null;
+  });
+
+  return authStatePromise;
 }
 
 initialise().catch((error) => {

@@ -597,13 +597,6 @@ async function fetchJson(path, options = {}) {
   if (response.status === 204) return null;
   return response.json();
 }
-function openAuthWindow(path) {
-  const url = buildApiUrl(path);
-  if (typeof window !== "undefined") {
-    window.open(url, "_blank", "noopener");
-  }
-  return url;
-}
 
 // src/admin/upload-adapter.js
 var NOT_CONFIGURED_MESSAGE = "Upload backend is not configured yet.";
@@ -697,8 +690,11 @@ function uploadFileWithProgress(url, file, { metadata, onProgress } = {}) {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(body);
       } else {
-        const message = (body == null ? void 0 : body.error) || `Upload failed with status ${xhr.status}.`;
-        reject(new Error(message));
+        const message = (body == null ? void 0 : body.error) || (body == null ? void 0 : body.message) || (xhr.status === 401 ? "Sign in with Google to upload." : `Upload failed with status ${xhr.status}.`);
+        const error = new Error(message);
+        error.status = xhr.status;
+        error.payload = body;
+        reject(error);
       }
     };
     const formData = new FormData();
@@ -727,6 +723,9 @@ async function uploadBinary(type, file, { metadata = {}, replaceFileId, makePubl
   } catch (error) {
     await refreshBackendStatus(true).catch(() => {
     });
+    if (error && typeof error === "object" && error.status === 401) {
+      error.message = "Sign in with Google to upload.";
+    }
     throw error;
   }
 }
@@ -909,6 +908,14 @@ var readyCallbacks = /* @__PURE__ */ new Set();
 var authCallbacks = /* @__PURE__ */ new Set();
 var readyResolved = false;
 var initialisePromise = null;
+var authStatePromise = null;
+var authState = {
+  user: null,
+  isAdmin: false,
+  status: "initialising",
+  message: "Checking backend and authentication\u2026",
+  googleClientId: null
+};
 function invokeSafely(callback, payload) {
   if (typeof callback !== "function") return;
   try {
@@ -919,23 +926,20 @@ function invokeSafely(callback, payload) {
 }
 function buildAuthState() {
   const status = getBackendStatus();
-  if (!status.configured) {
+  const configured = Boolean(status == null ? void 0 : status.configured);
+  if (!configured) {
     return {
+      ...authState,
       user: null,
       isAdmin: false,
       status: "backend_not_configured",
-      message: status.message || NOT_CONFIGURED_MESSAGE2
+      message: (status == null ? void 0 : status.message) || NOT_CONFIGURED_MESSAGE2
     };
   }
   return {
-    user: {
-      displayName: "Drive Admin",
-      email: "drive-admin@vortex-prime.local",
-      photoURL: null
-    },
-    isAdmin: true,
-    status: "ready",
-    message: status.message || "Upload backend ready."
+    ...authState,
+    status: authState.user ? "ready" : "requires_auth",
+    message: authState.message || (authState.user ? "Upload backend ready." : "Sign in with Google to continue.")
   };
 }
 function notifyReady() {
@@ -957,10 +961,12 @@ async function initialise(force = false) {
   }
   initialisePromise = (async () => {
     await refreshBackendStatus(force);
+    await refreshAuthState(force);
     const status = getBackendStatus();
     AdminBackend.isConfigured = Boolean(status.configured);
-    AdminBackend.status = status.configured ? "ready" : "backend_not_configured";
-    AdminBackend.message = status.message || (status.configured ? "Upload backend ready." : NOT_CONFIGURED_MESSAGE2);
+    const authInfo = buildAuthState();
+    AdminBackend.status = authInfo.status;
+    AdminBackend.message = authInfo.message;
     notifyAuth();
     notifyReady();
     return AdminBackend;
@@ -973,6 +979,7 @@ var AdminBackend = {
   isConfigured: false,
   status: "initialising",
   message: "Checking backend status\u2026",
+  googleClientId: null,
   async refresh() {
     return initialise(true);
   },
@@ -997,21 +1004,67 @@ var AdminBackend = {
     });
     return () => authCallbacks.delete(callback);
   },
+  getGoogleClientId() {
+    return authState.googleClientId;
+  },
+  getAuthState() {
+    return { ...buildAuthState() };
+  },
+  async loginWithCredential(credential) {
+    if (!credential) {
+      throw new Error("Google credential is required.");
+    }
+    const response = await fetch(buildApiUrl("/api/auth/login"), {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ credential })
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => response.statusText || "Login failed");
+      throw new Error(text || "Google sign-in failed.");
+    }
+    await refreshAuthState(true);
+    notifyAuth();
+    return buildAuthState();
+  },
+  async logout() {
+    await fetch(buildApiUrl("/api/auth/logout"), {
+      method: "POST",
+      credentials: "include"
+    }).catch(() => {
+    });
+    await refreshAuthState(true);
+    notifyAuth();
+  },
   async signInWithGoogle() {
-    const url = openAuthWindow("/auth/google/start");
-    return url;
+    throw new Error("Google sign-in is handled by the page script.");
   },
   async signOut() {
-    return;
+    await AdminBackend.logout();
   },
   async fetchItems(mode) {
     await initialise();
     await ensureBackendConfigured();
+    if (!authState.user) {
+      throw new Error("Sign in with Google to view catalogue items.");
+    }
+    if (!authState.isAdmin) {
+      throw new Error("Admin access required to manage catalogue entries.");
+    }
     return mode === "mods" ? loadStoreMods() : loadStoreItems();
   },
   async saveItem(mode, item, currentUser) {
     await initialise();
     await ensureBackendConfigured();
+    if (!authState.user) {
+      throw new Error("Sign in with Google to upload content.");
+    }
+    if (!authState.isAdmin) {
+      throw new Error("Admin privileges required to update catalogue entries.");
+    }
     const saved = await saveStoreItem(mode, item, currentUser);
     await refreshBackendStatus().catch(() => {
     });
@@ -1023,11 +1076,18 @@ var AdminBackend = {
   async deleteItem(mode, item) {
     await initialise();
     await ensureBackendConfigured();
+    if (!authState.user) {
+      throw new Error("Sign in with Google to manage catalogue content.");
+    }
+    if (!authState.isAdmin) {
+      throw new Error("Admin privileges required to delete catalogue entries.");
+    }
     await deleteStoreItem(mode, item);
   },
   isAdminEmail(email) {
+    var _a;
     if (!email) return false;
-    return true;
+    return Boolean((authState == null ? void 0 : authState.isAdmin) && ((_a = authState.user) == null ? void 0 : _a.email) === email);
   },
   getStatus() {
     return getBackendStatus();
@@ -1035,6 +1095,38 @@ var AdminBackend = {
 };
 if (typeof window !== "undefined") {
   window.AdminBackend = AdminBackend;
+}
+async function refreshAuthState(force = false) {
+  if (authStatePromise && !force) {
+    return authStatePromise;
+  }
+  authStatePromise = (async () => {
+    try {
+      const data = await fetchJson("/api/auth/config", { credentials: "include" });
+      const user = (data == null ? void 0 : data.user) || null;
+      authState = {
+        user,
+        isAdmin: Boolean((user == null ? void 0 : user.role) === "admin"),
+        status: user ? "ready" : "requires_auth",
+        message: user ? "Signed in with Google." : "Google sign-in required to upload.",
+        googleClientId: (data == null ? void 0 : data.googleClientId) || null
+      };
+      AdminBackend.googleClientId = authState.googleClientId;
+    } catch (error) {
+      console.warn("Failed to refresh auth state", error);
+      authState = {
+        user: null,
+        isAdmin: false,
+        status: "auth_error",
+        message: (error == null ? void 0 : error.message) || "Unable to check Google sign-in status.",
+        googleClientId: authState.googleClientId || null
+      };
+    }
+    return authState;
+  })().finally(() => {
+    authStatePromise = null;
+  });
+  return authStatePromise;
 }
 initialise().catch((error) => {
   console.error("Failed to initialise admin backend", error);

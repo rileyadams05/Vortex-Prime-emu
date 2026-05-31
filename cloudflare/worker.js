@@ -45,6 +45,21 @@ const UPLOAD_TARGETS = {
 
 let tokenCache = null;
 let serviceAccountKey = null;
+let googleCertCache = null;
+let adminEmailCache = null;
+
+const GOOGLE_ISSUERS = new Set([
+  'https://accounts.google.com',
+  'accounts.google.com',
+]);
+
+const SESSION_COOKIE_NAME = 'vps_session';
+const SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 hours
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+let sessionKeyCache = null;
 
 export default {
   async fetch(request, env) {
@@ -64,7 +79,19 @@ export default {
       }
 
       if (path === 'api/status') {
-        return handleStatus(env, allowedOrigin);
+        return handleStatus(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/auth/config') {
+        return handleAuthConfig(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/auth/login') {
+        return handleLogin(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/auth/logout') {
+        return handleLogout(env, allowedOrigin);
       }
 
       if (path === 'api/public/catalogue') {
@@ -122,7 +149,7 @@ function json(data, status = 200, origin) {
   });
 }
 
-async function handleStatus(env, origin) {
+async function handleStatus(request, env, origin) {
   const requiredSecrets = [
     'GOOGLE_SERVICE_ACCOUNT_EMAIL',
     'GOOGLE_PRIVATE_KEY',
@@ -132,6 +159,8 @@ async function handleStatus(env, origin) {
     'DRIVE_ICONS_FOLDER_ID',
     'DRIVE_PREVIEWS_FOLDER_ID',
     'DRIVE_READMES_FOLDER_ID',
+    'GOOGLE_OAUTH_CLIENT_ID',
+    'SESSION_SECRET',
   ];
 
   const missing = requiredSecrets.filter((name) => !String(env[name] || '').trim());
@@ -141,6 +170,7 @@ async function handleStatus(env, origin) {
     message: missing.length ? `Missing Worker secrets: ${missing.join(', ')}` : 'Google Drive storage ready.',
     folders: buildFolderSummary(env),
     storeDbFileId: buildFileLink(env.DRIVE_DATABASE_FILE_ID),
+    auth: buildAuthSummary(env, await readSession(request, env).catch(() => null)),
   };
 
   if (missing.length) {
@@ -164,6 +194,51 @@ async function handlePublicCatalogue(env, origin) {
   return json(db, 200, origin);
 }
 
+async function handleAuthConfig(request, env, origin) {
+  const session = await readSession(request, env).catch(() => null);
+  const summary = buildAuthSummary(env, session);
+  return json({ ok: true, ...summary }, 200, origin);
+}
+
+async function handleLogin(request, env, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Login requires POST.');
+  }
+
+  const body = await request.json().catch(() => null);
+  const credential = body?.credential;
+  if (!credential || typeof credential !== 'string') {
+    throw httpError(400, 'Missing Google credential.');
+  }
+
+  const profile = await validateGoogleCredential(credential, env);
+  const role = isAdminEmail(profile.email, env) ? 'admin' : 'uploader';
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    sub: profile.sub,
+    email: profile.email,
+    name: profile.name || null,
+    picture: profile.picture || null,
+    role,
+    exp: now + SESSION_TTL_SECONDS,
+    iat: now,
+  };
+  const token = await createSessionToken(payload, env);
+  const response = json({
+    ok: true,
+    user: sanitizeUserForResponse(payload),
+    role,
+  }, 200, origin);
+  response.headers.append('Set-Cookie', buildSessionCookie(token));
+  return response;
+}
+
+async function handleLogout(env, origin) {
+  const response = json({ ok: true }, 200, origin);
+  response.headers.append('Set-Cookie', buildSessionCookie('', { maxAge: 0 }));
+  return response;
+}
+
 async function handleCatalogueRequest(request, env, path, origin) {
   const segments = path.split('/');
   const mode = normaliseMode(segments[2]);
@@ -174,16 +249,18 @@ async function handleCatalogueRequest(request, env, path, origin) {
   }
 
   if (request.method === 'POST') {
+    const admin = await ensureAdmin(request, env);
     const payload = await request.json().catch(() => null);
     if (!payload || typeof payload !== 'object') {
       throw httpError(400, 'Missing JSON payload.');
     }
     const incoming = payload.item && typeof payload.item === 'object' ? payload.item : payload;
-    const saved = await saveCatalogueItem(env, mode, incoming);
+    const saved = await saveCatalogueItem(env, mode, incoming, admin);
     return json(saved, 200, origin);
   }
 
   if (request.method === 'DELETE') {
+    await ensureAdmin(request, env);
     const itemId = segments[3];
     if (!itemId) {
       throw httpError(400, 'Missing item id.');
@@ -199,6 +276,8 @@ async function handleUploadRequest(request, env, path, origin) {
   if (request.method !== 'POST') {
     throw httpError(405, 'Upload endpoint only supports POST.');
   }
+
+  const user = await ensureAuthenticated(request, env);
 
   const type = path.split('/')[2];
   const target = UPLOAD_TARGETS[type];
@@ -232,7 +311,7 @@ async function handleUploadRequest(request, env, path, origin) {
     fileInfo.format = file.name.toLowerCase().endsWith('.txt') ? 'text' : 'markdown';
   }
 
-  return json(fileInfo, 200, origin);
+  return json({ ...fileInfo, uploadedBy: sanitizeUserForResponse(user) }, 200, origin);
 }
 
 function buildFolderSummary(env) {
@@ -317,13 +396,14 @@ async function readCatalogue(env, mode) {
   return list.map((entry) => sanitizeItem(entry));
 }
 
-async function saveCatalogueItem(env, mode, incoming) {
+async function saveCatalogueItem(env, mode, incoming, actor) {
   const db = await loadDatabase(env);
   const listName = mode === 'mods' ? 'storeMods' : 'storeItems';
   const list = Array.isArray(db[listName]) ? [...db[listName]] : [];
 
   let item = assignItemId(incoming);
   item = timestampItem(item);
+  item = annotateItemWithActor(item, actor);
   item = sanitizeItem(item);
 
   const index = list.findIndex((entry) => entry.id === item.id);
@@ -492,6 +572,16 @@ function timestampItem(item) {
   return next;
 }
 
+function annotateItemWithActor(item, actor) {
+  if (!actor) return item;
+  const sanitized = sanitizeUserForResponse(actor);
+  if (!sanitized) return item;
+  return {
+    ...item,
+    lastModifiedBy: sanitized,
+  };
+}
+
 function normaliseMode(value) {
   return value === 'mods' ? 'mods' : 'store';
 }
@@ -522,6 +612,307 @@ function requireEnv(env, name) {
     throw httpError(500, `Worker secret ${name} is not set.`);
   }
   return value;
+}
+
+function sanitizeUserForResponse(user) {
+  if (!user || typeof user !== 'object') return null;
+  const { email, name, picture, role } = user;
+  const trimmedEmail = typeof email === 'string' ? email.trim() : null;
+  if (!trimmedEmail) return null;
+  return {
+    email: trimmedEmail,
+    name: typeof name === 'string' ? name.trim() : null,
+    picture: typeof picture === 'string' ? picture.trim() : null,
+    role: role || 'uploader',
+  };
+}
+
+function buildAuthSummary(env, sessionUser) {
+  return {
+    googleClientId: String(env.GOOGLE_OAUTH_CLIENT_ID || '').trim() || null,
+    adminEmails: getAdminEmails(env),
+    user: sanitizeUserForResponse(sessionUser),
+  };
+}
+
+async function ensureAuthenticated(request, env) {
+  const session = await readSession(request, env);
+  if (!session) {
+    throw httpError(401, 'Sign in with Google to upload.');
+  }
+  return session;
+}
+
+async function ensureAdmin(request, env) {
+  const session = await ensureAuthenticated(request, env);
+  if (session.role !== 'admin') {
+    throw httpError(403, 'Admin privileges required.');
+  }
+  return session;
+}
+
+function parseCookies(header) {
+  if (!header) return {};
+  return header.split(';').reduce((acc, part) => {
+    const [key, ...rest] = part.split('=');
+    if (!key) return acc;
+    const name = key.trim();
+    const value = rest.join('=').trim();
+    if (name) acc[name] = value;
+    return acc;
+  }, {});
+}
+
+async function readSession(request, env) {
+  const header = request.headers.get('Cookie');
+  if (!header) return null;
+  const cookies = parseCookies(header);
+  const token = cookies[SESSION_COOKIE_NAME];
+  if (!token) return null;
+  return verifySessionToken(token, env);
+}
+
+function buildSessionCookie(value, options = {}) {
+  const parts = [`${SESSION_COOKIE_NAME}=${value || ''}`];
+  const maxAge = options.maxAge ?? SESSION_TTL_SECONDS;
+  parts.push(`Path=/`);
+  parts.push(`HttpOnly`);
+  parts.push(`Secure`);
+  parts.push(`SameSite=Lax`);
+  parts.push(`Max-Age=${maxAge}`);
+  if (options.expires instanceof Date) {
+    parts.push(`Expires=${options.expires.toUTCString()}`);
+  }
+  return parts.join('; ');
+}
+
+async function importSessionKey(env) {
+  if (sessionKeyCache) return sessionKeyCache;
+  const secret = requireEnv(env, 'SESSION_SECRET');
+  const data = textEncoder.encode(secret);
+  sessionKeyCache = await crypto.subtle.importKey(
+    'raw',
+    data,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  return sessionKeyCache;
+}
+
+async function createSessionToken(payload, env) {
+  const key = await importSessionKey(env);
+  const trimmed = sanitizeUserForResponse(payload);
+  const toEncode = { ...payload, role: trimmed?.role || payload.role || 'uploader' };
+  const json = JSON.stringify(toEncode);
+  const base = base64UrlEncode(json);
+  const signatureBuffer = await crypto.subtle.sign('HMAC', key, textEncoder.encode(base));
+  const signature = base64UrlEncode(new Uint8Array(signatureBuffer));
+  return `${base}.${signature}`;
+}
+
+async function verifySessionToken(token, env) {
+  const [payloadPart, signaturePart] = token.split('.');
+  if (!payloadPart || !signaturePart) {
+    throw httpError(401, 'Invalid session.');
+  }
+  const key = await importSessionKey(env);
+  const expectedSignatureBuffer = await crypto.subtle.sign('HMAC', key, textEncoder.encode(payloadPart));
+  const expectedSignature = new Uint8Array(expectedSignatureBuffer);
+  const providedSignature = base64UrlDecode(signaturePart);
+  if (!constantTimeEquals(expectedSignature, providedSignature)) {
+    throw httpError(401, 'Invalid signature.');
+  }
+  const payloadJson = textDecoder.decode(base64UrlDecode(payloadPart));
+  const payload = JSON.parse(payloadJson);
+  if (!payload?.exp || Math.floor(Date.now() / 1000) >= Number(payload.exp)) {
+    throw httpError(401, 'Session expired.');
+  }
+  return payload;
+}
+
+function constantTimeEquals(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    mismatch |= a[i] ^ b[i];
+  }
+  return mismatch === 0;
+}
+
+function getAdminEmails(env) {
+  const raw = String(env.GOOGLE_ADMIN_EMAILS || '').trim();
+  if (!raw) {
+    adminEmailCache = {
+      raw: '',
+      list: [],
+      exact: new Set(),
+      domains: new Set(),
+    };
+    return adminEmailCache.list;
+  }
+  if (adminEmailCache?.raw === raw) {
+    return adminEmailCache.list;
+  }
+  const parts = raw
+    .split(/[,\n]/)
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+  const exact = new Set();
+  const domains = new Set();
+  for (const entry of parts) {
+    if (entry.startsWith('*@')) {
+      domains.add(entry.slice(2));
+    } else if (entry.startsWith('@')) {
+      domains.add(entry.slice(1));
+    } else {
+      exact.add(entry);
+    }
+  }
+  adminEmailCache = {
+    raw,
+    list: parts,
+    exact,
+    domains,
+  };
+  return adminEmailCache.list;
+}
+
+function isAdminEmail(email, env) {
+  if (!email) return false;
+  const lower = String(email).toLowerCase();
+  const configRaw = String(env.GOOGLE_ADMIN_EMAILS || '').trim();
+  const cache = adminEmailCache && adminEmailCache.raw === configRaw
+    ? adminEmailCache
+    : (getAdminEmails(env), adminEmailCache);
+  if (cache.exact.has(lower)) {
+    return true;
+  }
+  const domain = lower.split('@')[1];
+  if (domain && cache.domains.has(domain)) {
+    return true;
+  }
+  return false;
+}
+
+async function validateGoogleCredential(credential, env) {
+  const parts = credential.split('.');
+  if (parts.length !== 3) {
+    throw httpError(400, 'Invalid Google credential.');
+  }
+  const [headerPart, payloadPart, signaturePart] = parts;
+  const headerJson = textDecoder.decode(base64UrlDecode(headerPart));
+  const payloadJson = textDecoder.decode(base64UrlDecode(payloadPart));
+  let header;
+  let payload;
+  try {
+    header = JSON.parse(headerJson);
+    payload = JSON.parse(payloadJson);
+  } catch (error) {
+    throw httpError(400, 'Malformed Google credential.');
+  }
+
+  if (!GOOGLE_ISSUERS.has(payload.iss)) {
+    throw httpError(401, 'Invalid Google issuer.');
+  }
+
+  const audience = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  const clientId = requireEnv(env, 'GOOGLE_OAUTH_CLIENT_ID');
+  if (!audience.includes(clientId)) {
+    throw httpError(401, 'Google credential audience mismatch.');
+  }
+
+  if (!payload.email || payload.email_verified === false) {
+    throw httpError(401, 'Google account email must be verified.');
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (Number(payload.exp) <= now) {
+    throw httpError(401, 'Google credential expired.');
+  }
+  if (payload.nbf && Number(payload.nbf) > now) {
+    throw httpError(401, 'Google credential not yet valid.');
+  }
+
+  const publicKey = await getGooglePublicKey(header.kid);
+  const signedContent = textEncoder.encode(`${headerPart}.${payloadPart}`);
+  const signature = base64UrlDecode(signaturePart);
+  const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, signature, signedContent);
+  if (!valid) {
+    throw httpError(401, 'Failed to verify Google credential.');
+  }
+
+  return {
+    sub: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    picture: payload.picture,
+  };
+}
+
+async function getGooglePublicKey(kid) {
+  if (!kid) {
+    throw httpError(401, 'Missing Google key id.');
+  }
+  const now = Date.now();
+  if (!googleCertCache || googleCertCache.expiresAt <= now) {
+    await refreshGoogleCertCache();
+  }
+  let key = googleCertCache.keys.get(kid);
+  if (!key) {
+    await refreshGoogleCertCache();
+    key = googleCertCache.keys.get(kid);
+  }
+  if (!key) {
+    throw httpError(401, 'Unable to verify Google credential key.');
+  }
+  return key;
+}
+
+async function refreshGoogleCertCache() {
+  const response = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+  if (!response.ok) {
+    throw httpError(response.status, 'Failed to retrieve Google certificates.');
+  }
+  const data = await response.json();
+  if (!data?.keys || !Array.isArray(data.keys)) {
+    throw httpError(500, 'Google certificate response malformed.');
+  }
+  const keys = new Map();
+  await Promise.all(data.keys.map(async (jwk) => {
+    if (!jwk.kid) return;
+    const key = await crypto.subtle.importKey(
+      'jwk',
+      {
+        ...jwk,
+        ext: true,
+        key_ops: ['verify'],
+      },
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    );
+    keys.set(jwk.kid, key);
+  }));
+  const cacheControl = response.headers.get('Cache-Control') || '';
+  const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
+  const maxAgeSeconds = maxAgeMatch ? Number(maxAgeMatch[1]) : 300;
+  googleCertCache = {
+    keys,
+    expiresAt: Date.now() + maxAgeSeconds * 1000,
+  };
+}
+
+function base64UrlDecode(input) {
+  const normalized = input.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = normalized.length % 4 === 0 ? 0 : 4 - (normalized.length % 4);
+  const padded = normalized + '='.repeat(pad);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 async function driveRequest(env, url, options = {}, retry = true) {
