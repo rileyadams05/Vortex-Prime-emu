@@ -305,6 +305,7 @@
 
   const GOOGLE_CLIENT_ID = '1031854944297-5fnr5ag53nnviq0av9htnctq733uae0k.apps.googleusercontent.com';
   const USER_STORAGE_KEY = 'vpGoogleAuthUser';
+  const ACCESS_TOKEN_KEY = 'vpGoogleAccessToken';
 
   let googleTokenClient = null;
   let currentUser = null;
@@ -336,18 +337,27 @@
 
   function loadStoredUser() {
     try {
-      return JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+      const user = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+      if (user) {
+        const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+        if (!token) return null;
+      }
+      return user;
     } catch (error) {
       return null;
     }
   }
 
-  function persistUser(user) {
+  function persistUser(user, accessToken) {
     if (!user) {
       localStorage.removeItem(USER_STORAGE_KEY);
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
       return;
     }
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    if (accessToken) {
+      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    }
   }
 
   function applyUser(user) {
@@ -382,7 +392,6 @@
 
   function ensureTokenClient() {
     if (!window.google || !google.accounts || !google.accounts.oauth2) {
-      setStatus('Google sign-in is still loading. Please try again in a moment.', 'error');
       return null;
     }
     if (!googleTokenClient) {
@@ -412,24 +421,47 @@
     };
   }
 
-  function startGoogleSignIn() {
+  function startGoogleSignIn(silent = false) {
     const client = ensureTokenClient();
-    if (!client) return;
-    setStatus('Opening Google sign-in…');
+    if (!client) {
+      if (!silent) setStatus('Google sign-in is still loading. Please try again in a moment.', 'error');
+      return;
+    }
+    if (!silent) setStatus('Opening Google sign-in…');
     client.callback = async (tokenResponse) => {
       try {
         if (!tokenResponse || !tokenResponse.access_token) {
           throw new Error('Google did not return an access token');
         }
         const profile = await fetchGoogleProfile(tokenResponse.access_token);
-        persistUser(profile);
+        persistUser(profile, tokenResponse.access_token);
         applyUser(profile);
       } catch (error) {
         console.error(error);
-        setStatus('Unable to complete Google sign-in. Please try again.', 'error');
+        if (!silent) setStatus('Unable to complete Google sign-in. Please try again.', 'error');
       }
     };
-    client.requestAccessToken({ prompt: '' });
+    client.requestAccessToken({ prompt: silent ? '' : '' });
+  }
+
+  function initGoogleAuth() {
+    const storedUser = loadStoredUser();
+    if (storedUser) {
+      applyUser(storedUser);
+    }
+
+    if (window.google && google.accounts && google.accounts.id) {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          startGoogleSignIn(true);
+        },
+        auto_select: true
+      });
+      if (!storedUser) {
+        google.accounts.id.prompt();
+      }
+    }
   }
 
   function signOut() {
@@ -455,7 +487,7 @@
     });
   }
 
-  applyUser(loadStoredUser());
+  initGoogleAuth();
 
   // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function toast(msg, type = 'success') {

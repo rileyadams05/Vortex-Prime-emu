@@ -2603,6 +2603,7 @@
                     const installAppButton = document.getElementById('installAppButton');
                     const GOOGLE_CLIENT_ID = '1031854944297-5fnr5ag53nnviq0av9htnctq733uae0k.apps.googleusercontent.com';
                     const USER_STORAGE_KEY = 'vpGoogleAuthUser';
+                    const ACCESS_TOKEN_KEY = 'vpGoogleAccessToken';
                     let googleTokenClient = null;
                     let currentUser = null;
 
@@ -2629,18 +2630,28 @@
 
                     function loadStoredUser() {
                         try {
-                            return JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+                            const user = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) || 'null');
+                            if (user) {
+                                // Check if token exists and isn't too old (simplified check)
+                                const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+                                if (!token) return null;
+                            }
+                            return user;
                         } catch (error) {
                             return null;
                         }
                     }
 
-                    function persistUser(user) {
+                    function persistUser(user, accessToken) {
                         if (!user) {
                             localStorage.removeItem(USER_STORAGE_KEY);
+                            localStorage.removeItem(ACCESS_TOKEN_KEY);
                             return;
                         }
                         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+                        if (accessToken) {
+                            localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+                        }
                     }
 
                     function applyMainUser(user) {
@@ -2677,7 +2688,6 @@
 
                     function ensureTokenClient() {
                         if (!window.google || !google.accounts || !google.accounts.oauth2) {
-                            alert('Google sign-in is still loading. Please try again in a moment.');
                             return null;
                         }
                         if (!googleTokenClient) {
@@ -2705,23 +2715,49 @@
                         };
                     }
 
-                    function startGoogleSignIn() {
+                    function startGoogleSignIn(silent = false) {
                         const client = ensureTokenClient();
-                        if (!client) return;
+                        if (!client) {
+                            if (!silent) alert('Google sign-in is still loading. Please try again in a moment.');
+                            return;
+                        }
                         client.callback = async (tokenResponse) => {
                             try {
                                 if (!tokenResponse || !tokenResponse.access_token) {
                                     throw new Error('Google did not return an access token');
                                 }
                                 const profile = await fetchGoogleProfile(tokenResponse.access_token);
-                                persistUser(profile);
+                                persistUser(profile, tokenResponse.access_token);
                                 applyMainUser(profile);
                             } catch (error) {
                                 console.error(error);
-                                alert('Unable to complete Google sign-in. Please try again.');
+                                if (!silent) alert('Unable to complete Google sign-in. Please try again.');
                             }
                         };
-                        client.requestAccessToken({ prompt: '' });
+                        client.requestAccessToken({ prompt: silent ? '' : '' });
+                    }
+
+                    function initGoogleAuth() {
+                        const storedUser = loadStoredUser();
+                        if (storedUser) {
+                            applyMainUser(storedUser);
+                        }
+
+                        // Initialize One Tap / Automatic Sign-in
+                        if (window.google && google.accounts && google.accounts.id) {
+                            google.accounts.id.initialize({
+                                client_id: GOOGLE_CLIENT_ID,
+                                callback: async (response) => {
+                                    // Handle ID Token if needed, but we currently use OAuth2 Access Token for profile
+                                    // For now, if One Tap succeeds, we can just trigger the silent Access Token request
+                                    startGoogleSignIn(true);
+                                },
+                                auto_select: true
+                            });
+                            if (!storedUser) {
+                                google.accounts.id.prompt();
+                            }
+                        }
                     }
 
                     function signOutMainUser() {
@@ -2930,7 +2966,7 @@
                         }
                     });
 
-                    applyMainUser(loadStoredUser());
+                    initGoogleAuth();
 
                     if ('serviceWorker' in navigator) {
                         window.addEventListener('load', () => {
