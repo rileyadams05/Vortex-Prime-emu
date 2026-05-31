@@ -398,8 +398,11 @@
       googleTokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: 'openid email profile',
-        ux_mode: 'popup',
-        callback: () => {}
+        callback: () => {},
+        error_callback: (err) => {
+          console.error('Google OAuth error:', err);
+          setStatus('Google sign-in was blocked or closed. Allow popups and disable ad/privacy blockers for this site, then retry.', 'error');
+        }
       });
     }
     return googleTokenClient;
@@ -424,7 +427,7 @@
   function startGoogleSignIn(silent = false) {
     const client = ensureTokenClient();
     if (!client) {
-      if (!silent) setStatus('Google sign-in is still loading. Please try again in a moment.', 'error');
+      if (!silent) setStatus('Google sign-in could not load. A browser ad/privacy blocker may be blocking accounts.google.com. Disable it for this site and refresh.', 'error');
       return;
     }
     if (!silent) setStatus('Opening Google sign-in…');
@@ -441,7 +444,12 @@
         if (!silent) setStatus('Unable to complete Google sign-in. Please try again.', 'error');
       }
     };
-    client.requestAccessToken({ prompt: silent ? '' : '' });
+    try {
+      client.requestAccessToken();
+    } catch (error) {
+      console.error('requestAccessToken failed:', error);
+      if (!silent) setStatus('Unable to open Google sign-in. Disable any ad/privacy blocker for this site and try again.', 'error');
+    }
   }
 
   function initGoogleAuth() {
@@ -458,24 +466,9 @@
         clearInterval(poll);
         // Pre-initialize the token client so clicks work synchronously
         ensureTokenClient();
-
-        if (google.accounts.id) {
-          try {
-            google.accounts.id.initialize({
-              client_id: GOOGLE_CLIENT_ID,
-              callback: () => { startGoogleSignIn(true); },
-              auto_select: true
-            });
-            if (!loadStoredUser()) {
-              google.accounts.id.prompt();
-            }
-          } catch (error) {
-            console.warn('Google One Tap init failed:', error);
-          }
-        }
       } else if (attempts >= maxAttempts) {
         clearInterval(poll);
-        setStatus('Google sign-in failed to load. Check your connection and refresh.', 'error');
+        setStatus('Google sign-in failed to load (likely blocked by an extension). Disable it for this site and refresh.', 'error');
       }
     }, 200);
   }
