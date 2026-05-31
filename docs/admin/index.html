@@ -642,6 +642,55 @@
   // ── Collect current field values into packages array ──────────
   function collectAll() {
     const cards = document.querySelectorAll('.pkg-card');
+    
+    let uploaderName = '';
+    if (currentUser) {
+      // 1. Try to read from shared public user profile in local storage
+      try {
+        const publicUserRaw = localStorage.getItem('vpPublicUser');
+        if (publicUserRaw) {
+          const publicUser = JSON.parse(publicUserRaw);
+          if (publicUser && publicUser.name && (!currentUser.email || publicUser.email === currentUser.email)) {
+            uploaderName = publicUser.name.trim();
+          }
+        }
+      } catch (e) {}
+
+      // 2. Try to read from Google profile overrides in local storage
+      if (!uploaderName) {
+        try {
+          const keys = Object.keys(localStorage);
+          for (const key of keys) {
+            if (key.startsWith('vpPublicProfile.') || key.startsWith('vpProfileOverrides_')) {
+              const raw = localStorage.getItem(key);
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.displayName) {
+                  uploaderName = parsed.displayName.trim();
+                  break;
+                }
+              }
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 3. Fall back to currentUser.name
+      if (!uploaderName && currentUser.name) {
+        uploaderName = currentUser.name.trim();
+      }
+
+      // 4. Fall back to currentUser.email (stripped)
+      if (!uploaderName && currentUser.email) {
+        const emailStr = currentUser.email.trim();
+        uploaderName = emailStr.includes('@') ? emailStr.split('@')[0] : emailStr;
+      }
+    }
+
+    if (!uploaderName) {
+      uploaderName = 'Community';
+    }
+
     packages = Array.from(cards).map(card => {
       const idx = card.dataset.idx;
       const g = (name) => (card.querySelector(`[data-field="${name}"]`) || {}).value || '';
@@ -663,8 +712,8 @@
         name: g('name'),
         description: g('description'),
         creator: g('creator'),
-        uploader: pkg.uploader || (currentUser ? (currentUser.name || currentUser.email) : 'Community'),
-        owner: pkg.owner || (currentUser ? (currentUser.name || currentUser.email) : 'Community'),
+        uploader: uploaderName || pkg.uploader || 'Community',
+        owner: uploaderName || pkg.owner || 'Community',
         tags,
         icon: g('icon') || pkg.icon || '',
         preview: g('preview') || pkg.preview || '',
