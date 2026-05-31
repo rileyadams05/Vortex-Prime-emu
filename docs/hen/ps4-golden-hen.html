@@ -3,61 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png">
-  <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png">
-  <link rel="icon" href="/favicon-192x192.png" sizes="192x192" type="image/png">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
-  <link rel="manifest" href="/site.webmanifest">
-  <meta property="og:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
-  <title>Vortex Prime GoldHEN Host</title>
-    <link rel="stylesheet" href="assets/goldhen-host.css">
+    <meta http-equiv="refresh" content="0; url=/ps4/goldhen-selector.html">
+    <title>Opening Vortex Prime GoldHEN Host</title>
+    <script>
+      window.location.replace('/ps4/goldhen-selector.html');
+    </script>
   </head>
   <body>
-    <main class="host-shell">
-      <header>
-        <h1>Vortex Prime GoldHEN Host</h1>
-        <p>On your PS4 browser, type: bit.ly/PS4-hen. Then choose your firmware, select one of the GoldHEN payloads mirrored from Vortex Prime local host files, and run it through the matching Vortex Prime engine flow.</p>
-      </header>
-
-      <p class="action-status" data-status-message aria-live="polite" aria-atomic="true"></p>
-
-      <section class="firmware-panel">
-        <div class="firmware-header">
-          <h2>Firmware selection</h2>
-          <p class="detection-message" data-detection-message>Detecting firmware…</p>
-        </div>
-
-        <div class="firmware-controls">
-          <div class="firmware-control">
-            <span class="field-label">Detected / manual firmware</span>
-            <div class="field-group">
-              <input type="text" inputmode="decimal" pattern="[0-9.]*" placeholder="Enter firmware (e.g. 9.00)" data-firmware-input>
-            </div>
-          </div>
-        </div>
-
-        <div class="action-buttons">
-          <button class="primary-button" type="button" data-next-goldhen>Next</button>
-          <button class="ghost-button" type="button" data-cache-host>Open offline cache</button>
-        </div>
-
-        <div class="version-panel" data-version-panel hidden>
-          <span class="field-label">Available GoldHEN versions</span>
-          <div class="version-list" data-version-list></div>
-        </div>
-      </section>
-
-      <p class="limitation-note"><strong>Reminder:</strong> Firmware 9.00 uses Vortex Prime 9.00 USB flow. Insert the prepared exFAT exploit USB only when the Vortex Prime prompt appears, then remove it after Vortex Prime says the jailbreak is done.</p>
-    </main>
-
-    <noscript>
-      <p style="color: #ffd252; text-align: center; max-width: 640px; margin: 2rem auto; font-family: 'Segoe UI', sans-serif;">JavaScript is required for the GoldHEN host. Enable scripts in the PS4 browser, refresh, and try again.</p>
-    </noscript>
-
-    <script src="assets/goldhen-host.js"></script>
+    <p><a href="/ps4/goldhen-selector.html">Open Vortex Prime GoldHEN Host</a></p>
   </body>
 </html>
