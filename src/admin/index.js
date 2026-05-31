@@ -28,6 +28,7 @@ if (typeof window !== "undefined") {
   window.AdminBackend = AdminBackend;
   window.VortexUploadManager = { createUploadFieldManager };
   window.VortexUploadAdapter = VortexUploadAdapter;
+  window.dispatchEvent(new CustomEvent("vortex-admin-portal-loaded"));
 }
 
 export { createUploadFieldManager };

@@ -742,8 +742,12 @@ async function uploadBinary(type, file, { metadata = {}, replaceFileId, makePubl
   } catch (error) {
     await refreshBackendStatus(true).catch(() => {
     });
-    if (error && typeof error === "object" && error.status === 401) {
-      error.message = "Sign in with Google to upload.";
+    if (error && typeof error === "object") {
+      if (error.status === 401) {
+        error.message = "Sign in with Google to upload.";
+      } else if (error.status === 403 && (String(error.message).includes("storageQuotaExceeded") || String(error.message).toLowerCase().includes("storage quota"))) {
+        error.message = "Google Drive upload failed because the backend is using a service account with no storage quota. Configure Drive OAuth refresh-token storage.";
+      }
     }
     throw error;
   }
@@ -3951,6 +3955,7 @@ if (typeof window !== "undefined") {
   window.AdminBackend = portal_default;
   window.VortexUploadManager = { createUploadFieldManager };
   window.VortexUploadAdapter = VortexUploadAdapter;
+  window.dispatchEvent(new CustomEvent("vortex-admin-portal-loaded"));
 }
 var AdminUploadAdapter = VortexUploadAdapter;
 var admin_default = portal_default;

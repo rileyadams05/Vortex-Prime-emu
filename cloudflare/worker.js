@@ -46,7 +46,6 @@ const UPLOAD_TARGETS = {
 };
 
 let tokenCache = null;
-let serviceAccountKey = null;
 let googleCertCache = null;
 let adminEmailCache = null;
 
@@ -177,8 +176,9 @@ function json(data, status = 200, origin) {
 
 async function handleStatus(request, env, origin) {
   const requiredSecrets = [
-    'GOOGLE_SERVICE_ACCOUNT_EMAIL',
-    'GOOGLE_PRIVATE_KEY',
+    'GOOGLE_DRIVE_CLIENT_ID',
+    'GOOGLE_DRIVE_CLIENT_SECRET',
+    'GOOGLE_DRIVE_REFRESH_TOKEN',
     'DRIVE_DATABASE_FILE_ID',
     'DRIVE_PACKAGES_FOLDER_ID',
     'DRIVE_MODS_FOLDER_ID',
@@ -354,7 +354,12 @@ async function handleUploadRequest(request, env, path, origin) {
   } catch (error) {
     console.error('Upload failed for type', type, error);
     const status = Number(error?.status) || 500;
-    const message = error?.message || 'Upload failed.';
+    const rawMessage = error?.message || 'Upload failed.';
+    // Detect Drive quota errors and surface a clear diagnostic message.
+    const isQuotaError = rawMessage.includes('storageQuotaExceeded') || rawMessage.toLowerCase().includes('storage quota');
+    const message = isQuotaError
+      ? 'Google Drive upload failed because the backend is using a service account with no storage quota. Configure Drive OAuth refresh-token storage.'
+      : rawMessage;
     return json({ ok: false, message }, status, origin);
   }
 
@@ -1004,89 +1009,43 @@ async function driveRequest(env, url, options = {}, retry = true) {
   return response;
 }
 
+// Obtains a Google Drive access token by exchanging the stored OAuth refresh
+// token.  This uses the personal Google account that owns the Drive storage
+// quota, not a service account (which has no quota).
 async function getAccessToken(env) {
   const now = Math.floor(Date.now() / 1000);
   if (tokenCache && tokenCache.expiresAt > now + 60) {
     return tokenCache.token;
   }
 
-  const privateKey = await loadServiceAccountKey(env);
-  const email = requireEnv(env, 'GOOGLE_SERVICE_ACCOUNT_EMAIL');
-
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const payload = {
-    iss: email,
-    scope: 'https://www.googleapis.com/auth/drive',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now,
-  };
-
-  const signingInput = `${base64UrlEncode(JSON.stringify(header))}.${base64UrlEncode(JSON.stringify(payload))}`;
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    privateKey,
-    new TextEncoder().encode(signingInput),
-  );
-  const jwt = `${signingInput}.${base64UrlEncode(new Uint8Array(signature))}`;
+  const clientId     = requireEnv(env, 'GOOGLE_DRIVE_CLIENT_ID');
+  const clientSecret = requireEnv(env, 'GOOGLE_DRIVE_CLIENT_SECRET');
+  const refreshToken = requireEnv(env, 'GOOGLE_DRIVE_REFRESH_TOKEN');
 
   const body = new URLSearchParams({
-    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    assertion: jwt,
+    grant_type:    'refresh_token',
+    client_id:     clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
   });
 
   const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
   });
 
-  const json = await response.json().catch(() => null);
-  if (!response.ok || !json?.access_token) {
-    const text = json ? JSON.stringify(json) : await response.text().catch(() => response.statusText);
-    throw httpError(response.status, `Failed to obtain Google access token: ${text}`);
+  const data = await response.json().catch(() => null);
+  if (!response.ok || !data?.access_token) {
+    const detail = data?.error_description || data?.error || (data ? JSON.stringify(data) : response.statusText);
+    throw httpError(response.status, `Failed to obtain Google Drive access token: ${detail}`);
   }
 
   tokenCache = {
-    token: json.access_token,
-    expiresAt: now + Number(json.expires_in || 3600),
+    token:     data.access_token,
+    expiresAt: now + Number(data.expires_in || 3600),
   };
   return tokenCache.token;
-}
-
-async function loadServiceAccountKey(env) {
-  if (serviceAccountKey) return serviceAccountKey;
-  const pem = normalizePrivateKey(requireEnv(env, 'GOOGLE_PRIVATE_KEY'));
-  const der = decodePem(pem);
-  serviceAccountKey = await crypto.subtle.importKey(
-    'pkcs8',
-    der,
-    {
-      name: 'RSASSA-PKCS1-v1_5',
-      hash: 'SHA-256',
-    },
-    false,
-    ['sign'],
-  );
-  return serviceAccountKey;
-}
-
-function normalizePrivateKey(value) {
-  return value.replace(/\\n/g, '\n');
-}
-
-function decodePem(pem) {
-  const cleaned = pem.replace(/-----BEGIN PRIVATE KEY-----/, '')
-    .replace(/-----END PRIVATE KEY-----/, '')
-    .replace(/\s+/g, '');
-  const binary = atob(cleaned);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes.buffer;
 }
 
 function base64UrlEncode(input) {

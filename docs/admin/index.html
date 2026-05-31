@@ -512,18 +512,21 @@
     backendApi = api;
 
     syncBackendStatus();
+    attachUploaders();
 
     if (typeof api.onAuthChanged === 'function') {
       api.onAuthChanged((state) => {
         syncBackendStatus();
         const authMessage = state?.message || backendStatus.message;
         updateAuthUi({ ...(state || {}), message: authMessage, googleClientId: state?.googleClientId });
+        attachUploaders();
         if (backendStatus.configured && !packagesLoadedOnce) {
           refreshPackages(true);
         }
       });
     } else {
       updateAuthUi({ user: null, isAdmin: backendStatus.configured, message: backendStatus.message, googleClientId: api?.getGoogleClientId?.() });
+      attachUploaders();
       if (backendStatus.configured && !packagesLoadedOnce) {
         refreshPackages(true);
       }
@@ -1196,7 +1199,6 @@
 
   async function refreshPackages(force = false) {
     if (!backendStatus.configured) {
-      packagesLoadedOnce = true;
       updateSaveHint('Backend not configured — working in local draft mode.');
       applyProfileActionOrRender();
       return;
@@ -1590,6 +1592,14 @@
 
   // â”€â”€ Auto-load themes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   refreshPackages(true);
+
+  // Bind uploaders as soon as VortexUploadManager loads
+  window.addEventListener("vortex-admin-portal-loaded", () => {
+    attachUploaders();
+  });
+  if (window.VortexUploadManager) {
+    attachUploaders();
+  }
 
 })();
 </script>
