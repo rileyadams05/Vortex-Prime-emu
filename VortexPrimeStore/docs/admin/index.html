@@ -497,6 +497,8 @@
         name: g('name'),
         description: g('description'),
         creator: g('creator'),
+        uploader: pkg.uploader || (currentUser ? (currentUser.name || currentUser.email) : 'Community'),
+        owner: pkg.owner || (currentUser ? (currentUser.name || currentUser.email) : 'Community'),
         tags,
         icon: g('icon') || pkg.icon || '',
         preview: g('preview') || pkg.preview || '',

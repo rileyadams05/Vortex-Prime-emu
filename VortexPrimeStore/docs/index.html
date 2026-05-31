@@ -3735,6 +3735,17 @@
                         const platformBadge = `<span class="theme-badge" style="background: var(--color-accent); left: auto; right: 0.75rem;">${escapeHtml(platform)}</span>`;
 
                         const creatorRaw = ((theme.creator ?? theme.author) || '').toString().trim();
+                        const uploaderRaw = (
+                            theme.uploader || 
+                            theme.owner || 
+                            theme.ownerEmail || 
+                            theme.email || 
+                            theme.googleEmail || 
+                            ''
+                        ).toString().trim();
+                        const uploaderName = uploaderRaw.includes('@') 
+                            ? uploaderRaw.split('@')[0] 
+                            : uploaderRaw;
                         const updatedLabel = formatUpdated(theme.updated);
                         const downloadUrl = (theme.download_url || '').trim();
                         const zipFile = (theme.zip_file || '').trim();
@@ -3785,9 +3796,9 @@
                                 <h3>${escapeHtml(theme.name || 'Untitled Package')}</h3>
                                 ${tagsMarkup}
                                 <div class="theme-meta">
-                                    <span class="theme-creator">Created by ${escapeHtml(creatorRaw || 'Community')}</span>
-                                    ${updatedLabel ? `<span class="theme-updated">Updated ${escapeHtml(updatedLabel)}</span>` : ''}
-                                </div>
+                                     <span class="theme-creator">Created by ${escapeHtml(creatorRaw || 'Community')}${uploaderName ? ` • Uploaded by ${escapeHtml(uploaderName)}` : ''}</span>
+                                     ${updatedLabel ? `<span class="theme-updated">Updated ${escapeHtml(updatedLabel)}</span>` : ''}
+                                 </div>
                                 ${downloadStatus}
                                 <div class="theme-actions">
                                     <div class="theme-card-actions">
