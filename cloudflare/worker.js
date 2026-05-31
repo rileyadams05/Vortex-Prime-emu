@@ -1,7 +1,9 @@
-const ALLOWED_ORIGINS = [
+const PRODUCTION_ORIGINS = [
   'https://vortex-prime-emu.com',
-  'https://rileyadams05.github.io'
+  'https://rileyadams05.github.io',
 ];
+
+const LOCAL_DEV_HOSTS = new Set(['localhost', '127.0.0.1']);
 
 const DEFAULT_DB = {
   storeItems: [],
@@ -117,8 +119,32 @@ export default {
 };
 
 function resolveAllowedOrigin(origin) {
-  if (!origin) return ALLOWED_ORIGINS[0];
-  return ALLOWED_ORIGINS.includes(origin) ? origin : null;
+  if (!origin) return PRODUCTION_ORIGINS[0];
+  if (PRODUCTION_ORIGINS.includes(origin)) {
+    return origin;
+  }
+  if (isAllowedLocalOrigin(origin)) {
+    return origin;
+  }
+  return null;
+}
+
+function isAllowedLocalOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return false;
+    }
+    if (!LOCAL_DEV_HOSTS.has(url.hostname)) {
+      return false;
+    }
+    if (url.port && Number.isNaN(Number(url.port))) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 function optionsResponse(origin) {
@@ -249,7 +275,16 @@ async function handleCatalogueRequest(request, env, path, origin) {
   }
 
   if (request.method === 'POST') {
-    const admin = await ensureAdmin(request, env);
+    let admin;
+    try {
+      admin = await ensureAdmin(request, env);
+    } catch (error) {
+      const status = Number(error?.status) || 403;
+      const message = status === 401
+        ? 'Sign in with Google to manage the catalogue.'
+        : (error?.message || 'Admin privileges required.');
+      return json({ ok: false, message }, status, origin);
+    }
     const payload = await request.json().catch(() => null);
     if (!payload || typeof payload !== 'object') {
       throw httpError(400, 'Missing JSON payload.');
@@ -260,7 +295,15 @@ async function handleCatalogueRequest(request, env, path, origin) {
   }
 
   if (request.method === 'DELETE') {
-    await ensureAdmin(request, env);
+    try {
+      await ensureAdmin(request, env);
+    } catch (error) {
+      const status = Number(error?.status) || 403;
+      const message = status === 401
+        ? 'Sign in with Google to manage the catalogue.'
+        : (error?.message || 'Admin privileges required.');
+      return json({ ok: false, message }, status, origin);
+    }
     const itemId = segments[3];
     if (!itemId) {
       throw httpError(400, 'Missing item id.');
@@ -277,7 +320,14 @@ async function handleUploadRequest(request, env, path, origin) {
     throw httpError(405, 'Upload endpoint only supports POST.');
   }
 
-  const user = await ensureAuthenticated(request, env);
+  let user;
+  try {
+    user = await ensureAuthenticated(request, env);
+  } catch (error) {
+    const status = Number(error?.status) || 401;
+    const message = error?.message || 'Sign in with Google to upload.';
+    return json({ ok: false, message }, status, origin);
+  }
 
   const type = path.split('/')[2];
   const target = UPLOAD_TARGETS[type];

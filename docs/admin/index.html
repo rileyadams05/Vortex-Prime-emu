@@ -610,13 +610,16 @@
   }
 
 
+  function bootAdminPortal() {
+    setStatus(BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
+    ensureBackendReady().catch(handleBackendInitError);
+  }
 
-  setStatus(BACKEND_NOT_CONFIGURED_MESSAGE, 'error');
-
-  ensureBackendReady().catch(handleBackendInitError);
-
-
-
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootAdminPortal, { once: true });
+  } else {
+    bootAdminPortal();
+  }
   // ── Toast ──────────────────────────────────────────────────────
   function toast(msg, type = 'success') {
     const el = document.getElementById('toast');
