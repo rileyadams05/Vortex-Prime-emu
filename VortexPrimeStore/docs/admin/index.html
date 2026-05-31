@@ -450,18 +450,34 @@
       applyUser(storedUser);
     }
 
-    if (window.google && google.accounts && google.accounts.id) {
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (response) => {
-          startGoogleSignIn(true);
-        },
-        auto_select: true
-      });
-      if (!storedUser) {
-        google.accounts.id.prompt();
+    let attempts = 0;
+    const maxAttempts = 100; // ~20 seconds
+    const poll = setInterval(() => {
+      attempts += 1;
+      if (window.google && google.accounts && google.accounts.oauth2) {
+        clearInterval(poll);
+        // Pre-initialize the token client so clicks work synchronously
+        ensureTokenClient();
+
+        if (google.accounts.id) {
+          try {
+            google.accounts.id.initialize({
+              client_id: GOOGLE_CLIENT_ID,
+              callback: () => { startGoogleSignIn(true); },
+              auto_select: true
+            });
+            if (!loadStoredUser()) {
+              google.accounts.id.prompt();
+            }
+          } catch (error) {
+            console.warn('Google One Tap init failed:', error);
+          }
+        }
+      } else if (attempts >= maxAttempts) {
+        clearInterval(poll);
+        setStatus('Google sign-in failed to load. Check your connection and refresh.', 'error');
       }
-    }
+    }, 200);
   }
 
   function signOut() {

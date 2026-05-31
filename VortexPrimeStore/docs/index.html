@@ -2718,7 +2718,7 @@
                     function startGoogleSignIn(silent = false) {
                         const client = ensureTokenClient();
                         if (!client) {
-                            if (!silent) alert('Google sign-in is still loading. Please try again in a moment.');
+                            if (!silent) alert('Google sign-in is still loading. Please wait a moment and try again.');
                             return;
                         }
                         client.callback = async (tokenResponse) => {
@@ -2743,21 +2743,35 @@
                             applyMainUser(storedUser);
                         }
 
-                        // Initialize One Tap / Automatic Sign-in
-                        if (window.google && google.accounts && google.accounts.id) {
-                            google.accounts.id.initialize({
-                                client_id: GOOGLE_CLIENT_ID,
-                                callback: async (response) => {
-                                    // Handle ID Token if needed, but we currently use OAuth2 Access Token for profile
-                                    // For now, if One Tap succeeds, we can just trigger the silent Access Token request
-                                    startGoogleSignIn(true);
-                                },
-                                auto_select: true
-                            });
-                            if (!storedUser) {
-                                google.accounts.id.prompt();
+                        let attempts = 0;
+                        const maxAttempts = 100; // ~20 seconds
+                        const poll = setInterval(() => {
+                            attempts += 1;
+                            if (window.google && google.accounts && google.accounts.oauth2) {
+                                clearInterval(poll);
+                                // Pre-initialize the token client so clicks work synchronously
+                                ensureTokenClient();
+
+                                // Initialize One Tap / Automatic Sign-in
+                                if (google.accounts.id) {
+                                    try {
+                                        google.accounts.id.initialize({
+                                            client_id: GOOGLE_CLIENT_ID,
+                                            callback: () => { startGoogleSignIn(true); },
+                                            auto_select: true
+                                        });
+                                        if (!loadStoredUser()) {
+                                            google.accounts.id.prompt();
+                                        }
+                                    } catch (error) {
+                                        console.warn('Google One Tap init failed:', error);
+                                    }
+                                }
+                            } else if (attempts >= maxAttempts) {
+                                clearInterval(poll);
+                                console.warn('Google Identity Services failed to load.');
                             }
-                        }
+                        }, 200);
                     }
 
                     function signOutMainUser() {
