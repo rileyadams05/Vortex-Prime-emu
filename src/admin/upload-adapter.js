@@ -79,6 +79,14 @@ function safeParseJson(value) {
   }
 }
 
+function safeReadResponseText(xhr) {
+  try {
+    return xhr.responseText;
+  } catch (error) {
+    return null;
+  }
+}
+
 function uploadFileWithProgress(url, file, { metadata, onProgress } = {}) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -104,14 +112,26 @@ function uploadFileWithProgress(url, file, { metadata, onProgress } = {}) {
     };
 
     xhr.onload = () => {
-      const body = xhr.response ?? safeParseJson(xhr.responseText);
+      let body = null;
+      if (xhr.responseType === 'json') {
+        body = xhr.response ?? null;
+      } else if (!xhr.responseType || xhr.responseType === 'text') {
+        body = safeParseJson(xhr.responseText) ?? xhr.responseText;
+      } else {
+        const fallbackText = safeReadResponseText(xhr);
+        body = xhr.response ?? safeParseJson(fallbackText) ?? fallbackText;
+      }
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(body);
       } else {
-        const message = body?.error || body?.message || (xhr.status === 401 ? 'Sign in with Google to upload.' : `Upload failed with status ${xhr.status}.`);
+        const fallbackText = typeof body === 'string' ? body : safeReadResponseText(xhr);
+        const message = body?.error || body?.message || fallbackText || (xhr.status === 401 ? 'Sign in with Google to upload.' : `Upload failed with status ${xhr.status}.`);
         const error = new Error(message);
         error.status = xhr.status;
         error.payload = body;
+        if (!error.payload && fallbackText) {
+          error.payload = safeParseJson(fallbackText) || { raw: fallbackText };
+        }
         reject(error);
       }
     };

@@ -348,7 +348,15 @@ async function handleUploadRequest(request, env, path, origin) {
   const metadata = parseMetadata(form.get('metadata'));
   const folderId = requireEnv(env, target.folderEnv);
 
-  const fileInfo = await uploadFileToDrive(env, folderId, file, target.makePublic !== false);
+  let fileInfo;
+  try {
+    fileInfo = await uploadFileToDrive(env, folderId, file, target.makePublic !== false);
+  } catch (error) {
+    console.error('Upload failed for type', type, error);
+    const status = Number(error?.status) || 500;
+    const message = error?.message || 'Upload failed.';
+    return json({ ok: false, message }, status, origin);
+  }
 
   if (metadata?.replaceFileId) {
     await deleteDriveFile(env, metadata.replaceFileId).catch(() => {});
@@ -498,13 +506,28 @@ async function uploadFileToDrive(env, folderId, file, makePublic = true) {
   };
   const boundary = `vortex-${crypto.randomUUID()}`;
   const mimeType = file.type || 'application/octet-stream';
-  const body = new Blob([
-    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`,
-    JSON.stringify(metadata),
-    `\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`,
-    file,
-    `\r\n--${boundary}--\r\n`,
-  ]);
+  const preamble = textEncoder.encode(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`);
+  const closing = textEncoder.encode(`\r\n--${boundary}--\r\n`);
+
+  const bodyStream = new ReadableStream({
+    async start(controller) {
+      controller.enqueue(preamble);
+      const reader = file.stream().getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          controller.enqueue(value);
+        }
+        controller.enqueue(closing);
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      } finally {
+        reader.releaseLock();
+      }
+    },
+  });
 
   const response = await driveRequest(
     env,
@@ -514,7 +537,7 @@ async function uploadFileToDrive(env, folderId, file, makePublic = true) {
       headers: {
         'Content-Type': `multipart/related; boundary=${boundary}`,
       },
-      body,
+      body: bodyStream,
     },
   );
 

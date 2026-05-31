@@ -24,8 +24,15 @@ export function createUploadFieldManager({ toast } = {}) {
     if (!id || !target || !input) return null;
 
     if (instances.has(id)) {
+      const previous = instances.get(id);
       try {
-        instances.get(id).uppy.close({ reason: 'unmount' });
+        if (previous?.uppy) {
+          if (typeof previous.uppy.close === 'function') {
+            previous.uppy.close({ reason: 'unmount' });
+          } else if (typeof previous.uppy.destroy === 'function') {
+            previous.uppy.destroy();
+          }
+        }
       } catch (error) {
         console.warn('Failed to close previous Uppy instance', error);
       }
@@ -225,7 +232,11 @@ export function createUploadFieldManager({ toast } = {}) {
   function destroyAll() {
     instances.forEach((instance) => {
       try {
-        instance.uppy.close({ reason: 'destroy' });
+        if (typeof instance.uppy?.close === 'function') {
+          instance.uppy.close({ reason: 'destroy' });
+        } else if (typeof instance.uppy?.destroy === 'function') {
+          instance.uppy.destroy();
+        }
       } catch (error) {
         console.warn('Failed to close Uppy instance', error);
       }

@@ -663,6 +663,13 @@ function safeParseJson(value) {
     return null;
   }
 }
+function safeReadResponseText(xhr) {
+  try {
+    return xhr.responseText;
+  } catch (error) {
+    return null;
+  }
+}
 function uploadFileWithProgress(url, file, { metadata, onProgress } = {}) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -685,15 +692,27 @@ function uploadFileWithProgress(url, file, { metadata, onProgress } = {}) {
       reject(new Error("Upload failed due to a network error."));
     };
     xhr.onload = () => {
-      var _a;
-      const body = (_a = xhr.response) != null ? _a : safeParseJson(xhr.responseText);
+      var _a, _b, _c, _d;
+      let body = null;
+      if (xhr.responseType === "json") {
+        body = (_a = xhr.response) != null ? _a : null;
+      } else if (!xhr.responseType || xhr.responseType === "text") {
+        body = (_b = safeParseJson(xhr.responseText)) != null ? _b : xhr.responseText;
+      } else {
+        const fallbackText = safeReadResponseText(xhr);
+        body = (_d = (_c = xhr.response) != null ? _c : safeParseJson(fallbackText)) != null ? _d : fallbackText;
+      }
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(body);
       } else {
-        const message = (body == null ? void 0 : body.error) || (body == null ? void 0 : body.message) || (xhr.status === 401 ? "Sign in with Google to upload." : `Upload failed with status ${xhr.status}.`);
+        const fallbackText = typeof body === "string" ? body : safeReadResponseText(xhr);
+        const message = (body == null ? void 0 : body.error) || (body == null ? void 0 : body.message) || fallbackText || (xhr.status === 401 ? "Sign in with Google to upload." : `Upload failed with status ${xhr.status}.`);
         const error = new Error(message);
         error.status = xhr.status;
         error.payload = body;
+        if (!error.payload && fallbackText) {
+          error.payload = safeParseJson(fallbackText) || { raw: fallbackText };
+        }
         reject(error);
       }
     };
@@ -3711,8 +3730,15 @@ function createUploadFieldManager({ toast } = {}) {
     } = options;
     if (!id || !target || !input) return null;
     if (instances.has(id)) {
+      const previous = instances.get(id);
       try {
-        instances.get(id).uppy.close({ reason: "unmount" });
+        if (previous == null ? void 0 : previous.uppy) {
+          if (typeof previous.uppy.close === "function") {
+            previous.uppy.close({ reason: "unmount" });
+          } else if (typeof previous.uppy.destroy === "function") {
+            previous.uppy.destroy();
+          }
+        }
       } catch (error) {
         console.warn("Failed to close previous Uppy instance", error);
       }
@@ -3884,8 +3910,13 @@ function createUploadFieldManager({ toast } = {}) {
   }
   function destroyAll() {
     instances.forEach((instance) => {
+      var _a, _b;
       try {
-        instance.uppy.close({ reason: "destroy" });
+        if (typeof ((_a = instance.uppy) == null ? void 0 : _a.close) === "function") {
+          instance.uppy.close({ reason: "destroy" });
+        } else if (typeof ((_b = instance.uppy) == null ? void 0 : _b.destroy) === "function") {
+          instance.uppy.destroy();
+        }
       } catch (error) {
         console.warn("Failed to close Uppy instance", error);
       }
