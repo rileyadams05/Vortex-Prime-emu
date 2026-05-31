@@ -1173,12 +1173,29 @@
         }
 
         .media-thumbs {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+            display: flex;
+            overflow-x: auto;
             gap: 0.65rem;
+            padding-bottom: 0.5rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+
+        .media-thumbs::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .media-thumbs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .media-thumbs::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 99px;
         }
 
         .media-thumb {
+            flex: 0 0 132px;
             position: relative;
             min-height: 74px;
             border: 1px solid var(--color-border);
