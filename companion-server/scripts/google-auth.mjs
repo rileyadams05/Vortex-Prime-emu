@@ -17,7 +17,7 @@ function buildAuthInstructions(url) {
   console.log('\n2. Sign in with the Google account that owns your Drive storage.');
   console.log('3. Approve Drive access for the companion server when prompted.');
   console.log('4. When Google redirects back to the local callback, this script will continue automatically.');
-  console.log('\nIf you see "Access blocked", add Vortex_Prime_store@outlook.com as a test user in the OAuth consent screen.');
+  console.log('\nIf you see "Access blocked", add your Google account email as a test user in the OAuth consent screen.');
 }
 
 async function openBrowser(url) {
