@@ -2225,6 +2225,7 @@
                         <a href="https://discord.gg/PVFJ64QA" class="nav-link" target="_blank" data-no-gate="true">Help</a>
                     </div>
                     <div class="nav-auth">
+                        <div id="googleBtnHost"></div>
                         <button id="mainGoogleSignInBtn" class="gsi-material-button" type="button">
                             <div class="gsi-material-button-state"></div>
                             <div class="gsi-material-button-content-wrapper">
@@ -2656,7 +2657,9 @@
 
                     function applyMainUser(user) {
                         currentUser = user || null;
+                        const googleBtnHost = document.getElementById('googleBtnHost');
                         if (user) {
+                            if (googleBtnHost) googleBtnHost.style.display = 'none';
                             if (mainSignInBtn) mainSignInBtn.style.display = 'none';
                             if (mainUserBadge) {
                                 mainUserBadge.style.display = 'inline-flex';
@@ -2673,7 +2676,7 @@
                                 }
                             }
                         } else {
-                            if (mainSignInBtn) mainSignInBtn.style.display = 'inline-flex';
+                            if (googleBtnHost) googleBtnHost.style.display = 'block';
                             if (mainUserBadge) {
                                 mainUserBadge.style.display = 'none';
                                 mainUserBadge.removeAttribute('title');
@@ -2682,6 +2685,10 @@
                             if (mainUserAvatar) {
                                 mainUserAvatar.style.display = 'none';
                                 mainUserAvatar.removeAttribute('src');
+                            }
+                            // Re-render the official Google button if available; otherwise show fallback
+                            if (!renderGoogleButton() && mainSignInBtn) {
+                                mainSignInBtn.style.display = 'inline-flex';
                             }
                         }
                     }
@@ -2698,12 +2705,43 @@
                                 error_callback: (err) => {
                                     console.error('Google OAuth error:', err);
                                     if (err && (err.type === 'popup_failed_to_open' || err.type === 'popup_closed')) {
-                                        alert('The Google sign-in popup was blocked or closed. Please allow popups for this site (and disable any ad/privacy blocker for it), then try again.');
+                                        alert('The Google sign-in popup was blocked or closed. Please allow popups for this site, then try again.');
                                     }
                                 }
                             });
                         }
                         return googleTokenClient;
+                    }
+
+                    function decodeJwtPayload(token) {
+                        try {
+                            const part = token.split('.')[1];
+                            const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'));
+                            return JSON.parse(decodeURIComponent(escape(json)));
+                        } catch (error) {
+                            console.error('Failed to decode credential JWT:', error);
+                            return null;
+                        }
+                    }
+
+                    function handleCredentialResponse(response) {
+                        if (!response || !response.credential) {
+                            console.error('No credential returned from Google');
+                            return;
+                        }
+                        const payload = decodeJwtPayload(response.credential);
+                        if (!payload) {
+                            alert('Unable to read your Google account details. Please try again.');
+                            return;
+                        }
+                        const profile = {
+                            sub: payload.sub,
+                            name: payload.name || payload.given_name || payload.email || 'Google User',
+                            email: payload.email || null,
+                            picture: payload.picture || ''
+                        };
+                        persistUser(profile, response.credential);
+                        applyMainUser(profile);
                     }
 
                     async function fetchGoogleProfile(accessToken) {
@@ -2720,10 +2758,11 @@
                         };
                     }
 
+                    // Fallback: OAuth2 popup flow (used only if the rendered button is unavailable)
                     function startGoogleSignIn(silent = false) {
                         const client = ensureTokenClient();
                         if (!client) {
-                            if (!silent) alert('Google sign-in could not load. A browser ad-blocker or privacy extension may be blocking accounts.google.com. Please disable it for this site and refresh.');
+                            if (!silent) alert('Google sign-in could not load. Please disable any privacy/ad blocker for this site and refresh.');
                             return;
                         }
                         client.callback = async (tokenResponse) => {
@@ -2743,7 +2782,29 @@
                             client.requestAccessToken();
                         } catch (error) {
                             console.error('requestAccessToken failed:', error);
-                            if (!silent) alert('Unable to open Google sign-in. Please disable any ad/privacy blocker for this site and try again.');
+                            if (!silent) alert('Unable to open Google sign-in. Please disable any privacy/ad blocker for this site and try again.');
+                        }
+                    }
+
+                    function renderGoogleButton() {
+                        const host = document.getElementById('googleBtnHost');
+                        if (!host || !window.google || !google.accounts || !google.accounts.id) return false;
+                        try {
+                            host.innerHTML = '';
+                            google.accounts.id.renderButton(host, {
+                                type: 'standard',
+                                theme: 'filled_black',
+                                size: 'large',
+                                text: 'signin_with',
+                                shape: 'pill',
+                                logo_alignment: 'left'
+                            });
+                            // Hide our custom fallback button since the official one is showing
+                            if (mainSignInBtn) mainSignInBtn.style.display = 'none';
+                            return true;
+                        } catch (error) {
+                            console.warn('renderButton failed:', error);
+                            return false;
                         }
                     }
 
@@ -2757,13 +2818,28 @@
                         const maxAttempts = 100; // ~20 seconds
                         const poll = setInterval(() => {
                             attempts += 1;
-                            if (window.google && google.accounts && google.accounts.oauth2) {
+                            if (window.google && google.accounts && google.accounts.id) {
                                 clearInterval(poll);
-                                // Pre-initialize the token client so clicks work synchronously
+                                try {
+                                    google.accounts.id.initialize({
+                                        client_id: GOOGLE_CLIENT_ID,
+                                        callback: handleCredentialResponse,
+                                        auto_select: true,
+                                        cancel_on_tap_outside: false
+                                    });
+                                } catch (error) {
+                                    console.warn('Google ID init failed:', error);
+                                }
+                                // Pre-init oauth2 client for the fallback button
                                 ensureTokenClient();
+                                // Render the official Google button (only when signed out)
+                                if (!storedUser) {
+                                    renderGoogleButton();
+                                    try { google.accounts.id.prompt(); } catch (e) {}
+                                }
                             } else if (attempts >= maxAttempts) {
                                 clearInterval(poll);
-                                console.warn('Google Identity Services failed to load (likely blocked by an extension).');
+                                console.warn('Google Identity Services failed to load.');
                             }
                         }, 200);
                     }
