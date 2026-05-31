@@ -2270,6 +2270,7 @@
                                 <span class="gsi-material-button-contents">Sign in with Google</span>
                             </div>
                         </button>
+                        <div id="mainGoogleBtnSlot" style="display:none;"></div>
                         <div id="mainUserBadge" class="user-badge">
                             <img id="mainUserAvatar" alt="" src="">
                             <span class="name" id="mainUserName"></span>
@@ -2738,12 +2739,114 @@
                         }
                     }
 
+                    let googleSignInReady = false;
+
+                    function mapServerUser(serverUser) {
+                        if (!serverUser || !serverUser.email) return null;
+                        return {
+                            uid: serverUser.email,
+                            email: serverUser.email,
+                            displayName: serverUser.name || serverUser.email,
+                            photoURL: serverUser.picture || '',
+                            role: serverUser.role || 'uploader',
+                        };
+                    }
+
+                    function renderGoogleButton(clientId) {
+                        if (!clientId || !(window.google && window.google.accounts && window.google.accounts.id)) return;
+                        const slot = document.getElementById('mainGoogleBtnSlot');
+                        if (!googleSignInReady) {
+                            googleSignInReady = true;
+                            window.google.accounts.id.initialize({
+                                client_id: clientId,
+                                auto_select: true,
+                                callback: async (response) => {
+                                    try {
+                                        const api = await ensureStoreApi();
+                                        await api.loginWithCredential(response && response.credential);
+                                        await refreshStoreSession();
+                                    } catch (error) {
+                                        console.error('Google sign-in failed', error);
+                                        alert((error && error.message) || 'Google sign-in failed.');
+                                    }
+                                },
+                            });
+                        }
+                        if (slot) {
+                            slot.innerHTML = '';
+                            slot.style.display = 'inline-flex';
+                            window.google.accounts.id.renderButton(slot, {
+                                theme: 'filled_black',
+                                size: 'large',
+                                shape: 'pill',
+                                text: 'signin_with',
+                            });
+                        }
+                        if (mainSignInBtn) mainSignInBtn.style.display = 'none';
+                        window.google.accounts.id.prompt();
+                    }
+
+                    function waitForGoogleAndRender(clientId) {
+                        if (!clientId) return;
+                        if (window.google && window.google.accounts && window.google.accounts.id) {
+                            renderGoogleButton(clientId);
+                            return;
+                        }
+                        let tries = 0;
+                        const timer = setInterval(() => {
+                            tries += 1;
+                            if (window.google && window.google.accounts && window.google.accounts.id) {
+                                clearInterval(timer);
+                                renderGoogleButton(clientId);
+                            } else if (tries > 80) {
+                                clearInterval(timer);
+                            }
+                        }, 150);
+                    }
+
+                    async function refreshStoreSession() {
+                        try {
+                            const api = await ensureStoreApi();
+                            const config = await api.getAuthConfig();
+                            const user = mapServerUser(config && config.user);
+                            applyMainUser(user);
+                            const slot = document.getElementById('mainGoogleBtnSlot');
+                            if (user) {
+                                if (mainSignInBtn) mainSignInBtn.style.display = 'none';
+                                if (slot) slot.style.display = 'none';
+                            } else {
+                                waitForGoogleAndRender(config && config.googleClientId);
+                            }
+                            if (profileModal && profileModal.classList.contains('active')) renderProfileUploads();
+                            return user;
+                        } catch (error) {
+                            console.warn('Failed to refresh store session', error);
+                            applyMainUser(null);
+                            return null;
+                        }
+                    }
+
                     async function startGoogleSignIn() {
-                        alert('Public store sign-in is disabled until a storage backend is configured.');
+                        if (window.google && window.google.accounts && window.google.accounts.id) {
+                            window.google.accounts.id.prompt();
+                        } else {
+                            alert('Google sign-in is still loading. Please try again in a moment.');
+                        }
                     }
 
                     async function signOutMainUser() {
-                        alert('Sign-out is disabled because no store backend is configured.');
+                        try {
+                            const api = await ensureStoreApi();
+                            await api.logout();
+                            if (window.google && window.google.accounts && window.google.accounts.id) {
+                                window.google.accounts.id.disableAutoSelect();
+                            }
+                        } catch (error) {
+                            console.warn('Sign-out failed', error);
+                        }
+                        applyMainUser(null);
+                        closeProfilePanel();
+                        await refreshStoreSession();
                     }
 
                     function profileAvatarFor(user) {
@@ -2822,12 +2925,16 @@
                             item.creator,
                             item.author,
                             item.uploader,
+                            item.uploadedBy,
                             item.owner,
                             item.email,
                             item.ownerEmail,
                             item.googleEmail,
                             item.discord_id,
-                            item.userId
+                            item.userId,
+                            item.uploaderAccount && item.uploaderAccount.email,
+                            item.uploaderAccount && item.uploaderAccount.name,
+                            item.lastModifiedBy && item.lastModifiedBy.email
                         ].map(normalizeOwner).filter(Boolean);
                         return itemKeys.some((key) => userKeys.includes(key));
                     }
@@ -2950,12 +3057,13 @@
                     async function initStoreAuth() {
                         applyMainUser(null);
                         if (mainSignInBtn) {
-                            mainSignInBtn.setAttribute('disabled', 'disabled');
-                            mainSignInBtn.title = 'Backend not configured yet';
+                            mainSignInBtn.removeAttribute('disabled');
+                            mainSignInBtn.removeAttribute('title');
                         }
                         if (profileUploadsList) {
-                            profileUploadsList.innerHTML = '<div class="profile-empty">Uploads will appear once the backend is configured.</div>';
+                            profileUploadsList.innerHTML = '<div class="profile-empty">Sign in to view your uploads.</div>';
                         }
+                        await refreshStoreSession();
                     }
 
                     if ('serviceWorker' in navigator) {
@@ -3493,9 +3601,23 @@
                         const readmeMarkup = renderReadmeContent(item.readme);
                         const hasReadme = item.readme && (readmeMarkup || item.readme.url);
                         const consoleInstallerMarkup = renderConsoleInstaller(item);
+                        const detailCreator = ((item.creator ?? item.author) || '').toString().trim() || 'Community';
+                        const detailUploaderRaw = (
+                            item.uploadedBy ||
+                            item.uploader ||
+                            item.owner ||
+                            ''
+                        ).toString().trim();
+                        const detailUploader = detailUploaderRaw.includes('@')
+                            ? detailUploaderRaw.split('@')[0]
+                            : detailUploaderRaw;
                         itemDetailContent.innerHTML = `
                             <div class="item-detail-header">
                                 <h3 id="itemDetailTitle">${escapeHtml(item.name || 'Untitled Package')}</h3>
+                                <div class="item-detail-credits" style="display:flex;flex-wrap:wrap;gap:0.35rem 1.5rem;margin-top:0.5rem;font-size:0.9rem;color:var(--color-text-muted);">
+                                    <span><strong style="color:var(--color-text);">Original Creator / Author:</strong> ${escapeHtml(detailCreator)}</span>
+                                    ${detailUploader ? `<span><strong style="color:var(--color-text);">Uploaded By:</strong> ${escapeHtml(detailUploader)}</span>` : ''}
+                                </div>
                             </div>
                             <div class="media-gallery">
                                 <div class="media-main" id="mediaMain">${renderMediaMain(first)}</div>
@@ -3766,6 +3888,7 @@
 
                         const creatorRaw = ((theme.creator ?? theme.author) || '').toString().trim();
                         const uploaderRaw = (
+                            theme.uploadedBy ||
                             theme.uploader || 
                             theme.owner || 
                             theme.ownerEmail || 

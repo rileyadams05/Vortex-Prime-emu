@@ -151,6 +151,32 @@ function getBackendStatus() {
 
 // src/store/catalogue.js
 var NOT_CONFIGURED_MESSAGE2 = "Store backend is not configured yet.";
+async function getAuthConfig() {
+  return fetchJson("/api/auth/config", { credentials: "include" });
+}
+async function loginWithCredential(credential) {
+  if (!credential) {
+    throw new Error("Google credential is required.");
+  }
+  const response = await fetch(buildApiUrl("/api/auth/login"), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ credential })
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => response.statusText || "Login failed");
+    throw new Error(text || "Google sign-in failed.");
+  }
+  return response.json().catch(() => ({ ok: true }));
+}
+async function logout() {
+  await fetch(buildApiUrl("/api/auth/logout"), {
+    method: "POST",
+    credentials: "include"
+  }).catch(() => {
+  });
+}
 async function loadStoreItems2() {
   try {
     return await loadStoreItems();
@@ -187,7 +213,10 @@ var VortexStoreBackend = {
   loadStoreItems: loadStoreItems2,
   loadStoreMods: loadStoreMods2,
   getStatus: getStoreBackendStatus,
-  submitPublicVideo
+  submitPublicVideo,
+  getAuthConfig,
+  loginWithCredential,
+  logout
 };
 if (typeof window !== "undefined") {
   window.VortexStoreBackend = VortexStoreBackend;

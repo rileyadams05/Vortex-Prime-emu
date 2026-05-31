@@ -55,7 +55,7 @@ const GOOGLE_ISSUERS = new Set([
 ]);
 
 const SESSION_COOKIE_NAME = 'vps_session';
-const SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 hours
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days (persistent login)
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -469,11 +469,12 @@ async function saveCatalogueItem(env, mode, incoming, actor) {
   const list = Array.isArray(db[listName]) ? [...db[listName]] : [];
 
   let item = assignItemId(incoming);
-  item = timestampItem(item);
-  item = annotateItemWithActor(item, actor);
+  const index = list.findIndex((entry) => entry.id === item.id);
+  const existing = index >= 0 ? list[index] : null;
+  item = timestampItem(item, existing);
+  item = annotateItemWithActor(item, actor, existing);
   item = sanitizeItem(item);
 
-  const index = list.findIndex((entry) => entry.id === item.id);
   if (index >= 0) {
     list[index] = item;
   } else {
@@ -623,7 +624,12 @@ function sanitizeItem(raw) {
   item.id = typeof item.id === 'string' && item.id.trim() ? item.id.trim() : crypto.randomUUID();
   item.name = item.name || '';
   item.description = item.description || '';
-  item.creator = item.creator || '';
+  // Original Creator / Author of the package (e.g. "Cyb1k") — never overwritten
+  // by the uploader's account name.
+  item.creator = item.creator || item.author || '';
+  // "Uploaded By" is the editable display label for who uploaded it to the
+  // Vortex Prime Store (e.g. "Riley Adams"). Falls back to legacy uploader/owner.
+  item.uploadedBy = (item.uploadedBy || item.uploader || item.owner || '').toString().trim();
   item.tags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
   item.platform = item.platform || 'PS4';
   item.updated = item.updated || new Date().toISOString();
@@ -646,22 +652,27 @@ function assignItemId(item) {
   return { ...item, id: crypto.randomUUID() };
 }
 
-function timestampItem(item) {
+function timestampItem(item, existing) {
   const now = new Date().toISOString();
   const next = { ...item, updated: now };
-  if (!next.created_at) next.created_at = now;
-  if (!next.uploaded_at) next.uploaded_at = now;
+  next.created_at = existing?.created_at || next.created_at || now;
+  next.uploaded_at = existing?.uploaded_at || next.uploaded_at || now;
   return next;
 }
 
-function annotateItemWithActor(item, actor) {
+function annotateItemWithActor(item, actor, existing) {
   if (!actor) return item;
   const sanitized = sanitizeUserForResponse(actor);
   if (!sanitized) return item;
-  return {
+  const next = {
     ...item,
     lastModifiedBy: sanitized,
   };
+  // Ownership account is set once when the item is first created and is then
+  // preserved across edits. This is the signed-in account that owns the upload
+  // for permission checks — kept separate from the editable "Uploaded By" label.
+  next.uploaderAccount = existing?.uploaderAccount || item.uploaderAccount || sanitized;
+  return next;
 }
 
 function normaliseMode(value) {

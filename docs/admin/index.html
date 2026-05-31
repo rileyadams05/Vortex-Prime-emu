@@ -398,6 +398,7 @@
     googleButtonRendered = true;
     window.google.accounts.id.initialize({
       client_id: clientId,
+      auto_select: true,
       callback: async (response) => {
         try {
           const adminModule = window.AdminBackend;
@@ -712,8 +713,9 @@
         name: g('name'),
         description: g('description'),
         creator: g('creator'),
-        uploader: uploaderName || pkg.uploader || 'Community',
-        owner: uploaderName || pkg.owner || 'Community',
+        uploadedBy: (g('uploadedBy') || '').trim() || uploaderName || pkg.uploadedBy || pkg.uploader || 'Community',
+        uploader: (g('uploadedBy') || '').trim() || uploaderName || pkg.uploader || 'Community',
+        owner: (g('uploadedBy') || '').trim() || uploaderName || pkg.owner || 'Community',
         tags,
         icon: g('icon') || pkg.icon || '',
         preview: g('preview') || pkg.preview || '',
@@ -909,7 +911,13 @@
           </div>
           <div class="field">
             <label>Original Creator / Author Name *</label>
-            <input type="text" data-field="creator" value="${esc(pkg.creator || pkg.author)}" placeholder="Your name or team" oninput="onFieldInput(${i},'creator',this.value)">
+            <input type="text" data-field="creator" value="${esc(pkg.creator || pkg.author)}" placeholder="e.g. Cyb1k (the real package author)" oninput="onFieldInput(${i},'creator',this.value)">
+            <span class="upload-hint-box">The person who actually made this package. This is shown publicly as the credited author.</span>
+          </div>
+          <div class="field">
+            <label>Uploaded By</label>
+            <input type="text" data-field="uploadedBy" value="${esc(pkg.uploadedBy || pkg.uploader || '')}" placeholder="e.g. Riley Adams (who uploaded it here)" oninput="onFieldInput(${i},'uploadedBy',this.value)">
+            <span class="upload-hint-box">Who uploaded this to Vortex Prime Store. Leave blank to use your signed-in name.</span>
           </div>
           
           <div class="field">
