@@ -2808,6 +2808,26 @@
                         }
                     }
 
+                    function showAuthDiagnostic(message) {
+                        let banner = document.getElementById('authDiagnosticBanner');
+                        if (!banner) {
+                            banner = document.createElement('div');
+                            banner.id = 'authDiagnosticBanner';
+                            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7f1d1d;color:#fff;padding:12px 16px;font:600 14px/1.5 Inter,sans-serif;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.5);';
+                            const close = document.createElement('button');
+                            close.textContent = '×';
+                            close.style.cssText = 'position:absolute;right:12px;top:8px;background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;';
+                            close.onclick = () => banner.remove();
+                            banner.appendChild(close);
+                            const text = document.createElement('div');
+                            text.id = 'authDiagnosticText';
+                            banner.appendChild(text);
+                            document.body.appendChild(banner);
+                        }
+                        const text = document.getElementById('authDiagnosticText');
+                        if (text) text.textContent = message;
+                    }
+
                     function initGoogleAuth() {
                         const storedUser = loadStoredUser();
                         if (storedUser) {
@@ -2835,7 +2855,21 @@
                                 // Render the official Google button (only when signed out)
                                 if (!storedUser) {
                                     renderGoogleButton();
-                                    try { google.accounts.id.prompt(); } catch (e) {}
+                                    try {
+                                        google.accounts.id.prompt((notification) => {
+                                            try {
+                                                if (notification.isNotDisplayed && notification.isNotDisplayed()) {
+                                                    const reason = notification.getNotDisplayedReason ? notification.getNotDisplayedReason() : 'unknown';
+                                                    console.warn('Google One Tap not displayed:', reason);
+                                                    if (reason === 'unregistered_origin' || reason === 'invalid_client') {
+                                                        showAuthDiagnostic('Google sign-in config error (' + reason + '): the origin https://vortex-prime-emu.com is not authorized for this OAuth Client ID. Add it under Google Cloud Console → Credentials → Authorized JavaScript origins.');
+                                                    }
+                                                } else if (notification.isSkippedMoment && notification.isSkippedMoment()) {
+                                                    console.warn('Google One Tap skipped:', notification.getSkippedReason ? notification.getSkippedReason() : 'unknown');
+                                                }
+                                            } catch (e) { console.warn('Prompt notification handler error:', e); }
+                                        });
+                                    } catch (e) { console.warn('prompt() failed:', e); }
                                 }
                             } else if (attempts >= maxAttempts) {
                                 clearInterval(poll);
