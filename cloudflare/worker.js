@@ -99,6 +99,10 @@ export default {
         return handlePublicCatalogue(env, allowedOrigin);
       }
 
+      if (path === 'api/public/submit-video') {
+        return handlePublicSubmitVideo(request, env, allowedOrigin);
+      }
+
       if (path.startsWith('api/catalogue/')) {
         return handleCatalogueRequest(request, env, path, allowedOrigin);
       }
@@ -1058,4 +1062,72 @@ function base64UrlEncode(input) {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function handlePublicSubmitVideo(request, env, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Submit video endpoint only supports POST.');
+  }
+
+  const payload = await request.json().catch(() => null);
+  if (!payload || typeof payload !== 'object') {
+    throw httpError(400, 'Missing JSON payload.');
+  }
+
+  const { itemId, url, title, submittedBy } = payload;
+  if (!itemId || !url || !title) {
+    throw httpError(400, 'Missing required fields: itemId, url, and title are required.');
+  }
+
+  const videoId = getYoutubeId(url);
+  if (!videoId) {
+    throw httpError(400, 'Invalid YouTube video URL.');
+  }
+
+  const db = await loadDatabase(env);
+  
+  let foundItem = db.storeItems?.find(item => item.id === itemId || item.name === itemId || item.code === itemId);
+  
+  if (!foundItem) {
+    foundItem = db.storeMods?.find(item => item.id === itemId || item.name === itemId || item.code === itemId);
+  }
+
+  if (!foundItem) {
+    throw httpError(404, 'Catalogue item not found.');
+  }
+
+  if (!Array.isArray(foundItem.youtubeVideos)) {
+    foundItem.youtubeVideos = [];
+  }
+
+  foundItem.youtubeVideos.push({
+    title: title.trim(),
+    url: `https://www.youtube.com/watch?v=${videoId}`,
+    submittedBy: String(submittedBy || 'Anonymous').trim(),
+    status: 'approved',
+    submittedAt: new Date().toISOString()
+  });
+
+  await persistDatabase(env, db);
+
+  return json({ ok: true, message: 'Video tutorial submitted successfully! It will appear once approved by an admin.' }, 200, origin);
+}
+
+function getYoutubeId(url) {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be') return parsed.pathname.split('/').filter(Boolean)[0] || '';
+    if (host.endsWith('youtube.com')) {
+      if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/').filter(Boolean)[1] || '';
+      if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/').filter(Boolean)[1] || '';
+      return parsed.searchParams.get('v') || '';
+    }
+  } catch (error) {
+    const match = value.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([A-Za-z0-9_-]{6,})/);
+    return match ? match[1] : '';
+  }
+  return '';
 }

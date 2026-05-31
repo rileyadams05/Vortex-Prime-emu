@@ -1823,6 +1823,124 @@
         /* Upload Form Styles */
         .modal-content.wide { max-width: 780px; }
 
+        /* Community Tutorials CSS */
+        .community-tutorials-section {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            text-align: left;
+        }
+        .community-tutorials-section .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .community-tutorials-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-submit-tutorial {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-primary-light);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.45rem 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .btn-submit-tutorial:hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--color-primary);
+            color: var(--color-text);
+        }
+        .tutorial-form-container {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--color-border);
+        }
+        .tutorial-form-container form {
+            display: grid;
+            gap: 0.85rem;
+        }
+        .tutorial-form-container .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .tutorial-form-container label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+        }
+        .tutorial-form-container input {
+            background: var(--color-bg-dark);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        .tutorial-form-container input:focus {
+            border-color: var(--color-primary);
+        }
+        .tutorial-form-container .form-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+        .tutorial-form-container .btn-primary {
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.5rem 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .tutorial-form-container .btn-primary:hover {
+            background: var(--color-primary-dark);
+        }
+        .tutorial-form-container .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .tutorial-form-container .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.5rem 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .tutorial-form-container .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .tutorial-form-container .status-error { color: #fca5a5; font-size: 0.75rem; font-weight: 600; margin-top: 0.35rem; display: block; }
+        .tutorial-form-container .status-success { color: #6ee7b7; font-size: 0.75rem; font-weight: 600; margin-top: 0.35rem; display: block; }
+        .tutorial-form-container .status-info { color: #93c5fd; font-size: 0.75rem; font-weight: 600; margin-top: 0.35rem; display: block; }
+
         .upload-layout {
             display: grid;
             grid-template-columns: 1fr 220px;
@@ -3327,6 +3445,35 @@
                             </div>
                             ${links.length ? `<div class="media-links">${links.map(link => `<a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.title || 'Community Link')}</a>`).join('')}</div>` : ''}
                             ${consoleInstallerMarkup}
+                            
+                            <div class="community-tutorials-section">
+                                <div class="section-header">
+                                    <h4>🎥 Community Tutorials</h4>
+                                    <button class="btn-submit-tutorial" id="btnShowSubmitForm" type="button">+ Submit Tutorial</button>
+                                </div>
+                                <div class="tutorial-form-container" id="tutorialFormContainer" style="display: none;">
+                                    <form id="publicTutorialForm" onsubmit="event.preventDefault()">
+                                        <div class="form-group">
+                                            <label for="tutorialUrl">YouTube Video URL *</label>
+                                            <input type="url" id="tutorialUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="tutorialTitle">Video Title *</label>
+                                            <input type="text" id="tutorialTitle" placeholder="e.g., PS4 Tutorial & Showcase" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="tutorialUser">Your Name (optional)</label>
+                                            <input type="text" id="tutorialUser" placeholder="Anonymous">
+                                        </div>
+                                        <div class="form-actions">
+                                            <button class="btn-primary" type="submit" id="btnSubmitTutorialForm">Add to Gallery</button>
+                                            <button class="btn-secondary" type="button" id="btnCancelSubmitForm">Cancel</button>
+                                        </div>
+                                        <div class="form-status" id="tutorialFormStatus"></div>
+                                    </form>
+                                </div>
+                            </div>
+
                             ${hasReadme ? `<div class="readme-section"><h4>${escapeHtml(item.readme?.filename || 'README')}</h4><div class="readme-body" data-readme-body>${readmeMarkup || '<p>Loading README…</p>'}</div></div>` : ''}
                         `;
                         itemDetailContent.querySelectorAll('.media-thumb').forEach(button => {
@@ -3336,6 +3483,93 @@
                                 if (main) main.innerHTML = renderMediaMain(media);
                             });
                         });
+
+                        // Wire up community tutorial submission form handlers
+                        const showBtn = itemDetailContent.querySelector('#btnShowSubmitForm');
+                        const cancelBtn = itemDetailContent.querySelector('#btnCancelSubmitForm');
+                        const formContainer = itemDetailContent.querySelector('#tutorialFormContainer');
+                        const form = itemDetailContent.querySelector('#publicTutorialForm');
+                        const statusEl = itemDetailContent.querySelector('#tutorialFormStatus');
+                        const submitBtn = itemDetailContent.querySelector('#btnSubmitTutorialForm');
+
+                        if (showBtn && formContainer) {
+                            showBtn.addEventListener('click', () => {
+                                formContainer.style.display = formContainer.style.display === 'none' ? 'block' : 'none';
+                                showBtn.style.display = formContainer.style.display === 'none' ? 'none' : 'inline-block';
+                            });
+                        }
+                        if (cancelBtn && formContainer && showBtn) {
+                            cancelBtn.addEventListener('click', () => {
+                                formContainer.style.display = 'none';
+                                showBtn.style.display = 'inline-block';
+                                if (form) form.reset();
+                                if (statusEl) statusEl.innerHTML = '';
+                            });
+                        }
+                        if (form) {
+                            form.addEventListener('submit', async (e) => {
+                                e.preventDefault();
+                                const url = form.querySelector('#tutorialUrl').value.trim();
+                                const title = form.querySelector('#tutorialTitle').value.trim();
+                                const submittedBy = form.querySelector('#tutorialUser').value.trim();
+
+                                if (!url || !title) {
+                                    if (statusEl) statusEl.innerHTML = '<span class="status-error">Missing required fields.</span>';
+                                    return;
+                                }
+
+                                const videoId = getYoutubeId(url);
+                                if (!videoId) {
+                                    if (statusEl) statusEl.innerHTML = '<span class="status-error">Invalid YouTube URL. Please enter a valid watch link or Shorts link.</span>';
+                                    return;
+                                }
+
+                                submitBtn.disabled = true;
+                                submitBtn.textContent = 'Adding…';
+                                if (statusEl) statusEl.innerHTML = '<span class="status-info">Adding your tutorial…</span>';
+
+                                try {
+                                    const api = await ensureStoreApi();
+                                    await api.submitPublicVideo(itemKey(item), url, title, submittedBy);
+                                    
+                                    // SUCCESS! Add instantly to the local items array and rerender details modal in real time!
+                                    if (!Array.isArray(item.youtubeVideos)) {
+                                        item.youtubeVideos = [];
+                                    }
+                                    const newVideo = {
+                                        title,
+                                        url: `https://www.youtube.com/watch?v=${videoId}`,
+                                        submittedBy: submittedBy || 'Anonymous',
+                                        status: 'approved',
+                                        submittedAt: new Date().toISOString()
+                                    };
+                                    item.youtubeVideos.push(newVideo);
+                                    
+                                    // Update item's media list too if present
+                                    if (Array.isArray(item.media)) {
+                                        item.media.push({
+                                            type: 'youtube',
+                                            title,
+                                            url: `https://www.youtube.com/watch?v=${videoId}`
+                                        });
+                                    }
+                                    
+                                    if (statusEl) statusEl.innerHTML = '<span class="status-success">✓ Tutorial added successfully to gallery!</span>';
+                                    form.reset();
+                                    setTimeout(() => {
+                                        // Rerender the active details panel instantly with the new video in place!
+                                        renderItemDetails(item);
+                                    }, 1500);
+                                } catch (error) {
+                                    console.error('Failed to submit tutorial', error);
+                                    if (statusEl) statusEl.innerHTML = `<span class="status-error">Failed to add: ${escapeHtml(error.message || 'Unknown error')}</span>`;
+                                } finally {
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = 'Add to Gallery';
+                                }
+                            });
+                        }
+
                         attachConsoleInstaller(item);
                         if (hasReadme && !readmeMarkup && item.readme?.url) {
                             const container = itemDetailContent.querySelector('[data-readme-body]');

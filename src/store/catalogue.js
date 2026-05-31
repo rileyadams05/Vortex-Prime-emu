@@ -3,6 +3,7 @@ import {
   loadStoreMods as adapterLoadStoreMods,
   getBackendStatus,
 } from "../admin/upload-adapter.js";
+import { fetchJson } from "../backend/config.js";
 
 const NOT_CONFIGURED_MESSAGE = "Store backend is not configured yet.";
 
@@ -35,10 +36,18 @@ function getStoreBackendStatus() {
   }
 }
 
+async function submitPublicVideo(itemId, url, title, submittedBy) {
+  return fetchJson("/api/public/submit-video", {
+    method: "POST",
+    body: JSON.stringify({ itemId, url, title, submittedBy }),
+  });
+}
+
 const VortexStoreBackend = {
   loadStoreItems,
   loadStoreMods,
   getStatus: getStoreBackendStatus,
+  submitPublicVideo,
 };
 
 if (typeof window !== "undefined") {

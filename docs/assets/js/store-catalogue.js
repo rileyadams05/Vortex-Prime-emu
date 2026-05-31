@@ -177,10 +177,17 @@ function getStoreBackendStatus() {
     return { configured: false, message: NOT_CONFIGURED_MESSAGE2 };
   }
 }
+async function submitPublicVideo(itemId, url, title, submittedBy) {
+  return fetchJson("/api/public/submit-video", {
+    method: "POST",
+    body: JSON.stringify({ itemId, url, title, submittedBy })
+  });
+}
 var VortexStoreBackend = {
   loadStoreItems: loadStoreItems2,
   loadStoreMods: loadStoreMods2,
-  getStatus: getStoreBackendStatus
+  getStatus: getStoreBackendStatus,
+  submitPublicVideo
 };
 if (typeof window !== "undefined") {
   window.VortexStoreBackend = VortexStoreBackend;
