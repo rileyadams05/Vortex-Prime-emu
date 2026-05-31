@@ -1127,6 +1127,7 @@
         }
 
         .media-main {
+            position: relative;
             aspect-ratio: 16 / 9;
             background: var(--color-bg-dark);
             border: 1px solid var(--color-border);
@@ -1196,6 +1197,52 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .media-thumb.active {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .gallery-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 42px;
+            height: 42px;
+            background: rgba(9, 9, 11, 0.65);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fafafa;
+            border-radius: 50%;
+            font-size: 1.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+            line-height: 1;
+            user-select: none;
+        }
+
+        .gallery-nav-btn:hover {
+            background: var(--color-primary);
+            border-color: var(--color-primary-light);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+            color: #fff;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .gallery-nav-btn.prev {
+            left: 0.75rem;
+            padding-right: 3px;
+        }
+
+        .gallery-nav-btn.next {
+            right: 0.75rem;
+            padding-left: 3px;
         }
 
         .youtube-play-overlay {
@@ -3452,7 +3499,7 @@
 
                             <div class="community-tutorials-section">
                                 <div class="section-header">
-                                    <h4>🎥 Community Tutorials</h4>
+                                    <h4><svg class="youtube-icon" viewBox="0 0 24 24" style="width:20px;height:20px;fill:#FF0000;vertical-align:middle;display:inline-block;margin-right:6px;"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.108C19.528 3.545 12 3.545 12 3.545s-7.528 0-9.388.51a3.003 3.003 0 0 0-2.11 2.108C0 8.024 0 12 0 12s0 3.976.502 5.837a3.003 3.003 0 0 0 2.11 2.108c1.86.51 9.388.51 9.388.51s7.53 0 9.388-.51a3.003 3.003 0 0 0 2.11-2.108c.502-1.861.502-5.837.502-5.837s0-3.976-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>YouTube Tutorials</h4>
                                     <button class="btn-submit-tutorial" id="btnShowSubmitForm" type="button">+ Submit Tutorial</button>
                                 </div>
                                 <div class="tutorial-form-container" id="tutorialFormContainer" style="display: none;">
@@ -3480,13 +3527,89 @@
 
                             ${readmeMarkup ? `<div class="readme-section"><h4>${escapeHtml(item.readme?.filename || 'README')}</h4>${readmeMarkup}</div>` : ''}
                         `;
-                        itemDetailContent.querySelectorAll('.media-thumb').forEach(button => {
+
+                        let currentMediaIndex = 0;
+
+                        function updateActiveMedia(index) {
+                            currentMediaIndex = (index + gallery.length) % gallery.length;
+                            const media = gallery[currentMediaIndex];
+                            const main = document.getElementById('mediaMain');
+                            if (main) {
+                                main.innerHTML = renderMediaMain(media);
+                                
+                                // Re-append nav buttons if gallery.length > 1
+                                if (gallery.length > 1) {
+                                    const prevBtn = document.createElement('button');
+                                    prevBtn.className = 'gallery-nav-btn prev';
+                                    prevBtn.type = 'button';
+                                    prevBtn.setAttribute('aria-label', 'Previous media');
+                                    prevBtn.innerHTML = '&lsaquo;';
+                                    prevBtn.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        updateActiveMedia(currentMediaIndex - 1);
+                                    });
+
+                                    const nextBtn = document.createElement('button');
+                                    nextBtn.className = 'gallery-nav-btn next';
+                                    nextBtn.type = 'button';
+                                    nextBtn.setAttribute('aria-label', 'Next media');
+                                    nextBtn.innerHTML = '&rsaquo;';
+                                    nextBtn.addEventListener('click', (e) => {
+                                        e.stopPropagation();
+                                        updateActiveMedia(currentMediaIndex + 1);
+                                    });
+
+                                    main.appendChild(prevBtn);
+                                    main.appendChild(nextBtn);
+                                }
+                            }
+
+                            // Update active thumbnail state
+                            itemDetailContent.querySelectorAll('.media-thumb').forEach((thumb, tIndex) => {
+                                if (tIndex === currentMediaIndex) {
+                                    thumb.classList.add('active');
+                                    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                                } else {
+                                    thumb.classList.remove('active');
+                                }
+                            });
+                        }
+
+                        // Attach thumbnail click handlers
+                        itemDetailContent.querySelectorAll('.media-thumb').forEach((button, index) => {
                             button.addEventListener('click', () => {
-                                const media = gallery[Number(button.dataset.mediaIndex)];
-                                const main = document.getElementById('mediaMain');
-                                if (main) main.innerHTML = renderMediaMain(media);
+                                updateActiveMedia(index);
                             });
                         });
+
+                        // Set the initial active media (first item)
+                        updateActiveMedia(0);
+
+                        // Attach document keyboard shortcuts for details modal gallery
+                        if (!window._vortexGalleryKeyboardBound) {
+                            window._vortexGalleryKeyboardBound = true;
+                            document.addEventListener('keydown', (e) => {
+                                const modal = document.getElementById('itemDetailModal');
+                                if (!modal || !modal.classList.contains('active')) return;
+                                
+                                // Ignore keypresses if user is typing inside an input/textarea
+                                if (document.activeElement && 
+                                    ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName.toUpperCase())) {
+                                    return;
+                                }
+
+                                const key = e.key.toLowerCase();
+                                if (key === 'arrowleft' || key === 'a') {
+                                    e.preventDefault();
+                                    const prevBtn = modal.querySelector('.gallery-nav-btn.prev');
+                                    if (prevBtn) prevBtn.click();
+                                } else if (key === 'arrowright' || key === 'd') {
+                                    e.preventDefault();
+                                    const nextBtn = modal.querySelector('.gallery-nav-btn.next');
+                                    if (nextBtn) nextBtn.click();
+                                }
+                            });
+                        }
 
                         // Wire up community tutorial submission form handlers
                         const showBtn = itemDetailContent.querySelector('#btnShowSubmitForm');
