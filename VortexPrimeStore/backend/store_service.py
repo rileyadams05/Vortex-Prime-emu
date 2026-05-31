@@ -295,6 +295,7 @@ async def save_submission(
     external_guide_url: str = "",
     youtube_guide_url: str = "",
     youtube_videos: list = None,
+    uploaded_by: str = "",
     extract_contents: bool = False,
     db=None,
 ) -> dict:
@@ -368,6 +369,8 @@ async def save_submission(
         "discord_id": discord_id,
         "author": author,
         "creator": author, # Alias for consistency
+        "uploaded_by": uploaded_by or author,
+        "uploader": uploaded_by or author,
         "platform": platform,
         "category": category,
         "tags": tags or [],

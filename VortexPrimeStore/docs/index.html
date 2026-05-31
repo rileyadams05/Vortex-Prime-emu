@@ -180,6 +180,7 @@
             -moz-user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
+            user-select: none;
             -webkit-appearance: none;
             appearance: none;
             background-color: #131314;
@@ -2720,7 +2721,7 @@
                                 alert('Unable to complete Google sign-in. Please try again.');
                             }
                         };
-                        client.requestAccessToken({ prompt: currentUser ? '' : 'consent' });
+                        client.requestAccessToken({ prompt: '' });
                     }
 
                     function signOutMainUser() {
@@ -2781,6 +2782,7 @@
                         const itemKeys = [
                             item.creator,
                             item.author,
+                            item.uploaded_by,
                             item.uploader,
                             item.owner,
                             item.email,
@@ -2841,7 +2843,7 @@
                         if (!profileUploadsList || !currentUser) return;
                         const uploads = getUserUploads();
                         if (uploads.length === 0) {
-                            profileUploadsList.innerHTML = '<div class="profile-empty">No uploads matched this profile yet. Packages match when their creator or author name is the same as your signed-in username.</div>';
+                            profileUploadsList.innerHTML = '<div class="profile-empty">No uploads matched this profile yet. Packages match when their creator, uploader, or author name matches your signed-in name or email.</div>';
                             return;
                         }
 
@@ -2855,7 +2857,7 @@
                                     <h5>${escapeHtml(item.name || 'Untitled Package')}</h5>
                                     <p>${escapeHtml(sourceLabel)}${platform}${updatedLabel}</p>
                                     <div class="profile-upload-actions">
-                                        <button class="profile-secondary" type="button" data-profile-action="update" data-profile-index="${index}">Update</button>
+                                        <button class="profile-secondary" type="button" data-profile-action="update" data-profile-index="${index}">Edit</button>
                                         <button class="profile-danger" type="button" data-profile-action="delete" data-profile-index="${index}">Delete</button>
                                     </div>
                                 </article>
@@ -3736,6 +3738,7 @@
 
                         const creatorRaw = ((theme.creator ?? theme.author) || '').toString().trim();
                         const uploaderRaw = (
+                            theme.uploaded_by ||
                             theme.uploader || 
                             theme.owner || 
                             theme.ownerEmail || 

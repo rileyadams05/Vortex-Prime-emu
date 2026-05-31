@@ -271,6 +271,7 @@ async def upload_store_package(
     externalGuideUrl: str = Form(""),
     youtubeGuideUrl: str = Form(""),
     youtubeVideos: str = Form(""),
+    uploadedBy: str = Form(""),
     access_token: str = Form(""),
     theme: UploadFile = File(...),
     icon: UploadFile = File(None),
@@ -355,6 +356,7 @@ async def upload_store_package(
         external_guide_url=externalGuideUrl,
         youtube_guide_url=youtubeGuideUrl,
         youtube_videos=_parse_youtube_videos(youtubeVideos),
+        uploaded_by=uploadedBy,
         extract_contents=should_extract_archive,
         db=db if mongo_available else None,
     )

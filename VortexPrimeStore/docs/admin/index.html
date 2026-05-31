@@ -429,7 +429,7 @@
         setStatus('Unable to complete Google sign-in. Please try again.', 'error');
       }
     };
-    client.requestAccessToken({ prompt: currentUser ? '' : 'consent' });
+    client.requestAccessToken({ prompt: '' });
   }
 
   function signOut() {
@@ -545,7 +545,8 @@
         name: g('name'),
         description: g('description'),
         creator: g('creator'),
-        uploader: uploaderName || pkg.uploader || 'Community',
+        uploaded_by: g('uploaded_by') || uploaderName || pkg.uploaded_by || pkg.uploader || 'Community',
+        uploader: g('uploaded_by') || uploaderName || pkg.uploader || pkg.uploaded_by || 'Community',
         owner: uploaderName || pkg.owner || 'Community',
         tags,
         icon: g('icon') || pkg.icon || '',
@@ -738,6 +739,10 @@
           <div class="field">
             <label>Original Creator / Author Name *</label>
             <input type="text" data-field="creator" value="${esc(pkg.creator || pkg.author)}" placeholder="Your name or team" oninput="onFieldInput(${i},'creator',this.value)">
+          </div>
+          <div class="field">
+            <label>Uploaded By</label>
+            <input type="text" data-field="uploaded_by" value="${esc(pkg.uploaded_by || pkg.uploader || '')}" placeholder="Your display name" oninput="onFieldInput(${i},'uploaded_by',this.value)">
           </div>
           
           <div class="field">
@@ -1062,6 +1067,7 @@
       fd.append('description', pkg.description || '');
       fd.append('discord_id', currentUser?.sub || currentUser?.email || 'local-admin');
       fd.append('author', pkg.creator || pkg.author || 'Community');
+      fd.append('uploadedBy', pkg.uploaded_by || pkg.uploader || '');
       fd.append('platform', pkg.platform);
       if (pkg.category) fd.append('category', pkg.category);
       fd.append('tags', JSON.stringify(pkg.tags || []));
@@ -1155,6 +1161,7 @@
       name: '',
       description: '',
       creator: '',
+      uploaded_by: currentUser?.name || currentUser?.email || '',
       tags: [],
       icon: '',
       preview: '',
