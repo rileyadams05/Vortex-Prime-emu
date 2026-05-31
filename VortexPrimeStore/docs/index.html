@@ -1015,7 +1015,7 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .theme-preview-placeholder {
@@ -3376,8 +3376,8 @@
                                 ${preview ? '' : '<span class="theme-preview-placeholder">🎨</span>'}
                                 ${primaryTag}
                                 ${platformBadge}
+                                ${iconMarkup}
                             </div>
-                            ${iconMarkup}
                             <div class="theme-info">
                                 <h3>${escapeHtml(theme.name || 'Untitled Package')}</h3>
                                 ${tagsMarkup}
