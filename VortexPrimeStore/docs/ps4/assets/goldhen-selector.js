@@ -28,7 +28,16 @@ function init() {
     return;
   }
 
+function handleInputEnter(e) {
+  const key = e.key || e.keyCode;
+  if (key === 'Enter' || key === 13) {
+    e.preventDefault();
+    handleSubmit(e);
+  }
+}
+
   state.form.addEventListener('submit', handleSubmit);
+  state.input.addEventListener('keydown', handleInputEnter);
   state.sortButtons.forEach((button) => {
     button.addEventListener('click', handleSortChange);
   });
