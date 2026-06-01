@@ -385,6 +385,7 @@
       }
 
       function runUrl(option) {
+        if (option.firmware === '9.00') return option.host;
         return option.host + '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version);
       }
 

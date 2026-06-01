@@ -215,9 +215,9 @@ transform: scale(1.1)
 
     </style>
 <meta charset="utf-8">
-<title>Vortex Prime GoldHEN 9.00 Loader</title>
+<title>Karo Host Auto Exploit Compressed + New Webkit Version 9.00 fw</title>
 <script>
-if (window.applicationCache && window.applicationCache.status=='0' && location.search.indexOf('payload=')<0){window.location.replace("cache.html");}
+if (window.applicationCache.status=='0'){window.location.replace("cache.html");}
 </script>
 <script src="int64.js"></script>
 <script src="rop.js"></script>
@@ -288,7 +288,6 @@ setTimeout(white, 3000);
 }
 
 function allset() {
-if(typeof LoadedPL=="undefined"){LoadedPL=LoadedMSG;}
 window.progress.innerHTML= LoadedMSG
 }
 
@@ -471,7 +470,6 @@ runScript('relocator.js');
 function goldhen2(){
     progress.innerHTML="Goldhen 2.0b2 loading... please wait";
     LoadedMSG="GoldHEN 2.0b2 Loaded";
-    LoadedPL=LoadedMSG;
     PLfile = "goldhen2b2.bin";
     out_jb = "AllPL";
     load_pocB();
@@ -480,7 +478,6 @@ function goldhen2(){
 function goldhen222(){
     progress.innerHTML="Goldhen 2.2.2 loading... please wait";
     LoadedMSG="GoldHEN 2.2.2 Loaded";
-    LoadedPL=LoadedMSG;
     PLfile = "goldhen_2.2.2_900.bin";
     out_jb = "AllPL";
     load_pocB();
@@ -489,7 +486,6 @@ function goldhen222(){
 function goldhen224(){
     progress.innerHTML="Goldhen 2.2.4 loading... please wait";
     LoadedMSG="GoldHEN 2.2.4 Loaded";
-    LoadedPL=LoadedMSG;
     PLfile = "goldhen_2.2.4_900.bin";
     out_jb = "AllPL";
     load_pocB();
@@ -498,7 +494,6 @@ function goldhen224(){
 function goldhen23(){
     progress.innerHTML="Goldhen 2.3 loading... please wait";
     LoadedMSG="GoldHEN 2.3 Loaded";
-    LoadedPL=LoadedMSG;
     PLfile = "goldhen_2.3_900.bin";
     out_jb = "AllPL";
     load_pocB();
@@ -506,7 +501,6 @@ function goldhen23(){
 function goldhen24(){
     progress.innerHTML="Goldhen 2.4 Beta 18 9 loading... please wait";
     LoadedMSG="GoldHEN 2.4 Beta 18 9 Loaded";
-    LoadedPL=LoadedMSG;
     PLfile = "goldhen.bin";
     out_jb = "AllPL";
     load_pocB();
@@ -514,29 +508,7 @@ function goldhen24(){
 function goldhen212(){
     progress.innerHTML="Goldhen 2.1.2 loading... please wait";
     LoadedMSG="GoldHEN 2.1.2 Loaded";
-    LoadedPL=LoadedMSG;
     PLfile = "goldhen_212_900.bin";
-    out_jb = "AllPL";
-    load_pocB();
-}
-
-function getQueryValue(name) {
-    var m = String(location.search || '').match(new RegExp('[?&]' + name + '=([^&]+)'));
-    return m ? decodeURIComponent(m[1]) : '';
-}
-
-function getSelectedPayload(fallback) {
-    var p = getQueryValue('payload') || fallback;
-    if (!/^[A-Za-z0-9_.-]+\.bin$/.test(p)) p = fallback;
-    return p;
-}
-
-function goldhenSelected(){
-    var label = getQueryValue('label') || 'GoldHEN';
-    progress.innerHTML=label + " loading... please wait";
-    LoadedMSG=label + " Loaded";
-    LoadedPL=LoadedMSG;
-    PLfile = getSelectedPayload("goldhen.bin");
     out_jb = "AllPL";
     load_pocB();
 }
@@ -869,7 +841,7 @@ Tools.style.display = "none";
 </script>
 </head>
 <body style='background-color:#1A1920'>
-<h1 style='text-shadow: 4px 4px 4px black;font-size:30px;text-align:center;text-shadow: 4px 4px 4px black;color:yellow;margin-top:1%;'>Vortex Prime GoldHEN 9.00 Loader</h1>
+<h1 style='text-shadow: 4px 4px 4px black;font-size:30px;text-align:center;text-shadow: 4px 4px 4px black;color:yellow;margin-top:1%;'>Karo Host Auto Exploit Compressed + New Webkit Version 9.00 fw</h1>
 <h1 id=progress style='font-size:25px;text-align:center;text-shadow: 4px 4px 4px black;color:white;'>Jailbreaking... Wait</h1>
 <div id=all style="text-align:center;display:none">
 <button id="button-Payload" onMouseOver="progress.innerHTML='GoldHen v2.1.2 by SISTR0 for PS4 9.00 Fw'" onmouseout="progress.innerHTML='Status'" type="button" onclick="goldhen212()" style='font-size:20px;text-align:center;text-shadow: 4px 4px 4px black;color:#CEC52A' > GoldHenV2.1.2</button>
@@ -979,16 +951,10 @@ Tools.style.display = "none";
 </div>
 <div class="content" >
  	    <div class="text" >
- 	        <br><span style="text-shadow: 4px 4px 4px black;" class="yellow" >Vortex Prime local GoldHEN host</span>
- 	        <br><br><br><br><span style="text-shadow: 4px 4px 4px black;" class="yellow" >Credits:</span >&nbsp;&nbsp; <a style="font-size:30px;text-align:center;text-shadow: 4px 4px 4px black;color:white;">GoldHEN and PS4 scene contributors</a>
+ 	        <br><span style="text-shadow: 4px 4px 4px black;" class="yellow" >Designed, Compiled by :</span >&nbsp;&nbsp; <span style="text-shadow: 4px 4px 4px black;" class="hue" >Karo Sharifi</span>
+ 	        <br><br><br><br><span style="text-shadow: 4px 4px 4px black;" class="yellow" >Super Special Thanks To :</span >&nbsp;&nbsp; <a style="font-size:30px;text-align:center;text-shadow: 4px 4px 4px black;color:white;">Sleirsgoevy , Al Azif , ChendoChap , SiSTRo ,Specter ,Abc ,Znullptr ,hippie68 ... </a>
 	    </div>
 </div>
-<script>
-if(location.search.indexOf('payload=')>=0){
-    all.style.display="none";
-    setTimeout(function(){goldhenSelected();},500);
-}
-</script>
 <script>
 var bzip2 = {};
 
