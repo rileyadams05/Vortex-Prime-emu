@@ -1,4 +1,5 @@
 import goldhenSupport from './data/goldhen-support.json' assert { type: 'json' };
+import goldhenManifest from './data/vortex-goldhen-manifest.json' assert { type: 'json' };
 
 const SORT_OPTIONS = {
   NEWEST: 'newest',
@@ -32,6 +33,12 @@ function init() {
     button.addEventListener('click', handleSortChange);
   });
   updateSortButtons();
+  try {
+    const last = localStorage.getItem('vortex:lastFirmware') || '';
+    if (last && state.input) {
+      state.input.placeholder = `${state.input.placeholder} (last: ${last})`;
+    }
+  } catch(e) {}
 }
 
 function handleSubmit(event) {
@@ -40,7 +47,30 @@ function handleSubmit(event) {
     return;
   }
 
-  const normalised = normaliseFirmware(state.input.value);
+  const raw = String(state.input.value || '').trim();
+  const cmd = raw.toLowerCase();
+
+  if (cmd === 'run' || cmd === 'cache' || cmd === 'clear cache') {
+    const fw = state.currentFirmware || getLastFirmware();
+    if (!fw) {
+      renderUnsupported('Please enter your firmware first.');
+      return;
+    }
+    if (cmd === 'run') {
+      runRecommendedForFirmware(fw);
+      return;
+    }
+    if (cmd === 'cache') {
+      cacheForFirmware(fw);
+      return;
+    }
+    if (cmd === 'clear cache') {
+      clearCaches().then(() => showMessage('Cache cleared (where supported).')).catch(() => showMessage('Tried to clear cache. Some browsers may not support this.'));
+      return;
+    }
+  }
+
+  const normalised = normaliseFirmware(raw);
   if (!normalised) {
     state.lastResult = null;
     renderUnsupported('Enter a valid firmware version from the local Vortex Prime browser-host set, for example 5.05 or 9.00.');
@@ -48,6 +78,7 @@ function handleSubmit(event) {
   }
 
   state.currentFirmware = normalised;
+  try { localStorage.setItem('vortex:lastFirmware', state.currentFirmware); } catch(e) {}
   state.sortMode = SORT_OPTIONS.NEWEST;
   updateSortButtons();
 
@@ -192,6 +223,7 @@ function renderSortedResults() {
   });
 
   updateToolbar(firmware, sorted.length);
+  injectActionsToolbar(firmware);
 }
 
 function renderOptionCard(item, firmware, context) {
@@ -251,27 +283,27 @@ function renderOptionCard(item, firmware, context) {
   const footer = document.createElement('div');
   footer.className = 'option-footer';
 
-  const payloadMatch = getPayloadForFirmware(item, firmware);
-  const runButton = document.createElement('button');
-  runButton.type = 'button';
-  runButton.className = 'run-button';
-  runButton.textContent = 'Run on PS4';
+  const actions = document.createElement('div');
+  actions.className = 'selector-actions';
+  const runBtn = document.createElement('button');
+  runBtn.type = 'button';
+  runBtn.textContent = 'Run';
+  runBtn.addEventListener('click', () => runRecommendedForFirmware(firmware));
+  const cacheBtn = document.createElement('button');
+  cacheBtn.type = 'button';
+  cacheBtn.textContent = 'Cache';
+  cacheBtn.addEventListener('click', () => cacheForFirmware(firmware));
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.textContent = 'Clear Cache';
+  clearBtn.addEventListener('click', () => {
+    clearCaches().then(() => showMessage('Cache cleared (where supported).')).catch(() => showMessage('Tried to clear cache. Some browsers may not support this.'));
+  });
+  actions.appendChild(runBtn);
+  actions.appendChild(cacheBtn);
+  actions.appendChild(clearBtn);
 
-  const status = document.createElement('span');
-  status.className = 'payload-status';
-
-  if (payloadMatch) {
-    runButton.addEventListener('click', () => {
-      handleRunClick({ firmware, payload: payloadMatch, item });
-    });
-    status.textContent = 'Launches directly from this host.';
-  } else {
-    runButton.setAttribute('disabled', 'disabled');
-    status.textContent = 'Payload not hosted here yet. Follow release notes for manual loading.';
-  }
-
-  footer.appendChild(runButton);
-  footer.appendChild(status);
+  footer.appendChild(actions);
   card.appendChild(footer);
 
   return card;
@@ -454,4 +486,121 @@ function formatChannel(type) {
     default:
       return type || 'Unknown';
   }
+}
+
+function getLastFirmware() {
+  try { return localStorage.getItem('vortex:lastFirmware') || state.currentFirmware || ''; } catch(e) { return state.currentFirmware || ''; }
+}
+
+function injectActionsToolbar(firmware) {
+  if (!state.toolbar) return;
+  const existing = state.toolbar.querySelector('.cmd-actions');
+  if (existing) existing.remove();
+  const group = document.createElement('div');
+  group.className = 'cmd-actions';
+  const run = document.createElement('button');
+  run.type = 'button';
+  run.textContent = 'Run';
+  run.addEventListener('click', () => runRecommendedForFirmware(firmware));
+  const cache = document.createElement('button');
+  cache.type = 'button';
+  cache.textContent = 'Cache';
+  cache.addEventListener('click', () => cacheForFirmware(firmware));
+  const clear = document.createElement('button');
+  clear.type = 'button';
+  clear.textContent = 'Clear Cache';
+  clear.addEventListener('click', () => {
+    clearCaches().then(() => showMessage('Cache cleared (where supported).')).catch(() => showMessage('Tried to clear cache. Some browsers may not support this.'));
+  });
+  group.appendChild(run);
+  group.appendChild(cache);
+  group.appendChild(clear);
+  state.toolbar.appendChild(group);
+}
+
+function runRecommendedForFirmware(firmware) {
+  const payload = pickBestPayload(firmware);
+  if (!payload) {
+    showMessage('No local payload found for this firmware.');
+    return;
+  }
+  navigateToEngine(firmware, payload);
+}
+
+function cacheForFirmware(firmware) {
+  try { sessionStorage.setItem('vortexCacheChoice', 'yes'); } catch(e) {}
+  const payload = pickBestPayload(firmware);
+  if (!payload) { showMessage('No local payload found to cache for this firmware.'); return; }
+  navigateToEngine(firmware, payload);
+}
+
+function pickBestPayload(firmware) {
+  const fw = normaliseFirmware(firmware);
+  const fwEntry = (goldhenManifest && goldhenManifest.firmwares && goldhenManifest.firmwares[fw]) || null;
+  if (!fwEntry || !Array.isArray(fwEntry.payloads) || !fwEntry.payloads.length) {
+    return null;
+  }
+  const ranked = [...fwEntry.payloads].sort((a, b) => compareGoldhenVersion(labelVersion(b.label), labelVersion(a.label)));
+  const best = ranked[0];
+  return {
+    engine: fwEntry.engine,
+    cache: fwEntry.cache,
+    ...best
+  };
+}
+
+function labelVersion(label) {
+  if (!label) return '0';
+  const m = String(label).match(/v(\d+(?:\.\d+)*(?:[a-z]\d+(?:\.\d+)*)?)/i);
+  return m ? m[1] : '0';
+}
+
+function buildEngineUrl(firmware, payload) {
+  const base = new URL('.', window.location.origin + '/ps4/');
+  const engine = new URL(payload.engine || '', base);
+  const params = engine.searchParams;
+  const mode = payload.mode || 'poc-b';
+  params.set('vortexMode', mode);
+  if (payload.when) params.set('vortexWhen', payload.when);
+  if (payload.loaded) params.set('vortexLoaded', payload.loaded);
+  if (payload.payload) params.set('vortexPayload', payload.payload);
+  if (payload.file) params.set('vortexFile', payload.file);
+  if (payload.fw) params.set('vortexFw', payload.fw);
+  return engine.toString();
+}
+
+function navigateToEngine(firmware, payload) {
+  const url = buildEngineUrl(firmware, payload);
+  window.location.href = url;
+}
+
+function clearCaches() {
+  const tasks = [];
+  if ('serviceWorker' in navigator) {
+    tasks.push(
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        return Promise.all(regs.map((r) => {
+          if (r && r.scope && r.scope.indexOf('/ps4/') !== -1) {
+            return r.unregister();
+          }
+        }));
+      })
+    );
+  }
+  if (window.caches && caches.keys) {
+    tasks.push(
+      caches.keys().then((keys) => Promise.all(keys.map((k) => /vortex-goldhen-cache-v/.test(k) ? caches.delete(k) : Promise.resolve())))
+    );
+  }
+  try { localStorage.removeItem('cachedB'); } catch(e) {}
+  try { sessionStorage.removeItem('vortexCacheChoice'); } catch(e) {}
+  return Promise.all(tasks);
+}
+
+function showMessage(text) {
+  if (!state.resultsBody) return;
+  const p = document.createElement('p');
+  p.className = 'alert';
+  p.textContent = text;
+  state.resultsBody.prepend(p);
 }
