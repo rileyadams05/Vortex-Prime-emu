@@ -101,6 +101,14 @@
   var p = (window.location && window.location.pathname) || '';
   var is900 = (p.indexOf('/ps4/vortex/900C/') !== -1) || (document && document.title === 'Vortex Prime GoldHEN Host - 9.00');
   if (!is900) { return; }
+  // Set clear, truthful initial status. Do not show fake percentages.
+  try {
+    var elInit = document.getElementById('progress');
+    if (elInit && !window.__vortexStatusSet) {
+      window.__vortexStatusSet = true;
+      elInit.textContent = 'Running exploit...\nFollow the USB prompt, then wait for GoldHEN to finish loading.\nIf nothing happens after a while, close the browser and retry.';
+    }
+  } catch(e) {}
   try {
     if (typeof window.poc === 'function') {
       var __origPoc = window.poc;
@@ -124,9 +132,10 @@
     var appCache = window.applicationCache;
     if (appCache) {
       appCache.onchecking = function(){ if (!allow) { try { appCache.abort(); } catch(e) {} } };
-      appCache.ondownloading = function(){ if (allow) { var el = progressEl(); if (el) el.textContent = 'Page Caching Started!!'; } };
-      appCache.onprogress = function(a){ if (allow) { var el = progressEl(); if (el && a && a.total) el.textContent = (Math.round(100*(a.loaded/a.total))) + '%'; } };
-      appCache.oncached = function(){ if (allow) { var el = progressEl(); if (el) el.textContent = 'Host cached successfully.'; try { localStorage.cachedB = 'yes'; } catch(e) {} } };
+      // Suppress noisy/fake progress UI. Do not alter exploit status line.
+      appCache.ondownloading = function(){};
+      appCache.onprogress = function(a){};
+      appCache.oncached = function(){ if (allow) { try { localStorage.cachedB = 'yes'; } catch(e) {} } };
       appCache.onupdateready = function(){ if (allow) { try { appCache.swapCache(); } catch(e) {} try { localStorage.cachedB = 'yes'; } catch(e) {} } };
       appCache.onnoupdate = function(){ if (allow) { try { localStorage.cachedB = 'yes'; } catch(e) {} } };
       appCache.onerror = function(){};
