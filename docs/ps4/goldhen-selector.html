@@ -459,6 +459,7 @@
               var base = option.host.replace(/index\.html$/, '');
               html = html.replace(/<head>/i, '<head><base href="' + base + '">');
               html = html.replace(/String\(location\.search\|\|''\)/g, "'" + query + "'");
+              html = html.replace(/location\.search/g, "'" + query + "'");
               writeRunner(html);
             } else {
               setStatus('Failed', 'The local exploit host returned HTTP ' + req.status + '.');
@@ -469,30 +470,6 @@
           setStatus('Failed', 'The local exploit host could not be loaded.');
         };
         req.send(null);
-      }
-
-      function buildNineRunner(option) {
-        var base = option.base || '/ps4/karo218/900New/';
-        var payload = jsValue(option.payload);
-        var label = jsValue(option.version);
-        return '<!DOCTYPE html><html manifest="' + base + 'Cache.manifest"><head>' +
-          '<meta charset="UTF-8"><base href="' + base + '">' +
-          '<title>Vortex Prime GoldHEN Runner</title>' +
-          '<style>html,body{margin:0;min-height:100%;background:#090b12;color:#f4f5f7;font-family:Arial,Helvetica,sans-serif;text-align:center;}body{padding:28px 12px;}h1{font-size:30px;color:#fff;}#progress{font-size:25px;color:#f0c542;text-shadow:4px 4px 4px #000;}p{font-size:18px;color:#c7d0e7;}</style>' +
-          '<script>if(window.applicationCache){window.applicationCache.onerror=function(){return true;};}<' + '/script>' +
-          '<script src="int64.js"><' + '/script>' +
-          '<script src="rop.js"><' + '/script>' +
-          '<script src="kexploit.js" defer><' + '/script>' +
-          '<script src="exploit.js" defer><' + '/script>' +
-          '<script>' +
-          "var PLfile='" + payload + "';var LoadedMSG='" + label + " loaded';var out_jb=\"AllPL\";" +
-          'function setProgress(v){var p=document.getElementById("progress");if(p)p.innerHTML=v;}' +
-          'window.onerror=function(msg,src,line){setProgress("Failed: "+msg);return false;};' +
-          'function load_pocB(){setProgress("Loading GoldHEN payload...");var req=new XMLHttpRequest();req.responseType="arraybuffer";req.open("GET",PLfile,true);req.onreadystatechange=function(){if(req.readyState==4){if(req.status&&req.status!=200){setProgress("Failed: payload HTTP "+req.status);return;}try{PLD=req.response;var payload_buffer=chain.syscall(477,0,PLD.byteLength*4,7,0x1002,-1,0);var pl=p.array_from_address(payload_buffer,PLD.byteLength*4);var padding=new Uint8Array(4-(req.response.byteLength%4)%4);var tmp=new Uint8Array(req.response.byteLength+padding.byteLength);tmp.set(new Uint8Array(req.response),0);tmp.set(padding,req.response.byteLength);var shellcode=new Uint32Array(tmp.buffer);pl.set(shellcode,0);var pthread=p.malloc(0x10);chain.call(libKernelBase.add32(OFFSET_lk_pthread_create),pthread,0x0,payload_buffer,0);allset();}catch(e){setProgress("Failed: "+e.message);}}};req.onerror=function(){setProgress("Failed: payload request failed");};req.send();}' +
-          'function jbdone(){var input=document.getElementById("input");if(input&&input.parentNode)input.parentNode.removeChild(input);setProgress("Running exploit...");goldhen();}' +
-          'function goldhen(){setProgress("Loading GoldHEN payload...");load_pocB();}' +
-          'function allset(){setProgress("Success: "+LoadedMSG);}' +
-          '<' + '/script></head><body style="background-color:#090b12"><h1>Vortex Prime PS4 GoldHEN Runner</h1><h1 id="progress">Preparing exploit files...</h1><p>' + escapeHtml(option.version) + ' for firmware ' + escapeHtml(option.firmware) + '</p><div id="input" style="display:none"></div></body></html>';
       }
 
       function runSelectedOption(id) {
@@ -509,11 +486,7 @@
           return false;
         }
 
-        if (option.firmware === '9.00') {
-          writeRunner(buildNineRunner(option));
-        } else {
-          loadHostPage(option);
-        }
+        loadHostPage(option);
         return false;
       }
 
