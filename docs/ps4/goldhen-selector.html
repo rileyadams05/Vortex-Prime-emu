@@ -385,7 +385,38 @@
       }
 
       function runUrl(option) {
-        if (option.firmware === '9.00') return option.host;
+        if (option.firmware === '9.00') {
+          var engine = '/ps4/vortex/900C/index.html';
+          var label = option.version || 'GoldHEN';
+          var p = String(option.payload || '').toLowerCase();
+
+          function fn(name) {
+            var qs = [];
+            qs.push('vortexMode=function');
+            qs.push('vortexPayload=' + encodeURIComponent(name));
+            qs.push('vortexWhen=after-jb');
+            qs.push('vortexLoaded=' + encodeURIComponent(label + ' Loaded'));
+            return engine + '?' + qs.join('&');
+          }
+
+          function pocb(file) {
+            var qs = [];
+            qs.push('vortexMode=poc-b');
+            qs.push('vortexFile=' + encodeURIComponent(file));
+            qs.push('vortexWhen=after-jb');
+            qs.push('vortexLoaded=' + encodeURIComponent(label + ' Loaded'));
+            return engine + '?' + qs.join('&');
+          }
+
+          if (p === 'goldhen.bin') return fn('goldhen24');
+          if (p === 'goldhen_2.2.4_900.bin') return fn('goldhen224');
+          if (p === 'goldhen_2.2.2_900.bin') return fn('goldhen222');
+          if (p === 'goldhen_212_900.bin') return fn('goldhen212');
+          if (p === 'goldhen2b2.bin') return fn('goldhen2');
+
+          // Fallback to payload-on-complete flow for other 9.00 builds
+          return pocb(option.payload);
+        }
         return option.host + '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version);
       }
 
