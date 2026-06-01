@@ -442,36 +442,6 @@
         req.send(null);
       }
 
-      function writeRunner(html) {
-        document.open();
-        document.write(html);
-        document.close();
-      }
-
-      function loadHostPage(option) {
-        var req = new XMLHttpRequest();
-        var query = '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version);
-        req.open('GET', option.host, true);
-        req.onreadystatechange = function () {
-          if (req.readyState === 4) {
-            if (req.status >= 200 && req.status < 300) {
-              var html = req.responseText;
-              var base = option.host.replace(/index\.html$/, '');
-              html = html.replace(/<head>/i, '<head><base href="' + base + '">');
-              html = html.replace(/String\(location\.search\|\|''\)/g, "'" + query + "'");
-              html = html.replace(/location\.search/g, "'" + query + "'");
-              writeRunner(html);
-            } else {
-              setStatus('Failed', 'The local exploit host returned HTTP ' + req.status + '.');
-            }
-          }
-        };
-        req.onerror = function () {
-          setStatus('Failed', 'The local exploit host could not be loaded.');
-        };
-        req.send(null);
-      }
-
       function runSelectedOption(id) {
         var option = findOption(id);
         if (!option) {
@@ -486,7 +456,7 @@
           return false;
         }
 
-        loadHostPage(option);
+        window.location.href = runUrl(option);
         return false;
       }
 
