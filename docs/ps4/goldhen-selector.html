@@ -67,12 +67,10 @@
         text-align: center;
       }
 
-      button,
-      .run {
+      button {
         display: inline-block;
         min-width: 150px;
         height: 42px;
-        line-height: 42px;
         margin: 8px 4px;
         padding: 0 14px;
         border: 0;
@@ -82,11 +80,9 @@
         font-size: 17px;
         font-weight: bold;
         text-align: center;
-        text-decoration: none;
       }
 
-      button:hover,
-      .run:hover {
+      button:hover {
         background: #5393ff;
       }
 
@@ -161,6 +157,33 @@
         color: #f2c6c6;
         font-size: 18px;
         font-weight: bold;
+      }
+
+      .status {
+        display: none;
+        margin: 16px 0;
+        padding: 14px;
+        border: 1px solid #3d4a70;
+        border-radius: 8px;
+        background: #101829;
+        color: #dfe5f7;
+        font-size: 18px;
+        line-height: 1.45;
+      }
+
+      .status strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #fff;
+      }
+
+      .host-frame {
+        position: absolute;
+        left: -9999px;
+        top: -9999px;
+        width: 1px;
+        height: 1px;
+        border: 0;
       }
     </style>
     <script>
@@ -285,19 +308,66 @@
         return 'old';
       }
 
+      function findOption(id) {
+        var i;
+        for (i = 0; i < OPTIONS.length; i++) {
+          if (optionId(OPTIONS[i]) === id) return OPTIONS[i];
+        }
+        return null;
+      }
+
+      function optionId(option) {
+        return option.firmware.replace('.', '') + '-' + option.payload.replace(/[^A-Za-z0-9]/g, '-');
+      }
+
       function runUrl(option) {
-        return option.host + '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version);
+        return option.host + '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version) + '&embedded=1';
       }
 
       function optionHtml(option) {
         var cls = statusClass(option.status);
+        var id = optionId(option);
         return '' +
           '<div class="option ' + cls + '">' +
             '<h3>' + option.version + '<span class="badge ' + cls + '">' + option.status + '</span></h3>' +
             '<div class="meta"><strong>Supported firmware:</strong> ' + option.firmware + '</div>' +
             '<div class="note">' + option.note + '</div>' +
-            '<a class="run" href="' + runUrl(option) + '">Run</a>' +
+            "<button type=\"button\" onclick=\"return runSelectedOption('" + id + "');\">Run</button>" +
           '</div>';
+      }
+
+      function setStatus(title, message) {
+        var status = document.getElementById('run-status');
+        if (!status) return;
+        status.style.display = 'block';
+        status.innerHTML = '<strong>' + title + '</strong>' + message;
+      }
+
+      function runSelectedOption(id) {
+        var option = findOption(id);
+        var frame = document.getElementById('exploit-frame');
+        if (!option || !frame) {
+          setStatus('Failed', 'Could not find that GoldHEN option. Re-check your firmware and try again.');
+          return false;
+        }
+
+        setStatus('Preparing exploit...', option.version + ' for firmware ' + option.firmware + ' is loading inside this Vortex Prime page.');
+
+        frame.onload = function () {
+          setStatus('Loading GoldHEN...', 'The local exploit host has loaded. Follow any on-screen console prompts and wait for the payload to finish.');
+        };
+
+        frame.onerror = function () {
+          setStatus('Failed', 'The local exploit host did not load. Re-check the firmware option and try again.');
+        };
+
+        frame.src = runUrl(option);
+
+        setTimeout(function () {
+          setStatus('Running payload...', 'GoldHEN is running in the background frame. If the console asks for action, follow the console prompt and wait.');
+        }, 3000);
+
+        return false;
       }
 
       function showResults() {
@@ -357,7 +427,9 @@
         </form>
       </div>
 
+      <div id="run-status" class="status"></div>
       <div id="results"></div>
+      <iframe id="exploit-frame" class="host-frame" title="Vortex Prime GoldHEN runner"></iframe>
     </div>
   </body>
 </html>
