@@ -3,94 +3,260 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PS4 GoldHEN Host - Vortex Prime</title>
+    <title>Vortex Prime PS4 GoldHEN Selector</title>
     <style>
       html,
       body {
         margin: 0;
         min-height: 100%;
-        background: #1a1920;
-        color: #fff;
-        font-family: Arial, sans-serif;
-        text-align: center;
+        background: #090b12;
+        color: #f4f5f7;
+        font-family: Arial, Helvetica, sans-serif;
       }
 
       body {
-        padding: 24px 12px;
+        padding: 22px 12px 34px;
+      }
+
+      .shell {
+        max-width: 920px;
+        margin: 0 auto;
       }
 
       h1 {
-        color: yellow;
-        font-size: 28px;
-        margin: 0 0 12px;
-        text-shadow: 4px 4px 4px #000;
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 30px;
+        text-align: center;
       }
 
-      p {
-        color: #ddd;
+      .intro {
+        margin: 0 auto 18px;
+        max-width: 760px;
+        color: #b8c0d8;
         font-size: 18px;
         line-height: 1.45;
-        margin: 8px auto 18px;
-        max-width: 820px;
+        text-align: center;
       }
 
-      form {
-        margin: 18px auto;
+      .panel {
+        margin: 16px 0;
+        padding: 16px;
+        border: 1px solid #2a3350;
+        border-radius: 8px;
+        background: #111725;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #dfe5f7;
+        font-size: 18px;
+        font-weight: bold;
       }
 
       input {
-        width: 220px;
-        height: 44px;
-        border: 2px solid #000;
-        border-radius: 8px;
-        font-size: 24px;
-        text-align: center;
+        width: 190px;
+        height: 42px;
+        padding: 0 10px;
+        border: 2px solid #3d4a70;
+        border-radius: 6px;
         background: #fff;
         color: #000;
+        font-size: 23px;
+        text-align: center;
       }
 
       button,
-      .button {
+      .run {
         display: inline-block;
-        min-width: 180px;
+        min-width: 150px;
         height: 42px;
         line-height: 42px;
-        margin: 7px;
-        padding: 0 12px;
-        border: 2px solid #000;
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.5);
-        box-shadow: 0 5px 20px 0 #fff;
-        color: yellow;
-        font-size: 20px;
+        margin: 8px 4px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 6px;
+        background: #2f7cf6;
+        color: #fff;
+        font-size: 17px;
         font-weight: bold;
+        text-align: center;
         text-decoration: none;
       }
 
       button:hover,
-      .button:hover {
-        background: #0f0f53;
-        color: #fff;
-        box-shadow: 0 5px 50px 0 #fff;
+      .run:hover {
+        background: #5393ff;
       }
 
-      .panel {
-        width: 92%;
-        max-width: 900px;
-        margin: 18px auto;
-        padding: 18px;
-        border-radius: 18px;
-        background: rgba(0, 0, 0, 0.42);
+      .section-title {
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 22px;
       }
 
-      #message {
-        min-height: 24px;
+      .option {
+        margin: 10px 0;
+        padding: 13px;
+        border: 1px solid #2a3350;
+        border-radius: 8px;
+        background: #0c111d;
+      }
+
+      .option.recommended {
+        border-color: #f0c542;
+        background: #17150b;
+      }
+
+      .option h3 {
+        margin: 0 0 8px;
         color: #fff;
-        font-size: 20px;
+        font-size: 21px;
+      }
+
+      .meta {
+        margin: 4px 0;
+        color: #c7d0e7;
+        font-size: 15px;
+      }
+
+      .note {
+        margin: 8px 0 4px;
+        color: #aeb8d4;
+        font-size: 15px;
+        line-height: 1.35;
+      }
+
+      .badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: #39435f;
+        color: #fff;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .badge.recommended {
+        background: #f0c542;
+        color: #17150b;
+      }
+
+      .badge.stable {
+        background: #1f8f5f;
+      }
+
+      .badge.beta {
+        background: #946a2c;
+      }
+
+      .badge.old {
+        background: #596172;
+      }
+
+      .empty {
+        color: #f2c6c6;
+        font-size: 18px;
         font-weight: bold;
       }
     </style>
     <script>
+      var OPTIONS = [
+        {
+          firmware: '5.05',
+          version: 'GoldHEN v2.4',
+          status: 'Recommended',
+          rank: 1,
+          payload: 'goldhen.bin',
+          host: '/ps4/karo218/Goldhen505/index.html',
+          note: 'Best default choice for 5.05. Use this first unless you specifically need an older build.'
+        },
+        {
+          firmware: '5.05',
+          version: 'GoldHEN v2.3',
+          status: 'Stable',
+          rank: 2,
+          payload: 'goldhen_2.3_505.bin',
+          host: '/ps4/karo218/Goldhen505/index.html',
+          note: 'Stable fallback for 5.05 if the recommended build gives you trouble.'
+        },
+        {
+          firmware: '5.05',
+          version: 'GoldHEN v2.4b16.2',
+          status: 'Beta',
+          rank: 3,
+          payload: 'goldhenv2.4b16.2.bin',
+          host: '/ps4/karo218/Goldhen505/index.html',
+          note: 'Beta build. Try this only if you need this specific build.'
+        },
+        {
+          firmware: '5.05',
+          version: 'GoldHEN v2.2.4',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen_2.2.4_505.bin',
+          host: '/ps4/karo218/Goldhen505/index.html',
+          note: 'Older fallback build for compatibility testing.'
+        },
+        {
+          firmware: '6.72',
+          version: 'GoldHEN v2.4',
+          status: 'Recommended',
+          rank: 1,
+          payload: 'goldhen.bin',
+          host: '/ps4/karo218/Goldhen672/index.html',
+          note: 'Best default choice for 6.72. Use this first.'
+        },
+        {
+          firmware: '6.72',
+          version: 'GoldHEN v2.3',
+          status: 'Stable',
+          rank: 2,
+          payload: 'goldhen_2.3_672.bin',
+          host: '/ps4/karo218/Goldhen672/index.html',
+          note: 'Stable fallback for 6.72 if the recommended build is not reliable on your console.'
+        },
+        {
+          firmware: '6.72',
+          version: 'GoldHEN v2.4b16.2',
+          status: 'Beta',
+          rank: 3,
+          payload: 'goldhenv2.4b16.2.bin',
+          host: '/ps4/karo218/Goldhen672/index.html',
+          note: 'Beta build. Use only when you want this exact build.'
+        },
+        {
+          firmware: '6.72',
+          version: 'GoldHEN v2.2.4',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen_2.2.4_672.bin',
+          host: '/ps4/karo218/Goldhen672/index.html',
+          note: 'Older fallback build for compatibility testing.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.4',
+          status: 'Recommended',
+          rank: 1,
+          payload: 'goldhen.bin',
+          host: '/ps4/karo218/G900/index.html',
+          note: 'Best default choice for 9.00. This uses the fast local 9.00 host.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.4b17.3',
+          status: 'Beta',
+          rank: 3,
+          payload: 'goldhen_v2.4b17.3.bin',
+          host: '/ps4/karo218/G900/index.html',
+          note: 'Alternate beta payload included with the local 9.00 host files.'
+        }
+      ];
+
       function cleanFirmware(value) {
         value = String(value || '');
         value = value.replace(/[^0-9.]/g, '');
@@ -104,7 +270,6 @@
         if (value === '5') return '5.05';
         if (value === '6') return '6.72';
         if (value === '9') return '9.00';
-
         if (value === '5.5') return '5.05';
         if (value === '6.7') return '6.72';
         if (value === '9.0') return '9.00';
@@ -112,51 +277,87 @@
         return value;
       }
 
-      function hostForFirmware(firmware) {
-        firmware = cleanFirmware(firmware);
-        if (firmware === '5.05') return '/ps4/karo218/Goldhen505/index.html';
-        if (firmware === '6.72') return '/ps4/karo218/Goldhen672/index.html';
-        if (firmware === '9.00') return '/ps4/karo218/G900/index.html';
-        return '';
+      function statusClass(status) {
+        status = String(status || '').toLowerCase();
+        if (status === 'recommended') return 'recommended';
+        if (status === 'stable') return 'stable';
+        if (status === 'beta') return 'beta';
+        return 'old';
       }
 
-      function openSelectedHost() {
-        var input = document.getElementById('firmware');
-        var message = document.getElementById('message');
-        var firmware = cleanFirmware(input ? input.value : '');
-        var host = hostForFirmware(firmware);
+      function runUrl(option) {
+        return option.host + '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version);
+      }
 
-        if (host) {
-          if (message) message.innerHTML = 'Opening KARO218 GoldHEN host for firmware ' + firmware + '...';
-          window.location.href = host;
+      function optionHtml(option) {
+        var cls = statusClass(option.status);
+        return '' +
+          '<div class="option ' + cls + '">' +
+            '<h3>' + option.version + '<span class="badge ' + cls + '">' + option.status + '</span></h3>' +
+            '<div class="meta"><strong>Supported firmware:</strong> ' + option.firmware + '</div>' +
+            '<div class="note">' + option.note + '</div>' +
+            '<a class="run" href="' + runUrl(option) + '">Run</a>' +
+          '</div>';
+      }
+
+      function showResults() {
+        var input = document.getElementById('firmware');
+        var results = document.getElementById('results');
+        var firmware = cleanFirmware(input ? input.value : '');
+        var matches = [];
+        var i;
+
+        for (i = 0; i < OPTIONS.length; i++) {
+          if (OPTIONS[i].firmware === firmware) matches.push(OPTIONS[i]);
+        }
+
+        matches.sort(function (a, b) {
+          if (a.rank !== b.rank) return a.rank - b.rank;
+          return a.version > b.version ? 1 : -1;
+        });
+
+        if (!matches.length) {
+          results.innerHTML = '<div class="panel"><p class="empty">No compatible GoldHEN build found for this firmware.</p></div>';
           return false;
         }
 
-        if (message) {
-          message.innerHTML = 'No direct KARO218 GoldHEN page is wired for "' + firmware + '". Use 5.05, 6.72, or 9.00.';
+        var recommended = '';
+        var other = '';
+        for (i = 0; i < matches.length; i++) {
+          if (matches[i].status === 'Recommended') {
+            recommended += optionHtml(matches[i]);
+          } else {
+            other += optionHtml(matches[i]);
+          }
         }
+
+        results.innerHTML =
+          '<div class="panel">' +
+            '<h2 class="section-title">Recommended for your firmware</h2>' +
+            recommended +
+          '</div>' +
+          '<div class="panel">' +
+            '<h2 class="section-title">Other compatible options</h2>' +
+            (other || '<p class="note">No other compatible options are currently hosted for this firmware.</p>') +
+          '</div>';
         return false;
       }
     </script>
   </head>
   <body>
-    <h1>Vortex Prime PS4 GoldHEN Host</h1>
-    <p>This page opens the restored KARO218 GoldHEN exploit host files from the public Vortex Prime site.</p>
+    <div class="shell">
+      <h1>Vortex Prime PS4 GoldHEN Selector</h1>
+      <p class="intro">Enter your PS4 firmware to see compatible GoldHEN builds hosted from Vortex Prime. The recommended option is the best first choice.</p>
 
-    <div class="panel">
-      <form onsubmit="return openSelectedHost();">
-        <p>Type your PS4 firmware:</p>
-        <input id="firmware" name="firmware" type="text" value="" placeholder="9.00">
-        <button type="submit">Open Host</button>
-      </form>
-      <div id="message">Supported direct hosts: 5.05, 6.72, 9.00</div>
-    </div>
+      <div class="panel">
+        <form onsubmit="return showResults();">
+          <label for="firmware">Enter your PS4 firmware</label>
+          <input id="firmware" name="firmware" type="text" value="" placeholder="9.00">
+          <button type="submit">Check Compatibility</button>
+        </form>
+      </div>
 
-    <div class="panel">
-      <p>Direct KARO218 GoldHEN hosts:</p>
-      <a class="button" href="/ps4/karo218/Goldhen505/index.html">GoldHEN 5.05</a>
-      <a class="button" href="/ps4/karo218/Goldhen672/index.html">GoldHEN 6.72</a>
-      <a class="button" href="/ps4/karo218/G900/index.html">GoldHEN 9.00</a>
+      <div id="results"></div>
     </div>
   </body>
 </html>
