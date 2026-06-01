@@ -535,6 +535,127 @@
         return false;
       }
     </script>
+    <script>
+      (function(){
+        var LAST_FW_KEY = 'vortex:lastFirmware';
+
+        function getLastFirmware(){
+          try { return localStorage.getItem(LAST_FW_KEY) || ''; } catch(e) { return ''; }
+        }
+
+        function setLastFirmware(fw){
+          try { localStorage.setItem(LAST_FW_KEY, fw || ''); } catch(e) {}
+        }
+
+        function matchesFirmware(value){
+          var v = String(value || '').trim();
+          return /^(?:\d{1,2})(?:\.\d{1,2})?$/.test(v) || /^(?:\d{3})$/.test(v);
+        }
+
+        function runRecommendedForFirmware(fw){
+          var i, matches = [];
+          for (i = 0; i < OPTIONS.length; i++) {
+            if (OPTIONS[i].firmware === fw) matches.push(OPTIONS[i]);
+          }
+          if (!matches.length) {
+            setStatus('Not found', 'Please enter your firmware first (example: 9.00).');
+            return false;
+          }
+          matches.sort(function (a, b) {
+            var aRec = a.status === 'Recommended' ? 0 : 1;
+            var bRec = b.status === 'Recommended' ? 0 : 1;
+            if (aRec !== bRec) return aRec - bRec;
+            if (a.rank !== b.rank) return a.rank - b.rank;
+            return (a.version > b.version) ? 1 : -1;
+          });
+          var best = matches[0];
+          return runSelectedOption(optionId(best));
+        }
+
+        function clearCaches(){
+          var tasks = [];
+          if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+            tasks.push(navigator.serviceWorker.getRegistrations().then(function(regs){
+              return Promise.all((regs||[]).map(function(r){
+                if (r && r.scope && r.scope.indexOf('/ps4/') !== -1) { return r.unregister(); }
+              }));
+            }));
+          }
+          if (window.caches && caches.keys) {
+            tasks.push(caches.keys().then(function(keys){
+              return Promise.all(keys.map(function(k){
+                return (/vortex-goldhen-cache-v/.test(k)) ? caches.delete(k) : Promise.resolve(false);
+              }));
+            }));
+          }
+          try { localStorage.removeItem('cachedB'); } catch(e) {}
+          try { sessionStorage.removeItem('vortexCacheChoice'); } catch(e) {}
+          return Promise.all(tasks);
+        }
+
+        function handleCommand(cmd){
+          var fw = getLastFirmware();
+          if (!fw) {
+            setStatus('Enter firmware first', 'Type your firmware (for example, 9.00) and press Enter.');
+            return false;
+          }
+          if (cmd === 'run') {
+            return runRecommendedForFirmware(fw);
+          }
+          if (cmd === 'cache') {
+            try { sessionStorage.setItem('vortexCacheChoice', 'yes'); } catch(e) {}
+            return runRecommendedForFirmware(fw);
+          }
+          if (cmd === 'clear cache') {
+            clearCaches().then(function(){
+              setStatus('Cache', 'Cache cleared (where supported).');
+            }).catch(function(){
+              setStatus('Cache', 'Tried to clear cache. Some browsers may not support this.');
+            });
+            return false;
+          }
+          return false;
+        }
+
+        function onEnter(e){
+          var key = e.key || e.keyCode;
+          if (key === 'Enter' || key === 13) {
+            e.preventDefault();
+            var input = document.getElementById('firmware');
+            var raw = (input && input.value) ? String(input.value).trim() : '';
+            var lc = raw.toLowerCase();
+            if (lc === 'run' || lc === 'cache' || lc === 'clear cache') {
+              return handleCommand(lc);
+            }
+            if (matchesFirmware(raw)) {
+              var cleaned = raw.replace(/[^0-9.]/g, '');
+              if (cleaned === '505') cleaned = '5.05';
+              else if (cleaned === '672') cleaned = '6.72';
+              else if (cleaned === '900') cleaned = '9.00';
+              else if (/^\d$/.test(cleaned)) cleaned = cleaned + '.00';
+              setLastFirmware(cleaned);
+              return showResults();
+            }
+            setStatus('Invalid input', 'Type a firmware like 9.00 or a command: run, cache, clear cache.');
+            return false;
+          }
+        }
+
+        function onLoad(){
+          var input = document.getElementById('firmware');
+          if (input && input.addEventListener) {
+            input.addEventListener('keydown', onEnter, false);
+            var last = getLastFirmware();
+            if (last && !input.value) {
+              input.setAttribute('placeholder', (input.getAttribute('placeholder')||'') + ' (last: ' + last + ')');
+            }
+          }
+        }
+
+        if (window.addEventListener) window.addEventListener('load', onLoad, false);
+        else if (window.attachEvent) window.attachEvent('onload', onLoad);
+      })();
+    </script>
   </head>
   <body>
     <div class="shell">
@@ -545,8 +666,17 @@
         <form onsubmit="return showResults();">
           <label for="firmware">Enter your PS4 firmware</label>
           <input id="firmware" name="firmware" type="text" value="" placeholder="9.00">
-          <button type="submit">Check Compatibility</button>
         </form>
+        <div class="note" id="selector-help">
+          <p><strong>How to use</strong></p>
+          <p>Type your PS4 firmware and press Enter. Example: <code>9.00</code></p>
+          <p>Commands (type then press Enter):<br>
+            <code>run</code> — run the recommended GoldHEN exploit<br>
+            <code>cache</code> — optional cache for faster/offline loading<br>
+            <code>clear cache</code> — reset cached host files
+          </p>
+          <p><em>Caching is optional. You do not need to cache before running.</em></p>
+        </div>
       </div>
 
       <div id="run-status" class="status"></div>
