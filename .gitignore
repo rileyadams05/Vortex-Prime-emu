@@ -5,6 +5,12 @@ webMAN-MOD/
 *.log
 MY-google-ID.json
 MY-google-ID.*
+MY-google-ID/
+get-token-and-set-secrets.mjs
+node_modules/.cache/
+For Vortex-Prime-emu/
+store test/
+store test.7z
 companion-server/.env
 companion-server/data/
 companion-server/tmp/
