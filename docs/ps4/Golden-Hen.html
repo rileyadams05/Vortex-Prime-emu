@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vortex Prime PS4 GoldHEN Selector</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #090b12;
+        color: #f4f5f7;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        padding: 22px 12px 34px;
+      }
+
+      .shell {
+        max-width: 920px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 30px;
+        text-align: center;
+      }
+
+      .intro {
+        margin: 0 auto 18px;
+        max-width: 760px;
+        color: #b8c0d8;
+        font-size: 18px;
+        line-height: 1.45;
+        text-align: center;
+      }
+
+      .panel {
+        margin: 16px 0;
+        padding: 16px;
+        border: 1px solid #2a3350;
+        border-radius: 8px;
+        background: #111725;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #dfe5f7;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      input {
+        width: 190px;
+        height: 42px;
+        padding: 0 10px;
+        border: 2px solid #3d4a70;
+        border-radius: 6px;
+        background: #fff;
+        color: #000;
+        font-size: 23px;
+        text-align: center;
+      }
+
+      button {
+        display: inline-block;
+        min-width: 150px;
+        height: 42px;
+        margin: 8px 4px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 6px;
+        background: #2f7cf6;
+        color: #fff;
+        font-size: 17px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      button:hover {
+        background: #5393ff;
+      }
+
+      .section-title {
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 22px;
+      }
+
+      .option {
+        margin: 10px 0;
+        padding: 13px;
+        border: 1px solid #2a3350;
+        border-radius: 8px;
+        background: #0c111d;
+      }
+
+      .option.recommended {
+        border-color: #f0c542;
+        background: #17150b;
+      }
+
+      .option h3 {
+        margin: 0 0 8px;
+        color: #fff;
+        font-size: 21px;
+      }
+
+      .meta {
+        margin: 4px 0;
+        color: #c7d0e7;
+        font-size: 15px;
+      }
+
+      .note {
+        margin: 8px 0 4px;
+        color: #aeb8d4;
+        font-size: 15px;
+        line-height: 1.35;
+      }
+
+      .badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: #39435f;
+        color: #fff;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .badge.recommended {
+        background: #f0c542;
+        color: #17150b;
+      }
+
+      .badge.stable {
+        background: #1f8f5f;
+      }
+
+      .badge.beta {
+        background: #946a2c;
+      }
+
+      .badge.old {
+        background: #596172;
+      }
+
+      .empty {
+        color: #f2c6c6;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .status {
+        display: none;
+        margin: 16px 0;
+        padding: 14px;
+        border: 1px solid #3d4a70;
+        border-radius: 8px;
+        background: #101829;
+        color: #dfe5f7;
+        font-size: 18px;
+        line-height: 1.45;
+      }
+
+      .status strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #fff;
+      }
+
+    </style>
+    <script>
+      var OPTIONS = [
+        {
+          firmware: '5.05',
+          version: 'GoldHEN v2.4',
+          status: 'Recommended',
+          rank: 1,
+          payload: 'goldhen.bin',
+          host: '/ps4/karo218/Goldhen505/index.html',
+          note: 'Best default choice for 5.05. Use this first unless you specifically need an older build.'
+        },
+        {
+          firmware: '5.05',
+          version: 'GoldHEN v2.3',
+          status: 'Stable',
+          rank: 2,
+          payload: 'goldhen_2.3_505.bin',
+          host: '/ps4/karo218/Goldhen505/index.html',
+          note: 'Stable fallback for 5.05 if the recommended build gives you trouble.'
+        },
+        {
+          firmware: '5.05',
+          version: 'GoldHEN v2.4b16.2',
+          status: 'Beta',
+          rank: 3,
+          payload: 'goldhenv2.4b16.2.bin',
+          host: '/ps4/karo218/Goldhen505/index.html',
+          note: 'Beta build. Try this only if you need this specific build.'
+        },
+        {
+          firmware: '5.05',
+          version: 'GoldHEN v2.2.4',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen_2.2.4_505.bin',
+          host: '/ps4/karo218/Goldhen505/index.html',
+          note: 'Older fallback build for compatibility testing.'
+        },
+        {
+          firmware: '6.72',
+          version: 'GoldHEN v2.4',
+          status: 'Recommended',
+          rank: 1,
+          payload: 'goldhen.bin',
+          host: '/ps4/karo218/Goldhen672/index.html',
+          note: 'Best default choice for 6.72. Use this first.'
+        },
+        {
+          firmware: '6.72',
+          version: 'GoldHEN v2.3',
+          status: 'Stable',
+          rank: 2,
+          payload: 'goldhen_2.3_672.bin',
+          host: '/ps4/karo218/Goldhen672/index.html',
+          note: 'Stable fallback for 6.72 if the recommended build is not reliable on your console.'
+        },
+        {
+          firmware: '6.72',
+          version: 'GoldHEN v2.4b16.2',
+          status: 'Beta',
+          rank: 3,
+          payload: 'goldhenv2.4b16.2.bin',
+          host: '/ps4/karo218/Goldhen672/index.html',
+          note: 'Beta build. Use only when you want this exact build.'
+        },
+        {
+          firmware: '6.72',
+          version: 'GoldHEN v2.2.4',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen_2.2.4_672.bin',
+          host: '/ps4/karo218/Goldhen672/index.html',
+          note: 'Older fallback build for compatibility testing.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.4b18.9',
+          status: 'Recommended',
+          rank: 1,
+          payload: 'goldhen.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Best default choice for 9.00 from the full local 9.00 GoldHEN host set.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.4b17.3',
+          status: 'Beta',
+          rank: 3,
+          payload: 'goldhen_v2.4b17.3.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Alternate beta payload included with the local 9.00 files.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.4b16',
+          status: 'Beta',
+          rank: 3,
+          payload: 'goldhen_2.4_b16_900.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Older beta build included in the complete 9.00 host files.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.3',
+          status: 'Stable',
+          rank: 2,
+          payload: 'goldhen_2.3_900.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Stable fallback for 9.00 if the recommended beta build is unreliable.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.2.4',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen_2.2.4_900.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Older fallback build from the complete 9.00 host files.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.2.3',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen_2.2.3_900.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Legacy 9.00 build kept for compatibility testing.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.2.2',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen_2.2.2_900.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Legacy 9.00 build kept for compatibility testing.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.1.2',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen_212_900.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Legacy 9.00 build from the original host set.'
+        },
+        {
+          firmware: '9.00',
+          version: 'GoldHEN v2.0b2',
+          status: 'Old',
+          rank: 4,
+          payload: 'goldhen2b2.bin',
+          host: '/ps4/karo218/900New/index.html',
+          base: '/ps4/karo218/900New/',
+          note: 'Very old beta build. Use only if you specifically need it.'
+        }
+      ];
+
+      function cleanFirmware(value) {
+        value = String(value || '');
+        value = value.replace(/[^0-9.]/g, '');
+        value = value.replace(/\.+/g, '.');
+        value = value.replace(/^\./, '');
+        value = value.replace(/\.$/, '');
+
+        if (value === '505') return '5.05';
+        if (value === '672') return '6.72';
+        if (value === '900') return '9.00';
+        if (value === '5') return '5.05';
+        if (value === '6') return '6.72';
+        if (value === '9') return '9.00';
+        if (value === '5.5') return '5.05';
+        if (value === '6.7') return '6.72';
+        if (value === '9.0') return '9.00';
+
+        return value;
+      }
+
+      function statusClass(status) {
+        status = String(status || '').toLowerCase();
+        if (status === 'recommended') return 'recommended';
+        if (status === 'stable') return 'stable';
+        if (status === 'beta') return 'beta';
+        return 'old';
+      }
+
+      function findOption(id) {
+        var i;
+        for (i = 0; i < OPTIONS.length; i++) {
+          if (optionId(OPTIONS[i]) === id) return OPTIONS[i];
+        }
+        return null;
+      }
+
+      function optionId(option) {
+        return option.firmware.replace('.', '') + '-' + option.payload.replace(/[^A-Za-z0-9]/g, '-');
+      }
+
+      function runUrl(option) {
+        if (option.firmware === '9.00') {
+          var engine = '/ps4/vortex/900C/index.html';
+          var label = option.version || 'GoldHEN';
+          var p = String(option.payload || '').toLowerCase();
+
+          function fn(name) {
+            var qs = [];
+            qs.push('vortexMode=function');
+            qs.push('vortexPayload=' + encodeURIComponent(name));
+            qs.push('vortexWhen=after-jb');
+            qs.push('vortexLoaded=' + encodeURIComponent(label + ' Loaded'));
+            return engine + '?' + qs.join('&');
+          }
+
+          function pocb(file) {
+            var qs = [];
+            qs.push('vortexMode=poc-b');
+            qs.push('vortexFile=' + encodeURIComponent(file));
+            qs.push('vortexWhen=after-jb');
+            qs.push('vortexLoaded=' + encodeURIComponent(label + ' Loaded'));
+            return engine + '?' + qs.join('&');
+          }
+
+          if (p === 'goldhen.bin') return fn('goldhen24');
+          if (p === 'goldhen_2.2.4_900.bin') return fn('goldhen224');
+          if (p === 'goldhen_2.2.2_900.bin') return fn('goldhen222');
+          if (p === 'goldhen_212_900.bin') return fn('goldhen212');
+          if (p === 'goldhen2b2.bin') return fn('goldhen2');
+
+          return pocb(option.payload);
+        }
+        return option.host + '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version);
+      }
+
+      function optionHtml(option) {
+        var cls = statusClass(option.status);
+        var id = optionId(option);
+        return '' +
+          '<div class="option ' + cls + '">' +
+            '<h3>' + option.version + '<span class="badge ' + cls + '">' + option.status + '</span></h3>' +
+            '<div class="meta"><strong>Supported firmware:</strong> ' + option.firmware + '</div>' +
+            '<div class="note">' + option.note + '</div>' +
+            "<button type=\"button\" onclick=\"return runSelectedOption('" + id + "');\">Run</button>" +
+          '</div>';
+      }
+
+      function setStatus(title, message) {
+        var status = document.getElementById('run-status');
+        if (!status) return;
+        status.style.display = 'block';
+        status.innerHTML = '<strong>' + title + '</strong>' + message;
+      }
+
+      function isPS4Browser() {
+        return /PlayStation 4/i.test(navigator.userAgent || '');
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function jsValue(value) {
+        return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r/g, '').replace(/\n/g, '\\n');
+      }
+
+      function payloadPath(option) {
+        var base = option.base || option.host.replace(/index\.html$/, '');
+        return base + option.payload;
+      }
+
+      function verifyPayload(option) {
+        var req = new XMLHttpRequest();
+        req.open('GET', payloadPath(option), true);
+        req.onreadystatechange = function () {
+          if (req.readyState === 4) {
+            if (req.status >= 200 && req.status < 300) {
+              setStatus('Desktop check passed', option.version + ' payload is reachable from the public Vortex Prime path. Open this page on the PS4 to run the exploit.');
+            } else {
+              setStatus('Failed', 'The payload file returned HTTP ' + req.status + ': ' + payloadPath(option));
+            }
+          }
+        };
+        req.onerror = function () {
+          setStatus('Failed', 'Could not reach payload file: ' + payloadPath(option));
+        };
+        req.send(null);
+      }
+
+      function runSelectedOption(id) {
+        var option = findOption(id);
+        if (!option) {
+          setStatus('Failed', 'Could not find that GoldHEN option. Re-check your firmware and try again.');
+          return false;
+        }
+
+        setStatus('Preparing exploit files...', option.version + ' for firmware ' + option.firmware + ' is being prepared from local Vortex Prime files.');
+
+        if (!isPS4Browser()) {
+          verifyPayload(option);
+          return false;
+        }
+
+        window.location.href = runUrl(option);
+        return false;
+      }
+
+      function showResults() {
+        var input = document.getElementById('firmware');
+        var results = document.getElementById('results');
+        var firmware = cleanFirmware(input ? input.value : '');
+        var matches = [];
+        var i;
+
+        for (i = 0; i < OPTIONS.length; i++) {
+          if (OPTIONS[i].firmware === firmware) matches.push(OPTIONS[i]);
+        }
+
+        matches.sort(function (a, b) {
+          if (a.rank !== b.rank) return a.rank - b.rank;
+          return a.version > b.version ? 1 : -1;
+        });
+
+        if (!matches.length) {
+          results.innerHTML = '<div class="panel"><p class="empty">No compatible GoldHEN build found for this firmware.</p></div>';
+          return false;
+        }
+
+        var recommended = '';
+        var other = '';
+        for (i = 0; i < matches.length; i++) {
+          if (matches[i].status === 'Recommended') {
+            recommended += optionHtml(matches[i]);
+          } else {
+            other += optionHtml(matches[i]);
+          }
+        }
+
+        results.innerHTML =
+          '<div class="panel">' +
+            '<h2 class="section-title">Recommended for your firmware</h2>' +
+            recommended +
+          '</div>' +
+          '<div class="panel">' +
+            '<h2 class="section-title">Other compatible options</h2>' +
+            (other || '<p class="note">No other compatible options are currently hosted for this firmware.</p>') +
+          '</div>';
+        return false;
+      }
+    </script>
+    <script>
+      (function(){
+        var LAST_FW_KEY = 'vortex:lastFirmware';
+
+        function getLastFirmware(){
+          try { return localStorage.getItem(LAST_FW_KEY) || ''; } catch(e) { return ''; }
+        }
+
+        function setLastFirmware(fw){
+          try { localStorage.setItem(LAST_FW_KEY, fw || ''); } catch(e) {}
+        }
+
+        function matchesFirmware(value){
+          var v = String(value || '').trim();
+          return /^(?:\d{1,2})(?:\.\d{1,2})?$/.test(v) || /^(?:\d{3})$/.test(v);
+        }
+
+        function runRecommendedForFirmware(fw){
+          var i, matches = [];
+          for (i = 0; i < OPTIONS.length; i++) {
+            if (OPTIONS[i].firmware === fw) matches.push(OPTIONS[i]);
+          }
+          if (!matches.length) {
+            setStatus('Not found', 'Please enter your firmware first (example: 9.00).');
+            return false;
+          }
+          matches.sort(function (a, b) {
+            var aRec = a.status === 'Recommended' ? 0 : 1;
+            var bRec = b.status === 'Recommended' ? 0 : 1;
+            if (aRec !== bRec) return aRec - bRec;
+            if (a.rank !== b.rank) return a.rank - b.rank;
+            return (a.version > b.version) ? 1 : -1;
+          });
+          var best = matches[0];
+          return runSelectedOption(optionId(best));
+        }
+
+        function clearCaches(){
+          var tasks = [];
+          if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+            tasks.push(navigator.serviceWorker.getRegistrations().then(function(regs){
+              return Promise.all((regs||[]).map(function(r){
+                if (r && r.scope && r.scope.indexOf('/ps4/') !== -1) { return r.unregister(); }
+              }));
+            }));
+          }
+          if (window.caches && caches.keys) {
+            tasks.push(caches.keys().then(function(keys){
+              return Promise.all(keys.map(function(k){
+                return (/vortex-goldhen-cache-v/.test(k)) ? caches.delete(k) : Promise.resolve(false);
+              }));
+            }));
+          }
+          try { localStorage.removeItem('cachedB'); } catch(e) {}
+          try { sessionStorage.removeItem('vortexCacheChoice'); } catch(e) {}
+          return Promise.all(tasks);
+        }
+
+        function handleCommand(cmd){
+          var fw = getLastFirmware();
+          if (!fw) {
+            setStatus('Enter firmware first', 'Type your firmware (for example, 9.00) and press Enter.');
+            return false;
+          }
+          if (cmd === 'run') {
+            return runRecommendedForFirmware(fw);
+          }
+          if (cmd === 'cache') {
+            try { sessionStorage.setItem('vortexCacheChoice', 'yes'); } catch(e) {}
+            return runRecommendedForFirmware(fw);
+          }
+          if (cmd === 'clear cache') {
+            clearCaches().then(function(){
+              setStatus('Cache', 'Cache cleared (where supported).');
+            }).catch(function(){
+              setStatus('Cache', 'Tried to clear cache. Some browsers may not support this.');
+            });
+            return false;
+          }
+          return false;
+        }
+
+        function onEnter(e){
+          var key = e.key || e.keyCode;
+          if (key === 'Enter' || key === 13) {
+            e.preventDefault();
+            var input = document.getElementById('firmware');
+            var raw = (input && input.value) ? String(input.value).trim() : '';
+            var lc = raw.toLowerCase();
+            if (lc === 'run' || lc === 'cache' || lc === 'clear cache') {
+              return handleCommand(lc);
+            }
+            if (matchesFirmware(raw)) {
+              var cleaned = raw.replace(/[^0-9.]/g, '');
+              if (cleaned === '505') cleaned = '5.05';
+              else if (cleaned === '672') cleaned = '6.72';
+              else if (cleaned === '900') cleaned = '9.00';
+              else if (/^\d$/.test(cleaned)) cleaned = cleaned + '.00';
+              setLastFirmware(cleaned);
+              return showResults();
+            }
+            setStatus('Invalid input', 'Type a firmware like 9.00 or a command: run, cache, clear cache.');
+            return false;
+          }
+        }
+
+        function onLoad(){
+          var input = document.getElementById('firmware');
+          if (input && input.addEventListener) {
+            input.addEventListener('keydown', onEnter, false);
+            var last = getLastFirmware();
+            if (last && !input.value) {
+              input.setAttribute('placeholder', (input.getAttribute('placeholder')||'') + ' (last: ' + last + ')');
+            }
+          }
+        }
+
+        if (window.addEventListener) window.addEventListener('load', onLoad, false);
+        else if (window.attachEvent) window.attachEvent('onload', onLoad);
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="shell">
+      <h1>Vortex Prime PS4 GoldHEN Selector</h1>
+      <p class="intro">Enter your PS4 firmware to see compatible GoldHEN builds hosted from Vortex Prime. The recommended option is the best first choice.</p>
+
+      <div class="panel">
+        <form onsubmit="return showResults();">
+          <label for="firmware">Enter your PS4 firmware</label>
+          <input id="firmware" name="firmware" type="text" value="" placeholder="9.00">
+        </form>
+        <div class="note" id="selector-help">
+          <p><strong>How to use</strong></p>
+          <p>Type your PS4 firmware and press Enter. Example: <code>9.00</code></p>
+          <p>Commands (type then press Enter):<br>
+            <code>run</code> — run the recommended GoldHEN exploit<br>
+            <code>cache</code> — optional cache for faster/offline loading<br>
+            <code>clear cache</code> — reset cached host files
+          </p>
+          <p><em>Caching is optional. You do not need to cache before running.</em></p>
+        </div>
+      </div>
+
+      <div id="run-status" class="status"></div>
+      <div id="results"></div>
+    </div>
+  </body>
+</html>

@@ -1,7 +1,8 @@
-const CACHE_NAME = 'vortex-goldhen-cache-v4';
+const CACHE_NAME = 'vortex-goldhen-cache-v5';
 const RESOURCES = [
   './',
   './index.html',
+  './Golden-Hen.html',
   './goldhen-selector.html',
   './assets/goldhen-selector.css',
   './assets/goldhen-selector.js',
