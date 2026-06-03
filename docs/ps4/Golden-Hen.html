@@ -400,36 +400,9 @@
       }
 
       function runUrl(option) {
+        // For 9.00, open the selected build's host directly instead of forcing 900C
         if (option.firmware === '9.00') {
-          var engine = '/ps4/vortex/900C/index.html';
-          var label = option.version || 'GoldHEN';
-          var p = String(option.payload || '').toLowerCase();
-
-          function fn(name) {
-            var qs = [];
-            qs.push('vortexMode=function');
-            qs.push('vortexPayload=' + encodeURIComponent(name));
-            qs.push('vortexWhen=after-jb');
-            qs.push('vortexLoaded=' + encodeURIComponent(label + ' Loaded'));
-            return engine + '?' + qs.join('&');
-          }
-
-          function pocb(file) {
-            var qs = [];
-            qs.push('vortexMode=poc-b');
-            qs.push('vortexFile=' + encodeURIComponent(file));
-            qs.push('vortexWhen=after-jb');
-            qs.push('vortexLoaded=' + encodeURIComponent(label + ' Loaded'));
-            return engine + '?' + qs.join('&');
-          }
-
-          if (p === 'goldhen.bin') return fn('goldhen24');
-          if (p === 'goldhen_2.2.4_900.bin') return fn('goldhen224');
-          if (p === 'goldhen_2.2.2_900.bin') return fn('goldhen222');
-          if (p === 'goldhen_212_900.bin') return fn('goldhen212');
-          if (p === 'goldhen2b2.bin') return fn('goldhen2');
-
-          return pocb(option.payload);
+          return option.host;
         }
         return option.host + '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version);
       }
@@ -449,6 +422,7 @@
             '<div class="meta"><strong>Supported firmware:</strong> ' + option.firmware + '</div>' +
             '<div class="note">' + option.note + '</div>' +
             "<button type=\"button\" onclick=\"return runSelectedOption('" + id + "');\">Run</button>" +
+            "<button type=\"button\" onclick=\"return cacheSelectedOption('" + id + "');\">Cache</button>" +
           '</div>';
       }
 
@@ -457,6 +431,22 @@
         if (!status) return;
         status.style.display = 'block';
         status.innerHTML = '<strong>' + title + '</strong>' + message;
+      }
+
+      function showRefreshButton() {
+        var status = document.getElementById('run-status');
+        if (!status) return;
+        if (document.getElementById('refresh-page-btn')) return;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = 'refresh-page-btn';
+        btn.textContent = 'Refresh Page';
+        btn.onclick = function () {
+          try { window.location.href = '/ps4/Golden-Hen.html?fresh=' + Date.now(); }
+          catch (e) { window.location.reload(true); }
+          return false;
+        };
+        status.appendChild(btn);
       }
 
       function isPS4Browser() {
@@ -474,6 +464,15 @@
       function payloadPath(option) {
         var base = option.base || option.host.replace(/index\.html$/, '');
         return base + option.payload;
+      }
+
+      function hostBase(option) {
+        return option.base || option.host.replace(/index\.html$/, '');
+      }
+
+      function cacheUrl(option) {
+        // Use the host index: many hosts install cache via AppCache manifest or redirect to a cache page if needed
+        return option.host;
       }
 
       function verifyPayload(option) {
@@ -509,6 +508,20 @@
         }
 
         window.location.href = runUrl(option);
+        return false;
+      }
+
+      function cacheSelectedOption(id) {
+        var option = findOption(id);
+        if (!option) {
+          setStatus('Failed', 'Could not find that GoldHEN option. Re-check your firmware and try again.');
+          return false;
+        }
+        setStatus('Preparing cache...', option.version + ' host files will be cached for firmware ' + option.firmware + '.');
+        try { sessionStorage.setItem('vortexCacheChoice', 'yes'); } catch (e) {}
+        // Prefer a dedicated cache page when available (notably 9.00), otherwise the host may install cache via its manifest
+        var url = cacheUrl(option);
+        window.location.href = url;
         return false;
       }
 
@@ -623,30 +636,36 @@
           return /^(?:\d{1,2})(?:\.\d{1,2})?$/.test(v) || /^(?:\d{3})$/.test(v);
         }
 
-        function runRecommendedForFirmware(fw){
-        var i, matches = [];
-        for (i = 0; i < OPTIONS.length; i++) {
-          if (OPTIONS[i].firmware === fw) matches.push(OPTIONS[i]);
+        function recommendedOptionForFirmware(fw){
+          var i, matches = [];
+          for (i = 0; i < OPTIONS.length; i++) {
+            if (OPTIONS[i].firmware === fw) matches.push(OPTIONS[i]);
+          }
+          if (!matches.length) return null;
+          var rec = matches.filter(function(m){ return m.status === 'Recommended'; });
+          if (rec.length) {
+            rec.sort(function(a,b){ return compareGoldhenVersion(labelVersion(b.version), labelVersion(a.version)); });
+            return rec[0];
+          }
+          var stable = matches.filter(function(m){ return String(m.channel || '').toLowerCase() === 'stable'; });
+          if (stable.length) {
+            stable.sort(function(a,b){ return compareGoldhenVersion(labelVersion(b.version), labelVersion(a.version)); });
+            return stable[0];
+          }
+          matches.sort(function(a,b){ return compareGoldhenVersion(labelVersion(b.version), labelVersion(a.version)); });
+          return matches[0];
         }
-        if (!matches.length) {
-          setStatus('Not found', 'Please enter your firmware first (example: 9.00).');
-          return false;
-        }
-        var rec = matches.filter(function(m){ return m.status === 'Recommended'; });
-        if (rec.length) {
-          rec.sort(function(a,b){ return compareGoldhenVersion(labelVersion(b.version), labelVersion(a.version)); });
-          return runSelectedOption(optionId(rec[0]));
-        }
-        var stable = matches.filter(function(m){ return String(m.channel || '').toLowerCase() === 'stable'; });
-        if (stable.length) {
-          stable.sort(function(a,b){ return compareGoldhenVersion(labelVersion(b.version), labelVersion(a.version)); });
-          return runSelectedOption(optionId(stable[0]));
-        }
-        matches.sort(function(a,b){ return compareGoldhenVersion(labelVersion(b.version), labelVersion(a.version)); });
-        return runSelectedOption(optionId(matches[0]));
-      }
 
-        function clearCaches(){
+        function runRecommendedForFirmware(fw){
+          var opt = recommendedOptionForFirmware(fw);
+          if (!opt) {
+            setStatus('Not found', 'Please enter your firmware first (example: 9.00).');
+            return false;
+          }
+          return runSelectedOption(optionId(opt));
+        }
+
+        function clearCaches(resetUI){
           var tasks = [];
           if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
             tasks.push(navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -658,16 +677,57 @@
           if (window.caches && caches.keys) {
             tasks.push(caches.keys().then(function(keys){
               return Promise.all(keys.map(function(k){
-                return (/vortex-goldhen-cache-v/.test(k)) ? caches.delete(k) : Promise.resolve(false);
+                return ((/vortex-goldhen-cache-v/i.test(k)) || (/goldhen/i.test(k)) || (/vortex/i.test(k))) ? caches.delete(k) : Promise.resolve(false);
               }));
             }));
           }
+          // Remove selector-related storage keys
+          try { localStorage.removeItem(LAST_FW_KEY); } catch(e) {}
           try { localStorage.removeItem('cachedB'); } catch(e) {}
+          try { localStorage.removeItem('vortex:lastRecommended'); } catch(e) {}
           try { sessionStorage.removeItem('vortexCacheChoice'); } catch(e) {}
-          return Promise.all(tasks);
+          try {
+            // Remove any other vortex- or goldhen-related flags in local/session storage
+            var i, key;
+            for (i = (localStorage.length-1); i >= 0; i--) {
+              key = localStorage.key(i);
+              if (/^(vortex[:\-]|goldhen)/i.test(String(key||''))) { try { localStorage.removeItem(key); } catch(_) {} }
+            }
+            for (i = (sessionStorage.length-1); i >= 0; i--) {
+              key = sessionStorage.key(i);
+              if (/^(vortex[:\-]|goldhen)/i.test(String(key||''))) { try { sessionStorage.removeItem(key); } catch(_) {} }
+            }
+          } catch(e) {}
+
+          // Reset UI state if requested
+          if (resetUI) {
+            try {
+              var input = document.getElementById('firmware');
+              if (input) {
+                input.value = '';
+                input.setAttribute('placeholder', '9.00');
+              }
+              var results = document.getElementById('results');
+              if (results) results.innerHTML = '';
+            } catch(e) {}
+          }
+
+          return Promise.all(tasks).then(function(){
+            return 'Local selector state cleared. Host cache cleared where supported.';
+          });
         }
 
         function handleCommand(cmd){
+          if (cmd === 'clear') {
+            clearCaches(true).then(function(msg){
+              setStatus('Cleared', 'Selector state cleared. Click Refresh Page to reload cleanly.');
+              showRefreshButton();
+            }).catch(function(){
+              setStatus('Cleared', 'Local selector state cleared. Browser host cache may require closing/reopening the browser. Click Refresh Page to reload cleanly.');
+              showRefreshButton();
+            });
+            return false;
+          }
           var fw = getLastFirmware();
           if (!fw) {
             setStatus('Enter firmware first', 'Type your firmware (for example, 9.00) and press Enter.');
@@ -677,17 +737,16 @@
             return runRecommendedForFirmware(fw);
           }
           if (cmd === 'cache') {
+            var opt = recommendedOptionForFirmware(fw);
+            if (!opt) {
+              setStatus('Not found', 'No compatible build found to cache for firmware ' + fw + '.');
+              return false;
+            }
             try { sessionStorage.setItem('vortexCacheChoice', 'yes'); } catch(e) {}
-            return runRecommendedForFirmware(fw);
-          }
-          if (cmd === 'clear cache') {
-            clearCaches().then(function(){
-              setStatus('Cache', 'Cache cleared (where supported).');
-            }).catch(function(){
-              setStatus('Cache', 'Tried to clear cache. Some browsers may not support this.');
-            });
+            window.location.href = cacheUrl(opt);
             return false;
           }
+          
           return false;
         }
 
@@ -698,7 +757,7 @@
             var input = document.getElementById('firmware');
             var raw = (input && input.value) ? String(input.value).trim() : '';
             var lc = raw.toLowerCase();
-            if (lc === 'run' || lc === 'cache' || lc === 'clear cache') {
+            if (lc === 'run' || lc === 'cache' || lc === 'clear') {
               return handleCommand(lc);
             }
             if (matchesFirmware(raw)) {
@@ -710,7 +769,7 @@
               setLastFirmware(cleaned);
               return showResults();
             }
-            setStatus('Invalid input', 'Type a firmware like 9.00 or a command: run, cache, clear cache.');
+            setStatus('Invalid input', 'Type a firmware like 9.00 or a command: run, cache, clear.');
             return false;
           }
         }
@@ -721,7 +780,7 @@
             input.addEventListener('keydown', onEnter, false);
             var last = getLastFirmware();
             if (last && !input.value) {
-              input.setAttribute('placeholder', (input.getAttribute('placeholder')||'') + ' (last: ' + last + ')');
+              input.setAttribute('placeholder', (input.getAttribute('placeholder')||'9.00') + ' (last: ' + last + ')');
             }
           }
         }
@@ -747,7 +806,7 @@
           <p>Commands (type then press Enter):<br>
             <code>run</code> — run the recommended GoldHEN exploit<br>
             <code>cache</code> — optional cache for faster/offline loading<br>
-            <code>clear cache</code> — reset cached host files
+            <code>clear</code> — reset cached host files and selector state
           </p>
           <p><em>Caching is optional. You do not need to cache before running.</em></p>
         </div>
