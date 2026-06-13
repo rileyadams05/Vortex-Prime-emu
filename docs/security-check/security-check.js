@@ -28,35 +28,13 @@ const feedback = document.getElementById("challenge-feedback");
 const methodCodeEl = document.getElementById("method-code");
 const methodPictureEl = document.getElementById("method-picture");
 const toggleMethodBtn = document.getElementById("toggle-method-btn");
-const confirmPicBtn = document.getElementById("confirm-pic-btn");
-const refreshPicBtn = document.getElementById("refresh-pic-btn");
-const pictureGrid = document.getElementById("picture-grid");
 const audioBtn = document.getElementById("audio-btn");
 
 let resolvedTarget = null;
 let activeCode = "";
 let solved = false;
 let currentMethod = "code";
-let targetIndices = [];
-let selectedIndices = new Set();
-let lockIconSrc = "/assets/locked.png";
-
-// Resolve lock icon source dynamically from the badge lock icon
-const badgeImg = document.querySelector(".badge img");
-if (badgeImg) {
-  const src = badgeImg.getAttribute("src");
-  if (src) lockIconSrc = src;
-}
-
-// Decoy SVGs
-const decoySvgs = [
-  `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`, // key
-  `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`, // shield
-  `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`, // bell
-  `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`, // star
-  `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>`, // cloud
-  `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` // heart
-];
+let recaptchaWidgetId = null;
 
 function renderError(message) {
   const fragment = errorTemplate.content.cloneNode(true);
@@ -103,7 +81,7 @@ function resetVerification() {
     if (currentMethod === "code") {
       feedback.textContent = "Enter the code shown above to continue.";
     } else {
-      feedback.textContent = "Select all squares with Lock Icons to continue.";
+      feedback.textContent = "Solve the reCAPTCHA challenge below to continue.";
     }
   }
 
@@ -112,14 +90,101 @@ function resetVerification() {
     input.disabled = false;
   }
 
-  // Clear selections in picture grid
-  selectedIndices.clear();
-  const tiles = document.querySelectorAll(".picture-tile");
-  tiles.forEach(tile => tile.classList.remove("selected"));
+  // Reset reCAPTCHA if rendered
+  if (currentMethod === "picture" && window.grecaptcha && recaptchaWidgetId !== null) {
+    try {
+      window.grecaptcha.reset(recaptchaWidgetId);
+    } catch (err) {
+      console.error("Error resetting reCAPTCHA", err);
+    }
+  }
 
-  // Ensure confirm buttons are enabled
   if (confirmBtn) confirmBtn.disabled = false;
-  if (confirmPicBtn) confirmPicBtn.disabled = false;
+}
+
+function loadRecaptchaScript(callback) {
+  if (window.grecaptcha) {
+    callback();
+    return;
+  }
+  let script = document.querySelector('script[src*="recaptcha/api.js"]');
+  if (!script) {
+    script = document.createElement("script");
+    script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.grecaptcha && window.grecaptcha.ready) {
+        window.grecaptcha.ready(callback);
+      } else {
+        const interval = setInterval(() => {
+          if (window.grecaptcha && window.grecaptcha.render) {
+            clearInterval(interval);
+            callback();
+          }
+        }, 100);
+      }
+    };
+    script.onerror = () => {
+      console.error("Failed to load Google reCAPTCHA.");
+      if (feedback) {
+        feedback.textContent = "Could not load Google reCAPTCHA. Check your ad blocker or connection.";
+        feedback.classList.add("error");
+      }
+    };
+    document.head.appendChild(script);
+  } else {
+    callback();
+  }
+}
+
+function renderRecaptcha() {
+  loadRecaptchaScript(() => {
+    try {
+      const widgetContainer = document.getElementById("recaptcha-widget");
+      if (!widgetContainer) return;
+      
+      if (recaptchaWidgetId !== null) {
+        window.grecaptcha.reset(recaptchaWidgetId);
+        return;
+      }
+
+      recaptchaWidgetId = window.grecaptcha.render("recaptcha-widget", {
+        sitekey: "6LfVJR0tAAAAAEl9GICb3-2sMXX0zmBWXtMegy8t",
+        theme: "dark",
+        callback: (response) => {
+          solved = true;
+          if (continueBtn) continueBtn.disabled = !resolvedTarget;
+          if (feedback) {
+            feedback.textContent = "Verification successful! You can now continue.";
+            feedback.classList.remove("error");
+            feedback.classList.add("success");
+          }
+          continueBtn?.focus({ preventScroll: true });
+        },
+        "expired-callback": () => {
+          solved = false;
+          if (continueBtn) continueBtn.disabled = true;
+          if (feedback) {
+            feedback.textContent = "Verification expired. Please solve the challenge again.";
+            feedback.classList.remove("success");
+            feedback.classList.add("error");
+          }
+        },
+        "error-callback": () => {
+          solved = false;
+          if (continueBtn) continueBtn.disabled = true;
+          if (feedback) {
+            feedback.textContent = "An error occurred with reCAPTCHA. Please reload or switch methods.";
+            feedback.classList.remove("success");
+            feedback.classList.add("error");
+          }
+        }
+      });
+    } catch (err) {
+      console.error("Error rendering reCAPTCHA", err);
+    }
+  });
 }
 
 function switchMethod(method) {
@@ -137,7 +202,7 @@ function switchMethod(method) {
     if (methodPictureEl) methodPictureEl.style.display = "block";
     if (toggleMethodBtn) toggleMethodBtn.textContent = "Prefer code? Use code challenge";
     resetVerification();
-    generatePictureChallenge();
+    renderRecaptcha();
   }
 }
 
@@ -278,7 +343,6 @@ function speakCaptchaCode() {
     if (!('speechSynthesis' in window)) {
       return;
     }
-    // Stop any ongoing speech
     window.speechSynthesis.cancel();
     
     const spelledOut = activeCode.split("").map(char => char.toUpperCase()).join(", ");
@@ -295,119 +359,6 @@ function speakCaptchaCode() {
     window.speechSynthesis.speak(utterance);
   } catch (err) {
     console.error("Audio spelling failed", err);
-  }
-}
-
-function generatePictureChallenge() {
-  selectedIndices.clear();
-  solved = false;
-  if (continueBtn) continueBtn.disabled = true;
-
-  if (feedback) {
-    feedback.textContent = "Select all squares with Lock Icons to continue.";
-    feedback.classList.remove("error", "success");
-  }
-
-  if (pictureGrid) {
-    pictureGrid.innerHTML = "";
-    
-    // Choose 2 to 4 random target indexes (out of 9)
-    const numTargets = Math.floor(Math.random() * 3) + 2; // 2, 3, or 4
-    targetIndices = [];
-    while (targetIndices.length < numTargets) {
-      const idx = Math.floor(Math.random() * 9);
-      if (!targetIndices.includes(idx)) {
-        targetIndices.push(idx);
-      }
-    }
-
-    for (let i = 0; i < 9; i++) {
-      const tile = document.createElement("div");
-      tile.className = "picture-tile";
-      tile.dataset.index = i;
-
-      if (targetIndices.includes(i)) {
-        const img = document.createElement("img");
-        img.src = lockIconSrc;
-        img.alt = "Lock Icon";
-        img.onerror = () => {
-          img.style.display = "none";
-          tile.innerHTML += `<svg viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent);"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`;
-        };
-        tile.appendChild(img);
-      } else {
-        const randomDecoy = decoySvgs[Math.floor(Math.random() * decoySvgs.length)];
-        tile.innerHTML = randomDecoy;
-        const svg = tile.querySelector("svg");
-        if (svg) {
-          svg.style.color = "var(--text-muted)";
-          svg.style.opacity = "0.65";
-        }
-      }
-
-      tile.addEventListener("click", () => {
-        if (solved) return;
-        const idx = parseInt(tile.dataset.index, 10);
-        if (selectedIndices.has(idx)) {
-          selectedIndices.delete(idx);
-          tile.classList.remove("selected");
-        } else {
-          selectedIndices.add(idx);
-          tile.classList.add("selected");
-        }
-      });
-
-      pictureGrid.appendChild(tile);
-    }
-  }
-}
-
-function verifyPictureChallenge() {
-  if (solved) return;
-
-  let isCorrect = true;
-  if (selectedIndices.size !== targetIndices.length) {
-    isCorrect = false;
-  } else {
-    for (const idx of targetIndices) {
-      if (!selectedIndices.has(idx)) {
-        isCorrect = false;
-        break;
-      }
-    }
-  }
-
-  if (isCorrect) {
-    solved = true;
-    if (continueBtn) continueBtn.disabled = !resolvedTarget;
-    if (feedback) {
-      feedback.textContent = "Verification successful! You can now continue.";
-      feedback.classList.remove("error");
-      feedback.classList.add("success");
-    }
-    if (confirmPicBtn) confirmPicBtn.disabled = true;
-    continueBtn?.focus({ preventScroll: true });
-  } else {
-    solved = false;
-    if (continueBtn) continueBtn.disabled = true;
-    if (feedback) {
-      feedback.textContent = "Incorrect selection. Please try again.";
-      feedback.classList.remove("success");
-      feedback.classList.add("error");
-    }
-
-    if (pictureGrid) {
-      pictureGrid.style.animation = "none";
-      void pictureGrid.offsetWidth;
-      pictureGrid.style.animation = "recaptcha-shake 0.35s ease-in-out";
-    }
-
-    const tiles = document.querySelectorAll(".picture-tile");
-    tiles.forEach(tile => tile.style.pointerEvents = "none");
-
-    setTimeout(() => {
-      generatePictureChallenge();
-    }, 1000);
   }
 }
 
@@ -468,14 +419,6 @@ function attachChallengeHandlers() {
 
   audioBtn?.addEventListener("click", () => {
     speakCaptchaCode();
-  });
-
-  confirmPicBtn?.addEventListener("click", () => {
-    verifyPictureChallenge();
-  });
-
-  refreshPicBtn?.addEventListener("click", () => {
-    generatePictureChallenge();
   });
 
   toggleMethodBtn?.addEventListener("click", () => {
