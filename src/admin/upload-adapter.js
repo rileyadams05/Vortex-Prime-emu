@@ -320,7 +320,16 @@ async function deleteStoreItem(mode, item) {
 
 async function loadCatalogue(mode) {
   await ensureBackendConfigured();
-  const list = await fetchJson(`/api/catalogue/${normalizeMode(mode)}`);
+  let list;
+  try {
+    list = await fetchJson(`/api/catalogue/${normalizeMode(mode)}`);
+  } catch (error) {
+    const status = await refreshBackendStatus(true).catch(() => null);
+    if (status?.message && error && typeof error === "object") {
+      error.message = status.message;
+    }
+    throw error;
+  }
   if (!Array.isArray(list)) return [];
   return list.map((entry) => ({
     ...entry,

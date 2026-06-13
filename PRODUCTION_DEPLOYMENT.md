@@ -70,6 +70,8 @@ GOOGLE_PRIVATE_KEY            ← remove from Worker secrets
 
 The Worker uses your personal Google account to upload files to Drive, which means you must authorise the OAuth client once and store the resulting refresh token as a Worker secret.
 
+Before generating the token, open **Google Auth Platform → Audience** for the `vortex-prime` project. If the publishing status is **Testing**, click **Publish app** and confirm. Drive refresh tokens issued while an External app is still in Testing expire after 7 days.
+
 ### Step-by-step using Google OAuth 2.0 Playground
 
 1. Open [https://developers.google.com/oauthplayground](https://developers.google.com/oauthplayground)
@@ -82,13 +84,32 @@ The Worker uses your personal Google account to upload files to Drive, which mea
 6. Click **Exchange authorization code for tokens**
 7. Copy the value of `refresh_token` from the JSON response — this is your `GOOGLE_DRIVE_REFRESH_TOKEN`
 
-> **Important**: the refresh token does not expire unless you manually revoke it or change the Google account password. Store it only in Cloudflare Worker Secrets, never in source code or environment files.
+> **Important**: the refresh token is only long-lived when the Google OAuth consent screen is in production. Google expires refresh tokens after 7 days for External apps left in Testing when they request Drive scopes. Publish the OAuth consent screen, then generate a new `GOOGLE_DRIVE_REFRESH_TOKEN`. Store it only in Cloudflare Worker Secrets, never in source code or environment files.
 
 ### Notes
 
 - The OAuth client used for Drive uploads (`GOOGLE_DRIVE_CLIENT_ID`) does not need to be the same client used for website login (`GOOGLE_OAUTH_CLIENT_ID`), but it can be.
 - Uploaded files will be owned by your personal Google account, not a service account, so they count against your 5 TB quota as intended.
 - Folder IDs are unchanged — the Worker continues to use the existing `Packages`, `Mods`, `Icons`, `Previews`, `Readmes`, and `Database` folders.
+- If `/api/status` reports that Google Drive authorization has expired or been revoked, check **Google Cloud Console → APIs & Services → OAuth consent screen → Publishing status**. If it says **Testing**, publish it before generating the replacement refresh token.
+
+## 4a. Cross-Account Protection
+
+The Worker exposes a Google Cross-Account Protection receiver at:
+
+```text
+https://vortex-prime-emu.com/api/risc/events
+```
+
+It validates Google security-event JWTs against Google's RISC discovery document and accepts valid events with HTTP 202. If a Cloudflare KV binding named `RISC_EVENTS_KV` is added later, the Worker also stores received event IDs and rejected Google subject IDs so matching sessions can be blocked.
+
+To register the receiver after deploying the Worker:
+
+```powershell
+node register-risc-stream.mjs
+```
+
+The service account in `MY-google-ID/vortex-prime-drive-worker-key.json` must have the Google role `roles/riscconfigs.admin`, and the RISC API must be enabled for the same Google Cloud project.
 
 ## 5. Frontend configuration
 
@@ -164,7 +185,7 @@ For local testing you can still run the Companion Express server (`companion-ser
 
 - **Missing secrets**: the Worker deploy workflow will fail if `CF_ACCOUNT_ID`/`CF_API_TOKEN` are missing. The Worker itself will report missing Google Drive secrets on `/api/status`.
 - **CORS errors**: add the new frontend domain to `PRODUCTION_ORIGINS` inside `cloudflare/worker.js` and redeploy.
-- **Uploads failing with 403 / token error**: verify `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, and `GOOGLE_DRIVE_REFRESH_TOKEN` are set correctly in Cloudflare Worker Secrets. Re-run the OAuth Playground flow if the refresh token was revoked.
+- **Uploads or catalogues failing with a token error**: verify `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, and `GOOGLE_DRIVE_REFRESH_TOKEN` are set correctly in Cloudflare Worker Secrets. If the OAuth consent screen is still in Testing, publish it first; otherwise the replacement refresh token can expire again after 7 days.
 - **Admin actions rejected**: confirm the Google account is listed in `GOOGLE_ADMIN_EMAILS`. You can set whole domains with entries like `@yourteam.com`.
 - **Frontend still calling localhost**: ensure your production build of `docs/index.html` includes `<meta name="vortex-companion-base-url" content="https://vortex-prime-emu.com">`.
 

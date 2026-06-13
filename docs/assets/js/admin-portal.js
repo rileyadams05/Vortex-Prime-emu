@@ -589,9 +589,17 @@ async function fetchJson(path, options = {}) {
   });
   if (!response.ok) {
     const text = await response.text().catch(() => response.statusText);
-    const error = new Error(text || `Request failed with status ${response.status}`);
+    let payload = null;
+    try {
+      payload = text ? JSON.parse(text) : null;
+    } catch (error2) {
+      payload = null;
+    }
+    const message = (payload == null ? void 0 : payload.message) || (payload == null ? void 0 : payload.error) || text || `Request failed with status ${response.status}`;
+    const error = new Error(message);
     error.status = response.status;
     error.url = url;
+    if (payload) error.payload = payload;
     throw error;
   }
   if (response.status === 204) return null;
@@ -879,7 +887,16 @@ async function deleteStoreItem(mode, item) {
 }
 async function loadCatalogue(mode) {
   await ensureBackendConfigured();
-  const list = await fetchJson(`/api/catalogue/${normalizeMode(mode)}`);
+  let list;
+  try {
+    list = await fetchJson(`/api/catalogue/${normalizeMode(mode)}`);
+  } catch (error) {
+    const status = await refreshBackendStatus(true).catch(() => null);
+    if ((status == null ? void 0 : status.message) && error && typeof error === "object") {
+      error.message = status.message;
+    }
+    throw error;
+  }
   if (!Array.isArray(list)) return [];
   return list.map((entry) => ({
     ...entry,

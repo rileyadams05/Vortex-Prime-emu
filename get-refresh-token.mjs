@@ -11,6 +11,7 @@
 
 import http from 'http';
 import https from 'https';
+import crypto from 'crypto';
 import { URL } from 'url';
 import fs from 'fs';
 import path from 'path';
@@ -30,6 +31,9 @@ const CLIENT_ID     = creds.web.client_id;
 const CLIENT_SECRET = creds.web.client_secret;
 const REDIRECT_URI  = 'http://localhost:53682/oauth2callback';
 const SCOPE         = 'https://www.googleapis.com/auth/drive';
+const STATE         = base64Url(crypto.randomBytes(32));
+const CODE_VERIFIER = base64Url(crypto.randomBytes(64));
+const CODE_CHALLENGE = base64Url(crypto.createHash('sha256').update(CODE_VERIFIER).digest());
 // ────────────────────────────────────────────────────────────────────────────
 
 const authUrl =
@@ -39,6 +43,10 @@ const authUrl =
   `&response_type=code` +
   `&scope=${encodeURIComponent(SCOPE)}` +
   `&access_type=offline` +
+  `&include_granted_scopes=true` +
+  `&state=${encodeURIComponent(STATE)}` +
+  `&code_challenge=${encodeURIComponent(CODE_CHALLENGE)}` +
+  `&code_challenge_method=S256` +
   `&prompt=consent`;           // forces Google to return a refresh_token
 
 console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -68,6 +76,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   const code = reqUrl.searchParams.get('code');
+  const state = reqUrl.searchParams.get('state');
   const error = reqUrl.searchParams.get('error');
 
   if (error || !code) {
@@ -75,6 +84,14 @@ const server = http.createServer(async (req, res) => {
     console.error('\n✖  ' + msg);
     res.writeHead(400, { 'Content-Type': 'text/html' });
     res.end(`<h2>Error: ${msg}</h2><p>Close this tab and check the terminal.</p>`);
+    server.close();
+    process.exit(1);
+  }
+  if (state !== STATE) {
+    const msg = 'Google returned an invalid OAuth state value.';
+    console.error('\n✖  ' + msg);
+    res.writeHead(400, { 'Content-Type': 'text/html' });
+    res.end(`<h2>Error: ${msg}</h2><p>Close this tab and re-run the script.</p>`);
     server.close();
     process.exit(1);
   }
@@ -86,6 +103,7 @@ const server = http.createServer(async (req, res) => {
     client_secret: CLIENT_SECRET,
     redirect_uri:  REDIRECT_URI,
     grant_type:    'authorization_code',
+    code_verifier:  CODE_VERIFIER,
   }).toString();
 
   let tokenData;
@@ -172,4 +190,12 @@ function post(url, body) {
     req.write(body);
     req.end();
   });
+}
+
+function base64Url(value) {
+  return Buffer.from(value)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
 }

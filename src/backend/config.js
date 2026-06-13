@@ -73,9 +73,21 @@ export async function fetchJson(path, options = {}) {
   });
   if (!response.ok) {
     const text = await response.text().catch(() => response.statusText);
-    const error = new Error(text || `Request failed with status ${response.status}`);
+    let payload = null;
+    try {
+      payload = text ? JSON.parse(text) : null;
+    } catch (error) {
+      payload = null;
+    }
+    const message =
+      payload?.message ||
+      payload?.error ||
+      text ||
+      `Request failed with status ${response.status}`;
+    const error = new Error(message);
     error.status = response.status;
     error.url = url;
+    if (payload) error.payload = payload;
     throw error;
   }
   if (response.status === 204) return null;

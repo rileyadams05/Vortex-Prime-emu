@@ -47,6 +47,7 @@ const UPLOAD_TARGETS = {
 
 let tokenCache = null;
 let googleCertCache = null;
+let riscConfigCache = null;
 let adminEmailCache = null;
 
 const GOOGLE_ISSUERS = new Set([
@@ -93,6 +94,10 @@ export default {
 
       if (path === 'api/auth/logout') {
         return handleLogout(env, allowedOrigin);
+      }
+
+      if (path === 'api/risc/events') {
+        return handleRiscEvents(request, env, allowedOrigin);
       }
 
       if (path === 'api/public/catalogue') {
@@ -267,6 +272,17 @@ async function handleLogout(env, origin) {
   const response = json({ ok: true }, 200, origin);
   response.headers.append('Set-Cookie', buildSessionCookie('', { maxAge: 0 }));
   return response;
+}
+
+async function handleRiscEvents(request, env, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Cross-Account Protection receiver requires POST.');
+  }
+
+  const token = await readSecurityEventToken(request);
+  const event = await validateSecurityEventToken(token, env);
+  await handleSecurityEvent(event, env);
+  return json({ ok: true, received: true }, 202, origin);
 }
 
 async function handleCatalogueRequest(request, env, path, origin) {
@@ -762,7 +778,14 @@ async function readSession(request, env) {
   const cookies = parseCookies(header);
   const token = cookies[SESSION_COOKIE_NAME];
   if (!token) return null;
-  return verifySessionToken(token, env);
+  const session = await verifySessionToken(token, env);
+  if (env.RISC_EVENTS_KV && session?.sub) {
+    const revoked = await env.RISC_EVENTS_KV.get(`revoked-sub:${session.sub}`);
+    if (revoked) {
+      throw httpError(401, 'Session revoked by Google security event.');
+    }
+  }
+  return session;
 }
 
 function buildSessionCookie(value, options = {}) {
@@ -943,17 +966,176 @@ async function validateGoogleCredential(credential, env) {
   };
 }
 
+async function readSecurityEventToken(request) {
+  const contentType = request.headers.get('content-type') || '';
+  const raw = await request.text();
+  if (!raw || !raw.trim()) {
+    throw httpError(400, 'Missing security event token.');
+  }
+
+  if (contentType.includes('application/json')) {
+    let body;
+    try {
+      body = JSON.parse(raw);
+    } catch (error) {
+      throw httpError(400, 'Malformed security event JSON body.');
+    }
+    const token = body?.jwt || body?.token || body?.security_event_token;
+    if (!token || typeof token !== 'string') {
+      throw httpError(400, 'Missing security event token in JSON body.');
+    }
+    return token.trim();
+  }
+
+  return raw.trim();
+}
+
+async function validateSecurityEventToken(token, env) {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    throw httpError(400, 'Malformed security event token.');
+  }
+
+  const [headerPart, payloadPart, signaturePart] = parts;
+  let header;
+  let payload;
+  try {
+    header = JSON.parse(textDecoder.decode(base64UrlDecode(headerPart)));
+    payload = JSON.parse(textDecoder.decode(base64UrlDecode(payloadPart)));
+  } catch (error) {
+    throw httpError(400, 'Malformed security event token JSON.');
+  }
+
+  const riscConfig = await getRiscConfig();
+  if (payload.iss !== riscConfig.issuer) {
+    throw httpError(400, 'Security event token issuer mismatch.');
+  }
+
+  const audience = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  const allowedAudience = getRiscAudiences(env);
+  if (!audience.some((value) => allowedAudience.includes(value))) {
+    throw httpError(400, 'Security event token audience mismatch.');
+  }
+
+  const publicKey = await getGooglePublicKey(header.kid, riscConfig.jwks_uri);
+  const signedContent = textEncoder.encode(`${headerPart}.${payloadPart}`);
+  const signature = base64UrlDecode(signaturePart);
+  const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, signature, signedContent);
+  if (!valid) {
+    throw httpError(400, 'Security event token signature verification failed.');
+  }
+
+  if (!payload.events || typeof payload.events !== 'object') {
+    throw httpError(400, 'Security event token has no events claim.');
+  }
+
+  return payload;
+}
+
+function getRiscAudiences(env) {
+  const configured = String(env.RISC_AUDIENCES || '')
+    .split(/[,\n]/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const defaults = [
+    String(env.GOOGLE_OAUTH_CLIENT_ID || '').trim(),
+    String(env.GOOGLE_DRIVE_CLIENT_ID || '').trim(),
+  ].filter(Boolean);
+  return [...new Set([...configured, ...defaults])];
+}
+
+async function getRiscConfig() {
+  const now = Date.now();
+  if (riscConfigCache && riscConfigCache.expiresAt > now) {
+    return riscConfigCache.config;
+  }
+
+  const response = await fetch('https://accounts.google.com/.well-known/risc-configuration');
+  if (!response.ok) {
+    throw httpError(response.status, 'Failed to retrieve Google RISC configuration.');
+  }
+  const config = await response.json();
+  if (!config?.issuer || !config?.jwks_uri) {
+    throw httpError(500, 'Google RISC configuration is missing required fields.');
+  }
+
+  const cacheControl = response.headers.get('cache-control') || '';
+  const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
+  const maxAgeSeconds = maxAgeMatch ? Number(maxAgeMatch[1]) : 300;
+  riscConfigCache = {
+    config,
+    expiresAt: now + maxAgeSeconds * 1000,
+  };
+  return config;
+}
+
+async function handleSecurityEvent(event, env) {
+  const eventTypes = Object.keys(event.events || {});
+  const subjects = eventTypes
+    .map((eventType) => event.events[eventType]?.subject)
+    .filter(Boolean);
+
+  if (env.RISC_EVENTS_KV) {
+    await storeSecurityEvent(event, eventTypes, subjects, env);
+  }
+
+  console.log('Received Google Cross-Account Protection event', {
+    jti: event.jti,
+    aud: event.aud,
+    eventTypes,
+    subjects: subjects.map((subject) => ({
+      subject_type: subject.subject_type,
+      iss: subject.iss,
+      sub: subject.sub,
+    })),
+  });
+}
+
+async function storeSecurityEvent(event, eventTypes, subjects, env) {
+  const now = Math.floor(Date.now() / 1000);
+  const ttl = 60 * 60 * 24 * 90;
+  if (event.jti) {
+    await env.RISC_EVENTS_KV.put(`event:${event.jti}`, JSON.stringify({
+      receivedAt: now,
+      eventTypes,
+      aud: event.aud,
+      iat: event.iat,
+    }), { expirationTtl: ttl });
+  }
+
+  const revocationEvent = eventTypes.some((eventType) => [
+    'https://schemas.openid.net/secevent/risc/event-type/sessions-revoked',
+    'https://schemas.openid.net/secevent/oauth/event-type/tokens-revoked',
+    'https://schemas.openid.net/secevent/risc/event-type/account-disabled',
+  ].includes(eventType));
+  if (!revocationEvent) return;
+
+  for (const subject of subjects) {
+    if (subject?.sub) {
+      await env.RISC_EVENTS_KV.put(`revoked-sub:${subject.sub}`, JSON.stringify({
+        revokedAt: now,
+        eventTypes,
+        jti: event.jti || null,
+      }), { expirationTtl: ttl });
+    }
+  }
+}
+
 async function getGooglePublicKey(kid) {
+  return getGooglePublicKeyFromJwks(kid, 'https://www.googleapis.com/oauth2/v3/certs');
+}
+
+async function getGooglePublicKeyFromJwks(kid, jwksUri) {
   if (!kid) {
     throw httpError(401, 'Missing Google key id.');
   }
   const now = Date.now();
-  if (!googleCertCache || googleCertCache.expiresAt <= now) {
-    await refreshGoogleCertCache();
+  if (!googleCertCache || googleCertCache.uri !== jwksUri || googleCertCache.expiresAt <= now) {
+    await refreshGoogleCertCache(jwksUri);
   }
   let key = googleCertCache.keys.get(kid);
   if (!key) {
-    await refreshGoogleCertCache();
+    await refreshGoogleCertCache(jwksUri);
     key = googleCertCache.keys.get(kid);
   }
   if (!key) {
@@ -962,8 +1144,8 @@ async function getGooglePublicKey(kid) {
   return key;
 }
 
-async function refreshGoogleCertCache() {
-  const response = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+async function refreshGoogleCertCache(jwksUri = 'https://www.googleapis.com/oauth2/v3/certs') {
+  const response = await fetch(jwksUri);
   if (!response.ok) {
     throw httpError(response.status, 'Failed to retrieve Google certificates.');
   }
@@ -991,6 +1173,7 @@ async function refreshGoogleCertCache() {
   const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
   const maxAgeSeconds = maxAgeMatch ? Number(maxAgeMatch[1]) : 300;
   googleCertCache = {
+    uri: jwksUri,
     keys,
     expiresAt: Date.now() + maxAgeSeconds * 1000,
   };
@@ -1053,6 +1236,13 @@ async function getAccessToken(env) {
   const data = await response.json().catch(() => null);
   if (!response.ok || !data?.access_token) {
     const detail = data?.error_description || data?.error || (data ? JSON.stringify(data) : response.statusText);
+    const isInvalidGrant = data?.error === 'invalid_grant' || /expired|revoked/i.test(String(detail));
+    if (isInvalidGrant) {
+      throw httpError(
+        503,
+        'Google Drive authorization has expired or been revoked. Generate a new refresh token and update GOOGLE_DRIVE_REFRESH_TOKEN.',
+      );
+    }
     throw httpError(response.status, `Failed to obtain Google Drive access token: ${detail}`);
   }
 
