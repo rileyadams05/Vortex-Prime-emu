@@ -36,31 +36,58 @@
         </section>
 
         <section class="challenge-area" id="challenge-area">
-          <div class="canvas-challenge-container">
-            <div class="canvas-wrapper">
-              <canvas id="captcha-canvas" width="280" height="85"></canvas>
+          <!-- Code Challenge Method -->
+          <div class="challenge-method" id="method-code">
+            <div class="botdetect-captcha-container">
+              <div class="captcha-row">
+                <div class="canvas-wrapper">
+                  <canvas id="captcha-canvas" width="280" height="80"></canvas>
+                </div>
+                <div class="captcha-controls">
+                  <button type="button" class="captcha-control-btn" id="refresh-btn" title="Change the code">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                  </button>
+                  <button type="button" class="captcha-control-btn" id="audio-btn" title="Speak the code">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="input-row">
+                <label class="visually-hidden" for="challenge-input">PLEASE RETYPE THE CODE ABOVE</label>
+                <input
+                  type="text"
+                  id="challenge-input"
+                  name="challenge-input"
+                  maxlength="5"
+                  autocomplete="off"
+                  inputmode="text"
+                  placeholder="PLEASE RETYPE THE CODE ABOVE"
+                  aria-describedby="challenge-feedback"
+                />
+                <button type="button" class="btn btn-confirm" id="confirm-btn">Verify</button>
+              </div>
             </div>
-            <button type="button" class="challenge-refresh" id="refresh-btn" aria-label="Refresh code">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
-              </svg>
-              <span>Refresh</span>
-            </button>
           </div>
 
-          <div class="challenge-inputs">
-            <label class="visually-hidden" for="challenge-input">Enter captcha</label>
-            <input
-              type="text"
-              id="challenge-input"
-              name="challenge-input"
-              maxlength="6"
-              autocomplete="off"
-              inputmode="text"
-              placeholder="Enter captcha (case-sensitive)"
-              aria-describedby="challenge-feedback"
-            />
-            <button type="button" class="btn btn-confirm" id="confirm-btn">Verify</button>
+          <!-- Picture Challenge Method -->
+          <div class="challenge-method" id="method-picture" style="display: none;">
+            <div class="picture-challenge-header">
+              <span class="challenge-instructions">Select all squares with</span>
+              <span class="challenge-target">Lock Icons</span>
+              <span class="challenge-sub-instructions">If there are none, click verify</span>
+            </div>
+            <div class="picture-challenge-grid" id="picture-grid"></div>
+            <div class="picture-challenge-footer">
+              <button type="button" class="picture-footer-btn" id="refresh-pic-btn" title="Refresh challenge">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+              </button>
+              <button type="button" class="btn btn-confirm btn-picture-verify" id="confirm-pic-btn">Verify</button>
+            </div>
+          </div>
+
+          <!-- Method Toggle Button -->
+          <div class="challenge-toggle-container">
+            <button type="button" class="btn-toggle-method" id="toggle-method-btn">Prefer pictures? Use picture challenge</button>
           </div>
 
           <p class="challenge-feedback" id="challenge-feedback" role="status">
