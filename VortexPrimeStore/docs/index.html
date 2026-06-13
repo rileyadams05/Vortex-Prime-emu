@@ -2765,7 +2765,20 @@
                             if (!silent) alert('Google sign-in could not load. Please disable any privacy/ad blocker for this site and refresh.');
                             return;
                         }
+                        const array = new Uint32Array(8);
+                        window.crypto.getRandomValues(array);
+                        const state = Array.from(array, dec => dec.toString(16).padStart(2, '0')).join('');
+                        sessionStorage.setItem('google_oauth_state', state);
+
                         client.callback = async (tokenResponse) => {
+                            const savedState = sessionStorage.getItem('google_oauth_state');
+                            sessionStorage.removeItem('google_oauth_state');
+                            if (!tokenResponse || tokenResponse.state !== savedState) {
+                                console.error('State mismatch. CSRF warning.');
+                                if (!silent) alert('Authentication error: CSRF verification failed.');
+                                return;
+                            }
+
                             try {
                                 if (!tokenResponse || !tokenResponse.access_token) {
                                     throw new Error('Google did not return an access token');
@@ -2779,7 +2792,7 @@
                             }
                         };
                         try {
-                            client.requestAccessToken();
+                            client.requestAccessToken({ state: state });
                         } catch (error) {
                             console.error('requestAccessToken failed:', error);
                             if (!silent) alert('Unable to open Google sign-in. Please disable any privacy/ad blocker for this site and try again.');
