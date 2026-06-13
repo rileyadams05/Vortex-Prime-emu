@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import http from 'node:http';
 import { once } from 'node:events';
+import crypto from 'node:crypto';
 
 import { google } from 'googleapis';
 
@@ -29,7 +30,7 @@ async function openBrowser(url) {
   }
 }
 
-async function startCallbackListener(preferredPorts = DEFAULT_PORTS) {
+async function startCallbackListener(expectedState, preferredPorts = DEFAULT_PORTS) {
   const attempted = [];
   for (const port of preferredPorts) {
     const redirectUri = `http://localhost:${port}${CALLBACK_PATH}`;
@@ -44,6 +45,15 @@ async function startCallbackListener(preferredPorts = DEFAULT_PORTS) {
         }
         const error = target.searchParams.get('error');
         const code = target.searchParams.get('code');
+        const state = target.searchParams.get('state');
+
+        if (state !== expectedState) {
+          res.statusCode = 400;
+          res.end('Invalid or expired state parameter. You can close this tab.');
+          server.emit('oauth:error', new Error('State parameter mismatch. Possible CSRF attempt.'));
+          return;
+        }
+
         if (error && !code) {
           res.statusCode = 400;
           res.end('Authorization failed. You can close this tab.');
@@ -108,8 +118,9 @@ async function verifyDriveAccess(oauth2Client) {
 
 async function main() {
   const scope = getEnv('GOOGLE_DRIVE_SCOPE', 'https://www.googleapis.com/auth/drive.file');
+  const state = crypto.randomBytes(32).toString('hex');
 
-  const { server, port, redirectUri } = await startCallbackListener();
+  const { server, port, redirectUri } = await startCallbackListener(state);
   console.log(`Listening for Google OAuth callback on ${redirectUri}`);
 
   let oauthSetup;
@@ -136,6 +147,7 @@ async function main() {
     prompt: 'consent',
     scope: [scope],
     redirect_uri: redirectUri,
+    state: state,
   });
 
   buildAuthInstructions(authUrl);

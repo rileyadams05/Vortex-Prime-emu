@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { existsSync } from 'node:fs';
+import crypto from 'node:crypto';
 
 import cors from 'cors';
 import express from 'express';
@@ -118,11 +119,14 @@ app.get('/api/status', async (req, res) => {
 
 app.get('/auth/google/start', async (req, res, next) => {
   try {
+    const state = crypto.randomBytes(32).toString('hex');
+    req.session.oauthState = state;
     const { oauth2Client } = await createOAuthClient();
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
       scope: [GOOGLE_SCOPE],
+      state: state,
     });
     res.redirect(authUrl);
   } catch (error) {
@@ -133,8 +137,16 @@ app.get('/auth/google/start', async (req, res, next) => {
 app.get('/auth/google/callback', async (req, res, next) => {
   try {
     const code = req.query.code;
+    const state = req.query.state;
+    const sessionState = req.session.oauthState;
+    delete req.session.oauthState;
+
     if (!code) {
       res.status(400).send('Missing ?code parameter.');
+      return;
+    }
+    if (!state || !sessionState || state !== sessionState) {
+      res.status(400).send('Invalid or expired ?state parameter.');
       return;
     }
     const { oauth2Client } = await createOAuthClient();
