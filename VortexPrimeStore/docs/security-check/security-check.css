@@ -4,8 +4,8 @@
   --card-bg: rgba(10, 18, 30, 0.92);
   --card-border: rgba(85, 150, 255, 0.35);
   --surface: rgba(14, 28, 46, 0.65);
-  --accent: #3ce882;
-  --accent-strong: #17b55c;
+  --accent: #3b82f6;
+  --accent-strong: #1a73e8;
   --text: #f0f4ff;
   --text-muted: #8ea1c7;
   --danger: #ff7b7b;
@@ -48,24 +48,26 @@ body {
 
 .card-head {
   display: flex;
-  gap: 1.25rem;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  gap: 1.25rem;
 }
 
 .badge {
-  flex: 0 0 72px;
-  height: 72px;
+  flex: 0 0 128px;
+  width: 128px;
+  height: 128px;
   display: grid;
   place-items: center;
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(60, 232, 130, 0.25), rgba(17, 33, 53, 0.55));
-  box-shadow: inset 0 0 0 1px rgba(60, 232, 130, 0.25);
+  background: transparent;
+  box-shadow: none;
 }
 
 .badge svg,
 .badge img {
-  width: 48px;
-  height: 48px;
+  width: 128px;
+  height: 128px;
   object-fit: contain;
 }
 
@@ -117,129 +119,11 @@ h1 {
   gap: 1.5rem;
 }
 
-.challenge-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.challenge-title {
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.82rem;
-  color: rgba(142, 161, 199, 0.8);
-}
-
-.challenge-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: rgba(12, 24, 42, 0.65);
-  border: 1px solid rgba(142, 161, 199, 0.25);
-  color: var(--text);
-  border-radius: 10px;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.challenge-refresh svg {
-  width: 18px;
-  height: 18px;
-}
-
-.challenge-refresh:hover,
-.challenge-refresh:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 30px rgba(12, 24, 42, 0.45);
-}
-
-.challenge-visual {
-  position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-  background: linear-gradient(135deg, rgba(60, 232, 130, 0.12), rgba(23, 181, 92, 0.08));
-  border: 1px solid rgba(60, 232, 130, 0.3);
-  padding: 1.85rem 1.5rem 1.4rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.challenge-wave {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 20% 20%, rgba(60, 232, 130, 0.28), transparent 55%),
-    radial-gradient(circle at 80% 30%, rgba(16, 38, 58, 0.45), transparent 60%),
-    radial-gradient(circle at 50% 80%, rgba(17, 181, 92, 0.2), transparent 65%);
-  opacity: 0.75;
-}
-
-.challenge-code {
-  position: relative;
-  font-family: "Space Grotesk", "JetBrains Mono", monospace;
-  font-size: clamp(2.25rem, 4vw, 3rem);
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--text);
-  text-shadow: 0 8px 28px rgba(10, 18, 30, 0.65);
-  z-index: 3;
+/* Google reCAPTCHA alignment */
+.g-recaptcha-container {
   display: flex;
   justify-content: center;
-  align-items: center;
-}
-
-.challenge-code span {
-  display: inline-block;
-  margin: 0 0.12em;
-  user-select: none;
-  transition: transform 0.25s ease;
-}
-
-.challenge-inputs {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-#challenge-input {
-  flex: 1 1 220px;
-  background: rgba(6, 12, 24, 0.88);
-  border: 1px solid rgba(62, 103, 170, 0.5);
-  border-radius: 10px;
-  padding: 0.85rem 1.1rem;
-  color: var(--text);
-  font-size: 1rem;
-  letter-spacing: 0.08em;
-}
-
-#challenge-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(60, 232, 130, 0.2);
-}
-
-.btn-confirm {
-  background: rgba(17, 33, 53, 0.9);
-  color: var(--text);
-  border: 1px solid rgba(142, 161, 199, 0.35);
-  padding: 0.75rem 1.6rem;
-  border-radius: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-confirm:hover,
-.btn-confirm:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 35px rgba(17, 33, 53, 0.45);
+  margin: 0.5rem 0;
 }
 
 .challenge-feedback {
@@ -294,14 +178,14 @@ h1 {
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
-  color: #02140c;
-  box-shadow: 0 18px 40px rgba(60, 232, 130, 0.35);
+  color: #ffffff;
+  box-shadow: 0 18px 40px rgba(59, 130, 246, 0.35);
 }
 
 .btn-primary:not(:disabled):hover,
 .btn-primary:not(:disabled):focus-visible {
   transform: translateY(-2px);
-  box-shadow: 0 24px 55px rgba(60, 232, 130, 0.45);
+  box-shadow: 0 24px 55px rgba(59, 130, 246, 0.45);
 }
 
 .btn-secondary {
@@ -341,17 +225,24 @@ h1 {
 
 @media (max-width: 640px) {
   .security-card {
-    padding: 1.75rem;
-    gap: 1.6rem;
+    padding: 1.5rem;
+    gap: 1.5rem;
   }
 
   .card-head {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .badge {
-    flex-basis: 60px;
-    height: 60px;
+    flex-basis: 90px;
+    width: 90px;
+    height: 90px;
+  }
+
+  .badge svg,
+  .badge img {
+    width: 90px;
+    height: 90px;
   }
 
   .actions {
