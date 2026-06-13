@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Xbox Exploit Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png">
+  <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png">
+  <link rel="icon" href="/favicon-192x192.png" sizes="192x192" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta property="og:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #05070d;
+      --card: #0e1424;
+      --text: #f4f5f7;
+      --muted: #9aa4c2;
+      --accent: #107C10;
+      --accent-xbox: #12b76a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #102714 0%, #05070d 55%, #020308 100%);
+      color: var(--text);
+      font-family: "Neue Haas Grotesk", "Inter", "Segoe UI", sans-serif;
+    }
+
+    .wrapper {
+      width: min(640px, 92vw);
+      background: color-mix(in srgb, var(--card) 80%, transparent 20%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: clamp(1.75rem, 2vw + 1rem, 2.5rem);
+      box-shadow: 0 30px 80px rgba(5, 10, 34, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 2.4vw + 1rem, 2.5rem);
+      letter-spacing: 0.04em;
+    }
+
+    .title-block p {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: clamp(0.95rem, 0.4vw + 0.9rem, 1.1rem);
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: grid;
+      gap: 1.2rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .cta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      padding: 1.4rem 1.5rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .cta span {
+      display: block;
+    }
+
+    .cta::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 0;
+    }
+
+    .cta:hover,
+    .cta:focus-visible {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 24px 45px rgba(12, 18, 40, 0.45);
+      outline: none;
+    }
+
+    .cta:hover::after,
+    .cta:focus-visible::after {
+      opacity: 1;
+    }
+
+    .cta.xbox360::after {
+      background: linear-gradient(135deg, rgba(16, 124, 16, 0.3), rgba(4, 28, 8, 0.12));
+    }
+
+    .cta.original-xbox::after {
+      background: linear-gradient(135deg, rgba(120, 255, 160, 0.22), rgba(4, 28, 8, 0.12));
+    }
+
+    .cta .content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .cta .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .cta .brand img {
+      display: block;
+      max-width: 160px;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.35));
+    }
+
+    .cta .brand img.brand-secondary {
+      max-width: 200px;
+    }
+
+    .cta .byline {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .cta .description {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    .cta .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .cta .tag {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .cta .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.2rem;
+    }
+
+    .cta .button-row a {
+      flex: 1 1 150px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cta .button-row a:hover,
+    .cta .button-row a:focus-visible {
+      transform: translateY(-3px);
+      background: rgba(16, 124, 16, 0.3);
+      box-shadow: 0 16px 32px rgba(5, 12, 38, 0.35);
+      outline: none;
+    }
+
+    .cta .disclaimer {
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 1.5rem 1rem;
+        align-items: flex-start;
+      }
+
+      .wrapper {
+        margin: auto;
+        gap: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrapper">
+    <div class="title-block">
+      <h1>Select an Xbox exploit experience</h1>
+      <p>Choose the Xbox exploit resource you need. Links will launch the official projects from their respective maintainers.</p>
+    </div>
+
+    <div class="actions">
+      <div class="cta xbox360" data-target="xbox-360-bad-update">
+        <div class="content">
+          <div class="brand">
+            <img class="brand-secondary" src="/assets/Xbox%20360%20.png" alt="Xbox 360 Bad Update" loading="lazy">
+          </div>
+          <span class="byline">By grimdoomer</span>
+          <span class="description">Software-only Xbox 360 exploit and softmod toolkit. Access community research, setup notes, and downloads from the original project.</span>
+          <div class="tag-row">
+            <span class="tag">Xbox 360</span>
+            <span class="tag">Softmod</span>
+            <span class="tag">Exploit</span>
+            <span class="tag">Bad Update</span>
+          </div>
+          <div class="button-row">
+            <a href="https://github.com/grimdoomer/Xbox360BadUpdate" rel="noopener" target="_blank">View Original Project</a>
+            <a href="https://github.com/grimdoomer/Xbox360BadUpdate/releases" rel="noopener" target="_blank">View Releases</a>
+          </div>
+          <span class="disclaimer">This is an external community project. Vortex Prime links to the original repository and does not host or maintain these exploit files.</span>
+        </div>
+      </div>
+
+      <div class="cta original-xbox" data-target="endgame-original-xbox">
+        <div class="content">
+          <div class="brand">
+            <img class="brand-secondary" src="/assets/regional%20xbox.png" alt="ENDGAME Original Xbox" loading="lazy">
+          </div>
+          <span class="byline">By XboxDev</span>
+          <span class="description">A modern dashboard exploit for the original Microsoft Xbox. Explore ENDGAME setup steps, tooling, and release builds from the XboxDev community.</span>
+          <div class="tag-row">
+            <span class="tag">Original Xbox</span>
+            <span class="tag">Dashboard</span>
+            <span class="tag">Softmod</span>
+            <span class="tag">ENDGAME</span>
+          </div>
+          <div class="button-row">
+            <a href="https://github.com/XboxDev/endgame-exploit" rel="noopener" target="_blank">View Original Project</a>
+            <a href="https://github.com/XboxDev/endgame-exploit/releases" rel="noopener" target="_blank">View Releases</a>
+          </div>
+          <span class="disclaimer">This is an external community project. Vortex Prime links to the original repository and does not host or maintain these exploit files.</span>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="/assets/js/security-gate.js"></script>
+</body>
+</html>
