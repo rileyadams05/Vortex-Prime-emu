@@ -66,13 +66,16 @@ function prepareDestination() {
 }
 
 function generateCode() {
-  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const length = 5;
+  // Mixed-case alphanumeric characters excluding ambiguous ones (O, 0, I, l, 1)
+  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const length = 6;
   let code = "";
   if (window.crypto?.getRandomValues) {
-    window.crypto.getRandomValues(new Uint8Array(length)).forEach((value) => {
-      code += charset[value % charset.length];
-    });
+    const bytes = new Uint8Array(length);
+    window.crypto.getRandomValues(bytes);
+    for (let i = 0; i < length; i += 1) {
+      code += charset[bytes[i] % charset.length];
+    }
   } else {
     for (let i = 0; i < length; i += 1) {
       const value = Math.floor(Math.random() * charset.length);
@@ -82,13 +85,71 @@ function generateCode() {
   activeCode = code;
   solved = false;
   continueBtn.disabled = true;
-  if (codeOutput) codeOutput.textContent = code;
+  
+  if (codeOutput) {
+    codeOutput.innerHTML = "";
+    for (let i = 0; i < code.length; i += 1) {
+      const span = document.createElement("span");
+      span.textContent = code[i];
+      
+      // Random rotation between -22 and 22 degrees
+      const rot = Math.floor(Math.random() * 44) - 22;
+      // Random vertical translation between -7px and 7px
+      const transY = Math.floor(Math.random() * 14) - 7;
+      // Random skew X between -12 and 12 degrees
+      const skewX = Math.floor(Math.random() * 24) - 12;
+      // Random scale between 0.85 and 1.25
+      const scale = 0.85 + Math.random() * 0.4;
+      
+      const fonts = ["Space Grotesk", "JetBrains Mono", "Courier New", "Georgia", "Impact", "Arial Black"];
+      const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+      
+      span.style.transform = `translateY(${transY}px) rotate(${rot}deg) skewX(${skewX}deg) scale(${scale})`;
+      span.style.fontFamily = randomFont;
+      
+      // Randomized color brightness matching the theme
+      const light = 60 + Math.floor(Math.random() * 25);
+      span.style.color = `hsl(142, 85%, ${light}%)`;
+      
+      codeOutput.appendChild(span);
+    }
+  }
+
+  // Draw random noise lines and circles in SVG overlay
+  const svg = document.querySelector(".captcha-noise-lines");
+  if (svg) {
+    svg.innerHTML = "";
+    // Draw random line paths across the text
+    const lineCount = 4 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < lineCount; i += 1) {
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", `${Math.random() * 100}%`);
+      line.setAttribute("y1", `${Math.random() * 100}%`);
+      line.setAttribute("x2", `${Math.random() * 100}%`);
+      line.setAttribute("y2", `${Math.random() * 100}%`);
+      line.setAttribute("stroke", `rgba(60, 232, 130, ${0.22 + Math.random() * 0.35})`);
+      line.setAttribute("stroke-width", `${1.2 + Math.random() * 2}`);
+      svg.appendChild(line);
+    }
+    // Draw dots
+    const dotCount = 25 + Math.floor(Math.random() * 20);
+    for (let i = 0; i < dotCount; i += 1) {
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", `${Math.random() * 100}%`);
+      circle.setAttribute("cy", `${Math.random() * 100}%`);
+      circle.setAttribute("r", `${1 + Math.random() * 2}`);
+      circle.setAttribute("fill", `rgba(60, 232, 130, ${0.12 + Math.random() * 0.3})`);
+      svg.appendChild(circle);
+    }
+  }
+
   if (feedback) {
     feedback.textContent = "Enter the code shown above to continue.";
     feedback.classList.remove("error", "success");
   }
   if (input) {
     input.value = "";
+    input.placeholder = "Enter captcha (case-sensitive)";
     input.focus({ preventScroll: true });
   }
 }
@@ -96,7 +157,7 @@ function generateCode() {
 function attachChallengeHandlers() {
   confirmBtn?.addEventListener("click", () => {
     if (!input) return;
-    const guess = input.value.trim().toUpperCase();
+    const guess = input.value.trim();
     if (!guess) {
       feedback?.classList.remove("success");
       feedback?.classList.add("error");

@@ -21,11 +21,7 @@
       <main class="security-card" id="security-card" role="main">
         <div class="card-head">
           <div class="badge" aria-hidden="true">
-            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 20.5C8 15.2533 8 12.6299 9.19726 11.017C9.76371 10.2596 10.4962 9.65921 11.3301 9.27032C13.0415 8.5 15.3609 8.5 20 8.5H28C32.6391 8.5 34.9585 8.5 36.6699 9.27032C37.5038 9.65921 38.2363 10.2596 38.8027 11.017C40 12.6299 40 15.2533 40 20.5V26.5C40 33.3325 40 36.7488 38.4853 39.0711C38.1036 39.6487 37.6487 40.1036 37.0711 40.4853C34.7488 42 31.3325 42 24.5 42C17.6675 42 14.2512 42 11.9289 40.4853C11.3513 40.1036 10.8964 39.6487 10.5147 39.0711C9 36.7488 9 33.3325 9 26.5V20.5H8Z" fill="#10263A" />
-              <path d="M17 21V17C17 12.5817 20.5817 9 25 9C29.4183 9 33 12.5817 33 17V21" stroke="#3CE882" stroke-width="3" stroke-linecap="round" />
-              <rect x="19" y="26" width="12" height="10" rx="3" fill="#3CE882" opacity="0.85" />
-            </svg>
+            <img src="/assets/locked.png" alt="Lock icon" />
           </div>
           <div>
             <h1>Security Check</h1>
@@ -55,6 +51,7 @@
 
           <div class="challenge-visual" aria-live="polite">
             <div class="challenge-wave" aria-hidden="true"></div>
+            <svg class="captcha-noise-lines" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2;"></svg>
             <div class="challenge-code" id="challenge-code">—</div>
           </div>
 

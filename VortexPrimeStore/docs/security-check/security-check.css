@@ -62,9 +62,11 @@ body {
   box-shadow: inset 0 0 0 1px rgba(60, 232, 130, 0.25);
 }
 
-.badge svg {
+.badge svg,
+.badge img {
   width: 48px;
   height: 48px;
+  object-fit: contain;
 }
 
 h1 {
@@ -182,11 +184,21 @@ h1 {
   font-family: "Space Grotesk", "JetBrains Mono", monospace;
   font-size: clamp(2.25rem, 4vw, 3rem);
   font-weight: 700;
-  letter-spacing: 0.35em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text);
   text-shadow: 0 8px 28px rgba(10, 18, 30, 0.65);
-  z-index: 1;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.challenge-code span {
+  display: inline-block;
+  margin: 0 0.12em;
+  user-select: none;
+  transition: transform 0.25s ease;
 }
 
 .challenge-inputs {
