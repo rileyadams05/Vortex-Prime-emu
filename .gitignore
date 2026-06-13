@@ -8,6 +8,7 @@ MY-google-ID.*
 MY-google-ID/
 get-token-and-set-secrets.mjs
 node_modules/.cache/
+.npm-cache/
 For Vortex-Prime-emu/
 store test/
 store test.7z

@@ -12,13 +12,25 @@
   "dependencies": {
     "@uppy/companion": "6.2.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "dotenv": "^17.4.2",
+    "express": "^4.22.2",
     "express-session": "^1.18.1",
     "fs-extra": "^11.2.0",
-    "googleapis": "^131.0.0",
-    "multer": "^1.4.5-lts.1",
+    "googleapis": "^173.0.0",
+    "multer": "^2.1.1",
     "nanoid": "^5.1.11",
-    "open": "^9.1.0"
+    "open": "^11.0.0"
+  },
+  "overrides": {
+    "@uppy/companion": {
+      "express": "4.22.2"
+    },
+    "body-parser": "1.20.5",
+    "elliptic": "6.6.1",
+    "on-headers": "1.1.0",
+    "qs": "6.15.2",
+    "serialize-javascript": "7.0.5",
+    "uuid": "14.0.0",
+    "ws": "8.21.0"
   }
 }

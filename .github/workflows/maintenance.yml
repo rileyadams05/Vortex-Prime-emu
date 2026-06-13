@@ -1,0 +1,55 @@
+name: Maintenance Checks
+
+on:
+  schedule:
+    - cron: "0 22 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  root:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Audit root dependencies
+        run: npm audit --audit-level=high
+
+      - name: Build site bundles
+        run: npm run build
+
+  companion-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: companion-server/package-lock.json
+
+      - name: Install companion dependencies
+        working-directory: companion-server
+        run: npm ci
+
+      - name: Audit companion dependencies
+        working-directory: companion-server
+        run: npm audit --audit-level=critical
+
+      - name: Syntax check companion server
+        run: node --check companion-server/server.mjs
