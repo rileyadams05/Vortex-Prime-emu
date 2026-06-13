@@ -9,11 +9,7 @@ var __typeError = (msg) => {
 };
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __commonJS = (cb, mod) => function __require() {
-  try {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-  } catch (e) {
-    throw mod = 0, e;
-  }
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -2698,7 +2694,7 @@ var _Uppy = class _Uppy {
       (_b = (_a = plugin.provider) == null ? void 0 : _a.logout) == null ? void 0 : _b.call(_a);
     });
   }
-  [/* @__PURE__ */ Symbol.for("uppy test: updateTotalProgress")]() {
+  [Symbol.for("uppy test: updateTotalProgress")]() {
     return __privateMethod(this, _Uppy_instances, updateTotalProgress_fn).call(this);
   }
   updateOnlineStatus() {
@@ -2763,7 +2759,7 @@ Uppy plugins must have unique \`id\` options.`;
     }
     return void 0;
   }
-  [/* @__PURE__ */ Symbol.for("uppy test: getPlugins")](type) {
+  [Symbol.for("uppy test: getPlugins")](type) {
     return __privateGet(this, _plugins)[type];
   }
   /**
@@ -2884,7 +2880,7 @@ Uppy plugins must have unique \`id\` options.`;
     this.emit("complete", result);
     return result;
   }
-  [/* @__PURE__ */ Symbol.for("uppy test: createUpload")](...args) {
+  [Symbol.for("uppy test: createUpload")](...args) {
     return __privateMethod(this, _Uppy_instances, createUpload_fn).call(this, ...args);
   }
   /**
@@ -3979,11 +3975,11 @@ if (typeof window !== "undefined") {
   window.dispatchEvent(new CustomEvent("vortex-admin-portal-loaded"));
 }
 var AdminUploadAdapter = VortexUploadAdapter;
-var index_default = portal_default;
+var admin_default = portal_default;
 export {
   AdminUploadAdapter,
   createUploadFieldManager,
-  index_default as default,
+  admin_default as default,
   deleteStoreItem,
   getBackendStatus,
   loadStoreItems,
