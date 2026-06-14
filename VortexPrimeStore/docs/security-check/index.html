@@ -4,16 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png">
-  <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png">
-  <link rel="icon" href="/favicon-192x192.png" sizes="192x192" type="image/png">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
-  <link rel="manifest" href="/site.webmanifest">
-  <meta property="og:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
-  <title>Security Check • Vortex Prime</title>
+    <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png">
+    <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png">
+    <link rel="icon" href="/favicon-192x192.png" sizes="192x192" type="image/png">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta property="og:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
+    <title>Security Check • Vortex Prime</title>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></script>
     <link rel="stylesheet" href="security-check.css" />
   </head>
   <body>
@@ -21,7 +22,7 @@
       <main class="security-card" id="security-card" role="main">
         <div class="card-head">
           <div class="badge" aria-hidden="true">
-            <img src="/assets/locked.png" alt="Lock icon" />
+            <img src="../assets/locked.png" alt="Lock icon" />
           </div>
           <div>
             <h1>Security Check</h1>
@@ -36,54 +37,12 @@
         </section>
 
         <section class="challenge-area" id="challenge-area">
-          <!-- Code Challenge Method -->
-          <div class="challenge-method" id="method-code">
-            <div class="botdetect-captcha-container">
-              <div class="captcha-row">
-                <div class="canvas-wrapper">
-                  <canvas id="captcha-canvas" width="280" height="80"></canvas>
-                </div>
-                <div class="captcha-controls">
-                  <button type="button" class="captcha-control-btn" id="refresh-btn" title="Change the code">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-                  </button>
-                  <button type="button" class="captcha-control-btn" id="audio-btn" title="Speak the code">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                  </button>
-                </div>
-              </div>
-              <div class="input-row">
-                <label class="visually-hidden" for="challenge-input">PLEASE RETYPE THE CODE ABOVE</label>
-                <input
-                  type="text"
-                  id="challenge-input"
-                  name="challenge-input"
-                  maxlength="5"
-                  autocomplete="off"
-                  inputmode="text"
-                  placeholder="PLEASE RETYPE THE CODE ABOVE"
-                  aria-describedby="challenge-feedback"
-                />
-                <button type="button" class="btn btn-confirm" id="confirm-btn">Verify</button>
-              </div>
-            </div>
+          <div class="recaptcha-verification-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem 0;">
+            <div class="spinner" id="verification-spinner"></div>
+            <p class="challenge-feedback" id="challenge-feedback" role="status" style="margin: 0; font-size: 0.95rem; color: var(--text-muted);">
+              Verifying browser safety...
+            </p>
           </div>
-
-          <!-- Picture Challenge Method -->
-          <div class="challenge-method" id="method-picture" style="display: none;">
-            <div class="recaptcha-challenge-container">
-              <div id="recaptcha-widget"></div>
-            </div>
-          </div>
-
-          <!-- Method Toggle Button -->
-          <div class="challenge-toggle-container">
-            <button type="button" class="btn-toggle-method" id="toggle-method-btn">Prefer pictures? Use picture challenge</button>
-          </div>
-
-          <p class="challenge-feedback" id="challenge-feedback" role="status">
-            Enter the code shown above to continue.
-          </p>
         </section>
 
         <div class="actions">

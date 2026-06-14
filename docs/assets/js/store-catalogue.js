@@ -1,4 +1,4 @@
-// src/backend/config.js
+// ../../src/backend/config.js
 var DEFAULT_LOCAL_PORT = 4100;
 var PRODUCTION_BASE_URL = "https://vortex-prime-emu.com";
 function readGlobal(name) {
@@ -84,7 +84,7 @@ async function fetchJson(path, options = {}) {
   return response.json();
 }
 
-// src/admin/upload-adapter.js
+// ../../src/admin/upload-adapter.js
 var NOT_CONFIGURED_MESSAGE = "Upload backend is not configured yet.";
 var backendStatus = {
   configured: false,
@@ -166,7 +166,7 @@ function getBackendStatus() {
   return { ...backendStatus };
 }
 
-// src/store/catalogue.js
+// ../../src/store/catalogue.js
 var NOT_CONFIGURED_MESSAGE2 = "Store backend is not configured yet.";
 async function getAuthConfig() {
   return fetchJson("/api/auth/config", { credentials: "include" });

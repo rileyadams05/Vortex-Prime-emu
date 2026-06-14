@@ -119,212 +119,13 @@ h1 {
   gap: 1.5rem;
 }
 
-.canvas-challenge-container {
+#captcha-form {
+  width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.canvas-wrapper {
-  background: #000000;
-  border: 1px solid rgba(85, 150, 255, 0.25);
-  border-radius: 10px;
-  overflow: hidden;
-  display: flex;
-  width: 280px;
-  height: 80px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-}
-
-#captcha-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* BotDetect CAPTCHA layout styles */
-.botdetect-captcha-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 324px;
-  margin: 0 auto;
-}
-
-.captcha-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-}
-
-.captcha-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 38px;
-}
-
-.captcha-control-btn {
-  width: 38px;
-  height: 38px;
-  background: rgba(14, 28, 46, 0.85);
-  border: 1px solid rgba(142, 161, 199, 0.25);
-  color: var(--text-muted);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
-}
-
-.captcha-control-btn:hover,
-.captcha-control-btn:focus-visible {
-  border-color: var(--accent);
-  color: var(--text);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
-  outline: none;
-}
-
-.captcha-control-btn svg {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-.input-row {
-  display: flex;
-  gap: 6px;
-  width: 100%;
-}
-
-.input-row input {
-  flex: 1;
-  background: rgba(6, 12, 24, 0.88);
-  border: 1px solid rgba(85, 150, 255, 0.25);
-  border-radius: 10px;
-  padding: 0.85rem 1.1rem;
-  color: var(--text);
-  font-size: 0.95rem;
-  letter-spacing: 0.05em;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.input-row input::placeholder {
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.input-row input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-  outline: none;
-}
-
-.input-row .btn-confirm {
-  flex: 0 0 90px;
-  height: 50px;
-  background: rgba(14, 28, 46, 0.85);
-  color: var(--text);
-  border: 1px solid rgba(85, 150, 255, 0.25);
-  padding: 0 1rem;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.input-row .btn-confirm:hover,
-.input-row .btn-confirm:focus-visible {
-  transform: translateY(-1px);
-  border-color: var(--accent);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
-}
-
-.challenge-refresh {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: rgba(14, 28, 46, 0.85);
-  border: 1px solid rgba(142, 161, 199, 0.25);
-  color: var(--text-muted);
-  border-radius: 10px;
-  padding: 0.75rem 1.1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  height: 50px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.challenge-refresh svg {
-  width: 18px;
-  height: 18px;
-}
-
-.challenge-refresh:hover,
-.challenge-refresh:focus-visible {
-  transform: translateY(-1px);
-  border-color: var(--accent);
-  color: var(--text);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
-}
-
-.challenge-inputs {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-#challenge-input {
-  flex: 1 1 200px;
-  background: rgba(6, 12, 24, 0.88);
-  border: 1px solid rgba(85, 150, 255, 0.25);
-  border-radius: 10px;
-  padding: 0.85rem 1.1rem;
-  color: var(--text);
-  font-size: 1.05rem;
-  letter-spacing: 0.1em;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-#challenge-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-  outline: none;
-}
-
-.btn-confirm {
-  background: rgba(14, 28, 46, 0.85);
-  color: var(--text);
-  border: 1px solid rgba(85, 150, 255, 0.25);
-  padding: 0.75rem 1.6rem;
-  border-radius: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
-
-.btn-confirm:hover,
-.btn-confirm:focus-visible {
-  transform: translateY(-1px);
-  border-color: var(--accent);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
 }
 
 .challenge-feedback {
@@ -452,10 +253,134 @@ h1 {
 }
 
 /* ==========================================================================
-   Dual-Method CAPTCHA & Picture Challenge Styles
+   Dual-Method CAPTCHA Styles
    ========================================================================== */
 
-/* Toggle Button Container & Style */
+.botdetect-captcha-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 324px;
+  margin: 0 auto;
+}
+
+.captcha-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-wrapper {
+  background: #000000;
+  border: 1px solid rgba(85, 150, 255, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  width: 280px;
+  height: 80px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+#captcha-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.captcha-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 38px;
+}
+
+.captcha-control-btn {
+  width: 38px;
+  height: 38px;
+  background: rgba(14, 28, 46, 0.85);
+  border: 1px solid rgba(142, 161, 199, 0.25);
+  color: var(--text-muted);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.captcha-control-btn:hover,
+.captcha-control-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+  outline: none;
+}
+
+.captcha-control-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.input-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.input-row input {
+  flex: 1;
+  background: rgba(6, 12, 24, 0.88);
+  border: 1px solid rgba(85, 150, 255, 0.25);
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  color: var(--text);
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-row input::placeholder {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.input-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  outline: none;
+}
+
+.input-row .btn-confirm {
+  flex: 0 0 90px;
+  height: 50px;
+  background: rgba(14, 28, 46, 0.85);
+  color: var(--text);
+  border: 1px solid rgba(85, 150, 255, 0.25);
+  padding: 0 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.input-row .btn-confirm:hover,
+.input-row .btn-confirm:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+}
+
 .challenge-toggle-container {
   display: flex;
   justify-content: center;
@@ -484,19 +409,18 @@ h1 {
   outline: none;
 }
 
-/* Picture Challenge Container (Real Google reCAPTCHA) */
-.recaptcha-challenge-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 78px;
-  margin: 10px 0;
-  user-select: none;
+/* Spinner Styles */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-left-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-/* Shake Animation */
-@keyframes recaptcha-shake {
-  0%, 100% { transform: translateX(0); }
-  15%, 45%, 75% { transform: translateX(-6px); }
-  30%, 60%, 90% { transform: translateX(6px); }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
+

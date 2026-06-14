@@ -17,24 +17,34 @@ const destinationHost = document.getElementById("destination-host");
 const destinationUrl = document.getElementById("destination-url");
 const continueBtn = document.getElementById("continue-btn");
 const cancelBtn = document.getElementById("cancel-btn");
+const feedback = document.getElementById("challenge-feedback");
 const errorTemplate = /** @type {HTMLTemplateElement} */ (document.getElementById("error-template"));
 
-const canvas = /** @type {HTMLCanvasElement | null} */ (document.getElementById("captcha-canvas"));
-const input = /** @type {HTMLInputElement | null} */ (document.getElementById("challenge-input"));
-const confirmBtn = document.getElementById("confirm-btn");
-const refreshBtn = document.getElementById("refresh-btn");
-const feedback = document.getElementById("challenge-feedback");
-
-const methodCodeEl = document.getElementById("method-code");
-const methodPictureEl = document.getElementById("method-picture");
-const toggleMethodBtn = document.getElementById("toggle-method-btn");
-const audioBtn = document.getElementById("audio-btn");
+const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
 
 let resolvedTarget = null;
-let activeCode = "";
-let solved = false;
-let currentMethod = "code";
-let recaptchaWidgetId = null;
+let isLoggedIn = false;
+let reCaptchaPassed = false;
+let authEndpointStatus = "unknown"; // "unknown", "exists", "missing", "error"
+
+/**
+ * Dynamically resolves the lock icon source to avoid broken image links
+ * when paths vary between environments (local root server vs. GitHub Pages custom domain).
+ */
+function fixLockIcon() {
+  const badgeImg = document.querySelector(".badge img");
+  if (badgeImg) {
+    const path = window.location.pathname;
+    if (path.includes("/VortexPrimeStore/docs/")) {
+      badgeImg.src = "/VortexPrimeStore/docs/assets/locked.png";
+    } else if (path.includes("/docs/")) {
+      badgeImg.src = "/docs/assets/locked.png";
+    } else {
+      // Custom domain (e.g. vortex-prime-emu.com) mapping docs/ to the root
+      badgeImg.src = "/assets/locked.png";
+    }
+  }
+}
 
 function renderError(message) {
   const fragment = errorTemplate.content.cloneNode(true);
@@ -43,7 +53,15 @@ function renderError(message) {
   const backBtn = fragment.getElementById("error-back");
 
   if (messageEl) messageEl.textContent = message;
-  if (backBtn) backBtn.addEventListener("click", () => window.history.length > 1 ? window.history.back() : window.location.assign("/"));
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.assign("/");
+      }
+    });
+  }
 
   card?.replaceWith(errorCard);
 }
@@ -72,367 +90,147 @@ function prepareDestination() {
   }
 }
 
-function resetVerification() {
-  solved = false;
-  if (continueBtn) continueBtn.disabled = true;
-
-  if (feedback) {
-    feedback.classList.remove("error", "success");
-    if (currentMethod === "code") {
-      feedback.textContent = "Enter the code shown above to continue.";
-    } else {
-      feedback.textContent = "Solve the reCAPTCHA challenge below to continue.";
+/**
+ * Check if the user is authenticated.
+ * Separates local testing behaviour from production.
+ * Live production does NOT allow URL/localStorage parameters for authentication.
+ */
+async function checkLoginState() {
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  
+  if (isLocal) {
+    console.log("[Security Gate] Running in LOCAL testing mode.");
+    // Allow URL parameter overrides only during local testing
+    if (params.get("authed") === "1" || params.get("logged_in") === "1" || params.get("user")) {
+      console.log("[Security Gate] Local test bypass active (URL parameter).");
+      return true;
     }
-  }
-
-  if (input) {
-    input.value = "";
-    input.disabled = false;
-  }
-
-  // Reset reCAPTCHA if rendered
-  if (currentMethod === "picture" && window.grecaptcha && recaptchaWidgetId !== null) {
+    // Allow localStorage bypass overrides only during local testing
     try {
-      window.grecaptcha.reset(recaptchaWidgetId);
-    } catch (err) {
-      console.error("Error resetting reCAPTCHA", err);
-    }
-  }
-
-  if (confirmBtn) confirmBtn.disabled = false;
-}
-
-function loadRecaptchaScript(callback) {
-  if (window.grecaptcha) {
-    callback();
-    return;
-  }
-  let script = document.querySelector('script[src*="recaptcha/api.js"]');
-  if (!script) {
-    script = document.createElement("script");
-    script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.grecaptcha && window.grecaptcha.ready) {
-        window.grecaptcha.ready(callback);
-      } else {
-        const interval = setInterval(() => {
-          if (window.grecaptcha && window.grecaptcha.render) {
-            clearInterval(interval);
-            callback();
-          }
-        }, 100);
+      if (localStorage.getItem("user") || localStorage.getItem("authed") === "true") {
+        console.log("[Security Gate] Local test bypass active (localStorage).");
+        return true;
       }
-    };
-    script.onerror = () => {
-      console.error("Failed to load Google reCAPTCHA.");
-      if (feedback) {
-        feedback.textContent = "Could not load Google reCAPTCHA. Check your ad blocker or connection.";
-        feedback.classList.add("error");
+    } catch (e) {}
+  } else {
+    console.log("[Security Gate] Running in PRODUCTION mode. Bypasses are strictly disabled.");
+  }
+
+  // Real production authentication check
+  try {
+    const res = await fetch("/api/auth/config", { credentials: "include" });
+    if (res.status === 404) {
+      authEndpointStatus = "missing";
+      return false;
+    }
+    authEndpointStatus = "exists";
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.user) {
+        return true;
       }
-    };
-    document.head.appendChild(script);
-  } else {
-    callback();
-  }
-}
-
-function renderRecaptcha() {
-  loadRecaptchaScript(() => {
-    try {
-      const widgetContainer = document.getElementById("recaptcha-widget");
-      if (!widgetContainer) return;
-      
-      if (recaptchaWidgetId !== null) {
-        window.grecaptcha.reset(recaptchaWidgetId);
-        return;
-      }
-
-      recaptchaWidgetId = window.grecaptcha.render("recaptcha-widget", {
-        sitekey: "6LfVJR0tAAAAAEl9GICb3-2sMXX0zmBWXtMegy8t",
-        theme: "dark",
-        callback: (response) => {
-          solved = true;
-          if (continueBtn) continueBtn.disabled = !resolvedTarget;
-          if (feedback) {
-            feedback.textContent = "Verification successful! You can now continue.";
-            feedback.classList.remove("error");
-            feedback.classList.add("success");
-          }
-          continueBtn?.focus({ preventScroll: true });
-        },
-        "expired-callback": () => {
-          solved = false;
-          if (continueBtn) continueBtn.disabled = true;
-          if (feedback) {
-            feedback.textContent = "Verification expired. Please solve the challenge again.";
-            feedback.classList.remove("success");
-            feedback.classList.add("error");
-          }
-        },
-        "error-callback": () => {
-          solved = false;
-          if (continueBtn) continueBtn.disabled = true;
-          if (feedback) {
-            feedback.textContent = "An error occurred with reCAPTCHA. Please reload or switch methods.";
-            feedback.classList.remove("success");
-            feedback.classList.add("error");
-          }
-        }
-      });
-    } catch (err) {
-      console.error("Error rendering reCAPTCHA", err);
     }
-  });
-}
-
-function switchMethod(method) {
-  if (currentMethod === method) return;
-  currentMethod = method;
-
-  if (method === "code") {
-    if (methodCodeEl) methodCodeEl.style.display = "block";
-    if (methodPictureEl) methodPictureEl.style.display = "none";
-    if (toggleMethodBtn) toggleMethodBtn.textContent = "Prefer pictures? Use picture challenge";
-    resetVerification();
-    generateCode();
-  } else {
-    if (methodCodeEl) methodCodeEl.style.display = "none";
-    if (methodPictureEl) methodPictureEl.style.display = "block";
-    if (toggleMethodBtn) toggleMethodBtn.textContent = "Prefer code? Use code challenge";
-    resetVerification();
-    renderRecaptcha();
+  } catch (err) {
+    console.warn("[Security Gate] Failed to contact authentication service:", err);
+    authEndpointStatus = "error";
   }
-}
 
-function generateCode() {
-  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  const length = 5;
-  let code = "";
-  if (window.crypto?.getRandomValues) {
-    const bytes = new Uint8Array(length);
-    window.crypto.getRandomValues(bytes);
-    for (let i = 0; i < length; i += 1) {
-      code += charset[bytes[i] % charset.length];
-    }
-  } else {
-    for (let i = 0; i < length; i += 1) {
-      const value = Math.floor(Math.random() * charset.length);
-      code += charset[value];
-    }
-  }
-  activeCode = code;
-  solved = false;
-  if (continueBtn) continueBtn.disabled = true;
-
-  drawCaptcha(code);
-
-  if (feedback) {
-    feedback.textContent = "Enter the code shown above to continue.";
-    feedback.classList.remove("error", "success");
-  }
-  if (input) {
-    input.value = "";
-    input.disabled = false;
-    input.focus({ preventScroll: true });
-  }
-  if (confirmBtn) confirmBtn.disabled = false;
+  return false;
 }
 
 /**
- * Draws the CAPTCHA text on the canvas with a high-contrast black/white BotDetect style.
- * @param {string} code 
+ * Executes Google reCAPTCHA v3 verification.
+ * @returns {Promise<boolean>}
  */
-function drawCaptcha(code) {
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const width = canvas.width;
-  const height = canvas.height;
-
-  // 1. Pure black background
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, width, height);
-
-  // 2. Draw white/grey background noise dots - 100 dots
-  ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-  for (let i = 0; i < 100; i += 1) {
-    ctx.fillRect(Math.random() * width, Math.random() * height, 1.5, 1.5);
-  }
-
-  // 3. Draw background curves/arcs (BotDetect style curved lines)
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 5; i += 1) {
-    ctx.beginPath();
-    ctx.moveTo(Math.random() * width, Math.random() * height);
-    ctx.bezierCurveTo(
-      Math.random() * width, Math.random() * height,
-      Math.random() * width, Math.random() * height,
-      Math.random() * width, Math.random() * height
-    );
-    ctx.stroke();
-  }
-
-  // 4. Draw large white warped characters
-  ctx.textBaseline = "middle";
-  const fonts = [
-    "bold 40px Georgia, serif",
-    "bold 42px 'Times New Roman', serif",
-    "bold 38px Garamond, serif",
-    "bold 40px 'Courier New', monospace"
-  ];
-  
-  for (let i = 0; i < code.length; i += 1) {
-    const char = code[i];
-    const font = fonts[Math.floor(Math.random() * fonts.length)];
-    ctx.font = font;
-
-    // Distribute 5 characters across the 280px canvas (each character block is ~48px)
-    const charX = 20 + i * 48 + (Math.random() * 8 - 4);
-    const charY = height / 2 + (Math.random() * 10 - 5);
-
-    // Subtle rotation (between -18 and 18 degrees) to keep it readable
-    const angle = (Math.random() * 36 - 18) * Math.PI / 180;
-    // Skewing
-    const skewX = (Math.random() * 20 - 10) * Math.PI / 180;
-
-    ctx.save();
-    ctx.translate(charX, charY);
-    ctx.rotate(angle);
-    ctx.transform(1, 0, Math.tan(skewX), 1, 0, 0);
-
-    // Pure white characters with a distinct dark shadow for a 3D embossed look
-    ctx.fillStyle = "#ffffff";
-    ctx.shadowColor = "rgba(0, 0, 0, 0.95)";
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-
-    // Compressing characters horizontally to look stretched (max width 35px)
-    ctx.fillText(char, 0, 0, 35);
-    ctx.restore();
-  }
-
-  // 5. Draw foreground curves overlapping the text - 3 lines
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-  ctx.lineWidth = 1.2;
-  for (let i = 0; i < 3; i += 1) {
-    ctx.beginPath();
-    ctx.moveTo(Math.random() * width, Math.random() * height);
-    ctx.bezierCurveTo(
-      Math.random() * width, Math.random() * height,
-      Math.random() * width, Math.random() * height,
-      Math.random() * width, Math.random() * height
-    );
-    ctx.stroke();
-  }
-
-  // 6. Draw foreground noise dots - 40 dots
-  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-  for (let i = 0; i < 40; i += 1) {
-    ctx.fillRect(Math.random() * width, Math.random() * height, 1.5, 1.5);
-  }
-}
-
-function speakCaptchaCode() {
-  if (!activeCode) return;
-  try {
-    if (!('speechSynthesis' in window)) {
-      return;
-    }
-    window.speechSynthesis.cancel();
-    
-    const spelledOut = activeCode.split("").map(char => char.toUpperCase()).join(", ");
-    const utterance = new SpeechSynthesisUtterance("Verification code: " + spelledOut);
-    utterance.rate = 0.75;
-    utterance.pitch = 1.0;
-    
-    const voices = window.speechSynthesis.getVoices();
-    const enVoice = voices.find(voice => voice.lang.toLowerCase().startsWith("en"));
-    if (enVoice) {
-      utterance.voice = enVoice;
-    }
-    
-    window.speechSynthesis.speak(utterance);
-  } catch (err) {
-    console.error("Audio spelling failed", err);
-  }
-}
-
-function attachChallengeHandlers() {
-  confirmBtn?.addEventListener("click", () => {
-    if (!input) return;
-    const guess = input.value.trim();
-    if (!guess) {
-      if (feedback) {
-        feedback.textContent = "Please enter the code shown above.";
-        feedback.classList.remove("success");
-        feedback.classList.add("error");
-      }
+function executeReCaptcha() {
+  return new Promise((resolve) => {
+    if (typeof grecaptcha === "undefined") {
+      console.error("reCAPTCHA library not loaded.");
+      resolve(false);
       return;
     }
 
-    if (guess.toLowerCase() === activeCode.toLowerCase()) {
-      solved = true;
-      if (continueBtn) continueBtn.disabled = !resolvedTarget;
-      if (feedback) {
-        feedback.textContent = "Verification successful! You can now continue.";
-        feedback.classList.remove("error");
-        feedback.classList.add("success");
-      }
-      if (input) input.disabled = true;
-      if (confirmBtn) confirmBtn.disabled = true;
-      continueBtn?.focus({ preventScroll: true });
-    } else {
-      solved = false;
-      if (continueBtn) continueBtn.disabled = true;
-      if (feedback) {
-        feedback.textContent = "Incorrect code. Please try again.";
-        feedback.classList.remove("success");
-        feedback.classList.add("error");
-      }
-      
-      const wrapper = document.querySelector(".canvas-wrapper");
-      if (wrapper) {
-        wrapper.style.animation = "none";
-        void wrapper.offsetWidth;
-        wrapper.style.animation = "recaptcha-shake 0.35s ease-in-out";
-      }
+    grecaptcha.ready(() => {
+      grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "security_check" })
+        .then((token) => {
+          if (token) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        })
+        .catch((err) => {
+          console.error("reCAPTCHA execution failed:", err);
+          resolve(false);
+        });
+    });
+  });
+}
 
-      generateCode();
+/**
+ * Main entrance logic for the security check gate.
+ * Requires BOTH: login status / authentication AND Google reCAPTCHA v3 verification.
+ */
+async function runSecurityGate() {
+  fixLockIcon();
+  prepareDestination();
+
+  // 1. Check if user is logged in
+  isLoggedIn = await checkLoginState();
+
+  const spinner = document.getElementById("verification-spinner");
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+  // Check if endpoint does not exist and we are not locally bypassed
+  if (authEndpointStatus === "missing" && (!isLocal || !isLoggedIn)) {
+    if (spinner) spinner.style.display = "none";
+    if (feedback) {
+      feedback.textContent = "Authentication service endpoint does not exist on this server.";
+      feedback.style.color = "#ff7b7b"; // danger color
     }
-  });
+    if (continueBtn) continueBtn.disabled = true;
+    return;
+  }
 
-  input?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      confirmBtn?.click();
+  if (!isLoggedIn) {
+    // Hide spinner and show sign in error message
+    if (spinner) spinner.style.display = "none";
+    if (feedback) {
+      feedback.textContent = "Please sign in before continuing.";
+      feedback.style.color = "#ff7b7b"; // danger color
     }
-  });
+    if (continueBtn) continueBtn.disabled = true;
+    return;
+  }
 
-  refreshBtn?.addEventListener("click", () => {
-    generateCode();
-  });
+  // 2. Run Google reCAPTCHA v3 since the user is logged in
+  reCaptchaPassed = await executeReCaptcha();
 
-  audioBtn?.addEventListener("click", () => {
-    speakCaptchaCode();
-  });
+  // Hide spinner after verification complete
+  if (spinner) spinner.style.display = "none";
 
-  toggleMethodBtn?.addEventListener("click", () => {
-    if (currentMethod === "code") {
-      switchMethod("picture");
-    } else {
-      switchMethod("code");
+  if (!reCaptchaPassed) {
+    if (feedback) {
+      feedback.textContent = "Verification failed. Please try again.";
+      feedback.style.color = "#ff7b7b"; // danger color
     }
-  });
+    if (continueBtn) continueBtn.disabled = true;
+  } else {
+    // Both checks pass
+    if (feedback) {
+      feedback.textContent = "Verification successful. You can now continue.";
+      feedback.style.color = "#22c55e"; // success color
+    }
+    if (continueBtn) {
+      continueBtn.disabled = !resolvedTarget;
+      continueBtn.focus({ preventScroll: true });
+    }
+  }
 }
 
 function attachActions() {
   continueBtn?.addEventListener("click", () => {
-    if (!resolvedTarget || !solved) return;
+    if (!resolvedTarget || !isLoggedIn || !reCaptchaPassed) return;
     safeWindowOpen(resolvedTarget);
     window.location.assign(resolvedTarget.href);
   });
@@ -446,7 +244,5 @@ function attachActions() {
   });
 }
 
-prepareDestination();
-generateCode();
-attachChallengeHandlers();
+runSecurityGate();
 attachActions();

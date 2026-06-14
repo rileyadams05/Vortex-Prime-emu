@@ -1,7 +1,0 @@
-{
-  "extends": "./tsconfig.shared",
-  "compilerOptions": {
-    "noEmit": true
-  },
-  "include": ["src/**/*", "test/**/*"]
-}

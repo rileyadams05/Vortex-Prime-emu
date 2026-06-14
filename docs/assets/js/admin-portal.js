@@ -34,9 +34,9 @@ var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 
-// node_modules/@transloadit/prettier-bytes/dist/prettierBytes.js
+// ../../node_modules/@transloadit/prettier-bytes/dist/prettierBytes.js
 var require_prettierBytes = __commonJS({
-  "node_modules/@transloadit/prettier-bytes/dist/prettierBytes.js"(exports) {
+  "../../node_modules/@transloadit/prettier-bytes/dist/prettierBytes.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.prettierBytes = prettierBytes2;
@@ -64,9 +64,9 @@ var require_prettierBytes = __commonJS({
   }
 });
 
-// node_modules/wildcard/index.js
+// ../../node_modules/wildcard/index.js
 var require_wildcard = __commonJS({
-  "node_modules/wildcard/index.js"(exports, module) {
+  "../../node_modules/wildcard/index.js"(exports, module) {
     "use strict";
     function WildcardMatcher(text, separator) {
       this.text = text = text || "";
@@ -123,9 +123,9 @@ var require_wildcard = __commonJS({
   }
 });
 
-// node_modules/mime-match/index.js
+// ../../node_modules/mime-match/index.js
 var require_mime_match = __commonJS({
-  "node_modules/mime-match/index.js"(exports, module) {
+  "../../node_modules/mime-match/index.js"(exports, module) {
     var wildcard = require_wildcard();
     var reMimePartSplit = /[\/\+\.]/;
     module.exports = function(target, pattern) {
@@ -138,9 +138,9 @@ var require_mime_match = __commonJS({
   }
 });
 
-// node_modules/lodash/isObject.js
+// ../../node_modules/lodash/isObject.js
 var require_isObject = __commonJS({
-  "node_modules/lodash/isObject.js"(exports, module) {
+  "../../node_modules/lodash/isObject.js"(exports, module) {
     function isObject(value) {
       var type = typeof value;
       return value != null && (type == "object" || type == "function");
@@ -149,17 +149,17 @@ var require_isObject = __commonJS({
   }
 });
 
-// node_modules/lodash/_freeGlobal.js
+// ../../node_modules/lodash/_freeGlobal.js
 var require_freeGlobal = __commonJS({
-  "node_modules/lodash/_freeGlobal.js"(exports, module) {
+  "../../node_modules/lodash/_freeGlobal.js"(exports, module) {
     var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
     module.exports = freeGlobal;
   }
 });
 
-// node_modules/lodash/_root.js
+// ../../node_modules/lodash/_root.js
 var require_root = __commonJS({
-  "node_modules/lodash/_root.js"(exports, module) {
+  "../../node_modules/lodash/_root.js"(exports, module) {
     var freeGlobal = require_freeGlobal();
     var freeSelf = typeof self == "object" && self && self.Object === Object && self;
     var root = freeGlobal || freeSelf || Function("return this")();
@@ -167,9 +167,9 @@ var require_root = __commonJS({
   }
 });
 
-// node_modules/lodash/now.js
+// ../../node_modules/lodash/now.js
 var require_now = __commonJS({
-  "node_modules/lodash/now.js"(exports, module) {
+  "../../node_modules/lodash/now.js"(exports, module) {
     var root = require_root();
     var now = function() {
       return root.Date.now();
@@ -178,9 +178,9 @@ var require_now = __commonJS({
   }
 });
 
-// node_modules/lodash/_trimmedEndIndex.js
+// ../../node_modules/lodash/_trimmedEndIndex.js
 var require_trimmedEndIndex = __commonJS({
-  "node_modules/lodash/_trimmedEndIndex.js"(exports, module) {
+  "../../node_modules/lodash/_trimmedEndIndex.js"(exports, module) {
     var reWhitespace = /\s/;
     function trimmedEndIndex(string) {
       var index = string.length;
@@ -192,9 +192,9 @@ var require_trimmedEndIndex = __commonJS({
   }
 });
 
-// node_modules/lodash/_baseTrim.js
+// ../../node_modules/lodash/_baseTrim.js
 var require_baseTrim = __commonJS({
-  "node_modules/lodash/_baseTrim.js"(exports, module) {
+  "../../node_modules/lodash/_baseTrim.js"(exports, module) {
     var trimmedEndIndex = require_trimmedEndIndex();
     var reTrimStart = /^\s+/;
     function baseTrim(string) {
@@ -204,18 +204,18 @@ var require_baseTrim = __commonJS({
   }
 });
 
-// node_modules/lodash/_Symbol.js
+// ../../node_modules/lodash/_Symbol.js
 var require_Symbol = __commonJS({
-  "node_modules/lodash/_Symbol.js"(exports, module) {
+  "../../node_modules/lodash/_Symbol.js"(exports, module) {
     var root = require_root();
     var Symbol2 = root.Symbol;
     module.exports = Symbol2;
   }
 });
 
-// node_modules/lodash/_getRawTag.js
+// ../../node_modules/lodash/_getRawTag.js
 var require_getRawTag = __commonJS({
-  "node_modules/lodash/_getRawTag.js"(exports, module) {
+  "../../node_modules/lodash/_getRawTag.js"(exports, module) {
     var Symbol2 = require_Symbol();
     var objectProto = Object.prototype;
     var hasOwnProperty = objectProto.hasOwnProperty;
@@ -242,9 +242,9 @@ var require_getRawTag = __commonJS({
   }
 });
 
-// node_modules/lodash/_objectToString.js
+// ../../node_modules/lodash/_objectToString.js
 var require_objectToString = __commonJS({
-  "node_modules/lodash/_objectToString.js"(exports, module) {
+  "../../node_modules/lodash/_objectToString.js"(exports, module) {
     var objectProto = Object.prototype;
     var nativeObjectToString = objectProto.toString;
     function objectToString(value) {
@@ -254,9 +254,9 @@ var require_objectToString = __commonJS({
   }
 });
 
-// node_modules/lodash/_baseGetTag.js
+// ../../node_modules/lodash/_baseGetTag.js
 var require_baseGetTag = __commonJS({
-  "node_modules/lodash/_baseGetTag.js"(exports, module) {
+  "../../node_modules/lodash/_baseGetTag.js"(exports, module) {
     var Symbol2 = require_Symbol();
     var getRawTag = require_getRawTag();
     var objectToString = require_objectToString();
@@ -273,9 +273,9 @@ var require_baseGetTag = __commonJS({
   }
 });
 
-// node_modules/lodash/isObjectLike.js
+// ../../node_modules/lodash/isObjectLike.js
 var require_isObjectLike = __commonJS({
-  "node_modules/lodash/isObjectLike.js"(exports, module) {
+  "../../node_modules/lodash/isObjectLike.js"(exports, module) {
     function isObjectLike(value) {
       return value != null && typeof value == "object";
     }
@@ -283,9 +283,9 @@ var require_isObjectLike = __commonJS({
   }
 });
 
-// node_modules/lodash/isSymbol.js
+// ../../node_modules/lodash/isSymbol.js
 var require_isSymbol = __commonJS({
-  "node_modules/lodash/isSymbol.js"(exports, module) {
+  "../../node_modules/lodash/isSymbol.js"(exports, module) {
     var baseGetTag = require_baseGetTag();
     var isObjectLike = require_isObjectLike();
     var symbolTag = "[object Symbol]";
@@ -296,9 +296,9 @@ var require_isSymbol = __commonJS({
   }
 });
 
-// node_modules/lodash/toNumber.js
+// ../../node_modules/lodash/toNumber.js
 var require_toNumber = __commonJS({
-  "node_modules/lodash/toNumber.js"(exports, module) {
+  "../../node_modules/lodash/toNumber.js"(exports, module) {
     var baseTrim = require_baseTrim();
     var isObject = require_isObject();
     var isSymbol = require_isSymbol();
@@ -329,9 +329,9 @@ var require_toNumber = __commonJS({
   }
 });
 
-// node_modules/lodash/debounce.js
+// ../../node_modules/lodash/debounce.js
 var require_debounce = __commonJS({
-  "node_modules/lodash/debounce.js"(exports, module) {
+  "../../node_modules/lodash/debounce.js"(exports, module) {
     var isObject = require_isObject();
     var now = require_now();
     var toNumber = require_toNumber();
@@ -423,9 +423,9 @@ var require_debounce = __commonJS({
   }
 });
 
-// node_modules/lodash/throttle.js
+// ../../node_modules/lodash/throttle.js
 var require_throttle = __commonJS({
-  "node_modules/lodash/throttle.js"(exports, module) {
+  "../../node_modules/lodash/throttle.js"(exports, module) {
     var debounce = require_debounce();
     var isObject = require_isObject();
     var FUNC_ERROR_TEXT = "Expected a function";
@@ -448,9 +448,9 @@ var require_throttle = __commonJS({
   }
 });
 
-// node_modules/namespace-emitter/index.js
+// ../../node_modules/namespace-emitter/index.js
 var require_namespace_emitter = __commonJS({
-  "node_modules/namespace-emitter/index.js"(exports, module) {
+  "../../node_modules/namespace-emitter/index.js"(exports, module) {
     module.exports = function createNamespaceEmitter() {
       var emitter = {};
       var _fns = emitter._fns = {};
@@ -520,7 +520,7 @@ var require_namespace_emitter = __commonJS({
   }
 });
 
-// src/backend/config.js
+// ../../src/backend/config.js
 var DEFAULT_LOCAL_PORT = 4100;
 var PRODUCTION_BASE_URL = "https://vortex-prime-emu.com";
 function readGlobal(name) {
@@ -606,7 +606,7 @@ async function fetchJson(path, options = {}) {
   return response.json();
 }
 
-// src/admin/upload-adapter.js
+// ../../src/admin/upload-adapter.js
 var NOT_CONFIGURED_MESSAGE = "Upload backend is not configured yet.";
 var backendStatus = {
   configured: false,
@@ -942,7 +942,7 @@ function uploadReadme(file, metadata = {}, { onProgress } = {}) {
   });
 }
 
-// src/admin/portal.js
+// ../../src/admin/portal.js
 var NOT_CONFIGURED_MESSAGE2 = "Upload backend is not configured yet.";
 var readyCallbacks = /* @__PURE__ */ new Set();
 var authCallbacks = /* @__PURE__ */ new Set();
@@ -1173,7 +1173,7 @@ initialise().catch((error) => {
 });
 var portal_default = AdminBackend;
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getFileNameAndExtension.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getFileNameAndExtension.ts
 function getFileNameAndExtension(fullFileName) {
   const lastDot = fullFileName.lastIndexOf(".");
   if (lastDot === -1 || lastDot === fullFileName.length - 1) {
@@ -1188,7 +1188,7 @@ function getFileNameAndExtension(fullFileName) {
   };
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/mimeTypes.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/mimeTypes.ts
 var mimeTypes_default = {
   __proto__: null,
   md: "text/markdown",
@@ -1245,7 +1245,7 @@ var mimeTypes_default = {
   dmg: "application/x-apple-diskimage"
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getFileType.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getFileType.ts
 function getFileType(file) {
   var _a;
   if (file.type) return file.type;
@@ -1256,7 +1256,7 @@ function getFileType(file) {
   return "application/octet-stream";
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/generateFileID.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/generateFileID.ts
 function encodeCharacter(character) {
   return character.charCodeAt(0).toString(32);
 }
@@ -1310,16 +1310,16 @@ function getSafeFileId(file, instanceId) {
   );
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/toArray.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/toArray.ts
 var toArray_default = Array.from;
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getDroppedFiles/utils/fallbackApi.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getDroppedFiles/utils/fallbackApi.ts
 function fallbackApi(dataTransfer) {
   const files = toArray_default(dataTransfer.files);
   return Promise.resolve(files);
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getDroppedFiles/utils/webkitGetAsEntryApi/getFilesAndDirectoriesFromDirectory.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getDroppedFiles/utils/webkitGetAsEntryApi/getFilesAndDirectoriesFromDirectory.ts
 function getFilesAndDirectoriesFromDirectory(directoryReader, oldEntries, logDropError, { onSuccess }) {
   directoryReader.readEntries(
     (entries) => {
@@ -1345,7 +1345,7 @@ function getFilesAndDirectoriesFromDirectory(directoryReader, oldEntries, logDro
   );
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getDroppedFiles/utils/webkitGetAsEntryApi/index.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getDroppedFiles/utils/webkitGetAsEntryApi/index.ts
 function getAsFileSystemHandleFromEntry(entry, logDropError) {
   if (entry == null) return entry;
   return {
@@ -1425,7 +1425,7 @@ async function* getFilesFromDataTransfer(dataTransfer, logDropError) {
   }
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getDroppedFiles/index.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getDroppedFiles/index.ts
 async function getDroppedFiles(dataTransfer, options) {
   var _a;
   const logDropError = (_a = options == null ? void 0 : options.logDropError) != null ? _a : Function.prototype;
@@ -1440,7 +1440,7 @@ async function getDroppedFiles(dataTransfer, options) {
   }
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getTimeStamp.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/getTimeStamp.ts
 function pad(number) {
   return number < 10 ? `0${number}` : number.toString();
 }
@@ -1452,7 +1452,7 @@ function getTimeStamp() {
   return `${hours}:${minutes}:${seconds}`;
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/Translator.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/utils/src/Translator.ts
 function insertReplacement(source, rx, replacement) {
   const newParts = [];
   source.forEach((chunk) => {
@@ -1565,7 +1565,7 @@ apply_fn = function(locale) {
   });
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/src/BasePlugin.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/src/BasePlugin.ts
 var BasePlugin = class {
   constructor(uppy, opts) {
     __publicField(this, "uppy");
@@ -1632,7 +1632,7 @@ var BasePlugin = class {
   }
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/src/loggers.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/src/loggers.ts
 var justErrorsLogger = {
   debug: () => {
   },
@@ -1646,7 +1646,7 @@ var debugLogger = {
   error: (...args) => console.error(`[Uppy] [${getTimeStamp()}]`, ...args)
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/src/Restricter.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/src/Restricter.ts
 var import_prettier_bytes = __toESM(require_prettierBytes(), 1);
 var import_mime_match = __toESM(require_mime_match(), 1);
 var defaultOptions = {
@@ -1792,7 +1792,7 @@ var Restricter = class {
   }
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/store-default/package.json
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/store-default/package.json
 var package_default = {
   name: "@uppy/store-default",
   description: "The default simple object-based store for Uppy.",
@@ -1836,7 +1836,7 @@ var package_default = {
   ]
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/store-default/src/index.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/store-default/src/index.ts
 var _callbacks, _DefaultStore_instances, publish_fn;
 var DefaultStore = class {
   constructor() {
@@ -1870,11 +1870,11 @@ publish_fn = function(...args) {
 __publicField(DefaultStore, "VERSION", package_default.version);
 var src_default = DefaultStore;
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/src/Uppy.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/src/Uppy.ts
 var import_throttle = __toESM(require_throttle(), 1);
 var import_namespace_emitter = __toESM(require_namespace_emitter(), 1);
 
-// node_modules/nanoid/non-secure/index.js
+// ../../node_modules/nanoid/non-secure/index.js
 var urlAlphabet = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
 var nanoid = (size = 21) => {
   let id = "";
@@ -1885,7 +1885,7 @@ var nanoid = (size = 21) => {
   return id;
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/package.json
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/package.json
 var package_default2 = {
   name: "@uppy/core",
   description: "Core module for the extensible JavaScript file upload widget with support for drag&drop, resumable uploads, previews, restrictions, file processing/encoding, remote providers like Instagram, Dropbox, Google Drive, S3 and more :dog:",
@@ -1951,7 +1951,7 @@ var package_default2 = {
   }
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/src/getFileName.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/src/getFileName.ts
 function getFileName(fileType, fileDescriptor) {
   if (fileDescriptor.name) {
     return fileDescriptor.name;
@@ -1962,7 +1962,7 @@ function getFileName(fileType, fileDescriptor) {
   return "noname";
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/src/locale.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/src/locale.ts
 var locale_default = {
   strings: {
     addBulkFilesFailed: {
@@ -2029,7 +2029,7 @@ var locale_default = {
   }
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/src/supportsUploadProgress.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/src/supportsUploadProgress.ts
 function supportsUploadProgress(userAgent) {
   if (userAgent == null && typeof navigator !== "undefined") {
     userAgent = navigator.userAgent;
@@ -2050,7 +2050,7 @@ function supportsUploadProgress(userAgent) {
   return false;
 }
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/core/src/Uppy.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/core/src/Uppy.ts
 var defaultUploadState = {
   totalProgress: 0,
   allowNewUpload: true,
@@ -3545,7 +3545,7 @@ __publicField(_Uppy, "VERSION", package_default2.version);
 var Uppy = _Uppy;
 var Uppy_default = Uppy;
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/drop-target/package.json
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/drop-target/package.json
 var package_default3 = {
   name: "@uppy/drop-target",
   description: "Lets your users drag and drop files on a DOM element",
@@ -3609,7 +3609,7 @@ var package_default3 = {
   }
 };
 
-// uppy--uppy-companion-6.2.2/packages/@uppy/drop-target/src/index.ts
+// ../../For Vortex-Prime-emu/uppy--uppy-companion-6.2.2/packages/@uppy/drop-target/src/index.ts
 var defaultOpts = {
   target: null
 };
@@ -3730,7 +3730,7 @@ var DropTarget = class extends BasePlugin {
 };
 __publicField(DropTarget, "VERSION", package_default3.version);
 
-// src/admin/upload-manager.js
+// ../../src/admin/upload-manager.js
 function toPercentage(bytesUploaded, bytesTotal) {
   if (!bytesTotal || bytesTotal <= 0) return 0;
   return Math.min(100, Math.round(bytesUploaded / bytesTotal * 100));
@@ -3956,7 +3956,7 @@ function createUploadFieldManager({ toast } = {}) {
   };
 }
 
-// src/admin/index.js
+// ../../src/admin/index.js
 var VortexUploadAdapter = {
   uploadPackage,
   uploadMod,

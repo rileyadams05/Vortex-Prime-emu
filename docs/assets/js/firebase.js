@@ -1,4 +1,4 @@
-// src/firebase.js
+// ../../src/firebase.js
 var NOT_CONFIGURED_MESSAGE = "Firebase backend has been disabled for this project.";
 function notConfigured(functionName = "use this Firebase helper") {
   const error = new Error(`${NOT_CONFIGURED_MESSAGE} Unable to ${functionName}.`);
