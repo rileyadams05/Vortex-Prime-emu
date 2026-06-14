@@ -1,0 +1,15 @@
+{
+  "name": "vortex-prime-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tauri desktop wrapper for Vortex Prime.",
+  "type": "module",
+  "scripts": {
+    "dev": "npx tauri dev",
+    "build": "npx tauri build",
+    "tauri": "npx tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  }
+}

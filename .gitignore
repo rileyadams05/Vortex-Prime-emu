@@ -8,6 +8,10 @@ MY-google-ID.*
 MY-google-ID/
 get-token-and-set-secrets.mjs
 node_modules/.cache/
+node_modules/
+desktop/node_modules/
+desktop/src-tauri/gen/
+desktop/src-tauri/target/
 .npm-cache/
 For Vortex-Prime-emu/
 store test/
