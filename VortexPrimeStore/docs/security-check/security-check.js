@@ -26,6 +26,20 @@ let resolvedTarget = null;
 let isLoggedIn = false;
 let reCaptchaPassed = false;
 let authEndpointStatus = "unknown"; // "unknown", "exists", "missing", "error"
+let googleClientId = null;
+let googleSignInInitialized = false;
+
+/**
+ * Resolves API base URLs dynamically depending on the execution environment.
+ * In local dev, handles proxying requests to the companion server on port 4100.
+ */
+function buildApiUrl(path) {
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+  const base = isLocal ? `${protocol}//${hostname}:4100` : "";
+  return `${base}${path}`;
+}
 
 /**
  * Dynamically resolves the lock icon source to avoid broken image links
@@ -118,7 +132,8 @@ async function checkLoginState() {
 
   // Real production authentication check
   try {
-    const res = await fetch("/api/auth/config", { credentials: "include" });
+    const configUrl = buildApiUrl("/api/auth/config");
+    const res = await fetch(configUrl, { credentials: "include" });
     if (res.status === 404) {
       authEndpointStatus = "missing";
       return false;
@@ -126,8 +141,13 @@ async function checkLoginState() {
     authEndpointStatus = "exists";
     if (res.ok) {
       const data = await res.json();
-      if (data && data.user) {
-        return true;
+      if (data) {
+        if (data.googleClientId) {
+          googleClientId = data.googleClientId;
+        }
+        if (data.user) {
+          return true;
+        }
       }
     }
   } catch (err) {
@@ -136,6 +156,66 @@ async function checkLoginState() {
   }
 
   return false;
+}
+
+/**
+ * Initializes the Google Sign-in widget and triggers One-Tap.
+ */
+function initGoogleSignIn(clientId) {
+  if (!clientId || googleSignInInitialized) return;
+  if (!(window.google && window.google.accounts && window.google.accounts.id)) {
+    setTimeout(() => initGoogleSignIn(clientId), 150);
+    return;
+  }
+  
+  googleSignInInitialized = true;
+  window.google.accounts.id.initialize({
+    client_id: clientId,
+    auto_select: true,
+    callback: async (response) => {
+      try {
+        const loginUrl = buildApiUrl("/api/auth/login");
+        const res = await fetch(loginUrl, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ credential: response.credential }),
+        });
+        if (res.ok) {
+          // Re-run security gate verification
+          runSecurityGate();
+        } else {
+          const text = await res.text().catch(() => "Login failed");
+          alert("Google sign-in failed: " + text);
+        }
+      } catch (error) {
+        console.error("Google sign-in failed:", error);
+        alert("Google sign-in failed. Please try again.");
+      }
+    },
+  });
+
+  // Render official Google button in the slot
+  const slot = document.getElementById("googleBtnSlot");
+  if (slot) {
+    slot.innerHTML = "";
+    slot.style.display = "inline-flex";
+    window.google.accounts.id.renderButton(slot, {
+      theme: "filled_black",
+      size: "large",
+      shape: "pill",
+      text: "signin_with",
+    });
+  }
+  
+  // Hide fallback custom button if official button is rendering
+  const customBtn = document.getElementById("googleSignInBtn");
+  if (customBtn) {
+    customBtn.style.display = "none";
+  }
+
+  // Prompt One-Tap
+  window.google.accounts.id.prompt();
 }
 
 /**
@@ -175,10 +255,24 @@ async function runSecurityGate() {
   fixLockIcon();
   prepareDestination();
 
+  const spinner = document.getElementById("verification-spinner");
+  const warningIcon = document.getElementById("warning-icon");
+  const customBtn = document.getElementById("googleSignInBtn");
+  const slot = document.getElementById("googleBtnSlot");
+
+  // Show spinner, hide warning icon and buttons on start
+  if (spinner) spinner.style.display = "block";
+  if (warningIcon) warningIcon.style.display = "none";
+  if (customBtn) customBtn.style.display = "none";
+  if (slot) slot.style.display = "none";
+  if (feedback) {
+    feedback.textContent = "Verifying browser safety...";
+    feedback.className = "challenge-feedback";
+    feedback.style.color = "var(--text-muted)";
+  }
+
   // 1. Check if user is logged in
   isLoggedIn = await checkLoginState();
-
-  const spinner = document.getElementById("verification-spinner");
   const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
   // Check if endpoint does not exist and we are not locally bypassed
@@ -186,6 +280,7 @@ async function runSecurityGate() {
     if (spinner) spinner.style.display = "none";
     if (feedback) {
       feedback.textContent = "Authentication service endpoint does not exist on this server.";
+      feedback.className = "challenge-feedback error";
       feedback.style.color = "#ff7b7b"; // danger color
     }
     if (continueBtn) continueBtn.disabled = true;
@@ -193,13 +288,22 @@ async function runSecurityGate() {
   }
 
   if (!isLoggedIn) {
-    // Hide spinner and show sign in error message
+    // Hide spinner, show warning icon and warning message styled in yellow
     if (spinner) spinner.style.display = "none";
+    if (warningIcon) warningIcon.style.display = "inline";
     if (feedback) {
-      feedback.textContent = "Please sign in before continuing.";
-      feedback.style.color = "#ff7b7b"; // danger color
+      feedback.textContent = "Please sign in with Google to continue.";
+      feedback.className = "challenge-feedback warning";
+      feedback.style.color = "var(--warning)"; // yellow warning color
     }
     if (continueBtn) continueBtn.disabled = true;
+
+    // Trigger Google Sign-In prompt or display custom fallback button
+    if (googleClientId) {
+      initGoogleSignIn(googleClientId);
+    } else {
+      if (customBtn) customBtn.style.display = "inline-flex";
+    }
     return;
   }
 
@@ -212,6 +316,7 @@ async function runSecurityGate() {
   if (!reCaptchaPassed) {
     if (feedback) {
       feedback.textContent = "Verification failed. Please try again.";
+      feedback.className = "challenge-feedback error";
       feedback.style.color = "#ff7b7b"; // danger color
     }
     if (continueBtn) continueBtn.disabled = true;
@@ -219,6 +324,7 @@ async function runSecurityGate() {
     // Both checks pass
     if (feedback) {
       feedback.textContent = "Verification successful. You can now continue.";
+      feedback.className = "challenge-feedback success";
       feedback.style.color = "#22c55e"; // success color
     }
     if (continueBtn) {
@@ -240,6 +346,17 @@ function attachActions() {
       window.history.back();
     } else {
       window.location.assign("/");
+    }
+  });
+
+  // Fallback custom sign-in button click handler
+  const customBtn = document.getElementById("googleSignInBtn");
+  customBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.prompt();
+    } else {
+      alert("Google sign-in is still loading. Please try again in a moment.");
     }
   });
 }
