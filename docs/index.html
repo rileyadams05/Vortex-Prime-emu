@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png">
   <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png">
@@ -626,36 +626,40 @@
             transition: transform 0.25s, opacity 0.25s;
         }
 
-        .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-        .nav-hamburger.open span:nth-child(2) { opacity: 0; }
-        .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+        .nav-hamburger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-hamburger.is-open span:nth-child(2) { opacity: 0; }
+        .nav-hamburger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        /* Mobile nav drawer */
+        /* Mobile nav drawer — uses visibility so CSS transitions work on mobile */
         .mobile-nav-drawer {
-            display: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            z-index: 99;
-            background: rgba(9,9,11,0.98);
-            backdrop-filter: blur(20px);
+            z-index: 9999;
+            background: rgba(9,9,11,0.97);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             padding: 80px 1.5rem 2rem;
             overflow-y: auto;
-            flex-direction: column;
-            gap: 0.5rem;
+            /* Hidden state — no display:none so transitions fire */
+            visibility: hidden;
             opacity: 0;
-            transform: translateY(-8px);
-            transition: opacity 0.22s ease, transform 0.22s ease;
+            transform: translateY(-12px);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
             pointer-events: none;
         }
 
-        .mobile-nav-drawer.open {
-            display: flex;
+        .mobile-nav-drawer.is-open {
+            visibility: visible;
             opacity: 1;
             transform: translateY(0);
-            pointer-events: all;
+            pointer-events: auto;
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0s;
         }
 
         .mobile-nav-link {
@@ -3354,7 +3358,7 @@
                         if (mobileNav) mobileNav.classList.add('active');
 
                         // Close mobile drawer on navigation
-                        closeMobileDrawer();
+                        if (typeof window._closeMobileMenu === 'function') window._closeMobileMenu();
                         
                         // Ensure defaults are applied when entering store
                         if (pageId === 'store') {
@@ -4611,43 +4615,87 @@
                     window.addEventListener('popstate', initRouting);
                     initRouting();
 
-                    // ── Hamburger / Mobile Nav Drawer ───────────────────────
-                    const hamburger = document.getElementById('navHamburger');
-                    const mobileDrawer = document.getElementById('mobileNavDrawer');
-
-                    function openMobileDrawer() {
-                        hamburger.classList.add('open');
-                        hamburger.setAttribute('aria-expanded', 'true');
-                        mobileDrawer.classList.add('open');
-                        mobileDrawer.setAttribute('aria-hidden', 'false');
-                        document.body.style.overflow = 'hidden';
-                    }
-
-                    function closeMobileDrawer() {
-                        if (!hamburger || !mobileDrawer) return;
-                        hamburger.classList.remove('open');
-                        hamburger.setAttribute('aria-expanded', 'false');
-                        mobileDrawer.classList.remove('open');
-                        mobileDrawer.setAttribute('aria-hidden', 'true');
+                    // Hamburger close helper — also called from showPage above
+                    window._closeMobileMenu = function() {
+                        var btn = document.getElementById('navHamburger');
+                        var drawer = document.getElementById('mobileNavDrawer');
+                        if (!btn || !drawer) return;
+                        btn.classList.remove('is-open');
+                        btn.setAttribute('aria-expanded', 'false');
+                        drawer.classList.remove('is-open');
+                        drawer.setAttribute('aria-hidden', 'true');
                         document.body.style.overflow = '';
-                    }
-
-                    if (hamburger) {
-                        hamburger.addEventListener('click', () => {
-                            if (mobileDrawer.classList.contains('open')) {
-                                closeMobileDrawer();
-                            } else {
-                                openMobileDrawer();
-                            }
-                        });
-                    }
-
-                    // Close drawer on Escape key
-                    document.addEventListener('keydown', (e) => {
-                        if (e.key === 'Escape') closeMobileDrawer();
-                    });
+                    };
                 })();
             </script>
+
+        <!-- Mobile hamburger — standalone script, runs after DOM is ready -->
+        <script>
+        (function () {
+            function init() {
+                var btn    = document.getElementById('navHamburger');
+                var drawer = document.getElementById('mobileNavDrawer');
+                if (!btn || !drawer) return;
+
+                function openMenu() {
+                    btn.classList.add('is-open');
+                    btn.setAttribute('aria-expanded', 'true');
+                    drawer.classList.add('is-open');
+                    drawer.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function closeMenu() {
+                    btn.classList.remove('is-open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    drawer.classList.remove('is-open');
+                    drawer.setAttribute('aria-hidden', 'true');
+                    document.body.style.overflow = '';
+                }
+
+                // Also expose globally so showPage() can call it
+                window._closeMobileMenu = closeMenu;
+
+                // Toggle on click / tap
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (drawer.classList.contains('is-open')) {
+                        closeMenu();
+                    } else {
+                        openMenu();
+                    }
+                });
+
+                // Close when a drawer link is tapped
+                drawer.addEventListener('click', function (e) {
+                    var link = e.target.closest('a');
+                    if (link) closeMenu();
+                });
+
+                // Close when tapping outside (on the page content)
+                document.addEventListener('click', function (e) {
+                    if (drawer.classList.contains('is-open') &&
+                        !drawer.contains(e.target) &&
+                        !btn.contains(e.target)) {
+                        closeMenu();
+                    }
+                });
+
+                // Close on Escape
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') closeMenu();
+                });
+            }
+
+            // Run immediately if DOM is ready, else wait
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        }());
+        </script>
+
         <script type="module" src="/assets/js/security-gate.js"></script>
         </body>
         </html>
