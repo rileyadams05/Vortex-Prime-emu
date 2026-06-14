@@ -2549,7 +2549,7 @@
                     <!-- Discord Card -->
                     <a href="https://discord.gg/TwMsbb97Mm" target="_blank" rel="noopener" class="help-card" style="display: flex; flex-direction: column; gap: 1rem; background: var(--color-surface, rgba(14, 28, 46, 0.45)); border: 1px solid var(--color-border, rgba(85, 150, 255, 0.2)); border-radius: 12px; padding: 2rem; text-decoration: none; color: inherit; transition: transform 0.2s, border-color 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
                         <div class="help-icon" style="display: flex; align-items: center; justify-content: center; height: 48px;">
-                            <img src="assets/Discord-Logo-Blurple.png" alt="Discord" style="height: 48px; object-fit: contain;">
+                            <img src="assets/Discord-Symbol-White.png" alt="Discord" style="height: 48px; object-fit: contain;">
                         </div>
                         <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; text-align: center;">Discord Community</h3>
                         <p style="margin: 0; font-size: 0.95rem; color: var(--color-text-muted, #8ea1c7); line-height: 1.5; text-align: center;">Connect with other developers and creators on Discord. Get quick updates and announcements.</p>
@@ -2561,36 +2561,22 @@
                             <img src="assets/email-icon.png" alt="Email" style="height: 48px; object-fit: contain;">
                         </div>
                         <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; text-align: center;">Email Support</h3>
-                        <p style="margin: 0; font-size: 0.95rem; color: var(--color-text-muted, #8ea1c7); line-height: 1.5; text-align: center;">Contact the support team directly. Choose your preferred way to send an email.</p>
+                        <p style="margin: 0; font-size: 0.95rem; color: var(--color-text-muted, #8ea1c7); line-height: 1.5; text-align: center;">Contact the support team directly. Send an email or copy the support address.</p>
                         
                         <!-- Interactive Actions -->
                         <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: auto; padding-top: 1rem;">
                             <!-- Copy email box -->
                             <div style="display: flex; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(85, 150, 255, 0.1); border-radius: 6px; overflow: hidden;">
-                                <div style="flex: 1; padding: 0.5rem; font-family: monospace; font-size: 0.85rem; color: var(--color-text-muted, #8ea1c7); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; display: flex; align-items: center;">vortex.prime.team@outlook.com</div>
-                                <button type="button" onclick="navigator.clipboard.writeText('vortex.prime.team@outlook.com').then(() => { const originalText = this.innerHTML; this.innerHTML = '<span style=\'color: #10B981\'>✓ Copied</span>'; setTimeout(() => { this.innerHTML = originalText; }, 2000); })" style="background: rgba(85, 150, 255, 0.1); border: none; color: var(--color-text); padding: 0.5rem 0.75rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap;" onmouseover="this.style.background='rgba(85, 150, 255, 0.2)'" onmouseout="this.style.background='rgba(85, 150, 255, 0.1)'">
-                                    Copy
-                                </button>
+                                <div style="flex: 1; padding: 0.5rem; font-family: monospace; font-size: 0.85rem; color: var(--color-text-muted, #8ea1c7); display: flex; align-items: center; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">vortex.prime.team@outlook.com</div>
                             </div>
                             
-                            <!-- Email clients links -->
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
-                                <a href="mailto:vortex.prime.team@outlook.com" class="btn" style="padding: 0.5rem; font-size: 0.8rem; font-weight: 600; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: var(--color-surface, rgba(14, 28, 46, 0.45)); border: 1px solid var(--color-border, rgba(85, 150, 255, 0.2)); border-radius: 6px; color: var(--color-text); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.borderColor='var(--color-primary-light)'" onmouseout="this.style.transform='none'; this.style.borderColor='var(--color-border)'">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                                    Mail App
+                                <a href="mailto:vortex.prime.team@outlook.com" class="btn" style="padding: 0.6rem; font-size: 0.85rem; font-weight: 600; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.35rem; background: var(--color-primary, #3b82f6); border: none; border-radius: 6px; color: white; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                                    Send Email
                                 </a>
-                                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=vortex.prime.team@outlook.com" target="_blank" rel="noopener" class="btn" style="padding: 0.5rem; font-size: 0.8rem; font-weight: 600; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: var(--color-surface, rgba(14, 28, 46, 0.45)); border: 1px solid var(--color-border, rgba(85, 150, 255, 0.2)); border-radius: 6px; color: var(--color-text); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.borderColor='var(--color-primary-light)'" onmouseout="this.style.transform='none'; this.style.borderColor='var(--color-border)'">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                                    Gmail
-                                </a>
-                                <a href="https://outlook.live.com/mail/0/deeplink/compose?to=vortex.prime.team@outlook.com" target="_blank" rel="noopener" class="btn" style="padding: 0.5rem; font-size: 0.8rem; font-weight: 600; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: var(--color-surface, rgba(14, 28, 46, 0.45)); border: 1px solid var(--color-border, rgba(85, 150, 255, 0.2)); border-radius: 6px; color: var(--color-text); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.borderColor='var(--color-primary-light)'" onmouseout="this.style.transform='none'; this.style.borderColor='var(--color-border)'">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                                    Outlook
-                                </a>
-                                <a href="https://compose.mail.yahoo.com/?to=vortex.prime.team@outlook.com" target="_blank" rel="noopener" class="btn" style="padding: 0.5rem; font-size: 0.8rem; font-weight: 600; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.25rem; background: var(--color-surface, rgba(14, 28, 46, 0.45)); border: 1px solid var(--color-border, rgba(85, 150, 255, 0.2)); border-radius: 6px; color: var(--color-text); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.borderColor='var(--color-primary-light)'" onmouseout="this.style.transform='none'; this.style.borderColor='var(--color-border)'">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                                    Yahoo
-                                </a>
+                                <button type="button" onclick="navigator.clipboard.writeText('vortex.prime.team@outlook.com').then(() => { const originalText = this.innerHTML; this.innerHTML = '<span style=\'color: #10B981\'>✓ Copied</span>'; setTimeout(() => { this.innerHTML = originalText; }, 2000); })" style="background: rgba(85, 150, 255, 0.1); border: 1px solid var(--color-border); color: var(--color-text); padding: 0.6rem; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(85, 150, 255, 0.2)'" onmouseout="this.style.background='rgba(85, 150, 255, 0.1)'">
+                                    Copy Email
+                                </button>
                             </div>
                         </div>
                     </div>
