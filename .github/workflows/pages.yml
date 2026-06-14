@@ -28,6 +28,14 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
+      - name: Stamp service worker version
+        # Replaces the __BUILD_TS__ placeholder in app-sw.js with the current
+        # Unix timestamp so every deployment generates a unique cache version.
+        # Old caches are then wiped automatically by the SW activate handler.
+        run: |
+          TS=$(date +%s)
+          sed -i "s/__BUILD_TS__/${TS}/g" docs/app-sw.js
+
       - name: Upload Site
         uses: actions/upload-pages-artifact@v5
         with:
