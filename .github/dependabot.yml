@@ -14,7 +14,7 @@ updates:
           - "*"
 
   - package-ecosystem: "npm"
-    directory: "/"
+    directory: "/tools/npm"
     schedule:
       interval: "weekly"
       day: "monday"
