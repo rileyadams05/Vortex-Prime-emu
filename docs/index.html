@@ -600,6 +600,96 @@
             transform: translateY(-1px);
         }
 
+        /* Hamburger button */
+        .nav-hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            cursor: pointer;
+            gap: 5px;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .nav-hamburger span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--color-text);
+            border-radius: 2px;
+            transition: transform 0.25s, opacity 0.25s;
+        }
+
+        .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+        .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* Mobile nav drawer */
+        .mobile-nav-drawer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 99;
+            background: rgba(9,9,11,0.98);
+            backdrop-filter: blur(20px);
+            padding: 80px 1.5rem 2rem;
+            overflow-y: auto;
+            flex-direction: column;
+            gap: 0.5rem;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            pointer-events: none;
+        }
+
+        .mobile-nav-drawer.open {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 500;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: all 0.18s;
+            min-height: 52px;
+        }
+
+        .mobile-nav-link:hover,
+        .mobile-nav-link.active {
+            color: var(--color-text);
+            background: var(--color-bg-elevated);
+            border-color: var(--color-border);
+        }
+
+        .mobile-nav-link.active {
+            color: var(--color-primary-light);
+        }
+
+        .mobile-nav-divider {
+            height: 1px;
+            background: var(--color-border);
+            margin: 0.5rem 0;
+        }
+
         .help-card {
             transition: transform 0.2s, border-color 0.2s, background-color 0.2s, box-shadow 0.2s !important;
         }
@@ -621,9 +711,13 @@
 
         #page-store,
         #page-store-mods,
-        #page-games,
-        #page-help {
+        #page-games {
             padding-top: calc(110px + 2.5rem);
+        }
+
+        /* Help page needs enough clearance so heading is never under the nav */
+        #page-help {
+            padding-top: calc(110px + 3rem);
         }
 
         .page.active { display: block; }
@@ -2195,11 +2289,13 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            .nav-container { justify-content: flex-end; }
-            .nav-links { display: none; }
+            .nav-container { height: 64px; padding: 0 1rem; justify-content: space-between; }
+            /* Desktop nav links are hidden; hamburger shows instead */
+            .nav-links { display: none !important; }
+            .nav-hamburger { display: flex; }
             .nav-auth { margin-left: 0; }
-            .user-badge { max-width: calc(100vw - 2rem); }
-            .user-badge .name { max-width: 130px; }
+            .user-badge { max-width: calc(100vw - 7rem); }
+            .user-badge .name { max-width: 110px; }
             .hero h1 { font-size: 2rem; }
             .hero-subtitle { font-size: 1rem; }
             .hero-buttons { flex-direction: column; align-items: center; }
@@ -2221,6 +2317,9 @@
                 width: 52px;
                 height: 52px;
             }
+            /* Help page heading clearance on mobile (smaller nav height) */
+            #page-help { padding-top: calc(64px + 2.5rem); }
+            #page-store, #page-store-mods, #page-games { padding-top: calc(64px + 2.5rem); }
         }
 
         @keyframes fadeIn {
@@ -2263,6 +2362,12 @@
                         <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank" data-no-gate="true">Docs</a>
                         <a href="/help/" class="nav-link" id="nav-help" data-no-gate="true" data-page="help">Help</a>
                     </div>
+
+                    <!-- Hamburger button (mobile only) -->
+                    <button class="nav-hamburger" id="navHamburger" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNavDrawer" type="button">
+                        <span></span><span></span><span></span>
+                    </button>
+
                     <div class="nav-auth">
                         <button id="mainGoogleSignInBtn" class="gsi-material-button" type="button">
                             <div class="gsi-material-button-state"></div>
@@ -2288,6 +2393,21 @@
                     </div>
                 </div>
             </nav>
+
+            <!-- Mobile Navigation Drawer -->
+            <div class="mobile-nav-drawer" id="mobileNavDrawer" aria-hidden="true">
+                <a href="/" class="mobile-nav-link active" id="mobile-nav-home" data-no-gate="true" data-page="home">🏠 Home</a>
+                <a href="/store/" class="mobile-nav-link" id="mobile-nav-store" data-no-gate="true" data-page="store">🛒 Store</a>
+                <a href="/store-mods/" class="mobile-nav-link" id="mobile-nav-store-mods" data-no-gate="true" data-page="store-mods">🔧 Mods</a>
+                <a href="/games/" class="mobile-nav-link" id="mobile-nav-games" data-no-gate="true" data-page="games">🎮 Games</a>
+                <div class="mobile-nav-divider"></div>
+                <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="mobile-nav-link" target="_blank" rel="noopener">📖 Docs</a>
+                <a href="/help/" class="mobile-nav-link" id="mobile-nav-help" data-no-gate="true" data-page="help">❓ Help</a>
+                <div class="mobile-nav-divider"></div>
+                <a href="https://www.reddit.com/r/Vortex_Prime_HB_store/" class="mobile-nav-link" target="_blank" rel="noopener">💬 Reddit Community</a>
+                <a href="https://discord.gg/TwMsbb97Mm" class="mobile-nav-link" target="_blank" rel="noopener">🎙️ Discord Community</a>
+                <a href="mailto:vortex.prime.team@outlook.com?subject=Vortex%20Prime%20Support%20Request" class="mobile-nav-link">✉️ Email Support</a>
+            </div>
 
             <div id="backendStatusBanner" class="backend-status-banner" hidden></div>
 
@@ -3224,11 +3344,17 @@
                     function showPage(pageId) {
                         document.querySelectorAll('.page').forEach((page) => page.classList.remove('active'));
                         document.querySelectorAll('.nav-link').forEach((link) => link.classList.remove('active'));
+                        document.querySelectorAll('.mobile-nav-link').forEach((link) => link.classList.remove('active'));
 
                         const page = document.getElementById('page-' + pageId);
                         const nav = document.getElementById('nav-' + pageId);
+                        const mobileNav = document.getElementById('mobile-nav-' + pageId);
                         if (page) page.classList.add('active');
                         if (nav) nav.classList.add('active');
+                        if (mobileNav) mobileNav.classList.add('active');
+
+                        // Close mobile drawer on navigation
+                        closeMobileDrawer();
                         
                         // Ensure defaults are applied when entering store
                         if (pageId === 'store') {
@@ -4484,6 +4610,42 @@
 
                     window.addEventListener('popstate', initRouting);
                     initRouting();
+
+                    // ── Hamburger / Mobile Nav Drawer ───────────────────────
+                    const hamburger = document.getElementById('navHamburger');
+                    const mobileDrawer = document.getElementById('mobileNavDrawer');
+
+                    function openMobileDrawer() {
+                        hamburger.classList.add('open');
+                        hamburger.setAttribute('aria-expanded', 'true');
+                        mobileDrawer.classList.add('open');
+                        mobileDrawer.setAttribute('aria-hidden', 'false');
+                        document.body.style.overflow = 'hidden';
+                    }
+
+                    function closeMobileDrawer() {
+                        if (!hamburger || !mobileDrawer) return;
+                        hamburger.classList.remove('open');
+                        hamburger.setAttribute('aria-expanded', 'false');
+                        mobileDrawer.classList.remove('open');
+                        mobileDrawer.setAttribute('aria-hidden', 'true');
+                        document.body.style.overflow = '';
+                    }
+
+                    if (hamburger) {
+                        hamburger.addEventListener('click', () => {
+                            if (mobileDrawer.classList.contains('open')) {
+                                closeMobileDrawer();
+                            } else {
+                                openMobileDrawer();
+                            }
+                        });
+                    }
+
+                    // Close drawer on Escape key
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') closeMobileDrawer();
+                    });
                 })();
             </script>
         <script type="module" src="/assets/js/security-gate.js"></script>
