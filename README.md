@@ -154,7 +154,7 @@ Published Store and Store Mods items include an Edit button. The button opens th
 ```text
 .github/workflows/
   pages.yml               GitHub Pages deployment for VortexPrimeStore/docs
-  desktop-release.yml     Tauri desktop app builds for GitHub Releases
+  desktop-release.yml     Manual Tauri desktop app build workflow
 
 VortexPrimeStore/
   docs/

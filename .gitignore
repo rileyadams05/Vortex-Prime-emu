@@ -12,6 +12,7 @@ node_modules/
 desktop/node_modules/
 desktop/src-tauri/gen/
 desktop/src-tauri/target/
+release-builds/
 .npm-cache/
 For Vortex-Prime-emu/
 store test/

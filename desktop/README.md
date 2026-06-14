@@ -22,19 +22,32 @@ Build outputs are written under:
 desktop/src-tauri/target/release/bundle/
 ```
 
-## GitHub Releases
+## Manual GitHub Releases
 
-Push a tag named like `desktop-v0.1.0` to build release assets:
+Build locally, copy the finished files into the root `release-builds/` folder, then manually upload the files you want to a GitHub Release.
 
-```sh
-git tag desktop-v0.1.0
-git push origin desktop-v0.1.0
+The current local release folder layout is:
+
+```text
+release-builds/
+  Windows/
+    x64/
+    x86/
+    x32/
+    ARM64/
+  Linux/
+    x64/
+    ARM64/
+  macOS/
+    Intel/
+    Apple-Silicon/
 ```
 
-The release workflow builds:
+The GitHub Actions desktop workflow is manual-only and does not publish release assets automatically.
 
-- Windows NSIS `.exe` installer and MSI installer
-- Linux AppImage
-- macOS DMG
+Windows is the primary target. Local Windows builds currently produce:
 
-Windows is the primary target. Linux and macOS builds depend on GitHub runner support and Tauri platform requirements.
+- Windows x64 NSIS installer, MSI installer, and portable `.exe`
+- Windows x86 32-bit NSIS installer, MSI installer, and portable `.exe`
+
+Linux and macOS builds depend on platform-specific runner support and Tauri platform requirements.
