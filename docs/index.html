@@ -694,6 +694,52 @@
             margin: 0.5rem 0;
         }
 
+        /* Back button at the top of the mobile drawer */
+        .mobile-menu-back {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            font: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: left;
+            border-radius: 12px;
+            cursor: pointer;
+            min-height: 52px;
+            transition: color 0.15s, background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-menu-back:hover,
+        .mobile-menu-back:active {
+            color: var(--color-text);
+            background: var(--color-bg-elevated);
+        }
+
+        .mobile-menu-back svg {
+            flex-shrink: 0;
+        }
+
+        /* Community links with real image icons */
+        .mobile-nav-link--icon {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .mobile-nav-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            flex-shrink: 0;
+            border-radius: 4px;
+        }
+
         .help-card {
             transition: transform 0.2s, border-color 0.2s, background-color 0.2s, box-shadow 0.2s !important;
         }
@@ -2400,17 +2446,40 @@
 
             <!-- Mobile Navigation Drawer -->
             <div class="mobile-nav-drawer" id="mobileNavDrawer" aria-hidden="true">
-                <a href="/" class="mobile-nav-link active" id="mobile-nav-home" data-no-gate="true" data-page="home">🏠 Home</a>
-                <a href="/store/" class="mobile-nav-link" id="mobile-nav-store" data-no-gate="true" data-page="store">🛒 Store</a>
-                <a href="/store-mods/" class="mobile-nav-link" id="mobile-nav-store-mods" data-no-gate="true" data-page="store-mods">🔧 Mods</a>
-                <a href="/games/" class="mobile-nav-link" id="mobile-nav-games" data-no-gate="true" data-page="games">🎮 Games</a>
+
+                <!-- Back / Close button -->
+                <button type="button" class="mobile-menu-back" id="mobileMenuBack" aria-label="Close navigation menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Back
+                </button>
+
                 <div class="mobile-nav-divider"></div>
-                <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="mobile-nav-link" target="_blank" rel="noopener">📖 Docs</a>
-                <a href="/help/" class="mobile-nav-link" id="mobile-nav-help" data-no-gate="true" data-page="help">❓ Help</a>
-                <div class="mobile-nav-divider"></div>
-                <a href="https://www.reddit.com/r/Vortex_Prime_HB_store/" class="mobile-nav-link" target="_blank" rel="noopener">💬 Reddit Community</a>
-                <a href="https://discord.gg/TwMsbb97Mm" class="mobile-nav-link" target="_blank" rel="noopener">🎙️ Discord Community</a>
-                <a href="mailto:vortex.prime.team@outlook.com?subject=Vortex%20Prime%20Support%20Request" class="mobile-nav-link">✉️ Email Support</a>
+
+                <!-- Primary nav — plain text, no emojis -->
+                <a href="/" class="mobile-nav-link active" id="mobile-nav-home" data-no-gate="true" data-page="home">Home</a>
+                <a href="/store/" class="mobile-nav-link" id="mobile-nav-store" data-no-gate="true" data-page="store">Store</a>
+                <a href="/store-mods/" class="mobile-nav-link" id="mobile-nav-store-mods" data-no-gate="true" data-page="store-mods">Mods</a>
+                <a href="/games/" class="mobile-nav-link" id="mobile-nav-games" data-no-gate="true" data-page="games">Games</a>
+                <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="mobile-nav-link" target="_blank" rel="noopener">Docs</a>
+                <a href="/help/" class="mobile-nav-link" id="mobile-nav-help" data-no-gate="true" data-page="help">Help</a>
+
+                <div class="mobile-nav-divider" style="margin-top:0.75rem;"></div>
+
+                <!-- Community / support — real image icons -->
+                <a href="https://www.reddit.com/r/Vortex_Prime_HB_store/" class="mobile-nav-link mobile-nav-link--icon" target="_blank" rel="noopener">
+                    <img src="/assets/Reddit_Icon_FullColor_Bleed.png" alt="" class="mobile-nav-icon" aria-hidden="true">
+                    Reddit Community
+                </a>
+                <a href="https://discord.gg/TwMsbb97Mm" class="mobile-nav-link mobile-nav-link--icon" target="_blank" rel="noopener">
+                    <img src="/assets/Discord-Symbol-White.png" alt="" class="mobile-nav-icon" aria-hidden="true">
+                    Discord Community
+                </a>
+                <a href="mailto:vortex.prime.team@outlook.com?subject=Vortex%20Prime%20Support%20Request" class="mobile-nav-link mobile-nav-link--icon">
+                    <img src="/assets/email-icon.png" alt="" class="mobile-nav-icon" aria-hidden="true">
+                    Email Support
+                </a>
             </div>
 
             <div id="backendStatusBanner" class="backend-status-banner" hidden></div>
@@ -4655,6 +4724,15 @@
 
                 // Also expose globally so showPage() can call it
                 window._closeMobileMenu = closeMenu;
+
+                // Back button inside the drawer
+                var backBtn = document.getElementById('mobileMenuBack');
+                if (backBtn) {
+                    backBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        closeMenu();
+                    });
+                }
 
                 // Toggle on click / tap
                 btn.addEventListener('click', function (e) {
