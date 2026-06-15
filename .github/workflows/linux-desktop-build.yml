@@ -81,28 +81,95 @@ jobs:
           path: linux-artifacts
           if-no-files-found: error
 
-  linux-x86-note:
-    name: Linux x86 32-bit not supported
+  linux-x86-attempt:
+    name: Build x86
     runs-on: ubuntu-22.04
     steps:
-      - name: Stage x86 note
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Attempt Debian i386 AppImage build
         shell: bash
         run: |
           set -euo pipefail
-          output_dir="linux-x86-note/Releases/PC/Linux/x86"
+          output_dir="linux-x86-artifacts/Releases/PC/Linux/x86"
           mkdir -p "$output_dir"
-          cat > "$output_dir/NOT_BUILT.txt" <<'NOTE'
-          Linux x86 32-bit AppImage was not built.
 
-          Reason:
-          GitHub-hosted Actions does not provide a standard 32-bit Linux runner. Tauri Linux builds depend on native Linux desktop libraries such as WebKitGTK, and producing a 32-bit AppImage would require a custom 32-bit Linux build environment or a carefully configured multiarch/cross-build setup.
+          cat > linux-x86-build.sh <<'SCRIPT'
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          export PATH="$HOME/.cargo/bin:$PATH"
 
-          No fake x86 AppImage was produced.
-          NOTE
+          apt-get update
 
-      - name: Upload x86 note artifact
+          if ! apt-cache show libwebkit2gtk-4.1-dev >/dev/null 2>&1; then
+            echo "MISSING_DEPENDENCY: libwebkit2gtk-4.1-dev is not available in this Debian i386 package set."
+            apt-cache policy libwebkit2gtk-4.1-dev libwebkit2gtk-4.0-dev || true
+            exit 86
+          fi
+
+          apt-get install -y \
+            ca-certificates \
+            curl \
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            file \
+            wget \
+            fuse
+
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+            | sh -s -- -y --profile minimal --default-toolchain stable --target i686-unknown-linux-gnu
+
+          cargo install tauri-cli --version 2.11.2
+
+          cd /work/desktop
+          cargo tauri build --target i686-unknown-linux-gnu -b appimage
+          SCRIPT
+
+          set +e
+          docker run --rm --platform linux/386 \
+            -v "$PWD:/work" \
+            -w /work \
+            i386/debian:trixie \
+            bash /work/linux-x86-build.sh 2>&1 | tee linux-x86-build.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          appimage_path="$(find "desktop/src-tauri/target/i686-unknown-linux-gnu/release/bundle/appimage" -maxdepth 1 -type f -name "*.AppImage" 2>/dev/null | head -n 1 || true)"
+          if [ -n "$appimage_path" ]; then
+            cp "$appimage_path" "$output_dir/Vortex Prime.AppImage"
+            test -f "$output_dir/Vortex Prime.AppImage"
+          else
+            {
+              echo "Linux x86 32-bit AppImage was not built."
+              echo
+              echo "Attempted approach:"
+              echo "Debian i386 container: i386/debian:trixie"
+              echo "Build command: cargo tauri build --target i686-unknown-linux-gnu -b appimage"
+              echo
+              echo "Result:"
+              if [ "$status" -eq 86 ]; then
+                echo "The required 32-bit WebKitGTK package libwebkit2gtk-4.1-dev was not available in the Debian i386 package set."
+              else
+                echo "The real i386 build attempt failed before producing an AppImage."
+              fi
+              echo
+              echo "Last build log lines:"
+              tail -n 80 linux-x86-build.log
+              echo
+              echo "No fake x86 AppImage was produced."
+            } > "$output_dir/NOT_BUILT.txt"
+          fi
+
+      - name: Upload x86 artifact
         uses: actions/upload-artifact@v6
         with:
-          name: vortex-prime-linux-x86-not-built
-          path: linux-x86-note
+          name: vortex-prime-linux-x86
+          path: linux-x86-artifacts
           if-no-files-found: error
