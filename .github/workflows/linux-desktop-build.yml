@@ -1,0 +1,108 @@
+name: Build Linux Desktop App
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: x64
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            output-folder: x64
+            artifact-name: vortex-prime-linux-x64
+          - name: ARM64
+            runner: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            output-folder: ARM64
+            artifact-name: vortex-prime-linux-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build Linux AppImage
+        working-directory: desktop
+        run: npx tauri build --target ${{ matrix.target }} -b appimage
+
+      - name: Stage organized artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          output_dir="linux-artifacts/Releases/PC/Linux/${{ matrix.output-folder }}"
+          mkdir -p "$output_dir"
+
+          appimage_path="$(find "desktop/src-tauri/target/${{ matrix.target }}/release/bundle/appimage" -maxdepth 1 -type f -name "*.AppImage" | head -n 1)"
+          if [ -z "$appimage_path" ]; then
+            echo "No AppImage produced for ${{ matrix.target }}" >&2
+            exit 1
+          fi
+
+          cp "$appimage_path" "$output_dir/Vortex Prime.AppImage"
+          test -f "$output_dir/Vortex Prime.AppImage"
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: linux-artifacts
+          if-no-files-found: error
+
+  linux-x86-note:
+    name: Linux x86 32-bit not supported
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Stage x86 note
+        shell: bash
+        run: |
+          set -euo pipefail
+          output_dir="linux-x86-note/Releases/PC/Linux/x86"
+          mkdir -p "$output_dir"
+          cat > "$output_dir/NOT_BUILT.txt" <<'NOTE'
+          Linux x86 32-bit AppImage was not built.
+
+          Reason:
+          GitHub-hosted Actions does not provide a standard 32-bit Linux runner. Tauri Linux builds depend on native Linux desktop libraries such as WebKitGTK, and producing a 32-bit AppImage would require a custom 32-bit Linux build environment or a carefully configured multiarch/cross-build setup.
+
+          No fake x86 AppImage was produced.
+          NOTE
+
+      - name: Upload x86 note artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: vortex-prime-linux-x86-not-built
+          path: linux-x86-note
+          if-no-files-found: error
