@@ -124,7 +124,11 @@ jobs:
             fuse
 
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-            | sh -s -- -y --profile minimal --default-toolchain stable --target i686-unknown-linux-gnu
+            | sh -s -- -y --profile minimal --default-host i686-unknown-linux-gnu --default-toolchain stable --target i686-unknown-linux-gnu
+
+          . "$HOME/.cargo/env"
+          rustc -vV
+          cargo -vV
 
           cargo install tauri-cli --version 2.11.2
 
