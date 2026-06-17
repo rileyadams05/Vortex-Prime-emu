@@ -23,6 +23,7 @@
     }
     if (settings.vortexLoaded) {
       window.LoadedMSG = settings.vortexLoaded;
+      window.vortexSelectedLoaded = settings.vortexLoaded;
     }
 
     if (settings.vortexMode === 'load-hen' && typeof window.load_hen === 'function') {

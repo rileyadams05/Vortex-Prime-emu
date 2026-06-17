@@ -1,0 +1,27 @@
+<html manifest="Cache.manifest">
+<head>
+<meta charset="utf-8">
+<title>Vortex Prime GoldHEN 9.00 Cache</title>
+<style>
+html,body{margin:0;min-height:100%;background:#1A1920;color:white;font-family:Arial,Helvetica,sans-serif;text-align:center}
+.shell{padding-top:18%}
+h1{font-size:30px;color:yellow;text-shadow:4px 4px 4px black}
+#progress{font-size:25px;text-shadow:4px 4px 4px black}
+</style>
+<script>
+function setProgress(message){document.getElementById("progress").innerHTML=message;}
+window.applicationCache.ondownloading=function(){setProgress("Caching Vortex Prime GoldHEN 9.00 files...");};
+window.applicationCache.onprogress=function(a){setProgress(Math.round(100*(a.loaded/a.total))+"%");};
+window.applicationCache.oncached=function(){localStorage.cachedB="yes";setProgress("Host cached successfully. Return to the selector when ready.");};
+window.applicationCache.onupdateready=function(){try{window.applicationCache.swapCache();}catch(e){}localStorage.cachedB="yes";setProgress("Host cache updated successfully. Return to the selector when ready.");};
+window.applicationCache.onnoupdate=function(){localStorage.cachedB="yes";setProgress("Host cache is already installed. Return to the selector when ready.");};
+window.applicationCache.onerror=function(){setProgress("Cache installation failed. Check the connection and try again.");};
+</script>
+</head>
+<body>
+<div class="shell">
+<h1>Vortex Prime GoldHEN Host - 9.00 Cache</h1>
+<div id="progress">Preparing offline cache...</div>
+</div>
+</body>
+</html>

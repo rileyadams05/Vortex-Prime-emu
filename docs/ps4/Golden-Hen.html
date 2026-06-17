@@ -266,8 +266,8 @@
           status: 'Beta',
           rank: 3,
           payload: 'goldhen.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Beta build from the full local 9.00 GoldHEN host set.',
           channel: 'Beta'
         },
@@ -277,8 +277,8 @@
           status: 'Beta',
           rank: 3,
           payload: 'goldhen_v2.4b17.3.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Alternate beta payload included with the local 9.00 files.',
           channel: 'Beta'
         },
@@ -288,8 +288,8 @@
           status: 'Beta',
           rank: 3,
           payload: 'goldhen_2.4_b16_900.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Older beta build included in the complete 9.00 host files.',
           channel: 'Beta'
         },
@@ -299,8 +299,8 @@
           status: 'Recommended',
           rank: 1,
           payload: 'goldhen_2.3_900.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Best default choice for 9.00. Last stable GoldHEN release for 9.00.',
           channel: 'Stable'
         },
@@ -310,8 +310,8 @@
           status: 'Old',
           rank: 4,
           payload: 'goldhen_2.2.4_900.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Older fallback build from the complete 9.00 host files.',
           channel: 'Stable'
         },
@@ -321,8 +321,8 @@
           status: 'Old',
           rank: 4,
           payload: 'goldhen_2.2.3_900.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Legacy 9.00 build kept for compatibility testing.',
           channel: 'Stable'
         },
@@ -332,8 +332,8 @@
           status: 'Old',
           rank: 4,
           payload: 'goldhen_2.2.2_900.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Legacy 9.00 build kept for compatibility testing.',
           channel: 'Stable'
         },
@@ -343,8 +343,8 @@
           status: 'Old',
           rank: 4,
           payload: 'goldhen_212_900.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Legacy 9.00 build from the original host set.',
           channel: 'Stable'
         },
@@ -354,8 +354,8 @@
           status: 'Old',
           rank: 4,
           payload: 'goldhen2b2.bin',
-          host: '/ps4/karo218/900New/index.html',
-          base: '/ps4/karo218/900New/',
+          host: '/ps4/vortex/900C/index.html',
+          base: '/ps4/vortex/900C/',
           note: 'Very old beta build. Use only if you specifically need it.',
           channel: 'Beta'
         }
@@ -400,9 +400,35 @@
       }
 
       function runUrl(option) {
-        // For 9.00, open the selected build's host directly instead of forcing 900C
         if (option.firmware === '9.00') {
-          return option.host;
+          var engine = '/ps4/vortex/900C/index.html';
+          var label = option.version || 'GoldHEN';
+          var p = String(option.payload || '').toLowerCase();
+
+          function fn(name) {
+            var qs = [];
+            qs.push('vortexMode=function');
+            qs.push('vortexPayload=' + encodeURIComponent(name));
+            qs.push('vortexWhen=after-jb');
+            qs.push('vortexLoaded=' + encodeURIComponent(label + ' Loaded'));
+            return engine + '?' + qs.join('&');
+          }
+
+          function pocb(file) {
+            var qs = [];
+            qs.push('vortexMode=poc-b');
+            qs.push('vortexFile=' + encodeURIComponent(file));
+            qs.push('vortexWhen=after-jb');
+            qs.push('vortexLoaded=' + encodeURIComponent(label + ' Loaded'));
+            return engine + '?' + qs.join('&');
+          }
+
+          if (p === 'goldhen.bin') return fn('goldhen24');
+          if (p === 'goldhen_2.2.4_900.bin') return fn('goldhen224');
+          if (p === 'goldhen_2.2.2_900.bin') return fn('goldhen222');
+          if (p === 'goldhen_212_900.bin') return fn('goldhen212');
+          if (p === 'goldhen2b2.bin') return fn('goldhen2');
+          return pocb(option.payload);
         }
         return option.host + '?payload=' + encodeURIComponent(option.payload) + '&label=' + encodeURIComponent(option.version);
       }
@@ -471,6 +497,9 @@
       }
 
       function cacheUrl(option) {
+        if (option.firmware === '9.00') {
+          return '/ps4/vortex/900C/cache.html';
+        }
         // Use the host index: many hosts install cache via AppCache manifest or redirect to a cache page if needed
         return option.host;
       }
@@ -723,7 +752,7 @@
               setStatus('Cleared', 'Selector state cleared. Click Refresh Page to reload cleanly.');
               showRefreshButton();
             }).catch(function(){
-              setStatus('Cleared', 'Local selector state cleared. Browser host cache may require closing/reopening the browser. Click Refresh Page to reload cleanly.');
+              setStatus('Cleared', 'Local selector state cleared. Browser host cache may require a manual refresh. Click Refresh Page to reload cleanly.');
               showRefreshButton();
             });
             return false;

@@ -1,4 +1,4 @@
-<html manifest="Cache.manifest">
+<html>
 <head>
 <style>
     html, body{
@@ -190,13 +190,6 @@ opacity:0.7;
     </style>
 <meta charset="utf-8">
 <title>Vortex Prime GoldHEN Host - 9.00</title>
-		<script>
-			window.applicationCache.ondownloading=function(){document.getElementById("progress").innerHTML="Page Caching Started!!";};
-			window.applicationCache.onprogress=function(a){document.getElementById("progress").innerHTML=(Math.round(100*(a.loaded/a.total)))+"%";};
-			window.applicationCache.oncached=function(){document.getElementById("progress").innerHTML="Host cached successfully.";localStorage.cachedB="yes";};
-			window.applicationCache.onnoupdate=function(){localStorage.cachedB="yes";};
-            window.applicationCache.onerror=function(){localStorage.cachedB="yes";};
-		</script>
 <script>
   function loadFile(fileName) {
     let xhr = new XMLHttpRequest();
@@ -253,22 +246,24 @@ for (var i = 0; i < sections.length; i++) {
 }
 }
 
-function showVortexSuccess(showAlert) {
+function showVortexSuccess(showAlert, message) {
+var finalMessage = message || "GoldHEN loaded successfully.";
 hideVortexMenus();
-window.progress.innerHTML = "GoldHEN loaded successfully.";
+window.progress.innerHTML = finalMessage;
 var screen = document.getElementById("vortexSuccess");
 if (screen) screen.style.display = "block";
 if (showAlert && !window.vortexSuccessShown) {
     window.vortexSuccessShown = true;
-    alert("GoldHEN loaded successfully.\n\nRemove the USB drive now.\n\nYou can now press the PS button and close the browser.");
+    alert(finalMessage + "\n\nRemove the USB drive now.\n\nYou can now press the PS button and close the browser.");
 }
 }
 
 function allset() {
-if (String(LoadedMSG).toLowerCase().indexOf("goldhen") !== -1) {
-    showVortexSuccess(true);
+var message = window.vortexSelectedLoaded || LoadedMSG;
+if (String(message).toLowerCase().indexOf("goldhen") !== -1) {
+    showVortexSuccess(true, message);
 } else {
-    window.progress.innerHTML= LoadedMSG
+    window.progress.innerHTML= message
 }
 }
 
@@ -815,7 +810,7 @@ Tools.style.display = "none";
 		}
 </script>
 </head>
-<body onload="if(localStorage.cachedB=='yes')setTimeout(poc,50);" style='background-color:#1A1920'>
+<body onload="if(/[?&]vortexMode=/.test(location.search))setTimeout(poc,50);" style='background-color:#1A1920'>
 <h1 style='text-shadow: 4px 4px 4px black;font-size:30px;text-align:center;text-shadow: 4px 4px 4px black;color:yellow;margin-top:1%;'>Vortex Prime GoldHEN Host - 9.00</h1>
 <h1 id=progress style='font-size:25px;text-align:center;text-shadow: 4px 4px 4px black;color:white;'>Running exploit... please wait.</h1>
 <div id=vortexSuccess style="display:none;text-align:center;margin-top:6%;text-shadow: 4px 4px 4px black;color:white;">

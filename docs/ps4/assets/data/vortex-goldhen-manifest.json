@@ -89,13 +89,15 @@
       "cache": "vortex/900C/Cache.manifest",
       "usbFlow": true,
       "payloads": [
-        { "label": "GoldHEN v2.0b2", "file": "goldhen2b2.bin", "mode": "function", "payload": "goldhen2", "when": "after-jb" },
-        { "label": "GoldHEN v2.1.2", "file": "goldhen_212_900.bin", "mode": "function", "payload": "goldhen212", "when": "after-jb" },
-        { "label": "GoldHEN v2.2.2", "file": "goldhen_2.2.2_900.bin", "mode": "function", "payload": "goldhen222", "when": "after-jb" },
-        { "label": "GoldHEN v2.2.3", "file": "goldhen_2.2.3_900.bin", "mode": "poc-b", "when": "after-jb", "loaded": "GoldHEN 2.2.3 Loaded" },
-        { "label": "GoldHEN v2.2.4", "file": "goldhen_2.2.4_900.bin", "mode": "function", "payload": "goldhen224", "when": "after-jb" },
-        { "label": "GoldHEN v2.3", "file": "goldhen_2.3_900.bin", "mode": "poc-b", "when": "after-jb", "loaded": "GoldHEN 2.3 Loaded" },
-        { "label": "GoldHEN v2.4b18.9", "file": "goldhen.bin", "mode": "function", "payload": "goldhen24", "when": "after-jb" }
+        { "label": "GoldHEN v2.0b2", "file": "goldhen2b2.bin", "mode": "function", "payload": "goldhen2", "when": "after-jb", "loaded": "GoldHEN v2.0b2 Loaded" },
+        { "label": "GoldHEN v2.1.2", "file": "goldhen_212_900.bin", "mode": "function", "payload": "goldhen212", "when": "after-jb", "loaded": "GoldHEN v2.1.2 Loaded" },
+        { "label": "GoldHEN v2.2.2", "file": "goldhen_2.2.2_900.bin", "mode": "function", "payload": "goldhen222", "when": "after-jb", "loaded": "GoldHEN v2.2.2 Loaded" },
+        { "label": "GoldHEN v2.2.3", "file": "goldhen_2.2.3_900.bin", "mode": "poc-b", "when": "after-jb", "loaded": "GoldHEN v2.2.3 Loaded" },
+        { "label": "GoldHEN v2.2.4", "file": "goldhen_2.2.4_900.bin", "mode": "function", "payload": "goldhen224", "when": "after-jb", "loaded": "GoldHEN v2.2.4 Loaded" },
+        { "label": "GoldHEN v2.3", "file": "goldhen_2.3_900.bin", "mode": "poc-b", "when": "after-jb", "loaded": "GoldHEN v2.3 Loaded" },
+        { "label": "GoldHEN v2.4b16", "file": "goldhen_2.4_b16_900.bin", "mode": "poc-b", "when": "after-jb", "loaded": "GoldHEN v2.4b16 Loaded" },
+        { "label": "GoldHEN v2.4b17.3", "file": "goldhen_v2.4b17.3.bin", "mode": "poc-b", "when": "after-jb", "loaded": "GoldHEN v2.4b17.3 Loaded" },
+        { "label": "GoldHEN v2.4b18.9", "file": "goldhen.bin", "mode": "function", "payload": "goldhen24", "when": "after-jb", "loaded": "GoldHEN v2.4b18.9 Loaded" }
       ]
     }
   }
