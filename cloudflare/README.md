@@ -67,7 +67,6 @@ GOOGLE_ADMIN_EMAILS
 SESSION_SECRET
 STREAMZ_OAUTH_STATE_SECRET
 STREAMZ_TWITCH_CLIENT_ID
-STREAMZ_TWITCH_CLIENT_SECRET
 STREAMZ_KICK_CLIENT_ID
 STREAMZ_KICK_CLIENT_SECRET
 ```
@@ -80,7 +79,7 @@ STREAMZ_KICK_CLIENT_SECRET
 - `GOOGLE_ADMIN_EMAILS` — Comma-separated list of Google accounts (or domains prefixed with `@`) that should have admin rights for catalogue management.
 - `SESSION_SECRET` — Random string used to sign auth cookies (at least 32 characters).
 - `STREAMZ_OAUTH_STATE_SECRET` — Random string used to encrypt and validate Streamz OAuth state payloads (at least 32 characters).
-- `STREAMZ_TWITCH_CLIENT_ID` / `STREAMZ_TWITCH_CLIENT_SECRET` — Twitch app credentials for Streamz. Never commit the secret.
+- `STREAMZ_TWITCH_CLIENT_ID` — Twitch public client ID for Streamz. Twitch uses PKCE and does not require a client secret for this website callback flow.
 - `STREAMZ_KICK_CLIENT_ID` / `STREAMZ_KICK_CLIENT_SECRET` — Kick app credentials for Streamz. Never commit the secret.
 
 Optional Streamz OAuth Worker variables:
@@ -143,7 +142,7 @@ https://vortex-prime-emu.com/projects/streamz/auth/twitch/callback
 https://vortex-prime-emu.com/projects/streamz/auth/kick/callback
 ```
 
-For Kick, the Worker generates the PKCE verifier and challenge server-side and stores the verifier inside encrypted OAuth state. The browser callback page forwards only `code` and `state` to the Worker. The Worker validates state and exchanges authorization codes with provider secrets server-side.
+For Twitch and Kick, the Worker generates the PKCE verifier and challenge server-side and stores the verifier inside encrypted OAuth state. The browser callback page forwards only `code` and `state` to the Worker. The Worker validates state before exchanging authorization codes. Twitch uses public-client PKCE without a client secret. Kick uses server-side token exchange with `STREAMZ_KICK_CLIENT_SECRET`.
 
 For secure desktop token handoff, Streamz can include a random 32-byte base64url `handoffKey` and a `returnTo` deep link when calling the `start` endpoint. The Worker encrypts the provider token response with that handoff key and sends only the encrypted payload back through the deep link.
 

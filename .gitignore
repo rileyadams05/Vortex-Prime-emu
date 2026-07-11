@@ -1,22 +1,55 @@
 DirectPackageInstaller/
 webMAN-MOD/
+
+# Codex/local workspace artifacts
+.codex/
+.cache/
+.tmp/
+
+# Local SDKs and dependencies
+android-sdk/
+node_modules/
+desktop/node_modules/
+
+# Build outputs
+target/
+build/
+dist/
+out/
+
+# Logs
+*.log
+
+# Release archives
+*.7z
+*.zip
+*.rar
+
+# Generated installers and app packages
+*.exe
+*.msi
+*.dmg
+*.AppImage
+*.apk
+*.aab
+
 .env
 .env.*
-*.log
+!.env.example
+!**/.env.example
+OAuth client*.txt
+OAuth client*.json
 MY-google-ID.json
 MY-google-ID.*
 MY-google-ID/
 get-token-and-set-secrets.mjs
 node_modules/.cache/
-node_modules/
-desktop/node_modules/
 desktop/src-tauri/gen/
 desktop/src-tauri/target/
 release-builds/
 .npm-cache/
 For Vortex-Prime-emu/
 store test/
-store test.7z
 companion-server/.env
 companion-server/data/
 companion-server/tmp/

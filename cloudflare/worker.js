@@ -67,11 +67,10 @@ const STREAMZ_OAUTH_PROVIDERS = {
     authorizeUrl: 'https://id.twitch.tv/oauth2/authorize',
     tokenUrl: 'https://id.twitch.tv/oauth2/token',
     clientIdEnv: 'STREAMZ_TWITCH_CLIENT_ID',
-    clientSecretEnv: 'STREAMZ_TWITCH_CLIENT_SECRET',
     redirectUriEnv: 'STREAMZ_TWITCH_REDIRECT_URI',
     defaultRedirectUri: `${STREAMZ_CALLBACK_BASE}/twitch/callback`,
     defaultScopes: [],
-    usesPkce: false,
+    usesPkce: true,
   },
   kick: {
     label: 'Kick',
@@ -439,15 +438,18 @@ async function exchangeStreamzAuthorizationCode(env, provider, code, state) {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     client_id: requireEnv(env, provider.clientIdEnv),
-    client_secret: requireEnv(env, provider.clientSecretEnv),
     redirect_uri: getStreamzRedirectUri(env, provider),
     code,
   });
 
+  if (provider.clientSecretEnv) {
+    body.set('client_secret', requireEnv(env, provider.clientSecretEnv));
+  }
+
   if (provider.usesPkce) {
     const codeVerifier = String(state.codeVerifier || '').trim();
     if (!codeVerifier) {
-      throw httpError(400, 'Missing Kick PKCE verifier in OAuth state.');
+      throw httpError(400, `Missing ${provider.label} PKCE verifier in OAuth state.`);
     }
     body.set('code_verifier', codeVerifier);
   }
