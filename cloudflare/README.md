@@ -65,6 +65,11 @@ DRIVE_READMES_FOLDER_ID
 GOOGLE_OAUTH_CLIENT_ID
 GOOGLE_ADMIN_EMAILS
 SESSION_SECRET
+STREAMZ_OAUTH_STATE_SECRET
+STREAMZ_TWITCH_CLIENT_ID
+STREAMZ_TWITCH_CLIENT_SECRET
+STREAMZ_KICK_CLIENT_ID
+STREAMZ_KICK_CLIENT_SECRET
 ```
 
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` — The email for the service account that has Drive access.
@@ -74,6 +79,20 @@ SESSION_SECRET
 - `GOOGLE_OAUTH_CLIENT_ID` — The OAuth 2.0 Web client ID used by Google Identity Services on the admin portal.
 - `GOOGLE_ADMIN_EMAILS` — Comma-separated list of Google accounts (or domains prefixed with `@`) that should have admin rights for catalogue management.
 - `SESSION_SECRET` — Random string used to sign auth cookies (at least 32 characters).
+- `STREAMZ_OAUTH_STATE_SECRET` — Random string used to encrypt and validate Streamz OAuth state payloads (at least 32 characters).
+- `STREAMZ_TWITCH_CLIENT_ID` / `STREAMZ_TWITCH_CLIENT_SECRET` — Twitch app credentials for Streamz. Never commit the secret.
+- `STREAMZ_KICK_CLIENT_ID` / `STREAMZ_KICK_CLIENT_SECRET` — Kick app credentials for Streamz. Never commit the secret.
+
+Optional Streamz OAuth Worker variables:
+
+```
+STREAMZ_TWITCH_REDIRECT_URI=https://vortex-prime-emu.com/projects/streamz/auth/twitch/callback
+STREAMZ_KICK_REDIRECT_URI=https://vortex-prime-emu.com/projects/streamz/auth/kick/callback
+STREAMZ_DEFAULT_DEEP_LINK=streamz://auth/callback
+STREAMZ_ALLOWED_DEEP_LINK_SCHEMES=streamz
+```
+
+Set optional values in Cloudflare Worker variables if the defaults need to change. Do not put client secrets in website files, GitHub Pages files, or browser JavaScript.
 
 ## Deploy From GitHub
 
@@ -105,6 +124,28 @@ https://vortex-prime-emu.com/api/catalogue/mods
 3. List every Google account (emails separated by commas) that should have full admin privileges in `GOOGLE_ADMIN_EMAILS`. You can include whole domains with entries like `@yourteam.com`.
 4. Set `SESSION_SECRET` to a long random string so the Worker can sign authentication cookies securely.
 5. The admin portal uses Google Identity Services. Users sign in from the portal; the Worker verifies the ID token server-side and issues a secure session cookie. Upload endpoints require a signed-in Google user, and catalogue mutations require the email to match `GOOGLE_ADMIN_EMAILS`.
+
+## Streamz OAuth setup
+
+The Streamz desktop app should start provider authorization through the Worker, then open the returned `authorizationUrl` in the user's browser.
+
+Start endpoints:
+
+```text
+GET or POST https://vortex-prime-emu.com/api/streamz/auth/twitch/start
+GET or POST https://vortex-prime-emu.com/api/streamz/auth/kick/start
+```
+
+Callback routes registered with the providers:
+
+```text
+https://vortex-prime-emu.com/projects/streamz/auth/twitch/callback
+https://vortex-prime-emu.com/projects/streamz/auth/kick/callback
+```
+
+For Kick, the Worker generates the PKCE verifier and challenge server-side and stores the verifier inside encrypted OAuth state. The browser callback page forwards only `code` and `state` to the Worker. The Worker validates state and exchanges authorization codes with provider secrets server-side.
+
+For secure desktop token handoff, Streamz can include a random 32-byte base64url `handoffKey` and a `returnTo` deep link when calling the `start` endpoint. The Worker encrypts the provider token response with that handoff key and sends only the encrypted payload back through the deep link.
 
 ## Google Drive preparation
 

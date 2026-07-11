@@ -57,11 +57,40 @@ const GOOGLE_ISSUERS = new Set([
 
 const SESSION_COOKIE_NAME = 'vps_session';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days (persistent login)
+const STREAMZ_STATE_TTL_SECONDS = 10 * 60;
+const STREAMZ_CALLBACK_BASE = 'https://vortex-prime-emu.com/projects/streamz/auth';
+const STREAMZ_DEFAULT_DEEP_LINK = 'streamz://auth/callback';
+
+const STREAMZ_OAUTH_PROVIDERS = {
+  twitch: {
+    label: 'Twitch',
+    authorizeUrl: 'https://id.twitch.tv/oauth2/authorize',
+    tokenUrl: 'https://id.twitch.tv/oauth2/token',
+    clientIdEnv: 'STREAMZ_TWITCH_CLIENT_ID',
+    clientSecretEnv: 'STREAMZ_TWITCH_CLIENT_SECRET',
+    redirectUriEnv: 'STREAMZ_TWITCH_REDIRECT_URI',
+    defaultRedirectUri: `${STREAMZ_CALLBACK_BASE}/twitch/callback`,
+    defaultScopes: [],
+    usesPkce: false,
+  },
+  kick: {
+    label: 'Kick',
+    authorizeUrl: 'https://id.kick.com/oauth/authorize',
+    tokenUrl: 'https://id.kick.com/oauth/token',
+    clientIdEnv: 'STREAMZ_KICK_CLIENT_ID',
+    clientSecretEnv: 'STREAMZ_KICK_CLIENT_SECRET',
+    redirectUriEnv: 'STREAMZ_KICK_REDIRECT_URI',
+    defaultRedirectUri: `${STREAMZ_CALLBACK_BASE}/kick/callback`,
+    defaultScopes: [],
+    usesPkce: true,
+  },
+};
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 let sessionKeyCache = null;
+let streamzStateKeyCache = null;
 
 export default {
   async fetch(request, env) {
@@ -94,6 +123,10 @@ export default {
 
       if (path === 'api/auth/logout') {
         return handleLogout(env, allowedOrigin);
+      }
+
+      if (path.startsWith('api/streamz/auth/')) {
+        return await handleStreamzAuthRequest(request, env, path, allowedOrigin);
       }
 
       if (path === 'api/risc/events') {
@@ -272,6 +305,169 @@ async function handleLogout(env, origin) {
   const response = json({ ok: true }, 200, origin);
   response.headers.append('Set-Cookie', buildSessionCookie('', { maxAge: 0 }));
   return response;
+}
+
+async function handleStreamzAuthRequest(request, env, path, origin) {
+  const match = path.match(/^api\/streamz\/auth\/(twitch|kick)\/(start|callback)$/);
+  if (!match) {
+    throw httpError(404, 'Streamz OAuth route not found.');
+  }
+
+  const [, providerKey, action] = match;
+  const provider = STREAMZ_OAUTH_PROVIDERS[providerKey];
+  if (!provider) {
+    throw httpError(404, 'Unsupported Streamz OAuth provider.');
+  }
+
+  if (action === 'start') {
+    return handleStreamzAuthStart(request, env, providerKey, provider, origin);
+  }
+  return handleStreamzAuthCallback(request, env, providerKey, provider, origin);
+}
+
+async function handleStreamzAuthStart(request, env, providerKey, provider, origin) {
+  if (!['GET', 'POST'].includes(request.method)) {
+    throw httpError(405, 'Streamz OAuth start supports GET or POST.');
+  }
+
+  const clientId = requireEnv(env, provider.clientIdEnv);
+  const redirectUri = getStreamzRedirectUri(env, provider);
+  const url = new URL(request.url);
+  const body = request.method === 'POST' ? await request.json().catch(() => ({})) : {};
+  const scopeValue = readStreamzScope(url, body, provider);
+  const returnTo = sanitizeStreamzReturnTo(
+    body?.returnTo || url.searchParams.get('return_to') || url.searchParams.get('returnTo'),
+    env,
+  );
+  const handoffKey = sanitizeStreamzHandoffKey(
+    body?.handoffKey || url.searchParams.get('handoff_key') || url.searchParams.get('handoffKey'),
+  );
+
+  const now = Math.floor(Date.now() / 1000);
+  const statePayload = {
+    v: 1,
+    provider: providerKey,
+    nonce: base64UrlEncode(crypto.getRandomValues(new Uint8Array(24))),
+    iat: now,
+    exp: now + STREAMZ_STATE_TTL_SECONDS,
+    returnTo,
+  };
+  if (handoffKey) {
+    statePayload.handoffKey = handoffKey;
+  }
+
+  const authUrl = new URL(provider.authorizeUrl);
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('client_id', clientId);
+  authUrl.searchParams.set('redirect_uri', redirectUri);
+  if (scopeValue) {
+    authUrl.searchParams.set('scope', scopeValue);
+  }
+
+  if (provider.usesPkce) {
+    const codeVerifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(64)));
+    statePayload.codeVerifier = codeVerifier;
+    authUrl.searchParams.set('code_challenge', await sha256Base64Url(codeVerifier));
+    authUrl.searchParams.set('code_challenge_method', 'S256');
+  }
+
+  authUrl.searchParams.set('state', await encryptStreamzState(statePayload, env));
+
+  return json({
+    ok: true,
+    provider: providerKey,
+    authorizationUrl: authUrl.toString(),
+    redirectUri,
+    expiresIn: STREAMZ_STATE_TTL_SECONDS,
+  }, 200, origin);
+}
+
+async function handleStreamzAuthCallback(request, env, providerKey, provider, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Streamz OAuth callback requires POST.');
+  }
+
+  const payload = await request.json().catch(() => null);
+  if (!payload || typeof payload !== 'object') {
+    throw httpError(400, 'Missing OAuth callback payload.');
+  }
+
+  const rawState = String(payload.state || '').trim();
+  if (!rawState) {
+    throw httpError(400, 'Missing OAuth state.');
+  }
+
+  const state = await decryptStreamzState(rawState, env);
+  validateStreamzState(state, providerKey);
+
+  if (payload.error) {
+    throw httpError(400, `Authorization failed: ${String(payload.errorDescription || payload.error).trim()}`);
+  }
+
+  const code = String(payload.code || '').trim();
+  if (!code) {
+    throw httpError(400, 'Missing OAuth authorization code.');
+  }
+
+  const tokenResponse = await exchangeStreamzAuthorizationCode(env, provider, code, state);
+  const deepLinkParams = {
+    provider: providerKey,
+    status: 'success',
+    token_type: tokenResponse.token_type || '',
+    expires_in: tokenResponse.expires_in || '',
+    scope: normalizeScopeForResponse(tokenResponse.scope),
+  };
+  if (state.handoffKey) {
+    deepLinkParams.payload = await encryptStreamzHandoff(state.handoffKey, {
+      provider: providerKey,
+      token: tokenResponse,
+      authorizedAt: new Date().toISOString(),
+    });
+  }
+  const deepLink = buildStreamzDeepLink(state.returnTo, deepLinkParams);
+
+  return json({
+    ok: true,
+    provider: providerKey,
+    message: `${provider.label} authorization completed. Return to Streamz to continue.`,
+    deepLink,
+    token: sanitizeStreamzTokenResponse(tokenResponse, Boolean(state.handoffKey)),
+  }, 200, origin);
+}
+
+async function exchangeStreamzAuthorizationCode(env, provider, code, state) {
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: requireEnv(env, provider.clientIdEnv),
+    client_secret: requireEnv(env, provider.clientSecretEnv),
+    redirect_uri: getStreamzRedirectUri(env, provider),
+    code,
+  });
+
+  if (provider.usesPkce) {
+    const codeVerifier = String(state.codeVerifier || '').trim();
+    if (!codeVerifier) {
+      throw httpError(400, 'Missing Kick PKCE verifier in OAuth state.');
+    }
+    body.set('code_verifier', codeVerifier);
+  }
+
+  const response = await fetch(provider.tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+    },
+    body,
+  });
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok || !data?.access_token) {
+    const detail = data?.error_description || data?.message || data?.error || response.statusText;
+    throw httpError(response.status || 502, `Failed to exchange authorization code: ${detail}`);
+  }
+
+  return data;
 }
 
 async function handleRiscEvents(request, env, origin) {
@@ -721,6 +917,148 @@ function requireEnv(env, name) {
     throw httpError(500, `Worker secret ${name} is not set.`);
   }
   return value;
+}
+
+function getStreamzRedirectUri(env, provider) {
+  return String(env[provider.redirectUriEnv] || '').trim() || provider.defaultRedirectUri;
+}
+
+function readStreamzScope(url, body, provider) {
+  const raw = body?.scope || body?.scopes || url.searchParams.get('scope') || provider.defaultScopes;
+  if (Array.isArray(raw)) {
+    return raw.map((value) => String(value).trim()).filter(Boolean).join(' ');
+  }
+  return String(raw || '').trim();
+}
+
+function sanitizeStreamzReturnTo(value, env) {
+  const fallback = String(env.STREAMZ_DEFAULT_DEEP_LINK || '').trim() || STREAMZ_DEFAULT_DEEP_LINK;
+  const candidate = String(value || fallback).trim();
+  try {
+    const url = new URL(candidate);
+    const allowedSchemes = getAllowedStreamzDeepLinkSchemes(env);
+    if (!allowedSchemes.has(url.protocol.replace(/:$/, '').toLowerCase())) {
+      throw httpError(400, 'Unsupported Streamz deep-link scheme.');
+    }
+    return url.toString();
+  } catch (error) {
+    if (error?.status) throw error;
+    throw httpError(400, 'Invalid Streamz deep-link URL.');
+  }
+}
+
+function getAllowedStreamzDeepLinkSchemes(env) {
+  const configured = String(env.STREAMZ_ALLOWED_DEEP_LINK_SCHEMES || 'streamz')
+    .split(/[,\s]+/)
+    .map((value) => value.trim().replace(/:$/, '').toLowerCase())
+    .filter(Boolean);
+  return new Set(configured.length ? configured : ['streamz']);
+}
+
+function sanitizeStreamzHandoffKey(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  let bytes;
+  try {
+    bytes = base64UrlDecode(raw);
+  } catch (error) {
+    throw httpError(400, 'Invalid Streamz handoff key encoding.');
+  }
+  if (bytes.length !== 32) {
+    throw httpError(400, 'Streamz handoff key must be 32 random bytes encoded as base64url.');
+  }
+  return base64UrlEncode(bytes);
+}
+
+async function importStreamzStateKey(env) {
+  const secret = requireEnv(env, 'STREAMZ_OAUTH_STATE_SECRET');
+  if (streamzStateKeyCache?.secret === secret) {
+    return streamzStateKeyCache.key;
+  }
+  const digest = await crypto.subtle.digest('SHA-256', textEncoder.encode(secret));
+  const key = await crypto.subtle.importKey('raw', digest, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  streamzStateKeyCache = { secret, key };
+  return key;
+}
+
+async function encryptStreamzState(payload, env) {
+  const key = await importStreamzStateKey(env);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    textEncoder.encode(JSON.stringify(payload)),
+  );
+  return `${base64UrlEncode(iv)}.${base64UrlEncode(new Uint8Array(ciphertext))}`;
+}
+
+async function decryptStreamzState(token, env) {
+  const [ivPart, ciphertextPart] = String(token || '').split('.');
+  if (!ivPart || !ciphertextPart) {
+    throw httpError(400, 'Invalid OAuth state format.');
+  }
+  try {
+    const key = await importStreamzStateKey(env);
+    const plaintext = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: base64UrlDecode(ivPart) },
+      key,
+      base64UrlDecode(ciphertextPart),
+    );
+    return JSON.parse(textDecoder.decode(plaintext));
+  } catch (error) {
+    throw httpError(400, 'Invalid or expired OAuth state.');
+  }
+}
+
+function validateStreamzState(state, providerKey) {
+  if (!state || state.v !== 1 || state.provider !== providerKey || !state.nonce) {
+    throw httpError(400, 'OAuth state does not match this provider.');
+  }
+  const now = Math.floor(Date.now() / 1000);
+  if (!state.exp || Number(state.exp) < now) {
+    throw httpError(400, 'OAuth state has expired.');
+  }
+}
+
+async function sha256Base64Url(value) {
+  const digest = await crypto.subtle.digest('SHA-256', textEncoder.encode(String(value)));
+  return base64UrlEncode(new Uint8Array(digest));
+}
+
+async function encryptStreamzHandoff(handoffKey, payload) {
+  const keyBytes = base64UrlDecode(handoffKey);
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    textEncoder.encode(JSON.stringify(payload)),
+  );
+  return `${base64UrlEncode(iv)}.${base64UrlEncode(new Uint8Array(ciphertext))}`;
+}
+
+function buildStreamzDeepLink(returnTo, params) {
+  const url = new URL(returnTo || STREAMZ_DEFAULT_DEEP_LINK);
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  return url.toString();
+}
+
+function normalizeScopeForResponse(scope) {
+  if (Array.isArray(scope)) return scope.join(' ');
+  return String(scope || '').trim();
+}
+
+function sanitizeStreamzTokenResponse(tokenResponse, handoffEncrypted = false) {
+  return {
+    tokenType: tokenResponse?.token_type || null,
+    expiresIn: tokenResponse?.expires_in || null,
+    scope: normalizeScopeForResponse(tokenResponse?.scope) || null,
+    handoffEncrypted,
+  };
 }
 
 function sanitizeUserForResponse(user) {
