@@ -3,16 +3,306 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Streamz Pro | Vortex Prime</title>
+  <title>Streamz Pro Contact Intake</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    html, body {
+    :root {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #0f172a;
+      background: #0b0f16;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: radial-gradient(circle at top, rgba(99,102,241,0.1), transparent 55%),
+                  radial-gradient(circle at bottom, rgba(16,185,129,0.08), transparent 50%),
+                  #05070b;
+    }
+
+    .card {
+      width: min(560px, 100%);
+      background: rgba(12, 17, 26, 0.95);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+    }
+
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      color: #f8fafc;
+    }
+
+    p.description {
+      margin: 0 0 1.5rem;
+      color: #cbd5f5;
+      line-height: 1.5;
+    }
+
+    .status {
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .status[data-variant="warning"] {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .status[data-variant="success"] {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .status[data-variant="info"] {
+      background: rgba(59, 130, 246, 0.15);
+      color: #bfdbfe;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+    }
+
+    .status[data-variant="error"] {
+      background: rgba(248, 113, 113, 0.15);
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.4);
+    }
+
+    .google-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+      color: #e2e8f0;
+    }
+
+    input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 0.75rem 0.85rem;
+      font-size: 1rem;
+      color: #f8fafc;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: rgba(99, 102, 241, 0.75);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+      outline: none;
+    }
+
+    button[type="submit"] {
+      margin-top: 0.5rem;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(120deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.9rem 1.25rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(99,102,241,0.35);
+    }
+
+    button[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .form-note {
+      font-size: 0.85rem;
+      color: #94a3b8;
     }
   </style>
 </head>
 <body>
+  <main class="card">
+    <h1>Streamz Pro Contact</h1>
+    <p class="description">
+      Fill out the details below so we can reach out with onboarding information for Streamz Pro.
+      An authenticated Google session is required before you can submit your contact information.
+    </p>
+
+    <div class="google-wrap">
+      <div id="googleStatus" class="status" data-variant="warning">Sign in with Google to unlock the form.</div>
+      <div id="googleButton"></div>
+    </div>
+
+    <form id="contactForm" hidden>
+      <label>
+        Full name
+        <input type="text" id="fullName" name="fullName" autocomplete="name" placeholder="Jane Doe" required>
+      </label>
+
+      <label>
+        Date of birth
+        <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+      </label>
+
+      <label>
+        Email address
+        <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+      </label>
+
+      <p class="form-note">A confirmation email will be sent to the Google account you sign in with.</p>
+
+      <button type="submit" disabled id="submitBtn">Submit details</button>
+    </form>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById('googleStatus');
+    const googleButton = document.getElementById('googleButton');
+    const form = document.getElementById('contactForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function setStatus(message, variant = 'info') {
+      statusEl.textContent = message;
+      statusEl.setAttribute('data-variant', variant);
+    }
+
+    function enableForm(email) {
+      form.hidden = false;
+      submitBtn.disabled = false;
+      setStatus(email ? `Signed in as ${email}. You can submit your details.` : 'Signed in. You can submit your details.', 'success');
+      document.getElementById('email').value = email || '';
+    }
+
+    async function waitForGoogleClient() {
+      if (window.google && window.google.accounts && window.google.accounts.id) return;
+      await new Promise((resolve, reject) => {
+        const limitMs = 6000;
+        const started = Date.now();
+        const timer = setInterval(() => {
+          if (window.google && window.google.accounts && window.google.accounts.id) {
+            clearInterval(timer);
+            resolve();
+          } else if (Date.now() - started > limitMs) {
+            clearInterval(timer);
+            reject(new Error('Google client failed to load.'));
+          }
+        }, 75);
+      });
+    }
+
+    async function initializeAuth() {
+      try {
+        setStatus('Loading Google auth…', 'info');
+        const resp = await fetch('/api/auth/config', { credentials: 'include' });
+        if (!resp.ok) throw new Error('Unable to contact auth service.');
+        const data = await resp.json();
+        const clientId = data?.googleClientId;
+        if (!clientId) {
+          setStatus('Google sign-in is not configured.', 'error');
+          return;
+        }
+
+        await waitForGoogleClient();
+
+        const renderButton = () => {
+          google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleCredential,
+            auto_select: false,
+          });
+          google.accounts.id.renderButton(googleButton, {
+            theme: 'outline',
+            size: 'large',
+            shape: 'pill',
+            text: 'signin_with',
+          });
+        };
+
+        renderButton();
+
+        if (data?.user?.email) {
+          enableForm(data.user.email);
+        } else {
+          setStatus('Sign in with Google to unlock the form.', 'warning');
+        }
+      } catch (error) {
+        console.error(error);
+        setStatus('Unable to initialize Google sign-in. Refresh and try again.', 'error');
+      }
+    }
+
+    async function handleCredential(response) {
+      if (!response?.credential) {
+        setStatus('Google credential missing. Try again.', 'error');
+        return;
+      }
+
+      try {
+        setStatus('Signing in…', 'info');
+        const loginResp = await fetch('/api/auth/login', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential }),
+        });
+
+        if (!loginResp.ok) {
+          throw new Error('Login failed');
+        }
+
+        const result = await loginResp.json().catch(() => ({}));
+        const email = result?.user?.email;
+        enableForm(email);
+      } catch (error) {
+        console.error(error);
+        setStatus('Google sign-in failed. Please try again.', 'error');
+      }
+    }
+
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      submitBtn.disabled = true;
+      setStatus('Details captured. We will be in touch shortly.', 'success');
+      setTimeout(() => {
+        submitBtn.disabled = false;
+      }, 2000);
+    });
+
+    initializeAuth();
+  </script>
 </body>
 </html>
