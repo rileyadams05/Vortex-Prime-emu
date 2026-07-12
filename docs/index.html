@@ -868,7 +868,7 @@
 
         .btn-secondary:hover {
             background: var(--color-bg-card);
-            border-color: var(--color-primary);
+            border-color: rgba(255, 255, 255, 0.35);
         }
 
         .hero-hint {
@@ -985,9 +985,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(99, 102, 241, 0.18));
-            border: 1px solid rgba(16, 185, 129, 0.28);
-            color: var(--color-primary-light);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--color-text);
             font-size: 1.35rem;
             font-weight: 800;
             flex-shrink: 0;
@@ -1020,6 +1020,18 @@
             font-weight: 700;
             letter-spacing: 0.04em;
             text-transform: uppercase;
+            gap: 0.35rem;
+        }
+
+        .project-status svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .project-status-warning {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: rgba(245, 158, 11, 0.45);
+            color: #facc15;
         }
 
         .project-description {
@@ -2828,7 +2840,10 @@
                             </div>
                             <div class="project-title">
                                 <h2>Streamz</h2>
-                                <span class="project-status">Active Development</span>
+                                <span class="project-status project-status-warning">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v2h2zm0-4h-2v4h2z" fill="currentColor"/></svg>
+                                    Active Development
+                                </span>
                             </div>
                         </div>
 
@@ -2856,7 +2871,7 @@
                         </div>
 
                         <div class="project-links" aria-label="Project actions">
-                            <span class="btn btn-primary">Upgrade to Pro</span>
+                            <span class="btn btn-secondary">Upgrade to Pro</span>
                         </div>
                     </a>
                 </div>
@@ -2869,7 +2884,7 @@
                     <p>A modern multi-platform streaming toolkit for managing chat overlays, alerts, sounds, chatbots and streaming utilities from a single desktop application.</p>
 
                     <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
-                        <span class="project-chip">Active Development</span>
+                        <span class="project-chip project-chip-warning">Active Development</span>
                         <span class="project-chip">Windows</span>
                         <span class="project-chip">Linux</span>
                         <span class="project-chip">macOS</span>
@@ -2884,12 +2899,15 @@
                             </div>
                             <div class="project-title">
                                 <h2>Streamz project home</h2>
-                                <span class="project-status">Active Development</span>
+                                <span class="project-status project-status-warning">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v2h2zm0-4h-2v4h2z" fill="currentColor"/></svg>
+                                    Active Development
+                                </span>
                             </div>
                         </div>
                         <p class="project-description">This page is prepared as the official home for Streamz. Product details, media, release information and support content will be added here when they are ready.</p>
                         <div class="project-links">
-                            <span class="btn btn-primary">Upgrade to Pro</span>
+                            <span class="btn btn-secondary">Upgrade to Pro</span>
                             <a class="btn btn-secondary" href="/projects/" data-page="projects" data-no-gate="true">Back to Projects</a>
                         </div>
                     </div>
