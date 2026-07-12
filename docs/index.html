@@ -2873,7 +2873,15 @@
                         </div>
 
                         <div class="project-links" aria-label="Project actions">
-                            <a class="btn btn-secondary" href="/projects/streamz/pro/" data-no-gate="true">Upgrade to Pro</a>
+                            <span
+                                class="btn btn-secondary"
+                                role="link"
+                                tabindex="0"
+                                onclick="window.location.href='/projects/streamz/pro/';"
+                                onkeypress="if(event.key==='Enter'||event.key===' '){window.location.href='/projects/streamz/pro/';}"
+                            >
+                                Upgrade to Pro
+                            </span>
                         </div>
                     </a>
                 </div>
