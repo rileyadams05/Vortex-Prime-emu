@@ -993,6 +993,12 @@
             flex-shrink: 0;
         }
 
+        .project-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
         .project-title h2,
         .project-title h3 {
             margin: 0;
@@ -2817,7 +2823,9 @@
                 <div class="projects-grid" aria-label="Vortex Prime projects">
                     <a class="project-card" href="/projects/streamz/" data-page="streamz" data-no-gate="true" aria-label="Open Streamz project page">
                         <div class="project-card-header">
-                            <div class="project-logo" aria-hidden="true">Sz</div>
+                            <div class="project-logo" aria-hidden="true">
+                                <img src="/assets/streamz-icon.png" alt="">
+                            </div>
                             <div class="project-title">
                                 <h2>Streamz</h2>
                                 <span class="project-status">Active Development</span>
@@ -2837,32 +2845,20 @@
                             </div>
                             <div class="project-meta-row">
                                 <span>Screenshots</span>
-                                <strong>Placeholder</strong>
+                                <strong aria-hidden="true">&nbsp;</strong>
                             </div>
                         </div>
 
                         <div class="project-platforms" aria-label="Platform support">
                             <span class="project-chip">Windows</span>
                             <span class="project-chip">Linux</span>
-                            <span class="project-chip muted">macOS Coming Later</span>
+                            <span class="project-chip">macOS</span>
                         </div>
 
                         <div class="project-links" aria-label="Project actions">
-                            <span class="btn btn-disabled" aria-disabled="true">Documentation placeholder</span>
-                            <span class="btn btn-disabled" aria-disabled="true">Download placeholder</span>
-                            <span class="btn btn-secondary">Learn More</span>
+                            <span class="btn btn-primary">Upgrade to Pro</span>
                         </div>
                     </a>
-
-                    <div class="future-projects-card">
-                        <h3>Future software</h3>
-                        <p>Additional Vortex Prime applications can be added to this library without changing the page structure.</p>
-                        <div class="placeholder-chips" style="margin-top: 1rem;">
-                            <span class="project-chip muted">Vortex Prime Launcher</span>
-                            <span class="project-chip muted">Vortex Prime Modding Tools</span>
-                            <span class="project-chip muted">Future software</span>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -2876,14 +2872,16 @@
                         <span class="project-chip">Active Development</span>
                         <span class="project-chip">Windows</span>
                         <span class="project-chip">Linux</span>
-                        <span class="project-chip muted">macOS Coming Later</span>
+                        <span class="project-chip">macOS</span>
                     </div>
                 </section>
 
                 <div class="streamz-layout">
                     <div class="project-card" style="margin-bottom: 2rem;">
                         <div class="project-card-header">
-                            <div class="project-logo" aria-hidden="true">Sz</div>
+                            <div class="project-logo" aria-hidden="true">
+                                <img src="/assets/streamz-icon.png" alt="">
+                            </div>
                             <div class="project-title">
                                 <h2>Streamz project home</h2>
                                 <span class="project-status">Active Development</span>
@@ -2891,8 +2889,7 @@
                         </div>
                         <p class="project-description">This page is prepared as the official home for Streamz. Product details, media, release information and support content will be added here when they are ready.</p>
                         <div class="project-links">
-                            <span class="btn btn-disabled" aria-disabled="true">Download placeholder</span>
-                            <span class="btn btn-disabled" aria-disabled="true">Documentation placeholder</span>
+                            <span class="btn btn-primary">Upgrade to Pro</span>
                             <a class="btn btn-secondary" href="/projects/" data-page="projects" data-no-gate="true">Back to Projects</a>
                         </div>
                     </div>
@@ -2904,7 +2901,7 @@
                         </section>
                         <section class="streamz-placeholder-card">
                             <h3>Screenshots</h3>
-                            <p>Placeholder.</p>
+                            <p></p>
                         </section>
                         <section class="streamz-placeholder-card">
                             <h3>Changelog</h3>
