@@ -69,6 +69,9 @@ STREAMZ_OAUTH_STATE_SECRET
 STREAMZ_TWITCH_CLIENT_ID
 STREAMZ_KICK_CLIENT_ID
 STREAMZ_KICK_CLIENT_SECRET
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+STRIPE_PUBLISHABLE_KEY
 ```
 
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` — The email for the service account that has Drive access.
@@ -81,6 +84,9 @@ STREAMZ_KICK_CLIENT_SECRET
 - `STREAMZ_OAUTH_STATE_SECRET` — Random string used to encrypt and validate Streamz OAuth state payloads (at least 32 characters).
 - `STREAMZ_TWITCH_CLIENT_ID` — Twitch public client ID for Streamz. Twitch uses PKCE and does not require a client secret for this website callback flow.
 - `STREAMZ_KICK_CLIENT_ID` / `STREAMZ_KICK_CLIENT_SECRET` — Kick app credentials for Streamz. Never commit the secret.
+- `STRIPE_SECRET_KEY` — Stripe test or live secret key used only by the Worker to create Streamz Pro Checkout Sessions.
+- `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret for `/api/streamz/pro/webhook`.
+- `STRIPE_PUBLISHABLE_KEY` — Stripe publishable key returned by the Streamz Pro config endpoint for frontend diagnostics.
 
 Optional Streamz OAuth Worker variables:
 
@@ -92,6 +98,20 @@ STREAMZ_ALLOWED_DEEP_LINK_SCHEMES=streamz
 ```
 
 Set optional values in Cloudflare Worker variables if the defaults need to change. Do not put client secrets in website files, GitHub Pages files, or browser JavaScript.
+
+Optional Streamz Pro Stripe Worker variables:
+
+```
+STRIPE_STREAMZ_PRO_PRICE_ID=price_...
+STRIPE_STREAMZ_PRO_MODE=payment
+STRIPE_STREAMZ_PRO_AMOUNT_CENTS=999
+STRIPE_STREAMZ_PRO_CURRENCY=usd
+STRIPE_STREAMZ_PRO_PRODUCT_NAME=Streamz Pro
+STRIPE_STREAMZ_PRO_ALLOW_PROMOTION_CODES=false
+PUBLIC_SITE_ORIGIN=https://vortex-prime-emu.com
+```
+
+Use `STRIPE_STREAMZ_PRO_PRICE_ID` when you have a Price configured in Stripe. If it is not set, the Worker creates Checkout Sessions with inline price data using `STRIPE_STREAMZ_PRO_AMOUNT_CENTS` and `STRIPE_STREAMZ_PRO_CURRENCY`. Set `STRIPE_STREAMZ_PRO_MODE=subscription` for recurring billing; without a Price ID, the inline recurring interval defaults to `month` and can be changed with `STRIPE_STREAMZ_PRO_INTERVAL`.
 
 ## Deploy From GitHub
 
@@ -145,6 +165,24 @@ https://vortex-prime-emu.com/projects/streamz/auth/kick/callback
 For Twitch and Kick, the Worker generates the PKCE verifier and challenge server-side and stores the verifier inside encrypted OAuth state. The browser callback page forwards only `code` and `state` to the Worker. The Worker validates state before exchanging authorization codes. Twitch uses public-client PKCE without a client secret. Kick uses server-side token exchange with `STREAMZ_KICK_CLIENT_SECRET`.
 
 For secure desktop token handoff, Streamz can include a random 32-byte base64url `handoffKey` and a `returnTo` deep link when calling the `start` endpoint. The Worker encrypts the provider token response with that handoff key and sends only the encrypted payload back through the deep link.
+
+## Streamz Pro Stripe checkout
+
+The Streamz Pro intake page posts signed-in contact details to:
+
+```text
+POST https://vortex-prime-emu.com/api/streamz/pro/checkout
+```
+
+The Worker requires the existing Google session cookie, validates that the submitted email matches the Google account, creates a Stripe Checkout Session, and returns the Stripe-hosted checkout URL. The Google subject, Google email, and contact name are attached as Checkout metadata for reconciliation and onboarding; date of birth is validated by the intake request but is not written to Stripe metadata.
+
+Stripe should be configured to send Checkout webhooks to:
+
+```text
+POST https://vortex-prime-emu.com/api/streamz/pro/webhook
+```
+
+The Worker verifies the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET` before accepting the event. The current implementation logs completed checkout events; add durable persistence when Streamz Pro entitlement storage is ready.
 
 ## Google Drive preparation
 

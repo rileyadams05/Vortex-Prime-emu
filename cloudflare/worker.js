@@ -60,6 +60,11 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days (persistent login)
 const STREAMZ_STATE_TTL_SECONDS = 10 * 60;
 const STREAMZ_CALLBACK_BASE = 'https://vortex-prime-emu.com/projects/streamz/auth';
 const STREAMZ_DEFAULT_DEEP_LINK = 'streamz://auth/callback';
+const STREAMZ_PRO_DEFAULT_AMOUNT_CENTS = 999;
+const STREAMZ_PRO_DEFAULT_CURRENCY = 'usd';
+const STREAMZ_PRO_DEFAULT_INTERVAL = 'month';
+const STRIPE_API_BASE = 'https://api.stripe.com/v1';
+const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
 
 const STREAMZ_OAUTH_PROVIDERS = {
   twitch: {
@@ -126,6 +131,22 @@ export default {
 
       if (path.startsWith('api/streamz/auth/')) {
         return await handleStreamzAuthRequest(request, env, path, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/pro/config') {
+        return handleStreamzProConfig(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/pro/checkout') {
+        return await handleStreamzProCheckout(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/pro/checkout-session') {
+        return await handleStreamzProCheckoutSession(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/pro/webhook') {
+        return await handleStreamzProWebhook(request, env, allowedOrigin);
       }
 
       if (path === 'api/risc/events') {
@@ -434,6 +455,105 @@ async function handleStreamzAuthCallback(request, env, providerKey, provider, or
   }, 200, origin);
 }
 
+async function handleStreamzProConfig(request, env, origin) {
+  if (request.method !== 'GET') {
+    throw httpError(405, 'Streamz Pro config requires GET.');
+  }
+
+  const session = await readSession(request, env).catch(() => null);
+  return json({
+    ok: true,
+    user: sanitizeUserForResponse(session),
+    stripe: buildStreamzProStripeConfig(env),
+  }, 200, origin);
+}
+
+async function handleStreamzProCheckout(request, env, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Streamz Pro checkout requires POST.');
+  }
+
+  const user = await ensureAuthenticated(request, env);
+  const payload = await request.json().catch(() => null);
+  if (!payload || typeof payload !== 'object') {
+    throw httpError(400, 'Missing contact details.');
+  }
+
+  const contact = validateStreamzProContact(payload, user);
+  const siteOrigin = getCheckoutSiteOrigin(request, env, origin);
+  const checkoutParams = buildStreamzProCheckoutParams(env, user, contact, siteOrigin);
+  const checkoutSession = await stripeFormRequest(env, 'POST', '/checkout/sessions', checkoutParams);
+
+  if (!checkoutSession?.id || !checkoutSession?.url) {
+    throw httpError(502, 'Stripe did not return a Checkout Session URL.');
+  }
+
+  return json({
+    ok: true,
+    checkoutSessionId: checkoutSession.id,
+    url: checkoutSession.url,
+  }, 200, origin);
+}
+
+async function handleStreamzProCheckoutSession(request, env, origin) {
+  if (request.method !== 'GET') {
+    throw httpError(405, 'Checkout session lookup requires GET.');
+  }
+
+  const user = await ensureAuthenticated(request, env);
+  const url = new URL(request.url);
+  const sessionId = String(url.searchParams.get('session_id') || '').trim();
+  if (!sessionId || !sessionId.startsWith('cs_')) {
+    throw httpError(400, 'Missing Checkout Session ID.');
+  }
+
+  const checkoutSession = await stripeFormRequest(
+    env,
+    'GET',
+    `/checkout/sessions/${encodeURIComponent(sessionId)}`,
+  );
+
+  const metadataSub = checkoutSession?.metadata?.google_sub;
+  if (metadataSub && metadataSub !== user.sub) {
+    throw httpError(403, 'Checkout Session does not belong to this Google account.');
+  }
+
+  return json({
+    ok: true,
+    id: checkoutSession.id,
+    mode: checkoutSession.mode,
+    status: checkoutSession.status,
+    paymentStatus: checkoutSession.payment_status,
+    amountTotal: checkoutSession.amount_total,
+    currency: checkoutSession.currency,
+    customerEmail: checkoutSession.customer_details?.email || checkoutSession.customer_email || null,
+  }, 200, origin);
+}
+
+async function handleStreamzProWebhook(request, env, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Stripe webhook requires POST.');
+  }
+
+  const webhookSecret = requireEnv(env, 'STRIPE_WEBHOOK_SECRET');
+  const signature = request.headers.get('Stripe-Signature') || '';
+  const rawPayload = await request.text();
+  await verifyStripeWebhookSignature(rawPayload, signature, webhookSecret);
+
+  const event = JSON.parse(rawPayload);
+  if (event?.type === 'checkout.session.completed') {
+    const session = event.data?.object || {};
+    console.log('Streamz Pro checkout completed', {
+      checkoutSessionId: session.id,
+      googleSub: session.metadata?.google_sub || null,
+      email: session.metadata?.google_email || session.customer_details?.email || null,
+      paymentStatus: session.payment_status || null,
+    });
+  }
+
+  return json({ ok: true, received: true }, 200, origin);
+}
+
 async function exchangeStreamzAuthorizationCode(env, provider, code, state) {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
@@ -470,6 +590,244 @@ async function exchangeStreamzAuthorizationCode(env, provider, code, state) {
   }
 
   return data;
+}
+
+function buildStreamzProStripeConfig(env) {
+  const publishableKey = String(env.STRIPE_PUBLISHABLE_KEY || '').trim() || null;
+  const priceId = String(env.STRIPE_STREAMZ_PRO_PRICE_ID || '').trim() || null;
+  const mode = getStreamzProCheckoutMode(env);
+  const currency = priceId ? null : getStreamzProCurrency(env);
+  const amountCents = priceId ? null : getStreamzProAmountCents(env);
+  return {
+    publishableKey,
+    configured: Boolean(String(env.STRIPE_SECRET_KEY || '').trim()) && (Boolean(priceId) || Number(amountCents) > 0),
+    mode,
+    productName: getStreamzProProductName(env),
+    priceIdConfigured: Boolean(priceId),
+    amountCents,
+    currency,
+  };
+}
+
+function validateStreamzProContact(payload, user) {
+  const fullName = sanitizeSingleLine(payload.fullName, 120);
+  const dateOfBirth = sanitizeSingleLine(payload.dateOfBirth, 20);
+  const email = sanitizeSingleLine(payload.email, 254).toLowerCase();
+  const sessionEmail = String(user?.email || '').trim().toLowerCase();
+
+  if (!fullName) {
+    throw httpError(400, 'Full name is required.');
+  }
+  if (!isValidIsoDate(dateOfBirth)) {
+    throw httpError(400, 'Date of birth must be a valid date.');
+  }
+  if (!sessionEmail) {
+    throw httpError(401, 'Signed-in Google account is missing an email address.');
+  }
+  if (email && email !== sessionEmail) {
+    throw httpError(400, 'Email must match the signed-in Google account.');
+  }
+
+  return {
+    fullName,
+    dateOfBirth,
+    email: sessionEmail,
+  };
+}
+
+function buildStreamzProCheckoutParams(env, user, contact, siteOrigin) {
+  const mode = getStreamzProCheckoutMode(env);
+  const params = new URLSearchParams({
+    mode,
+    success_url: `${siteOrigin}/projects/streamz/pro/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${siteOrigin}/projects/streamz/pro/?checkout=cancelled`,
+    customer_email: contact.email,
+    client_reference_id: String(user.sub || contact.email),
+    'metadata[product]': 'streamz_pro',
+    'metadata[google_sub]': String(user.sub || ''),
+    'metadata[google_email]': contact.email,
+    'metadata[contact_full_name]': contact.fullName,
+    'line_items[0][quantity]': '1',
+    allow_promotion_codes: String(getBooleanEnv(env, 'STRIPE_STREAMZ_PRO_ALLOW_PROMOTION_CODES', false)),
+  });
+
+  const priceId = String(env.STRIPE_STREAMZ_PRO_PRICE_ID || '').trim();
+  if (priceId) {
+    params.set('line_items[0][price]', priceId);
+  } else {
+    params.set('line_items[0][price_data][currency]', getStreamzProCurrency(env));
+    params.set('line_items[0][price_data][product_data][name]', getStreamzProProductName(env));
+    params.set('line_items[0][price_data][unit_amount]', String(getStreamzProAmountCents(env)));
+    if (mode === 'subscription') {
+      params.set('line_items[0][price_data][recurring][interval]', getStreamzProInterval(env));
+    }
+  }
+
+  if (mode === 'subscription') {
+    params.set('subscription_data[metadata][product]', 'streamz_pro');
+    params.set('subscription_data[metadata][google_sub]', String(user.sub || ''));
+    params.set('subscription_data[metadata][google_email]', contact.email);
+  } else {
+    params.set('payment_intent_data[metadata][product]', 'streamz_pro');
+    params.set('payment_intent_data[metadata][google_sub]', String(user.sub || ''));
+    params.set('payment_intent_data[metadata][google_email]', contact.email);
+  }
+
+  return params;
+}
+
+async function stripeFormRequest(env, method, endpoint, formParams) {
+  const secretKey = requireEnv(env, 'STRIPE_SECRET_KEY');
+  const headers = new Headers({
+    Authorization: `Bearer ${secretKey}`,
+    Accept: 'application/json',
+  });
+
+  const options = { method, headers };
+  if (method !== 'GET') {
+    headers.set('Content-Type', 'application/x-www-form-urlencoded');
+    options.body = formParams;
+  }
+
+  const response = await fetch(`${STRIPE_API_BASE}${endpoint}`, options);
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const detail = data?.error?.message || data?.error || response.statusText;
+    throw httpError(response.status || 502, `Stripe API error: ${detail}`);
+  }
+  return data;
+}
+
+async function verifyStripeWebhookSignature(payload, signatureHeader, secret) {
+  const parsed = parseStripeSignatureHeader(signatureHeader);
+  if (!parsed.timestamp || !parsed.signatures.length) {
+    throw httpError(400, 'Missing Stripe webhook signature.');
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parsed.timestamp) > STRIPE_WEBHOOK_TOLERANCE_SECONDS) {
+    throw httpError(400, 'Stripe webhook signature timestamp is outside the tolerance window.');
+  }
+
+  const expected = await hmacSha256Hex(secret, `${parsed.timestamp}.${payload}`);
+  const expectedBytes = hexToBytes(expected);
+  const valid = parsed.signatures.some((signature) => {
+    try {
+      return constantTimeEquals(expectedBytes, hexToBytes(signature));
+    } catch (error) {
+      return false;
+    }
+  });
+
+  if (!valid) {
+    throw httpError(400, 'Invalid Stripe webhook signature.');
+  }
+}
+
+function parseStripeSignatureHeader(header) {
+  return String(header || '')
+    .split(',')
+    .map((part) => part.split('='))
+    .reduce((acc, [key, value]) => {
+      const name = String(key || '').trim();
+      const trimmedValue = String(value || '').trim();
+      if (name === 't') {
+        acc.timestamp = Number(trimmedValue);
+      } else if (name === 'v1' && trimmedValue) {
+        acc.signatures.push(trimmedValue);
+      }
+      return acc;
+    }, { timestamp: 0, signatures: [] });
+}
+
+async function hmacSha256Hex(secret, value) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    textEncoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, textEncoder.encode(value));
+  return bytesToHex(new Uint8Array(signature));
+}
+
+function bytesToHex(bytes) {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function hexToBytes(hex) {
+  const normalized = String(hex || '').trim().toLowerCase();
+  if (!/^[0-9a-f]+$/.test(normalized) || normalized.length % 2 !== 0) {
+    throw new Error('Invalid hex value.');
+  }
+  const bytes = new Uint8Array(normalized.length / 2);
+  for (let i = 0; i < normalized.length; i += 2) {
+    bytes[i / 2] = Number.parseInt(normalized.slice(i, i + 2), 16);
+  }
+  return bytes;
+}
+
+function getCheckoutSiteOrigin(request, env, allowedOrigin) {
+  const configured = String(env.PUBLIC_SITE_ORIGIN || env.SITE_ORIGIN || '').trim();
+  if (configured) {
+    return configured.replace(/\/+$/, '');
+  }
+  if (allowedOrigin) {
+    return allowedOrigin.replace(/\/+$/, '');
+  }
+  const url = new URL(request.url);
+  return `${url.protocol}//${url.host}`;
+}
+
+function getStreamzProCheckoutMode(env) {
+  const mode = String(env.STRIPE_STREAMZ_PRO_MODE || 'payment').trim().toLowerCase();
+  return mode === 'subscription' ? 'subscription' : 'payment';
+}
+
+function getStreamzProCurrency(env) {
+  const currency = String(env.STRIPE_STREAMZ_PRO_CURRENCY || STREAMZ_PRO_DEFAULT_CURRENCY).trim().toLowerCase();
+  return /^[a-z]{3}$/.test(currency) ? currency : STREAMZ_PRO_DEFAULT_CURRENCY;
+}
+
+function getStreamzProAmountCents(env) {
+  const raw = String(env.STRIPE_STREAMZ_PRO_AMOUNT_CENTS || '').trim();
+  const amount = raw ? Number(raw) : STREAMZ_PRO_DEFAULT_AMOUNT_CENTS;
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw httpError(500, 'STRIPE_STREAMZ_PRO_AMOUNT_CENTS must be a positive integer.');
+  }
+  return amount;
+}
+
+function getStreamzProInterval(env) {
+  const interval = String(env.STRIPE_STREAMZ_PRO_INTERVAL || STREAMZ_PRO_DEFAULT_INTERVAL).trim().toLowerCase();
+  return ['day', 'week', 'month', 'year'].includes(interval) ? interval : STREAMZ_PRO_DEFAULT_INTERVAL;
+}
+
+function getStreamzProProductName(env) {
+  return sanitizeSingleLine(env.STRIPE_STREAMZ_PRO_PRODUCT_NAME || 'Streamz Pro', 120) || 'Streamz Pro';
+}
+
+function getBooleanEnv(env, name, fallback = false) {
+  const value = String(env[name] || '').trim().toLowerCase();
+  if (!value) return fallback;
+  return ['1', 'true', 'yes', 'on'].includes(value);
+}
+
+function sanitizeSingleLine(value, maxLength) {
+  return String(value || '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+}
+
+function isValidIsoDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return false;
+  if (date.toISOString().slice(0, 10) !== value) return false;
+  return date.getTime() < Date.now();
 }
 
 async function handleRiscEvents(request, env, origin) {

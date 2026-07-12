@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Streamz Pro Contact Intake</title>
+  <title>Streamz Pro Checkout</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -124,6 +124,31 @@
       outline: none;
     }
 
+    input[readonly] {
+      color: #cbd5e1;
+      cursor: not-allowed;
+    }
+
+    .payment-summary {
+      border: 1px solid rgba(99, 102, 241, 0.28);
+      border-radius: 16px;
+      padding: 1rem;
+      background: rgba(99, 102, 241, 0.08);
+      color: #e2e8f0;
+    }
+
+    .payment-summary strong {
+      display: block;
+      color: #f8fafc;
+      margin-bottom: 0.35rem;
+    }
+
+    .payment-summary span {
+      color: #cbd5e1;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
     button[type="submit"] {
       margin-top: 0.5rem;
       border: none;
@@ -156,10 +181,10 @@
 </head>
 <body>
   <main class="card">
-    <h1>Streamz Pro Contact</h1>
+    <h1>Streamz Pro</h1>
     <p class="description">
-      Fill out the details below so we can reach out with onboarding information for Streamz Pro.
-      An authenticated Google session is required before you can submit your contact information.
+      Fill out the details below to continue to secure checkout for Streamz Pro.
+      An authenticated Google session is required before payment.
     </p>
 
     <div class="google-wrap">
@@ -183,9 +208,14 @@
         <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required>
       </label>
 
+      <div class="payment-summary">
+        <strong>Streamz Pro access</strong>
+        <span>Checkout is handled securely by Stripe. Your Google account email is attached to the payment session for onboarding.</span>
+      </div>
+
       <p class="form-note">A confirmation email will be sent to the Google account you sign in with.</p>
 
-      <button type="submit" disabled id="submitBtn">Submit details</button>
+      <button type="submit" disabled id="submitBtn">Continue to checkout</button>
     </form>
   </main>
 
@@ -194,6 +224,8 @@
     const googleButton = document.getElementById('googleButton');
     const form = document.getElementById('contactForm');
     const submitBtn = document.getElementById('submitBtn');
+    const emailInput = document.getElementById('email');
+    const initialParams = new URLSearchParams(window.location.search);
 
     function setStatus(message, variant = 'info') {
       statusEl.textContent = message;
@@ -204,7 +236,13 @@
       form.hidden = false;
       submitBtn.disabled = false;
       setStatus(email ? `Signed in as ${email}. You can submit your details.` : 'Signed in. You can submit your details.', 'success');
-      document.getElementById('email').value = email || '';
+      emailInput.value = email || '';
+      emailInput.readOnly = Boolean(email);
+    }
+
+    function setBusy(isBusy, message) {
+      submitBtn.disabled = isBusy;
+      submitBtn.textContent = isBusy ? message : 'Continue to checkout';
     }
 
     async function waitForGoogleClient() {
@@ -256,8 +294,15 @@
 
         if (data?.user?.email) {
           enableForm(data.user.email);
+          await renderCheckoutReturn();
         } else {
-          setStatus('Sign in with Google to unlock the form.', 'warning');
+          const checkoutState = initialParams.get('checkout');
+          setStatus(
+            checkoutState === 'success'
+              ? 'Sign in with Google to confirm your checkout status.'
+              : 'Sign in with Google to unlock the form.',
+            'warning',
+          );
         }
       } catch (error) {
         console.error(error);
@@ -287,19 +332,80 @@
         const result = await loginResp.json().catch(() => ({}));
         const email = result?.user?.email;
         enableForm(email);
+        await renderCheckoutReturn();
       } catch (error) {
         console.error(error);
         setStatus('Google sign-in failed. Please try again.', 'error');
       }
     }
 
-    form?.addEventListener('submit', (event) => {
+    async function renderCheckoutReturn() {
+      const checkoutState = initialParams.get('checkout');
+      if (!checkoutState) return;
+
+      if (checkoutState === 'cancelled') {
+        setStatus('Checkout was cancelled. Your details are still ready if you want to try again.', 'warning');
+        return;
+      }
+
+      if (checkoutState !== 'success') return;
+
+      const sessionId = initialParams.get('session_id');
+      if (!sessionId) {
+        setStatus('Checkout returned without a session id. Contact support if payment completed.', 'warning');
+        return;
+      }
+
+      try {
+        setStatus('Confirming checkout status...', 'info');
+        const resp = await fetch(`/api/streamz/pro/checkout-session?session_id=${encodeURIComponent(sessionId)}`, {
+          credentials: 'include',
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          throw new Error(data?.message || 'Unable to confirm checkout status.');
+        }
+
+        if (data.paymentStatus === 'paid') {
+          setStatus('Payment complete. Streamz Pro onboarding is ready for this Google account.', 'success');
+        } else {
+          setStatus(`Checkout status: ${data.paymentStatus || data.status || 'pending'}.`, 'info');
+        }
+      } catch (error) {
+        console.error(error);
+        setStatus('Unable to confirm checkout status. Refresh after a moment or contact support.', 'error');
+      }
+    }
+
+    form?.addEventListener('submit', async (event) => {
       event.preventDefault();
-      submitBtn.disabled = true;
-      setStatus('Details captured. We will be in touch shortly.', 'success');
-      setTimeout(() => {
-        submitBtn.disabled = false;
-      }, 2000);
+      setBusy(true, 'Creating checkout...');
+      setStatus('Creating secure Stripe checkout...', 'info');
+
+      const payload = {
+        fullName: document.getElementById('fullName').value,
+        dateOfBirth: document.getElementById('dateOfBirth').value,
+        email: emailInput.value,
+      };
+
+      try {
+        const resp = await fetch('/api/streamz/pro/checkout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data?.url) {
+          throw new Error(data?.message || 'Unable to create checkout session.');
+        }
+        setStatus('Redirecting to Stripe checkout...', 'info');
+        window.location.assign(data.url);
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message || 'Unable to start checkout. Please try again.', 'error');
+        setBusy(false);
+      }
     });
 
     initializeAuth();
