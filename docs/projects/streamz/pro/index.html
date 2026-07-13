@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://js.stripe.com/v3/"></script>
   <style>
     :root {
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -32,17 +33,23 @@
     }
 
     .card {
-      width: min(560px, 100%);
-      background: rgba(12, 17, 26, 0.95);
+      width: min(760px, 100%);
+      background: rgba(12, 17, 26, 0.96);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 24px;
-      padding: 2rem;
+      padding: clamp(1.35rem, 3vw, 2.25rem);
       box-shadow: 0 25px 60px rgba(0,0,0,0.45);
     }
 
     h1 {
       margin: 0 0 0.35rem;
       font-size: clamp(1.75rem, 3vw, 2.5rem);
+      color: #f8fafc;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1rem;
       color: #f8fafc;
     }
 
@@ -87,16 +94,26 @@
       border: 1px solid rgba(248, 113, 113, 0.4);
     }
 
-    .google-wrap {
+    .google-wrap,
+    .form-section {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.75rem;
+    }
+
+    .google-wrap {
       margin-bottom: 1.5rem;
     }
 
     form {
       display: flex;
       flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 1rem;
     }
 
@@ -108,7 +125,13 @@
       color: #e2e8f0;
     }
 
+    label.full-width,
+    .field-grid label:last-child {
+      grid-column: 1 / -1;
+    }
+
     input {
+      width: 100%;
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 10px;
@@ -129,35 +152,73 @@
       cursor: not-allowed;
     }
 
-    .payment-summary {
-      border: 1px solid rgba(99, 102, 241, 0.28);
-      border-radius: 16px;
-      padding: 1rem;
-      background: rgba(99, 102, 241, 0.08);
-      color: #e2e8f0;
-    }
-
-    .payment-summary strong {
-      display: block;
-      color: #f8fafc;
-      margin-bottom: 0.35rem;
-    }
-
-    .payment-summary span {
+    .terms-row {
+      display: grid;
+      grid-template-columns: 1rem 1fr;
+      align-items: start;
+      gap: 0.65rem;
       color: #cbd5e1;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       line-height: 1.45;
     }
 
+    .terms-row input {
+      width: 1rem;
+      height: 1rem;
+      margin-top: 0.16rem;
+      accent-color: #8b5cf6;
+    }
+
+    .stripe-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      min-height: 320px;
+    }
+
+    .stripe-box {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 1rem;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .stripe-box[hidden] {
+      display: none;
+    }
+
+    .stripe-placeholder {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
+    .divider {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0.85rem;
+      color: #94a3b8;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      background: rgba(255,255,255,0.14);
+    }
+
     button[type="submit"] {
-      margin-top: 0.5rem;
       border: none;
       border-radius: 999px;
       background: linear-gradient(120deg, #6366f1, #8b5cf6);
       color: #fff;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 1rem;
-      padding: 0.9rem 1.25rem;
+      padding: 0.95rem 1.35rem;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
@@ -168,14 +229,49 @@
     }
 
     button[disabled] {
-      opacity: 0.4;
+      opacity: 0.45;
       cursor: not-allowed;
       box-shadow: none;
+      transform: none;
     }
 
-    .form-note {
-      font-size: 0.85rem;
+    .form-note,
+    .payment-message {
+      font-size: 0.88rem;
       color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .payment-message[data-variant="success"] {
+      color: #6ee7b7;
+    }
+
+    .payment-message[data-variant="error"] {
+      color: #fecaca;
+    }
+
+    .payment-message[data-variant="info"] {
+      color: #bfdbfe;
+    }
+
+    .success-screen {
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 16px;
+      padding: 1rem;
+      color: #d1fae5;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+        align-items: flex-start;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -183,66 +279,127 @@
   <main class="card">
     <h1>Streamz Pro</h1>
     <p class="description">
-      Fill out the details below to continue to secure checkout for Streamz Pro.
-      An authenticated Google session is required before payment.
+      Complete your Streamz Pro purchase without leaving Vortex Prime.
     </p>
 
     <div class="google-wrap">
-      <div id="googleStatus" class="status" data-variant="warning">Sign in with Google to unlock the form.</div>
+      <div id="googleStatus" class="status" data-variant="warning">Sign in with Google to unlock payment.</div>
       <div id="googleButton"></div>
     </div>
 
-    <form id="contactForm" hidden>
-      <label>
-        Full name
-        <input type="text" id="fullName" name="fullName" autocomplete="name" placeholder="Jane Doe" required>
-      </label>
+    <div id="successScreen" class="success-screen" hidden>
+      Streamz Pro ownership is active for this Google account.
+    </div>
 
-      <label>
-        Date of birth
-        <input type="date" id="dateOfBirth" name="dateOfBirth" required>
-      </label>
+    <form id="checkoutForm" hidden>
+      <section class="form-section" aria-labelledby="personalDetailsHeading">
+        <h2 id="personalDetailsHeading">Personal details</h2>
+        <div class="field-grid">
+          <label>
+            Full name
+            <input type="text" id="fullName" name="fullName" autocomplete="name" placeholder="Jane Doe" required>
+          </label>
 
-      <label>
-        Email address
-        <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required>
-      </label>
+          <label>
+            Date of birth
+            <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+          </label>
 
-      <div class="payment-summary">
-        <strong>Streamz Pro access</strong>
-        <span>Checkout is handled securely by Stripe. Your Google account email is attached to the payment session for onboarding.</span>
-      </div>
+          <label>
+            Email address
+            <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required readonly>
+          </label>
+        </div>
 
-      <p class="form-note">A confirmation email will be sent to the Google account you sign in with.</p>
+        <label class="terms-row">
+          <input type="checkbox" id="termsAccepted" required>
+          <span>I accept the Streamz Pro purchase terms and understand this one-time payment is A$99.99.</span>
+        </label>
+      </section>
 
-      <button type="submit" disabled id="submitBtn">Continue to checkout</button>
+      <section class="form-section" aria-labelledby="quickPaymentHeading">
+        <h2 id="quickPaymentHeading">Quick payment</h2>
+        <div id="expressCheckoutBox" class="stripe-box">
+          <div id="expressCheckoutElement"></div>
+          <div id="expressCheckoutPlaceholder" class="stripe-placeholder">Loading secure payment form...</div>
+        </div>
+      </section>
+
+      <div class="divider">OR PAY WITH CARD</div>
+
+      <section class="form-section" aria-labelledby="paymentDetailsHeading">
+        <h2 id="paymentDetailsHeading">Payment details</h2>
+        <div class="stripe-shell">
+          <div id="paymentElement" class="stripe-box">
+            <div class="stripe-placeholder">Loading secure payment form...</div>
+          </div>
+        </div>
+      </section>
+
+      <button type="submit" disabled id="purchaseBtn">Purchase Streamz Pro — A$99.99</button>
+      <p class="form-note">Secure payment handled by Stripe.</p>
+      <div id="paymentStatus" class="payment-message" data-variant="info" role="status"></div>
     </form>
   </main>
 
   <script>
     const statusEl = document.getElementById('googleStatus');
     const googleButton = document.getElementById('googleButton');
-    const form = document.getElementById('contactForm');
-    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('checkoutForm');
+    const purchaseBtn = document.getElementById('purchaseBtn');
     const emailInput = document.getElementById('email');
-    const initialParams = new URLSearchParams(window.location.search);
+    const fullNameInput = document.getElementById('fullName');
+    const dateOfBirthInput = document.getElementById('dateOfBirth');
+    const termsAcceptedInput = document.getElementById('termsAccepted');
+    const paymentStatus = document.getElementById('paymentStatus');
+    const successScreen = document.getElementById('successScreen');
+    const expressCheckoutBox = document.getElementById('expressCheckoutBox');
+    const expressCheckoutPlaceholder = document.getElementById('expressCheckoutPlaceholder');
+
+    const PURCHASE_LABEL = 'Purchase Streamz Pro — A$99.99';
+    const RETURN_URL = `${window.location.origin}/projects/streamz/pro/?payment_return=1`;
+
+    let googleEmail = '';
+    let stripe = null;
+    let elements = null;
+    let paymentElement = null;
+    let expressCheckoutElement = null;
+    let stripeReady = false;
+    let paymentInFlight = false;
 
     function setStatus(message, variant = 'info') {
       statusEl.textContent = message;
       statusEl.setAttribute('data-variant', variant);
     }
 
-    function enableForm(email) {
-      form.hidden = false;
-      submitBtn.disabled = false;
-      setStatus(email ? `Signed in as ${email}. You can submit your details.` : 'Signed in. You can submit your details.', 'success');
-      emailInput.value = email || '';
-      emailInput.readOnly = Boolean(email);
+    function setPaymentMessage(message, variant = 'info') {
+      paymentStatus.textContent = message || '';
+      paymentStatus.setAttribute('data-variant', variant);
     }
 
-    function setBusy(isBusy, message) {
-      submitBtn.disabled = isBusy;
-      submitBtn.textContent = isBusy ? message : 'Continue to checkout';
+    function setBusy(isBusy, message = 'Processing payment...') {
+      paymentInFlight = isBusy;
+      purchaseBtn.disabled = isBusy || !stripeReady;
+      purchaseBtn.textContent = isBusy ? message : PURCHASE_LABEL;
+    }
+
+    function showOwnedState(entitlement) {
+      form.hidden = true;
+      successScreen.hidden = false;
+      setStatus(
+        entitlement?.googleEmail
+          ? `Streamz Pro is active for ${entitlement.googleEmail}.`
+          : 'Streamz Pro is active for this Google account.',
+        'success',
+      );
+    }
+
+    function enableForm(email) {
+      googleEmail = email || '';
+      form.hidden = false;
+      emailInput.value = googleEmail;
+      emailInput.readOnly = true;
+      setStatus(googleEmail ? `Signed in as ${googleEmail}.` : 'Signed in.', 'success');
     }
 
     async function waitForGoogleClient() {
@@ -264,7 +421,7 @@
 
     async function initializeAuth() {
       try {
-        setStatus('Loading Google auth…', 'info');
+        setStatus('Loading Google auth...', 'info');
         const resp = await fetch('/api/auth/config', { credentials: 'include' });
         if (!resp.ok) throw new Error('Unable to contact auth service.');
         const data = await resp.json();
@@ -276,33 +433,22 @@
 
         await waitForGoogleClient();
 
-        const renderButton = () => {
-          google.accounts.id.initialize({
-            client_id: clientId,
-            callback: handleCredential,
-            auto_select: false,
-          });
-          google.accounts.id.renderButton(googleButton, {
-            theme: 'outline',
-            size: 'large',
-            shape: 'pill',
-            text: 'signin_with',
-          });
-        };
-
-        renderButton();
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleCredential,
+          auto_select: false,
+        });
+        google.accounts.id.renderButton(googleButton, {
+          theme: 'outline',
+          size: 'large',
+          shape: 'pill',
+          text: 'signin_with',
+        });
 
         if (data?.user?.email) {
-          enableForm(data.user.email);
-          await renderCheckoutReturn();
+          await afterAuthenticated(data.user.email);
         } else {
-          const checkoutState = initialParams.get('checkout');
-          setStatus(
-            checkoutState === 'success'
-              ? 'Sign in with Google to confirm your checkout status.'
-              : 'Sign in with Google to unlock the form.',
-            'warning',
-          );
+          setStatus('Sign in with Google to unlock payment.', 'warning');
         }
       } catch (error) {
         console.error(error);
@@ -317,7 +463,7 @@
       }
 
       try {
-        setStatus('Signing in…', 'info');
+        setStatus('Signing in...', 'info');
         const loginResp = await fetch('/api/auth/login', {
           method: 'POST',
           credentials: 'include',
@@ -325,87 +471,233 @@
           body: JSON.stringify({ credential: response.credential }),
         });
 
+        const result = await loginResp.json().catch(() => ({}));
         if (!loginResp.ok) {
-          throw new Error('Login failed');
+          throw new Error(result?.message || 'Login failed');
         }
 
-        const result = await loginResp.json().catch(() => ({}));
-        const email = result?.user?.email;
-        enableForm(email);
-        await renderCheckoutReturn();
+        await afterAuthenticated(result?.user?.email || '');
       } catch (error) {
         console.error(error);
         setStatus('Google sign-in failed. Please try again.', 'error');
       }
     }
 
-    async function renderCheckoutReturn() {
-      const checkoutState = initialParams.get('checkout');
-      if (!checkoutState) return;
-
-      if (checkoutState === 'cancelled') {
-        setStatus('Checkout was cancelled. Your details are still ready if you want to try again.', 'warning');
+    async function afterAuthenticated(email) {
+      enableForm(email);
+      const config = await fetchStreamzProConfig();
+      if (config?.entitlement?.status === 'active') {
+        showOwnedState(config.entitlement);
         return;
       }
 
-      if (checkoutState !== 'success') return;
+      await initializeStripe(config);
 
-      const sessionId = initialParams.get('session_id');
-      if (!sessionId) {
-        setStatus('Checkout returned without a session id. Contact support if payment completed.', 'warning');
-        return;
-      }
-
-      try {
-        setStatus('Confirming checkout status...', 'info');
-        const resp = await fetch(`/api/streamz/pro/checkout-session?session_id=${encodeURIComponent(sessionId)}`, {
-          credentials: 'include',
-        });
-        const data = await resp.json().catch(() => ({}));
-        if (!resp.ok) {
-          throw new Error(data?.message || 'Unable to confirm checkout status.');
-        }
-
-        if (data.paymentStatus === 'paid') {
-          setStatus('Payment complete. Streamz Pro onboarding is ready for this Google account.', 'success');
-        } else {
-          setStatus(`Checkout status: ${data.paymentStatus || data.status || 'pending'}.`, 'info');
-        }
-      } catch (error) {
-        console.error(error);
-        setStatus('Unable to confirm checkout status. Refresh after a moment or contact support.', 'error');
+      if (new URLSearchParams(window.location.search).get('payment_return')) {
+        setPaymentMessage('Payment returned to Vortex Prime. Waiting for verified Stripe webhook...', 'info');
+        await pollEntitlement();
       }
     }
 
-    form?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      setBusy(true, 'Creating checkout...');
-      setStatus('Creating secure Stripe checkout...', 'info');
+    async function fetchStreamzProConfig() {
+      const resp = await fetch('/api/streamz/pro/config', { credentials: 'include' });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data?.message || 'Unable to load Streamz Pro payment config.');
+      }
+      return data;
+    }
 
-      const payload = {
-        fullName: document.getElementById('fullName').value,
-        dateOfBirth: document.getElementById('dateOfBirth').value,
-        email: emailInput.value,
-      };
+    async function initializeStripe(config) {
+      if (stripeReady || paymentInFlight) return;
+
+      const stripeConfig = config?.stripe || {};
+      if (!stripeConfig.publishableKey || !stripeConfig.configured) {
+        setPaymentMessage('Stripe sandbox keys are not configured for Streamz Pro.', 'error');
+        return;
+      }
 
       try {
-        const resp = await fetch('/api/streamz/pro/checkout', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+        setPaymentMessage('Loading secure payment form...', 'info');
+        stripe = Stripe(stripeConfig.publishableKey);
+        elements = stripe.elements({
+          mode: 'payment',
+          amount: stripeConfig.amountCents,
+          currency: stripeConfig.currency,
+          appearance: {
+            theme: 'night',
+            variables: {
+              colorPrimary: '#8b5cf6',
+              colorBackground: '#111827',
+              colorText: '#f8fafc',
+              colorDanger: '#fca5a5',
+              borderRadius: '10px',
+            },
+          },
         });
-        const data = await resp.json().catch(() => ({}));
-        if (!resp.ok || !data?.url) {
-          throw new Error(data?.message || 'Unable to create checkout session.');
-        }
-        setStatus('Redirecting to Stripe checkout...', 'info');
-        window.location.assign(data.url);
+
+        expressCheckoutElement = elements.create('expressCheckout', {
+          emailRequired: true,
+          layout: {
+            maxColumns: 2,
+            maxRows: 2,
+            overflow: 'auto',
+          },
+        });
+        expressCheckoutElement.on('availablepaymentmethodschange', ({ paymentMethods }) => {
+          const hasQuickPayment = paymentMethods && Object.keys(paymentMethods).length > 0;
+          expressCheckoutBox.hidden = false;
+          expressCheckoutPlaceholder.hidden = Boolean(hasQuickPayment);
+          if (!hasQuickPayment) {
+            expressCheckoutPlaceholder.textContent = 'No quick payment methods are available in this browser.';
+          }
+        });
+        expressCheckoutElement.on('confirm', () => {
+          startPayment('express');
+        });
+        expressCheckoutElement.mount('#expressCheckoutElement');
+
+        paymentElement = elements.create('payment', {
+          layout: {
+            type: 'accordion',
+            defaultCollapsed: false,
+            radios: 'always',
+          },
+          defaultValues: {
+            billingDetails: {
+              email: googleEmail,
+            },
+          },
+        });
+        paymentElement.on('ready', () => {
+          stripeReady = true;
+          setBusy(false);
+          setPaymentMessage('', 'info');
+        });
+        paymentElement.on('loaderror', (event) => {
+          setPaymentMessage(event?.error?.message || 'Stripe failed to load the payment form.', 'error');
+        });
+        paymentElement.mount('#paymentElement');
       } catch (error) {
         console.error(error);
-        setStatus(error.message || 'Unable to start checkout. Please try again.', 'error');
+        setPaymentMessage(error.message || 'Stripe failed to initialize.', 'error');
+      }
+    }
+
+    function readValidatedDetails() {
+      const fullName = fullNameInput.value.trim();
+      const dateOfBirth = dateOfBirthInput.value;
+      const email = emailInput.value.trim().toLowerCase();
+
+      if (!googleEmail) throw new Error('Sign in with Google before paying.');
+      if (!fullName) throw new Error('Full name is required.');
+      if (!dateOfBirth) throw new Error('Date of birth is required.');
+      if (email !== googleEmail.toLowerCase()) throw new Error('Email must match the signed-in Google account.');
+      if (!termsAcceptedInput.checked) throw new Error('Purchase terms must be accepted before payment.');
+
+      return {
+        fullName,
+        dateOfBirth,
+        email,
+        termsAccepted: true,
+      };
+    }
+
+    async function createPaymentIntent(details) {
+      const resp = await fetch('/api/streamz/pro/payment-intent', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(details),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data?.message || 'Unable to prepare payment.');
+      }
+      return data;
+    }
+
+    async function startPayment(source) {
+      if (paymentInFlight) return;
+
+      let details;
+      try {
+        details = readValidatedDetails();
+      } catch (error) {
+        setPaymentMessage(error.message, 'error');
+        return;
+      }
+
+      if (!stripe || !elements || !stripeReady) {
+        setPaymentMessage('Loading secure payment form...', 'info');
+        return;
+      }
+
+      try {
+        setBusy(true, source === 'express' ? 'Opening secure wallet...' : 'Processing payment...');
+        setPaymentMessage('Validating payment details...', 'info');
+
+        const { error: submitError } = await elements.submit();
+        if (submitError) {
+          throw new Error(submitError.message || 'Payment details are incomplete.');
+        }
+
+        setPaymentMessage('Preparing A$99.99 Streamz Pro payment...', 'info');
+        const intent = await createPaymentIntent(details);
+        if (intent.alreadyOwned) {
+          showOwnedState(intent.entitlement);
+          return;
+        }
+
+        const { error } = await stripe.confirmPayment({
+          elements,
+          clientSecret: intent.clientSecret,
+          confirmParams: {
+            return_url: RETURN_URL,
+            payment_method_data: {
+              billing_details: {
+                name: details.fullName,
+                email: details.email,
+              },
+            },
+          },
+          redirect: 'if_required',
+        });
+
+        if (error) {
+          throw new Error(error.message || 'Payment failed.');
+        }
+
+        setPaymentMessage('Payment submitted. Waiting for verified Stripe webhook...', 'info');
+        await pollEntitlement();
+      } catch (error) {
+        console.error(error);
+        setPaymentMessage(error.message || 'Payment failed. Check your details and try again.', 'error');
         setBusy(false);
       }
+    }
+
+    async function pollEntitlement() {
+      for (let attempt = 0; attempt < 30; attempt += 1) {
+        const resp = await fetch('/api/streamz/pro/entitlement', { credentials: 'include' });
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok && data?.hasPro) {
+          showOwnedState(data.entitlement);
+          setPaymentMessage('Streamz Pro ownership confirmed.', 'success');
+          setBusy(false);
+          return true;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+
+      setPaymentMessage('Payment is still processing. Refresh this page in a moment to check Pro ownership.', 'info');
+      setBusy(false);
+      return false;
+    }
+
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      startPayment('card');
     });
 
     initializeAuth();

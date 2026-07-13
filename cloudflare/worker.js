@@ -9,6 +9,8 @@ const DEFAULT_DB = {
   storeItems: [],
   storeMods: [],
   reports: [],
+  streamzProEntitlements: [],
+  stripeEvents: [],
   adminSettings: {},
 };
 
@@ -60,9 +62,9 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days (persistent login)
 const STREAMZ_STATE_TTL_SECONDS = 10 * 60;
 const STREAMZ_CALLBACK_BASE = 'https://vortex-prime-emu.com/projects/streamz/auth';
 const STREAMZ_DEFAULT_DEEP_LINK = 'streamz://auth/callback';
-const STREAMZ_PRO_DEFAULT_AMOUNT_CENTS = 999;
-const STREAMZ_PRO_DEFAULT_CURRENCY = 'usd';
-const STREAMZ_PRO_DEFAULT_INTERVAL = 'month';
+const STREAMZ_PRO_AMOUNT_CENTS = 9999;
+const STREAMZ_PRO_CURRENCY = 'aud';
+const STREAMZ_PRO_PRODUCT_NAME = 'Streamz Pro';
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
 
@@ -134,15 +136,15 @@ export default {
       }
 
       if (path === 'api/streamz/pro/config') {
-        return handleStreamzProConfig(request, env, allowedOrigin);
+        return await handleStreamzProConfig(request, env, allowedOrigin);
       }
 
-      if (path === 'api/streamz/pro/checkout') {
-        return await handleStreamzProCheckout(request, env, allowedOrigin);
+      if (path === 'api/streamz/pro/payment-intent') {
+        return await handleStreamzProPaymentIntent(request, env, allowedOrigin);
       }
 
-      if (path === 'api/streamz/pro/checkout-session') {
-        return await handleStreamzProCheckoutSession(request, env, allowedOrigin);
+      if (path === 'api/streamz/pro/entitlement') {
+        return await handleStreamzProEntitlement(request, env, allowedOrigin);
       }
 
       if (path === 'api/streamz/pro/webhook') {
@@ -461,16 +463,18 @@ async function handleStreamzProConfig(request, env, origin) {
   }
 
   const session = await readSession(request, env).catch(() => null);
+  const entitlement = session ? await getStreamzProEntitlement(env, session.sub).catch(() => null) : null;
   return json({
     ok: true,
     user: sanitizeUserForResponse(session),
+    entitlement: sanitizeStreamzProEntitlement(entitlement),
     stripe: buildStreamzProStripeConfig(env),
   }, 200, origin);
 }
 
-async function handleStreamzProCheckout(request, env, origin) {
+async function handleStreamzProPaymentIntent(request, env, origin) {
   if (request.method !== 'POST') {
-    throw httpError(405, 'Streamz Pro checkout requires POST.');
+    throw httpError(405, 'Streamz Pro payment setup requires POST.');
   }
 
   const user = await ensureAuthenticated(request, env);
@@ -480,53 +484,51 @@ async function handleStreamzProCheckout(request, env, origin) {
   }
 
   const contact = validateStreamzProContact(payload, user);
-  const siteOrigin = getCheckoutSiteOrigin(request, env, origin);
-  const checkoutParams = buildStreamzProCheckoutParams(env, user, contact, siteOrigin);
-  const checkoutSession = await stripeFormRequest(env, 'POST', '/checkout/sessions', checkoutParams);
+  if (payload.termsAccepted !== true) {
+    throw httpError(400, 'Purchase terms must be accepted before payment.');
+  }
 
-  if (!checkoutSession?.id || !checkoutSession?.url) {
-    throw httpError(502, 'Stripe did not return a Checkout Session URL.');
+  const existingEntitlement = await getStreamzProEntitlement(env, user.sub).catch(() => null);
+  if (existingEntitlement) {
+    return json({
+      ok: true,
+      alreadyOwned: true,
+      entitlement: sanitizeStreamzProEntitlement(existingEntitlement),
+    }, 200, origin);
+  }
+
+  const paymentIntent = await stripeFormRequest(
+    env,
+    'POST',
+    '/payment_intents',
+    buildStreamzProPaymentIntentParams(user, contact),
+  );
+
+  if (!paymentIntent?.id || !paymentIntent?.client_secret) {
+    throw httpError(502, 'Stripe did not return a PaymentIntent client secret.');
   }
 
   return json({
     ok: true,
-    checkoutSessionId: checkoutSession.id,
-    url: checkoutSession.url,
+    paymentIntentId: paymentIntent.id,
+    clientSecret: paymentIntent.client_secret,
+    amountCents: STREAMZ_PRO_AMOUNT_CENTS,
+    currency: STREAMZ_PRO_CURRENCY,
   }, 200, origin);
 }
 
-async function handleStreamzProCheckoutSession(request, env, origin) {
+async function handleStreamzProEntitlement(request, env, origin) {
   if (request.method !== 'GET') {
-    throw httpError(405, 'Checkout session lookup requires GET.');
+    throw httpError(405, 'Streamz Pro entitlement lookup requires GET.');
   }
 
   const user = await ensureAuthenticated(request, env);
-  const url = new URL(request.url);
-  const sessionId = String(url.searchParams.get('session_id') || '').trim();
-  if (!sessionId || !sessionId.startsWith('cs_')) {
-    throw httpError(400, 'Missing Checkout Session ID.');
-  }
-
-  const checkoutSession = await stripeFormRequest(
-    env,
-    'GET',
-    `/checkout/sessions/${encodeURIComponent(sessionId)}`,
-  );
-
-  const metadataSub = checkoutSession?.metadata?.google_sub;
-  if (metadataSub && metadataSub !== user.sub) {
-    throw httpError(403, 'Checkout Session does not belong to this Google account.');
-  }
+  const entitlement = await getStreamzProEntitlement(env, user.sub).catch(() => null);
 
   return json({
     ok: true,
-    id: checkoutSession.id,
-    mode: checkoutSession.mode,
-    status: checkoutSession.status,
-    paymentStatus: checkoutSession.payment_status,
-    amountTotal: checkoutSession.amount_total,
-    currency: checkoutSession.currency,
-    customerEmail: checkoutSession.customer_details?.email || checkoutSession.customer_email || null,
+    hasPro: Boolean(entitlement),
+    entitlement: sanitizeStreamzProEntitlement(entitlement),
   }, 200, origin);
 }
 
@@ -541,15 +543,7 @@ async function handleStreamzProWebhook(request, env, origin) {
   await verifyStripeWebhookSignature(rawPayload, signature, webhookSecret);
 
   const event = JSON.parse(rawPayload);
-  if (event?.type === 'checkout.session.completed') {
-    const session = event.data?.object || {};
-    console.log('Streamz Pro checkout completed', {
-      checkoutSessionId: session.id,
-      googleSub: session.metadata?.google_sub || null,
-      email: session.metadata?.google_email || session.customer_details?.email || null,
-      paymentStatus: session.payment_status || null,
-    });
-  }
+  await processStreamzProStripeEvent(env, event);
 
   return json({ ok: true, received: true }, 200, origin);
 }
@@ -594,18 +588,13 @@ async function exchangeStreamzAuthorizationCode(env, provider, code, state) {
 
 function buildStreamzProStripeConfig(env) {
   const publishableKey = String(env.STRIPE_PUBLISHABLE_KEY || '').trim() || null;
-  const priceId = String(env.STRIPE_STREAMZ_PRO_PRICE_ID || '').trim() || null;
-  const mode = getStreamzProCheckoutMode(env);
-  const currency = priceId ? null : getStreamzProCurrency(env);
-  const amountCents = priceId ? null : getStreamzProAmountCents(env);
   return {
     publishableKey,
-    configured: Boolean(String(env.STRIPE_SECRET_KEY || '').trim()) && (Boolean(priceId) || Number(amountCents) > 0),
-    mode,
-    productName: getStreamzProProductName(env),
-    priceIdConfigured: Boolean(priceId),
-    amountCents,
-    currency,
+    configured: Boolean(String(env.STRIPE_SECRET_KEY || '').trim()) && Boolean(publishableKey),
+    mode: 'payment',
+    productName: STREAMZ_PRO_PRODUCT_NAME,
+    amountCents: STREAMZ_PRO_AMOUNT_CENTS,
+    currency: STREAMZ_PRO_CURRENCY,
   };
 }
 
@@ -635,45 +624,181 @@ function validateStreamzProContact(payload, user) {
   };
 }
 
-function buildStreamzProCheckoutParams(env, user, contact, siteOrigin) {
-  const mode = getStreamzProCheckoutMode(env);
+function buildStreamzProPaymentIntentParams(user, contact) {
   const params = new URLSearchParams({
-    mode,
-    success_url: `${siteOrigin}/projects/streamz/pro/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${siteOrigin}/projects/streamz/pro/?checkout=cancelled`,
-    customer_email: contact.email,
-    client_reference_id: String(user.sub || contact.email),
+    amount: String(STREAMZ_PRO_AMOUNT_CENTS),
+    currency: STREAMZ_PRO_CURRENCY,
+    receipt_email: contact.email,
+    description: STREAMZ_PRO_PRODUCT_NAME,
+    'automatic_payment_methods[enabled]': 'true',
     'metadata[product]': 'streamz_pro',
+    'metadata[amount_cents]': String(STREAMZ_PRO_AMOUNT_CENTS),
+    'metadata[currency]': STREAMZ_PRO_CURRENCY,
     'metadata[google_sub]': String(user.sub || ''),
     'metadata[google_email]': contact.email,
     'metadata[contact_full_name]': contact.fullName,
-    'line_items[0][quantity]': '1',
-    allow_promotion_codes: String(getBooleanEnv(env, 'STRIPE_STREAMZ_PRO_ALLOW_PROMOTION_CODES', false)),
   });
 
-  const priceId = String(env.STRIPE_STREAMZ_PRO_PRICE_ID || '').trim();
-  if (priceId) {
-    params.set('line_items[0][price]', priceId);
-  } else {
-    params.set('line_items[0][price_data][currency]', getStreamzProCurrency(env));
-    params.set('line_items[0][price_data][product_data][name]', getStreamzProProductName(env));
-    params.set('line_items[0][price_data][unit_amount]', String(getStreamzProAmountCents(env)));
-    if (mode === 'subscription') {
-      params.set('line_items[0][price_data][recurring][interval]', getStreamzProInterval(env));
-    }
-  }
-
-  if (mode === 'subscription') {
-    params.set('subscription_data[metadata][product]', 'streamz_pro');
-    params.set('subscription_data[metadata][google_sub]', String(user.sub || ''));
-    params.set('subscription_data[metadata][google_email]', contact.email);
-  } else {
-    params.set('payment_intent_data[metadata][product]', 'streamz_pro');
-    params.set('payment_intent_data[metadata][google_sub]', String(user.sub || ''));
-    params.set('payment_intent_data[metadata][google_email]', contact.email);
-  }
-
   return params;
+}
+
+async function processStreamzProStripeEvent(env, event) {
+  if (!event?.id || !event?.type) {
+    throw httpError(400, 'Malformed Stripe event.');
+  }
+
+  if (!['payment_intent.succeeded', 'checkout.session.completed'].includes(event.type)) {
+    return;
+  }
+
+  const db = await loadDatabase(env);
+  const processedEvents = normalizeStripeEvents(db.stripeEvents);
+  if (processedEvents.some((entry) => entry.id === event.id)) {
+    return;
+  }
+
+  const entitlement = buildStreamzProEntitlementFromStripeEvent(event);
+  processedEvents.push({
+    id: event.id,
+    type: event.type,
+    processedAt: new Date().toISOString(),
+    objectId: entitlement?.paymentIntentId || entitlement?.checkoutSessionId || null,
+  });
+  db.stripeEvents = processedEvents.slice(-500);
+
+  if (entitlement) {
+    db.streamzProEntitlements = upsertStreamzProEntitlement(db.streamzProEntitlements, entitlement);
+  }
+
+  await persistDatabase(env, db);
+}
+
+function buildStreamzProEntitlementFromStripeEvent(event) {
+  const object = event.data?.object || {};
+
+  if (event.type === 'payment_intent.succeeded') {
+    if (!isValidStreamzProStripePayment(object)) {
+      console.log('Ignoring non-Streamz Pro PaymentIntent webhook', {
+        id: object.id || null,
+        amount: object.amount || null,
+        currency: object.currency || null,
+        product: object.metadata?.product || null,
+      });
+      return null;
+    }
+
+    return {
+      id: `streamz_pro:${object.metadata.google_sub}`,
+      googleSub: object.metadata.google_sub,
+      googleEmail: object.metadata.google_email || object.receipt_email || null,
+      contactFullName: object.metadata.contact_full_name || null,
+      product: 'streamz_pro',
+      status: 'active',
+      amountCents: STREAMZ_PRO_AMOUNT_CENTS,
+      currency: STREAMZ_PRO_CURRENCY,
+      paymentIntentId: object.id,
+      stripeCustomerId: object.customer || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const metadata = object.metadata || {};
+    const amountTotal = Number(object.amount_total || 0);
+    const currency = String(object.currency || '').toLowerCase();
+    if (
+      metadata.product !== 'streamz_pro'
+      || !metadata.google_sub
+      || object.payment_status !== 'paid'
+      || amountTotal !== STREAMZ_PRO_AMOUNT_CENTS
+      || currency !== STREAMZ_PRO_CURRENCY
+    ) {
+      return null;
+    }
+
+    return {
+      id: `streamz_pro:${metadata.google_sub}`,
+      googleSub: metadata.google_sub,
+      googleEmail: metadata.google_email || object.customer_details?.email || object.customer_email || null,
+      contactFullName: metadata.contact_full_name || null,
+      product: 'streamz_pro',
+      status: 'active',
+      amountCents: STREAMZ_PRO_AMOUNT_CENTS,
+      currency: STREAMZ_PRO_CURRENCY,
+      paymentIntentId: object.payment_intent || null,
+      checkoutSessionId: object.id,
+      stripeCustomerId: object.customer || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  return null;
+}
+
+function isValidStreamzProStripePayment(paymentIntent) {
+  const metadata = paymentIntent?.metadata || {};
+  return metadata.product === 'streamz_pro'
+    && metadata.google_sub
+    && Number(paymentIntent.amount || 0) === STREAMZ_PRO_AMOUNT_CENTS
+    && String(paymentIntent.currency || '').toLowerCase() === STREAMZ_PRO_CURRENCY;
+}
+
+function upsertStreamzProEntitlement(existing, incoming) {
+  const list = normalizeStreamzProEntitlements(existing);
+  const duplicatePayment = list.some((entry) => (
+    (incoming.paymentIntentId && entry.paymentIntentId === incoming.paymentIntentId)
+    || (incoming.checkoutSessionId && entry.checkoutSessionId === incoming.checkoutSessionId)
+  ));
+  if (duplicatePayment) {
+    return list;
+  }
+
+  const index = list.findIndex((entry) => entry.googleSub === incoming.googleSub);
+  if (index >= 0) {
+    list[index] = {
+      ...list[index],
+      ...incoming,
+      createdAt: list[index].createdAt || incoming.createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    return list;
+  }
+
+  return [...list, incoming];
+}
+
+async function getStreamzProEntitlement(env, googleSub) {
+  const db = await loadDatabase(env);
+  const list = normalizeStreamzProEntitlements(db.streamzProEntitlements);
+  return list.find((entry) => entry.googleSub === googleSub && entry.status === 'active') || null;
+}
+
+function normalizeStreamzProEntitlements(value) {
+  return Array.isArray(value)
+    ? value.filter((entry) => entry && typeof entry === 'object' && entry.googleSub)
+    : [];
+}
+
+function normalizeStripeEvents(value) {
+  return Array.isArray(value)
+    ? value.filter((entry) => entry && typeof entry === 'object' && entry.id)
+    : [];
+}
+
+function sanitizeStreamzProEntitlement(entitlement) {
+  if (!entitlement) return null;
+  return {
+    product: entitlement.product || 'streamz_pro',
+    status: entitlement.status || 'active',
+    googleEmail: entitlement.googleEmail || null,
+    contactFullName: entitlement.contactFullName || null,
+    amountCents: entitlement.amountCents || STREAMZ_PRO_AMOUNT_CENTS,
+    currency: entitlement.currency || STREAMZ_PRO_CURRENCY,
+    paymentIntentId: entitlement.paymentIntentId || null,
+    createdAt: entitlement.createdAt || null,
+  };
 }
 
 async function stripeFormRequest(env, method, endpoint, formParams) {
@@ -766,52 +891,6 @@ function hexToBytes(hex) {
     bytes[i / 2] = Number.parseInt(normalized.slice(i, i + 2), 16);
   }
   return bytes;
-}
-
-function getCheckoutSiteOrigin(request, env, allowedOrigin) {
-  const configured = String(env.PUBLIC_SITE_ORIGIN || env.SITE_ORIGIN || '').trim();
-  if (configured) {
-    return configured.replace(/\/+$/, '');
-  }
-  if (allowedOrigin) {
-    return allowedOrigin.replace(/\/+$/, '');
-  }
-  const url = new URL(request.url);
-  return `${url.protocol}//${url.host}`;
-}
-
-function getStreamzProCheckoutMode(env) {
-  const mode = String(env.STRIPE_STREAMZ_PRO_MODE || 'payment').trim().toLowerCase();
-  return mode === 'subscription' ? 'subscription' : 'payment';
-}
-
-function getStreamzProCurrency(env) {
-  const currency = String(env.STRIPE_STREAMZ_PRO_CURRENCY || STREAMZ_PRO_DEFAULT_CURRENCY).trim().toLowerCase();
-  return /^[a-z]{3}$/.test(currency) ? currency : STREAMZ_PRO_DEFAULT_CURRENCY;
-}
-
-function getStreamzProAmountCents(env) {
-  const raw = String(env.STRIPE_STREAMZ_PRO_AMOUNT_CENTS || '').trim();
-  const amount = raw ? Number(raw) : STREAMZ_PRO_DEFAULT_AMOUNT_CENTS;
-  if (!Number.isInteger(amount) || amount <= 0) {
-    throw httpError(500, 'STRIPE_STREAMZ_PRO_AMOUNT_CENTS must be a positive integer.');
-  }
-  return amount;
-}
-
-function getStreamzProInterval(env) {
-  const interval = String(env.STRIPE_STREAMZ_PRO_INTERVAL || STREAMZ_PRO_DEFAULT_INTERVAL).trim().toLowerCase();
-  return ['day', 'week', 'month', 'year'].includes(interval) ? interval : STREAMZ_PRO_DEFAULT_INTERVAL;
-}
-
-function getStreamzProProductName(env) {
-  return sanitizeSingleLine(env.STRIPE_STREAMZ_PRO_PRODUCT_NAME || 'Streamz Pro', 120) || 'Streamz Pro';
-}
-
-function getBooleanEnv(env, name, fallback = false) {
-  const value = String(env[name] || '').trim().toLowerCase();
-  if (!value) return fallback;
-  return ['1', 'true', 'yes', 'on'].includes(value);
 }
 
 function sanitizeSingleLine(value, maxLength) {
