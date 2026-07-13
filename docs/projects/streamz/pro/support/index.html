@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streamz Support Dashboard</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root { font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f8fafc; background: #05070b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #05070b; padding: 1rem; }
+    main { width: min(1120px, 100%); margin: 0 auto; }
+    header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin: 1rem 0 1.5rem; }
+    h1, h2 { margin: 0; }
+    section { border: 1px solid rgba(255,255,255,.12); background: #0c111a; border-radius: 12px; padding: 1rem; margin: 1rem 0; }
+    input, textarea, select { width: 100%; border: 1px solid rgba(255,255,255,.16); background: #111827; color: #f8fafc; border-radius: 8px; padding: .75rem; }
+    textarea { min-height: 90px; resize: vertical; }
+    button { border: 0; border-radius: 999px; padding: .72rem 1rem; font-weight: 850; color: #fff; background: linear-gradient(120deg, #6366f1, #8b5cf6); cursor: pointer; }
+    button.secondary { background: #1f2937; border: 1px solid rgba(255,255,255,.14); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+    .row { display: flex; gap: .7rem; align-items: end; flex-wrap: wrap; }
+    .row > * { flex: 1 1 220px; }
+    .status { color: #cbd5e1; line-height: 1.55; white-space: pre-wrap; }
+    .ticket { border-top: 1px solid rgba(255,255,255,.1); padding: .9rem 0; }
+    .ticket:first-child { border-top: 0; }
+    dl { display: grid; grid-template-columns: 150px 1fr; gap: .45rem .8rem; }
+    dt { color: #94a3b8; font-weight: 800; }
+    dd { margin: 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Streamz Support</h1>
+        <p class="status">Staff-only activation-code and support dashboard.</p>
+      </div>
+      <div id="googleButton"></div>
+    </header>
+
+    <section>
+      <h2>Activation Code Lookup</h2>
+      <div class="row">
+        <label>Code<input id="lookupCode" maxlength="10" placeholder="A1B2C3D4E5"></label>
+        <button id="lookupBtn">Search</button>
+      </div>
+      <div id="lookupResult" class="status"></div>
+    </section>
+
+    <section>
+      <h2>Issue Replacement</h2>
+      <div class="grid">
+        <label>Original code<input id="replaceCode" maxlength="10" placeholder="A1B2C3D4E5"></label>
+        <label>Reason<textarea id="replaceReason"></textarea></label>
+      </div>
+      <button id="replaceBtn">Issue replacement code</button>
+      <div id="replaceResult" class="status"></div>
+    </section>
+
+    <section>
+      <div class="row">
+        <h2>Support Tickets</h2>
+        <button id="refreshTickets" class="secondary">Refresh tickets</button>
+      </div>
+      <div id="tickets" class="status"></div>
+    </section>
+  </main>
+
+  <script>
+    const googleButton = document.getElementById('googleButton');
+    const lookupCode = document.getElementById('lookupCode');
+    const lookupResult = document.getElementById('lookupResult');
+    const replaceCode = document.getElementById('replaceCode');
+    const replaceReason = document.getElementById('replaceReason');
+    const replaceResult = document.getElementById('replaceResult');
+    const tickets = document.getElementById('tickets');
+
+    function cleanCode(value) {
+      return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+    }
+
+    [lookupCode, replaceCode].forEach((input) => input.addEventListener('input', () => { input.value = cleanCode(input.value); }));
+
+    async function api(path, options = {}) {
+      const resp = await fetch(path, { credentials: 'include', ...options });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.message || 'Request failed.');
+      return data;
+    }
+
+    async function init() {
+      const config = await api('/api/auth/config');
+      await new Promise((resolve) => {
+        const started = Date.now();
+        const timer = setInterval(() => {
+          if (window.google?.accounts?.id || Date.now() - started > 6000) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 100);
+      });
+      if (window.google?.accounts?.id && config.googleClientId) {
+        google.accounts.id.initialize({
+          client_id: config.googleClientId,
+          callback: async (response) => {
+            await api('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ credential: response.credential }),
+            });
+            await loadStaff();
+          },
+        });
+        google.accounts.id.renderButton(googleButton, { theme: 'outline', size: 'large', shape: 'pill' });
+      }
+      await loadStaff();
+    }
+
+    async function loadStaff() {
+      const data = await api('/api/streamz/pro/support/staff');
+      lookupResult.textContent = `Signed in as Streamz Support ${data.staff.role}.`;
+      await loadTickets();
+    }
+
+    async function loadTickets() {
+      const data = await api('/api/streamz/pro/support/tickets');
+      tickets.innerHTML = (data.tickets || []).map((ticket) => `
+        <div class="ticket">
+          <strong>${ticket.ticketNumber}</strong> (${ticket.status})
+          <dl>
+            <dt>Discord</dt><dd>${ticket.discordUsername || ''} ${ticket.discordUserId || ''}</dd>
+            <dt>Code</dt><dd>${ticket.activationCode || 'Manual review'}</dd>
+            <dt>Result</dt><dd>${ticket.backendVerification?.status || 'manual_review'}</dd>
+            <dt>Issue</dt><dd>${ticket.description || ''}</dd>
+          </dl>
+        </div>
+      `).join('') || 'No tickets.';
+    }
+
+    document.getElementById('lookupBtn').addEventListener('click', async () => {
+      lookupResult.textContent = 'Searching...';
+      try {
+        const data = await api(`/api/streamz/pro/support/search?code=${encodeURIComponent(cleanCode(lookupCode.value))}`);
+        lookupResult.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        lookupResult.textContent = error.message;
+      }
+    });
+
+    document.getElementById('replaceBtn').addEventListener('click', async () => {
+      replaceResult.textContent = 'Issuing replacement...';
+      try {
+        const data = await api('/api/streamz/pro/support/replacement', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: cleanCode(replaceCode.value), reason: replaceReason.value }),
+        });
+        replaceResult.textContent = `Replacement code: ${data.replacementCode}\nExpires: ${data.expiresAt}`;
+      } catch (error) {
+        replaceResult.textContent = error.message;
+      }
+    });
+
+    document.getElementById('refreshTickets').addEventListener('click', loadTickets);
+    init().catch((error) => { lookupResult.textContent = error.message; });
+  </script>
+</body>
+</html>

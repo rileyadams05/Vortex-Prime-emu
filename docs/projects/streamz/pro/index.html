@@ -462,6 +462,7 @@
     let stripeReady = false;
     let paymentInFlight = false;
     let activationPassDownloaded = false;
+    let activationCountdownTimer = null;
 
     function setStatus(message, variant = 'info') {
       statusEl.textContent = message;
@@ -488,7 +489,7 @@
         .replace(/'/g, '&#39;');
     }
 
-    function renderStateCard({ variant = 'pending', title, message, actions = [] }) {
+    function renderStateCard({ variant = 'pending', title, message, actions = [], extraHtml = '' }) {
       successScreen.hidden = false;
       successScreen.setAttribute('data-variant', variant);
       const actionHtml = actions.length
@@ -499,7 +500,35 @@
           return `<button type="button" class="secondary-action" data-action="${escapeHtml(action.action)}">${escapeHtml(action.label)}</button>`;
         }).join('')}</div>`
         : '';
-      successScreen.innerHTML = `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(message)}</p>${actionHtml}`;
+      successScreen.innerHTML = `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(message)}</p>${extraHtml}${actionHtml}`;
+    }
+
+    function renderActivationCountdown(expiresAt) {
+      if (activationCountdownTimer) {
+        clearInterval(activationCountdownTimer);
+        activationCountdownTimer = null;
+      }
+      if (!expiresAt) return '';
+      const expiryMs = Date.parse(expiresAt);
+      if (!Number.isFinite(expiryMs)) return '';
+      const id = 'activationCountdown';
+      const update = () => {
+        const el = document.getElementById(id);
+        if (!el) {
+          clearInterval(activationCountdownTimer);
+          activationCountdownTimer = null;
+          return;
+        }
+        const remaining = Math.max(0, expiryMs - Date.now());
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        el.textContent = remaining > 0
+          ? `Activation code expires in ${minutes}:${String(seconds).padStart(2, '0')}.`
+          : 'Activation code expired. Contact Streamz Support for assistance.';
+      };
+      setTimeout(update, 0);
+      activationCountdownTimer = setInterval(update, 1000);
+      return `<div class="status" data-variant="warning" id="${id}">Loading activation countdown...</div>`;
     }
 
     function showActiveState(entitlement) {
@@ -527,11 +556,13 @@
       form.hidden = true;
       const code = details.purchaseCode || details.verificationCode || '';
       const hasPass = Boolean(details.activationPass);
+      const expiresAt = details.codeExpiresAt || details.activationPass?.expiresAt || '';
       const codeLine = code ? `\n\nPurchase code:\n${code}` : '';
       renderStateCard({
         variant: 'pending',
         title: 'Streamz Pro payment received',
         message: `Your Streamz Pro purchase is confirmed, but Pro is not active yet.\n\nTo activate it:\n1. Download and keep your activation pass.\n2. Scan the permanent QR code on the pass or open /projects/streamz/pro/verify.\n3. Enter the one-time purchase code printed on the pass.\n4. Run /verify-pro using the same purchase code in the official Streamz Discord.\n5. Press Link Google Account in the bot’s private message.${codeLine}\n\nThe Discord bot will send a private automated message. Please do not reply to that message.`,
+        extraHtml: renderActivationCountdown(expiresAt),
         actions: [
           ...(hasPass ? [{ label: 'Download activation pass', action: 'download-pass' }] : []),
           ...(code ? [{ label: 'Copy purchase code', action: 'copy-code' }] : []),
@@ -1022,6 +1053,8 @@
         page.drawText(String(text || ''), { x, y, size, font: chosenFont, color });
       };
       const date = pass.purchaseDate ? new Date(pass.purchaseDate) : new Date();
+      const issueDate = pass.issueTime ? new Date(pass.issueTime) : date;
+      const expiryDate = pass.expiresAt ? new Date(pass.expiresAt) : null;
       draw(pass.customerName, 260, 532, 22);
       draw(pass.customerEmail, 260, 481, 20);
       draw(pass.orderNumber, 260, 430, 22);
@@ -1032,6 +1065,9 @@
       draw(pass.paymentStatus || 'succeeded', 260, 183, 22);
       draw(pass.purchaseCode, 760, 390, 40, font, accent);
       draw(`Order ${pass.orderNumber}`, 760, 350, 18, regular, ink);
+      draw(`Issued: ${issueDate.toLocaleString()}`, 760, 318, 14, regular, ink);
+      draw(`Expires: ${expiryDate ? expiryDate.toLocaleString() : '20 minutes after issue'}`, 760, 296, 14, regular, ink);
+      draw('The activation code expires 20 minutes after issue.', 760, 274, 12, regular, ink);
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);

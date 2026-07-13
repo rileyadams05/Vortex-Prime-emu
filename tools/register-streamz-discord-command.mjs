@@ -10,28 +10,49 @@ if (!botToken) {
   throw new Error("DISCORD_BOT_TOKEN is required.");
 }
 
-const command = {
-  name: "verify-pro",
-  description: "Privately verify a paid Streamz Pro purchase.",
-  type: 1,
-  options: [
-    {
-      name: "code",
-      description: "Your Streamz Pro purchase code, for example STZ-7K4M-92QX-8P2D.",
-      type: 3,
-      required: true,
-    },
-  ],
-};
+const commands = [
+  {
+    name: "verify-pro",
+    description: "Privately verify a paid Streamz Pro purchase.",
+    type: 1,
+    options: [
+      {
+        name: "code",
+        description: "Your 10-character Streamz Pro activation code from the PDF pass.",
+        type: 3,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "support",
+    description: "Open a private Streamz Pro support request using your original activation-pass PDF.",
+    type: 1,
+    options: [
+      {
+        name: "description",
+        description: "Briefly describe the problem.",
+        type: 3,
+        required: true,
+      },
+      {
+        name: "activation_pass",
+        description: "Attach the original Streamz Pro Activation Pass PDF.",
+        type: 11,
+        required: true,
+      },
+    ],
+  },
+];
 
 const endpoint = `https://discord.com/api/v10/applications/${applicationId}/guilds/${guildId}/commands`;
 const response = await fetch(endpoint, {
-  method: "POST",
+  method: "PUT",
   headers: {
     Authorization: `Bot ${botToken}`,
     "Content-Type": "application/json",
   },
-  body: JSON.stringify(command),
+  body: JSON.stringify(commands),
 });
 
 const data = await response.json().catch(() => ({}));
@@ -39,4 +60,4 @@ if (!response.ok) {
   throw new Error(`Discord command registration failed: ${response.status} ${JSON.stringify(data)}`);
 }
 
-console.log(`Registered /verify-pro command: ${data.id || "ok"}`);
+console.log(`Registered Streamz Discord commands: ${(Array.isArray(data) ? data.map((command) => `/${command.name}`).join(", ") : "ok")}`);

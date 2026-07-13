@@ -15,6 +15,9 @@ const DEFAULT_DB = {
   streamzProUpgradeSessions: [],
   streamzProDiscordVerifications: [],
   streamzProCodePool: [],
+  streamzProSupportTickets: [],
+  streamzProSupportStaff: [],
+  streamzProAuditLog: [],
   stripeEvents: [],
   streamzRateLimits: {},
   adminSettings: {},
@@ -95,9 +98,12 @@ const STREAMZ_DISCORD_COMMAND_MAX_ATTEMPTS = 5;
 const STREAMZ_DISCORD_COMMAND_WINDOW_MS = 10 * 60 * 1000;
 const STREAMZ_PURCHASE_CODE_MAX_ATTEMPTS = 10;
 const STREAMZ_PURCHASE_CODE_WINDOW_MS = 10 * 60 * 1000;
-const STREAMZ_RANDOM_ORG_URL = 'https://www.random.org/strings/?num=10&len=10&digits=on&upperalpha=on&unique=on&format=html&rnd=new';
-const STREAMZ_RANDOM_ORG_BATCH_SIZE = 10;
-const STREAMZ_RANDOM_CODE_LOW_WATERMARK = 2;
+const STREAMZ_CODE_BATCH_SIZE = 10;
+const STREAMZ_CODE_LOW_WATERMARK = 2;
+const STREAMZ_CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const STREAMZ_CODE_POOL_STATUSES = new Set(['unused', 'assigned', 'pending_google_linking', 'redeemed', 'expired', 'replaced', 'invalidated']);
+const STREAMZ_SUPPORT_TICKET_STATUSES = new Set(['open', 'claimed', 'closed']);
+const STREAMZ_SUPPORT_ROLES = new Set(['owner', 'admin', 'support']);
 const STREAMZ_SITE_BASE_URL = 'https://vortex-prime-emu.com';
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
@@ -199,6 +205,10 @@ export default {
 
       if (path === 'api/streamz/pro/verify-discord') {
         return await handleStreamzProVerifyDiscord(request, env, allowedOrigin);
+      }
+
+      if (path.startsWith('api/streamz/pro/support/')) {
+        return await handleStreamzProSupportRequest(request, env, path, allowedOrigin);
       }
 
       if (path === 'api/streamz/discord/interactions') {
@@ -625,9 +635,23 @@ async function handleStreamzProUpgradeSession(request, env, origin) {
   if (request.method === 'GET') {
     const token = new URL(request.url).searchParams.get('token') || '';
     const session = await getStreamzUpgradeSessionByRawToken(env, token);
+    const db = await loadDatabase(env);
+    const entitlement = session.entitlementId
+      ? normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === session.entitlementId)
+      : null;
+    const verification = entitlement ? findStreamzDiscordVerificationByEntitlement(db, entitlement.id) : null;
+    const activationPass = verification?.activationPassCode
+      ? buildStreamzActivationPassResponse(entitlement, verification, verification.activationPassCode)
+      : null;
     return json({
       ok: true,
       ...sanitizeStreamzUpgradeSession(session),
+      ...(activationPass ? {
+        purchaseCode: verification.activationPassCode,
+        verificationCode: verification.activationPassCode,
+        codeExpiresAt: verification.purchaseCodeExpiresAt || session.codeExpiresAt || null,
+        activationPass,
+      } : {}),
     }, 200, origin);
   }
 
@@ -669,7 +693,8 @@ async function handleStreamzProUpgradeSessionCode(request, env, origin) {
       status: 'code_generated',
       purchaseCodeHash: assignment.codeHash,
       purchaseCodePoolId: assignment.poolEntryId,
-      purchaseCodeSource: 'random.org',
+      purchaseCodeSource: 'internal_csprng',
+      activationPassCode: assignment.code,
       purchaseCodeAssignedAt: now,
       purchaseCodeExpiresAt: assignment.expiresAt,
       purchaseCodeClaimedAt: null,
@@ -731,19 +756,30 @@ async function handleStreamzProPurchaseCode(request, env, origin) {
   }
 
   const codeHash = await hashStreamzPurchaseCode(code);
-  const db = await loadDatabase(env);
-  const verification = normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications)
-    .find((entry) => (
-      (entry.purchaseCodeHash && constantTimeStringEquals(entry.purchaseCodeHash, codeHash))
-      || (entry.discordCodeHash && constantTimeStringEquals(entry.discordCodeHash, codeHash))
+  const result = await updateStreamzDatabase(env, async (db) => {
+    const now = new Date().toISOString();
+    expireAssignedStreamzCodePoolEntries(db, now);
+    const verification = normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications)
+      .find((entry) => (
+        (entry.purchaseCodeHash && constantTimeStringEquals(entry.purchaseCodeHash, codeHash))
+        || (entry.discordCodeHash && constantTimeStringEquals(entry.discordCodeHash, codeHash))
+      )) || null;
+    const poolEntry = normalizeStreamzProCodePool(db.streamzProCodePool).find((entry) => entry.codeHash && constantTimeStringEquals(entry.codeHash, codeHash)) || null;
+    if (!verification) {
+      const status = ['expired', 'replaced', 'redeemed', 'invalidated'].includes(poolEntry?.status) ? poolEntry.status : 'invalid';
+      const value = buildStreamzPurchaseCodeResult(status);
+      appendStreamzAuditEvent(db, 'activation_code_lookup', { status, codeHash }, now);
+      return { db, value };
+    }
+    const entitlement = normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === verification.entitlementId) || null;
+    const payment = normalizeStreamzProPayments(db.streamzProPayments).find((entry) => (
+      (entitlement?.stripePaymentIntentId && entry.stripePaymentIntentId === entitlement.stripePaymentIntentId)
+      || (entitlement?.stripeCheckoutSessionId && entry.stripeCheckoutSessionId === entitlement.stripeCheckoutSessionId)
     )) || null;
-  if (!verification) return json(buildStreamzPurchaseCodeResult('invalid'), 404, origin);
-  const entitlement = normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === verification.entitlementId) || null;
-  const payment = normalizeStreamzProPayments(db.streamzProPayments).find((entry) => (
-    (entitlement?.stripePaymentIntentId && entry.stripePaymentIntentId === entitlement.stripePaymentIntentId)
-    || (entitlement?.stripeCheckoutSessionId && entry.stripeCheckoutSessionId === entitlement.stripeCheckoutSessionId)
-  )) || null;
-  const result = buildStreamzPurchaseCodeResult(getStreamzPurchaseCodeStatus(entitlement, verification, payment), entitlement, verification, payment);
+    const status = getStreamzPurchaseCodeStatus(entitlement, verification, payment, poolEntry);
+    appendStreamzAuditEvent(db, 'activation_code_lookup', { status, codeHash, entitlementId: entitlement?.id || null }, now);
+    return { db, value: buildStreamzPurchaseCodeResult(status, entitlement, verification, payment) };
+  });
   return json(result, result.ok ? 200 : (result.status === 'expired' ? 410 : 400), origin);
 }
 
@@ -827,6 +863,40 @@ async function handleStreamzProVerifyDiscord(request, env, origin) {
   return json(result, result.ok ? 200 : (result.status === 'expired' ? 410 : 400), origin);
 }
 
+async function handleStreamzProSupportRequest(request, env, path, origin) {
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to access Streamz Support.');
+  const staff = await requireStreamzSupportStaff(env, user);
+  const route = path.replace(/^api\/streamz\/pro\/support\/?/, '');
+
+  if (route === 'staff' && request.method === 'GET') {
+    return json({ ok: true, staff, members: await listStreamzSupportStaff(env) }, 200, origin);
+  }
+  if (route === 'staff' && request.method === 'POST') {
+    if (staff.role !== 'owner') throw httpError(403, 'Only the owner can manage Streamz Support staff.');
+    const payload = await request.json().catch(() => ({}));
+    const result = await updateStreamzSupportStaff(env, payload, user);
+    return json(result, 200, origin);
+  }
+  if (route === 'search' && request.method === 'GET') {
+    const code = new URL(request.url).searchParams.get('code') || '';
+    return json(await lookupStreamzSupportCode(env, code), 200, origin);
+  }
+  if (route === 'tickets' && request.method === 'GET') {
+    const db = await loadDatabase(env);
+    return json({ ok: true, tickets: normalizeStreamzSupportTickets(db.streamzProSupportTickets).slice(-100).reverse() }, 200, origin);
+  }
+  if (route === 'tickets/action' && request.method === 'POST') {
+    const payload = await request.json().catch(() => ({}));
+    return json(await updateStreamzSupportTicket(env, payload, staff, user), 200, origin);
+  }
+  if (route === 'replacement' && request.method === 'POST') {
+    const payload = await request.json().catch(() => ({}));
+    return json(await issueStreamzSupportReplacementCode(env, payload, staff, user), 200, origin);
+  }
+
+  throw httpError(404, 'Streamz Support route not found.');
+}
+
 async function handleStreamzDiscordInteractions(request, env) {
   if (request.method !== 'POST') {
     return json({ ok: false, message: 'Discord interactions require POST.' }, 405, null);
@@ -843,7 +913,7 @@ async function handleStreamzDiscordInteractions(request, env) {
   if (interaction.type === 1) {
     return discordJson({ type: 1 });
   }
-  if (interaction.type !== 2 || interaction.data?.name !== 'verify-pro') {
+  if (interaction.type !== 2) {
     return discordJson({
       type: 4,
       data: {
@@ -853,6 +923,23 @@ async function handleStreamzDiscordInteractions(request, env) {
     });
   }
 
+  if (interaction.data?.name === 'support') {
+    return await handleStreamzDiscordSupportCommand(interaction, env);
+  }
+  if (interaction.data?.name !== 'verify-pro') {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Unsupported Streamz command.',
+      },
+    });
+  }
+
+  return await handleStreamzDiscordVerifyProCommand(interaction, env);
+}
+
+async function handleStreamzDiscordVerifyProCommand(interaction, env) {
   const discordUserId = interaction.member?.user?.id || interaction.user?.id || null;
   const code = interaction.data?.options?.find((option) => option.name === 'code')?.value || '';
   if (!discordUserId || !code) {
@@ -860,7 +947,7 @@ async function handleStreamzDiscordInteractions(request, env) {
       type: 4,
       data: {
         flags: 64,
-        content: 'Enter the one-time Streamz Pro purchase code from your activation pass.',
+        content: 'Enter the one-time Streamz Pro activation code from your activation pass.',
       },
     });
   }
@@ -904,6 +991,50 @@ async function handleStreamzDiscordInteractions(request, env) {
           url: result.verifyUrl,
         }],
       }],
+    },
+  });
+}
+
+async function handleStreamzDiscordSupportCommand(interaction, env) {
+  const discordUser = interaction.member?.user || interaction.user || {};
+  const discordUserId = discordUser.id || null;
+  const options = Array.isArray(interaction.data?.options) ? interaction.data.options : [];
+  const description = String(options.find((option) => option.name === 'description')?.value || '').trim();
+  const attachmentId = String(options.find((option) => option.name === 'activation_pass')?.value || '').trim();
+  const attachment = interaction.data?.resolved?.attachments?.[attachmentId] || null;
+  if (!discordUserId || !description || !attachment) {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Run /support with a short description and the original Streamz Pro Activation Pass PDF attached.',
+      },
+    });
+  }
+  const filename = String(attachment.filename || '').toLowerCase();
+  const contentType = String(attachment.content_type || '').toLowerCase();
+  if (!filename.endsWith('.pdf') || (contentType && contentType !== 'application/pdf')) {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Streamz Support requires the original activation-pass PDF. Screenshots, images, photos, copied text and recreated files are not accepted.',
+      },
+    });
+  }
+
+  const result = await createStreamzSupportTicketFromDiscord(env, {
+    discordUser,
+    description,
+    attachment,
+  });
+  return discordJson({
+    type: 4,
+    data: {
+      flags: 64,
+      content: result.ok
+        ? `Streamz Support ticket ${result.ticketNumber} was created. A support team member will review the original PDF.`
+        : (result.message || 'Unable to create a support ticket right now.'),
     },
   });
 }
@@ -953,7 +1084,13 @@ async function claimStreamzDiscordCode(env, code, discordUserId) {
       || (entry.discordCodeHash && constantTimeStringEquals(entry.discordCodeHash, codeHash))
     ));
     if (index < 0) {
-      return { db, value: { ok: false, message: 'That Streamz Pro purchase code is invalid or expired.' } };
+      const poolEntry = normalizeStreamzProCodePool(db.streamzProCodePool).find((entry) => entry.codeHash && constantTimeStringEquals(entry.codeHash, codeHash));
+      const message = poolEntry?.status === 'redeemed'
+        ? 'This activation code has already been redeemed.'
+        : ['expired', 'replaced'].includes(poolEntry?.status)
+          ? 'This activation code has expired. Contact Streamz Support for assistance.'
+          : 'This activation code is invalid.';
+      return { db, value: { ok: false, message } };
     }
     const verification = verifications[index];
     const entitlement = normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === verification.entitlementId);
@@ -961,7 +1098,8 @@ async function claimStreamzDiscordCode(env, code, discordUserId) {
       (entitlement?.stripePaymentIntentId && entry.stripePaymentIntentId === entitlement.stripePaymentIntentId)
       || (entitlement?.stripeCheckoutSessionId && entry.stripeCheckoutSessionId === entitlement.stripeCheckoutSessionId)
     )) || null;
-    const purchaseStatus = getStreamzPurchaseCodeStatus(entitlement, verification, payment);
+    const poolEntry = normalizeStreamzProCodePool(db.streamzProCodePool).find((entry) => entry.codeHash && constantTimeStringEquals(entry.codeHash, codeHash)) || null;
+    const purchaseStatus = getStreamzPurchaseCodeStatus(entitlement, verification, payment, poolEntry);
     if (purchaseStatus === 'refunded' || purchaseStatus === 'disputed' || purchaseStatus === 'canceled') {
       return {
         db,
@@ -989,7 +1127,7 @@ async function claimStreamzDiscordCode(env, code, discordUserId) {
           : entry
       ));
       db.streamzProDiscordVerifications = verifications;
-      return { db, value: { ok: false, message: 'This Streamz Pro purchase code has expired.' } };
+      return { db, value: { ok: false, message: 'This activation code has expired. Contact Streamz Support for assistance.' } };
     }
     if (!entitlement || entitlement.status !== 'pending_discord_verification' || !entitlement.paymentConfirmedAt || entitlement.status === 'revoked') {
       return { db, value: { ok: false, message: 'This Streamz Pro purchase is not ready for Discord verification.' } };
@@ -1017,6 +1155,16 @@ async function claimStreamzDiscordCode(env, code, discordUserId) {
       websiteTokenUsedAt: null,
       updatedAt: now,
     };
+    db.streamzProCodePool = normalizeStreamzProCodePool(db.streamzProCodePool).map((entry) => (
+      entry.id === verification.purchaseCodePoolId || (entry.codeHash && entry.codeHash === verification.purchaseCodeHash)
+        ? { ...entry, status: 'pending_google_linking', code: null, discordUserId, claimedAt: entry.claimedAt || now, updatedAt: now }
+        : entry
+    ));
+    appendStreamzAuditEvent(db, 'discord_code_claimed', {
+      codeHash,
+      entitlementId: entitlement.id,
+      discordUserId,
+    }, now);
     db.streamzProDiscordVerifications = verifications;
     db.streamzProUpgradeSessions = markStreamzUpgradeSessionForEntitlement(db.streamzProUpgradeSessions, entitlement.upgradeSessionHash, entitlement, 'discord_claimed');
     return {
@@ -1124,6 +1272,12 @@ async function linkStreamzDiscordVerificationToGoogle(env, token, googleProfile)
     db.streamzProEntitlements = entitlements;
     db.streamzProDiscordVerifications = verifications;
     db.streamzProUpgradeSessions = markStreamzUpgradeSessionForEntitlement(db.streamzProUpgradeSessions, activated.upgradeSessionHash, activated, 'active');
+    appendStreamzAuditEvent(db, 'google_linking_completed', {
+      entitlementId: activated.id,
+      googleSub: googleProfile.sub,
+      discordUserId: verification.claimedDiscordUserId,
+      codeHash: verification.purchaseCodeHash || null,
+    }, now);
     return { db, value: buildStreamzDiscordSiteResult('success', activated) };
   });
 }
@@ -1140,6 +1294,339 @@ function applySimpleDbRateLimit(db, key, maxAttempts, windowMs, message) {
   }
   attempts.push(now);
   db.streamzRateLimits = { ...limits, [key]: { attempts, lastAt: now } };
+}
+
+async function createStreamzSupportTicketFromDiscord(env, input) {
+  const attachmentUrl = String(input.attachment?.url || '').trim();
+  const now = new Date().toISOString();
+  let extractedCode = null;
+  let lookup = { ok: false, status: 'manual_review', message: 'PDF text extraction did not find an activation code.' };
+  if (attachmentUrl) {
+    const pdfBytes = await fetch(attachmentUrl).then((resp) => (resp.ok ? resp.arrayBuffer() : null)).catch(() => null);
+    extractedCode = pdfBytes ? extractStreamzActivationCodeFromPdfBytes(pdfBytes) : null;
+    if (extractedCode) {
+      const db = await loadDatabase(env);
+      lookup = await lookupStreamzActivationCodeInDb(db, extractedCode);
+    }
+  }
+  const ticket = await updateStreamzDatabase(env, async (db) => {
+    const tickets = normalizeStreamzSupportTickets(db.streamzProSupportTickets);
+    const ticketId = `stzsup_${crypto.randomUUID()}`;
+    const ticketNumber = `STZ-SUP-${String(tickets.length + 1).padStart(5, '0')}`;
+    const nextTicket = {
+      id: ticketId,
+      ticketNumber,
+      status: 'open',
+      discordUserId: String(input.discordUser?.id || ''),
+      discordUsername: buildDiscordDisplayName(input.discordUser),
+      discordMention: input.discordUser?.id ? `<@${input.discordUser.id}>` : null,
+      description: String(input.description || '').slice(0, 2000),
+      attachmentUrl,
+      attachmentFilename: String(input.attachment?.filename || ''),
+      activationCode: extractedCode,
+      backendVerification: lookup,
+      createdAt: now,
+      updatedAt: now,
+      events: [{ type: 'created', at: now, actor: 'discord_user' }],
+    };
+    db.streamzProSupportTickets = [...tickets, nextTicket].slice(-300);
+    appendStreamzAuditEvent(db, 'support_ticket_created', {
+      ticketId,
+      ticketNumber,
+      discordUserId: nextTicket.discordUserId,
+      codeHash: extractedCode ? await hashStreamzPurchaseCode(extractedCode) : null,
+    }, now);
+    return { db, value: nextTicket };
+  });
+  await postStreamzSupportTicketToDiscord(env, ticket).catch(() => {});
+  return { ok: true, ticketId: ticket.id, ticketNumber: ticket.ticketNumber };
+}
+
+function extractStreamzActivationCodeFromPdfBytes(buffer) {
+  const text = textDecoder.decode(new Uint8Array(buffer));
+  const matches = text.match(/\b[A-Z0-9]{10}\b/g) || [];
+  return matches.map(normalizeStreamzPurchaseCode).find(isValidStreamzPurchaseCode) || null;
+}
+
+function buildDiscordDisplayName(user) {
+  return String(user?.global_name || user?.username || 'Unknown Discord user').trim();
+}
+
+async function postStreamzSupportTicketToDiscord(env, ticket) {
+  const channelId = String(env.STREAMZ_SUPPORT_CHANNEL_ID || env.DISCORD_SUPPORT_CHANNEL_ID || '').trim();
+  const token = String(env.DISCORD_BOT_TOKEN || '').trim();
+  if (!channelId || !token) return false;
+  const resp = await fetch(`https://discord.com/api/v10/channels/${encodeURIComponent(channelId)}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      content: `New Streamz Support ticket ${ticket.ticketNumber}`,
+      embeds: [{
+        title: ticket.ticketNumber,
+        description: 'Original activation-pass PDF submitted through /support.',
+        color: 7032316,
+        fields: [
+          { name: 'Customer', value: `${ticket.discordMention || ticket.discordUsername}\n${ticket.discordUserId}`, inline: false },
+          { name: 'Issue', value: ticket.description || 'No description supplied.', inline: false },
+          { name: 'Activation code', value: ticket.activationCode || 'Manual PDF review required', inline: true },
+          { name: 'Backend result', value: ticket.backendVerification?.status || 'manual_review', inline: true },
+        ],
+      }],
+      components: ticket.attachmentUrl ? [{
+        type: 1,
+        components: [{ type: 2, style: 5, label: 'Open original PDF', url: ticket.attachmentUrl }],
+      }] : [],
+    }),
+  });
+  return resp.ok;
+}
+
+async function listStreamzSupportStaff(env) {
+  const db = await loadDatabase(env);
+  return normalizeStreamzSupportStaff(db.streamzProSupportStaff, env);
+}
+
+async function requireStreamzSupportStaff(env, user) {
+  const sub = String(user?.sub || '').trim();
+  if (!sub) throw httpError(401, 'Google sign-in required.');
+  const staff = await listStreamzSupportStaff(env);
+  const member = staff.find((entry) => entry.googleSub === sub);
+  if (!member) throw httpError(403, 'This Google account is not approved for Streamz Support.');
+  return member;
+}
+
+function normalizeStreamzSupportStaff(value, env = {}) {
+  const ownerSub = String(env.STREAMZ_OWNER_GOOGLE_SUB || '').trim();
+  const merged = new Map();
+  if (ownerSub) merged.set(ownerSub, { googleSub: ownerSub, role: 'owner', source: 'owner_secret' });
+  for (const entry of parseStreamzSupportStaffEnv(env)) merged.set(entry.googleSub, entry);
+  for (const entry of Array.isArray(value) ? value : []) {
+    const googleSub = String(entry?.googleSub || '').trim();
+    const role = String(entry?.role || '').trim().toLowerCase();
+    if (googleSub && STREAMZ_SUPPORT_ROLES.has(role)) merged.set(googleSub, { ...entry, googleSub, role });
+  }
+  return [...merged.values()];
+}
+
+function parseStreamzSupportStaffEnv(env) {
+  return String(env.STREAMZ_SUPPORT_STAFF || '').trim().split(/[,\n]+/).map((item) => {
+    const [googleSub, roleRaw] = item.split(':').map((part) => String(part || '').trim());
+    const role = roleRaw || 'support';
+    return googleSub && STREAMZ_SUPPORT_ROLES.has(role) ? { googleSub, role, source: 'staff_secret' } : null;
+  }).filter(Boolean);
+}
+
+async function updateStreamzSupportStaff(env, payload, actor) {
+  const action = String(payload?.action || '').trim();
+  const googleSub = String(payload?.googleSub || '').trim();
+  const role = String(payload?.role || 'support').trim().toLowerCase();
+  if (!googleSub) throw httpError(400, 'Google sub is required.');
+  if (action !== 'remove' && !STREAMZ_SUPPORT_ROLES.has(role)) throw httpError(400, 'Invalid support role.');
+  return updateStreamzDatabase(env, async (db) => {
+    let staff = normalizeStreamzSupportStaff(db.streamzProSupportStaff, {});
+    if (action === 'remove') {
+      staff = staff.filter((entry) => entry.googleSub !== googleSub);
+    } else {
+      const next = { googleSub, role, addedBy: actor.sub, updatedAt: new Date().toISOString() };
+      const index = staff.findIndex((entry) => entry.googleSub === googleSub);
+      if (index >= 0) staff[index] = { ...staff[index], ...next };
+      else staff.push(next);
+    }
+    db.streamzProSupportStaff = staff;
+    appendStreamzAuditEvent(db, 'support_staff_updated', { action, googleSub, role, actorSub: actor.sub });
+    return { db, value: { ok: true, staff } };
+  });
+}
+
+async function lookupStreamzSupportCode(env, code) {
+  if (!isValidStreamzPurchaseCode(code)) return { ok: false, status: 'invalid', message: 'This activation code is invalid.' };
+  const db = await loadDatabase(env);
+  return lookupStreamzActivationCodeInDb(db, code);
+}
+
+async function lookupStreamzActivationCodeInDb(db, code) {
+  const codeHash = await hashStreamzPurchaseCode(code);
+  const poolEntry = normalizeStreamzProCodePool(db.streamzProCodePool).find((entry) => entry.codeHash && constantTimeStringEquals(entry.codeHash, codeHash)) || null;
+  const verification = normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications).find((entry) => (
+    (entry.purchaseCodeHash && constantTimeStringEquals(entry.purchaseCodeHash, codeHash))
+    || (entry.discordCodeHash && constantTimeStringEquals(entry.discordCodeHash, codeHash))
+  )) || null;
+  const entitlement = normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === verification?.entitlementId) || null;
+  const payment = normalizeStreamzProPayments(db.streamzProPayments).find((entry) => (
+    (entitlement?.stripePaymentIntentId && entry.stripePaymentIntentId === entitlement.stripePaymentIntentId)
+    || (entitlement?.stripeCheckoutSessionId && entry.stripeCheckoutSessionId === entitlement.stripeCheckoutSessionId)
+  )) || null;
+  const status = verification ? getStreamzPurchaseCodeStatus(entitlement, verification, payment, poolEntry) : (poolEntry?.status || 'invalid');
+  const result = buildStreamzPurchaseCodeResult(status, entitlement, verification, payment);
+  return {
+    ok: Boolean(verification || poolEntry),
+    status,
+    message: result.message,
+    purchase: result.purchase,
+    poolEntry: poolEntry ? {
+      id: poolEntry.id,
+      status: poolEntry.status,
+      source: poolEntry.source,
+      issueType: poolEntry.issueType || null,
+      assignedAt: poolEntry.assignedAt || null,
+      expiresAt: poolEntry.expiresAt || null,
+      redeemedAt: poolEntry.redeemedAt || null,
+      replacedAt: poolEntry.replacedAt || null,
+    } : null,
+  };
+}
+
+async function issueStreamzSupportReplacementCode(env, payload, staff, actor) {
+  const code = normalizeStreamzPurchaseCode(payload?.code);
+  const reason = String(payload?.reason || '').trim().slice(0, 500);
+  if (!isValidStreamzPurchaseCode(code)) throw httpError(400, 'Original activation code is required.');
+  if (!reason) throw httpError(400, 'Replacement reason is required.');
+  return updateStreamzDatabase(env, async (db) => {
+    const now = new Date().toISOString();
+    const codeHash = await hashStreamzPurchaseCode(code);
+    const verifications = normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications);
+    const index = verifications.findIndex((entry) => (
+      (entry.purchaseCodeHash && constantTimeStringEquals(entry.purchaseCodeHash, codeHash))
+      || (entry.discordCodeHash && constantTimeStringEquals(entry.discordCodeHash, codeHash))
+    ));
+    if (index < 0) throw httpError(404, 'Original activation code was not found.');
+    const verification = verifications[index];
+    const entitlement = normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === verification.entitlementId);
+    if (!entitlement || entitlement.status !== 'pending_discord_verification' || entitlement.googleSub || entitlement.discordUserId) {
+      throw httpError(409, 'A replacement code cannot be issued for this purchase.');
+    }
+    const [replacementCode] = await createStreamzActivationCodeBatch(collectStreamzActivationCodeHashes(db));
+    const replacementHash = await hashStreamzPurchaseCode(replacementCode);
+    const expiresAt = new Date(Date.now() + STREAMZ_PURCHASE_CODE_TTL_MS).toISOString();
+    db.streamzProCodePool = normalizeStreamzProCodePool(db.streamzProCodePool).map((entry) => (
+      entry.entitlementId === entitlement.id && ['assigned', 'pending_google_linking'].includes(entry.status)
+        ? { ...entry, status: entry.codeHash === codeHash ? 'replaced' : 'invalidated', code: null, replacedAt: now, updatedAt: now }
+        : entry
+    ));
+    const replacementEntry = {
+      id: `pool:${replacementHash.slice(0, 24)}`,
+      code: null,
+      codeHash: replacementHash,
+      status: 'assigned',
+      source: 'internal_csprng',
+      issueType: 'support_replacement',
+      staffGoogleSub: staff.googleSub,
+      staffRole: staff.role,
+      reason,
+      entitlementId: entitlement.id,
+      paymentId: entitlement.stripePaymentIntentId || entitlement.stripeCheckoutSessionId || null,
+      orderNumber: entitlement.orderNumber || buildStreamzOrderNumber(entitlement),
+      assignedAt: now,
+      expiresAt,
+      verificationId: verification.id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    db.streamzProCodePool = [...normalizeStreamzProCodePool(db.streamzProCodePool), replacementEntry].slice(-500);
+    verifications[index] = {
+      ...verification,
+      status: 'code_generated',
+      previousPurchaseCodeHashes: [...(verification.previousPurchaseCodeHashes || []), verification.purchaseCodeHash].filter(Boolean),
+      purchaseCodeHash: replacementHash,
+      discordCodeHash: replacementHash,
+      purchaseCodePoolId: replacementEntry.id,
+      purchaseCodeSource: 'internal_csprng',
+      purchaseCodeAssignedAt: now,
+      purchaseCodeExpiresAt: expiresAt,
+      activationPassCode: replacementCode,
+      supportReplacementHistory: [
+        ...(verification.supportReplacementHistory || []),
+        { oldCodeHash: verification.purchaseCodeHash || null, newCodeHash: replacementHash, staffGoogleSub: staff.googleSub, reason, issuedAt: now, expiresAt },
+      ],
+      claimedDiscordUserId: null,
+      discordClaimedAt: null,
+      purchaseCodeClaimedAt: null,
+      websiteTokenHash: null,
+      websiteTokenExpiresAt: null,
+      websiteTokenUsedAt: null,
+      updatedAt: now,
+    };
+    db.streamzProDiscordVerifications = verifications;
+    appendStreamzAuditEvent(db, 'replacement_code_issued', { entitlementId: entitlement.id, oldCodeHash: codeHash, newCodeHash: replacementHash, staffGoogleSub: staff.googleSub, reason }, now);
+    return { db, value: { ok: true, replacementCode, expiresAt } };
+  });
+}
+
+async function updateStreamzSupportTicket(env, payload, staff) {
+  const action = String(payload?.action || '').trim();
+  const ticketId = String(payload?.ticketId || '').trim();
+  if (!ticketId) throw httpError(400, 'Ticket ID is required.');
+  return updateStreamzDatabase(env, async (db) => {
+    const tickets = normalizeStreamzSupportTickets(db.streamzProSupportTickets);
+    const index = tickets.findIndex((entry) => entry.id === ticketId);
+    if (index < 0) throw httpError(404, 'Support ticket not found.');
+    const now = new Date().toISOString();
+    const ticket = tickets[index];
+    if (action === 'claim') {
+      tickets[index] = { ...ticket, status: 'claimed', claimedBy: staff.googleSub, claimedAt: ticket.claimedAt || now, updatedAt: now };
+    } else if (action === 'close') {
+      tickets[index] = { ...ticket, status: 'closed', closedBy: staff.googleSub, closedAt: now, updatedAt: now };
+    } else if (action === 'reply') {
+      const message = String(payload?.message || '').trim().slice(0, 1800);
+      if (!message) throw httpError(400, 'Reply message is required.');
+      tickets[index] = {
+        ...ticket,
+        status: ticket.status === 'open' ? 'claimed' : ticket.status,
+        claimedBy: ticket.claimedBy || staff.googleSub,
+        replies: [...(ticket.replies || []), { message, staffGoogleSub: staff.googleSub, at: now }],
+        updatedAt: now,
+      };
+      await sendStreamzSupportDm(env, ticket.discordUserId, message);
+    } else {
+      throw httpError(400, 'Unsupported ticket action.');
+    }
+    db.streamzProSupportTickets = tickets;
+    appendStreamzAuditEvent(db, 'support_ticket_updated', { ticketId, action, staffGoogleSub: staff.googleSub }, now);
+    return { db, value: { ok: true, ticket: tickets[index] } };
+  });
+}
+
+async function sendStreamzSupportDm(env, discordUserId, message) {
+  const token = String(env.DISCORD_BOT_TOKEN || '').trim();
+  if (!token || !discordUserId) return false;
+  const dmResp = await fetch('https://discord.com/api/v10/users/@me/channels', {
+    method: 'POST',
+    headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipient_id: discordUserId }),
+  });
+  if (!dmResp.ok) return false;
+  const channel = await dmResp.json().catch(() => null);
+  if (!channel?.id) return false;
+  const content = `A Streamz Support team member has joined this conversation.\n\n${message}`;
+  const msgResp = await fetch(`https://discord.com/api/v10/channels/${encodeURIComponent(channel.id)}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  return msgResp.ok;
+}
+
+function normalizeStreamzSupportTickets(value) {
+  return Array.isArray(value)
+    ? value
+      .filter((entry) => entry && typeof entry === 'object' && entry.id)
+      .map((entry) => ({
+        ...entry,
+        status: STREAMZ_SUPPORT_TICKET_STATUSES.has(entry.status) ? entry.status : 'open',
+        events: Array.isArray(entry.events) ? entry.events : [],
+        replies: Array.isArray(entry.replies) ? entry.replies : [],
+      }))
+    : [];
+}
+
+function appendStreamzAuditEvent(db, type, details = {}, at = new Date().toISOString()) {
+  const list = Array.isArray(db.streamzProAuditLog) ? db.streamzProAuditLog : [];
+  db.streamzProAuditLog = [...list, {
+    id: `audit:${crypto.randomUUID()}`,
+    type,
+    at,
+    details,
+  }].slice(-1000);
 }
 
 async function handleStreamzProWebhook(request, env, origin) {
@@ -1926,12 +2413,12 @@ async function hashStreamzDiscordCode(code) {
 async function assignStreamzPurchaseCodeFromPool(db, entitlement, existingVerification, assignedAt) {
   db.streamzProCodePool = normalizeStreamzProCodePool(db.streamzProCodePool);
   expireAssignedStreamzCodePoolEntries(db, assignedAt);
-  if (countUnusedStreamzCodePoolEntries(db) < STREAMZ_RANDOM_CODE_LOW_WATERMARK) {
-    await addRandomOrgStreamzCodeBatch(db);
+  if (countUnusedStreamzCodePoolEntries(db) < STREAMZ_CODE_LOW_WATERMARK) {
+    await addStreamzActivationCodeBatch(db, 'automatic_issue');
   }
   let poolIndex = db.streamzProCodePool.findIndex((entry) => entry.status === 'unused' && entry.code && entry.codeHash);
   if (poolIndex < 0) {
-    await addRandomOrgStreamzCodeBatch(db);
+    await addStreamzActivationCodeBatch(db, 'automatic_issue');
     poolIndex = db.streamzProCodePool.findIndex((entry) => entry.status === 'unused' && entry.code && entry.codeHash);
   }
   if (poolIndex < 0) {
@@ -1944,6 +2431,7 @@ async function assignStreamzPurchaseCodeFromPool(db, entitlement, existingVerifi
     ...poolEntry,
     code: null,
     status: 'assigned',
+    issueType: 'automatic',
     entitlementId: entitlement.id,
     paymentId: entitlement.stripePaymentIntentId || entitlement.stripeCheckoutSessionId || null,
     stripePaymentIntentId: entitlement.stripePaymentIntentId || null,
@@ -1954,9 +2442,15 @@ async function assignStreamzPurchaseCodeFromPool(db, entitlement, existingVerifi
     verificationId: existingVerification?.id || `discord:${entitlement.id}`,
     updatedAt: assignedAt,
   };
+  appendStreamzAuditEvent(db, 'activation_code_assigned', {
+    codeHash: poolEntry.codeHash,
+    poolEntryId: poolEntry.id,
+    entitlementId: entitlement.id,
+    orderNumber: entitlement.orderNumber || buildStreamzOrderNumber(entitlement),
+  }, assignedAt);
 
-  if (countUnusedStreamzCodePoolEntries(db) < STREAMZ_RANDOM_CODE_LOW_WATERMARK) {
-    await addRandomOrgStreamzCodeBatch(db);
+  if (countUnusedStreamzCodePoolEntries(db) < STREAMZ_CODE_LOW_WATERMARK) {
+    await addStreamzActivationCodeBatch(db, 'low_pool_refill');
   }
 
   return {
@@ -1974,19 +2468,24 @@ function countUnusedStreamzCodePoolEntries(db) {
 function expireAssignedStreamzCodePoolEntries(db, nowIso) {
   const now = Date.parse(nowIso);
   db.streamzProCodePool = normalizeStreamzProCodePool(db.streamzProCodePool).map((entry) => {
-    if (entry.status === 'assigned' && entry.expiresAt && Date.parse(entry.expiresAt) <= now && !entry.redeemedAt) {
+    if (['assigned', 'pending_google_linking'].includes(entry.status) && entry.expiresAt && Date.parse(entry.expiresAt) <= now && !entry.redeemedAt) {
+      appendStreamzAuditEvent(db, 'activation_code_expired', {
+        codeHash: entry.codeHash,
+        poolEntryId: entry.id,
+        entitlementId: entry.entitlementId || null,
+      }, nowIso);
       return { ...entry, status: 'expired', code: null, expiredAt: entry.expiredAt || nowIso, updatedAt: nowIso };
     }
     return entry;
   });
 }
 
-async function addRandomOrgStreamzCodeBatch(db) {
-  const batch = await fetchRandomOrgStreamzCodeBatch();
-  const batchId = `randomorg:${crypto.randomUUID()}`;
-  const existingHashes = new Set(normalizeStreamzProCodePool(db.streamzProCodePool).map((entry) => entry.codeHash).filter(Boolean));
+async function addStreamzActivationCodeBatch(db, reason = 'pool_refill') {
+  const batchId = `batch:${crypto.randomUUID()}`;
+  const existingHashes = collectStreamzActivationCodeHashes(db);
   const now = new Date().toISOString();
   const next = normalizeStreamzProCodePool(db.streamzProCodePool);
+  const batch = await createStreamzActivationCodeBatch(existingHashes);
   for (const code of batch) {
     const normalized = normalizeStreamzPurchaseCode(code);
     const codeHash = await hashStreamzPurchaseCode(normalized);
@@ -1997,7 +2496,7 @@ async function addRandomOrgStreamzCodeBatch(db) {
       code: normalized,
       codeHash,
       status: 'unused',
-      source: 'random.org',
+      source: 'internal_csprng',
       batchId,
       fetchedAt: now,
       createdAt: now,
@@ -2005,52 +2504,61 @@ async function addRandomOrgStreamzCodeBatch(db) {
     });
   }
   db.streamzProCodePool = next.slice(-500);
+  appendStreamzAuditEvent(db, 'activation_code_batch_generated', {
+    batchId,
+    source: 'internal_csprng',
+    count: batch.length,
+    reason,
+  }, now);
   if (countUnusedStreamzCodePoolEntries(db) < 1) {
     throw httpError(503, 'Your activation pass is still being prepared. Try again in a moment.');
   }
 }
 
-async function fetchRandomOrgStreamzCodeBatch(retries = 2) {
-  let lastError = null;
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
-    try {
-      const response = await fetch(STREAMZ_RANDOM_ORG_URL, {
-        headers: { Accept: 'text/html, text/plain;q=0.9,*/*;q=0.8' },
-        cf: { cacheTtl: 0, cacheEverything: false },
-      });
-      const text = await response.text();
-      if (!response.ok) {
-        throw new Error(`RANDOM.ORG returned HTTP ${response.status}`);
-      }
-      const codes = parseRandomOrgStreamzCodes(text);
-      if (codes.length !== STREAMZ_RANDOM_ORG_BATCH_SIZE) {
-        throw new Error(`RANDOM.ORG returned ${codes.length} valid Streamz codes`);
-      }
-      return codes;
-    } catch (error) {
-      lastError = error;
-      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
-    }
+async function createStreamzActivationCodeBatch(existingHashes = new Set()) {
+  const codes = [];
+  const seen = new Set(existingHashes);
+  let attempts = 0;
+  while (codes.length < STREAMZ_CODE_BATCH_SIZE && attempts < STREAMZ_CODE_BATCH_SIZE * 100) {
+    attempts += 1;
+    const code = createStreamzActivationCode();
+    const codeHash = await hashStreamzPurchaseCode(code);
+    if (seen.has(codeHash)) continue;
+    seen.add(codeHash);
+    codes.push(code);
   }
-  throw httpError(503, 'Your activation pass is still being prepared. Try again in a moment.');
+  if (codes.length !== STREAMZ_CODE_BATCH_SIZE) {
+    throw httpError(503, 'Your activation pass is still being prepared. Try again in a moment.');
+  }
+  return codes;
 }
 
-function parseRandomOrgStreamzCodes(html) {
-  const source = String(html || '');
-  const dataBlock = source.match(/<pre[^>]*class=["'][^"']*\bdata\b[^"']*["'][^>]*>([\s\S]*?)<\/pre>/i);
-  const text = String(dataBlock?.[1] || source)
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>|<\/pre>|<\/div>|<\/li>/gi, '\n')
-    .replace(/<[^>]+>/g, '\n');
-  const matches = text.match(/\b[A-Z0-9]{10}\b/g) || [];
-  const unique = [];
-  const seen = new Set();
-  for (const code of matches.map(normalizeStreamzPurchaseCode)) {
-    if (!isValidStreamzPurchaseCode(code) || seen.has(code)) continue;
-    seen.add(code);
-    unique.push(code);
+function createStreamzActivationCode() {
+  const output = [];
+  const alphabetLength = STREAMZ_CODE_ALPHABET.length;
+  const max = Math.floor(256 / alphabetLength) * alphabetLength;
+  while (output.length < 10) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    for (const byte of bytes) {
+      if (byte >= max) continue;
+      output.push(STREAMZ_CODE_ALPHABET[byte % alphabetLength]);
+      if (output.length === 10) break;
+    }
   }
-  return unique.slice(0, STREAMZ_RANDOM_ORG_BATCH_SIZE);
+  return output.join('');
+}
+
+function collectStreamzActivationCodeHashes(db) {
+  const hashes = new Set();
+  for (const entry of normalizeStreamzProCodePool(db.streamzProCodePool)) {
+    if (entry.codeHash) hashes.add(entry.codeHash);
+  }
+  for (const entry of normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications)) {
+    if (entry.purchaseCodeHash) hashes.add(entry.purchaseCodeHash);
+    if (entry.discordCodeHash) hashes.add(entry.discordCodeHash);
+  }
+  return hashes;
 }
 
 function normalizeStreamzProCodePool(value) {
@@ -2060,7 +2568,7 @@ function normalizeStreamzProCodePool(value) {
       .map((entry) => ({
         ...entry,
         code: entry.status === 'unused' ? normalizeStreamzPurchaseCode(entry.code) : null,
-        status: ['unused', 'assigned', 'redeemed', 'expired'].includes(entry.status) ? entry.status : 'unused',
+        status: STREAMZ_CODE_POOL_STATUSES.has(entry.status) ? entry.status : 'unused',
       }))
     : [];
 }
@@ -2089,6 +2597,8 @@ function buildStreamzActivationPassResponse(entitlement, verification, rawCode) 
     paymentMethod: entitlement.paymentMethodType || 'Stripe',
     productName: STREAMZ_PRO_PRODUCT_NAME,
     paymentStatus: entitlement.paymentStatus || 'succeeded',
+    issueTime: verification?.purchaseCodeAssignedAt || verification?.createdAt || paymentDate,
+    expiresAt: verification?.purchaseCodeExpiresAt || null,
     redemptionStatus: verification?.purchaseCodeRedeemedAt || entitlement.status === 'active' ? 'redeemed' : 'available',
   };
 }
@@ -2103,7 +2613,7 @@ function buildStreamzPurchaseCodeResult(status, entitlement = null, verification
       : status === 'claimed'
         ? 'This purchase code is already in verification with a Discord account.'
       : status === 'redeemed'
-        ? 'This purchase code has already been redeemed.'
+        ? 'This activation code has already been redeemed.'
       : status === 'refunded'
         ? 'This purchase has been refunded and Streamz Pro is disabled.'
       : status === 'disputed'
@@ -2111,8 +2621,10 @@ function buildStreamzPurchaseCodeResult(status, entitlement = null, verification
       : status === 'canceled'
         ? 'This purchase was canceled and Streamz Pro is disabled.'
       : status === 'expired'
-        ? 'This purchase code has expired.'
-      : 'This purchase code is invalid.',
+        ? 'This activation code has expired. Contact Streamz Support for assistance.'
+      : status === 'replaced'
+        ? 'This activation code has expired. Contact Streamz Support for assistance.'
+      : 'This activation code is invalid.',
     purchase: entitlement ? {
       orderNumber: entitlement.orderNumber || buildStreamzOrderNumber(entitlement),
       productName: STREAMZ_PRO_PRODUCT_NAME,
@@ -2135,8 +2647,15 @@ function buildStreamzPurchaseCodeResult(status, entitlement = null, verification
   };
 }
 
-function getStreamzPurchaseCodeStatus(entitlement, verification, payment = null) {
+function getStreamzPurchaseCodeStatus(entitlement, verification, payment = null, poolEntry = null) {
   if (!entitlement || !verification) return 'invalid';
+  if (poolEntry?.status === 'replaced') return 'replaced';
+  if (poolEntry?.status === 'invalidated') return 'invalid';
+  if (poolEntry?.status === 'expired') return 'expired';
+  if (poolEntry?.status === 'redeemed') return 'redeemed';
+  if (verification.status === 'replaced') return 'replaced';
+  if (verification.status === 'invalidated') return 'invalid';
+  if (verification.status === 'expired') return 'expired';
   const paymentStatus = String(entitlement.paymentStatus || payment?.status || '').toLowerCase();
   if (entitlement.status === 'revoked' && paymentStatus === 'refunded') return 'refunded';
   if (entitlement.status === 'revoked' && paymentStatus === 'disputed') return 'disputed';
@@ -2146,7 +2665,7 @@ function getStreamzPurchaseCodeStatus(entitlement, verification, payment = null)
   if (paymentStatus === 'canceled') return 'canceled';
   if (verification.purchaseCodeExpiresAt && Date.parse(verification.purchaseCodeExpiresAt) <= Date.now() && entitlement.status !== 'active') return 'expired';
   if (verification.purchaseCodeRedeemedAt || entitlement.status === 'active') return 'redeemed';
-  if (verification.claimedDiscordUserId) return 'claimed';
+  if (verification.claimedDiscordUserId || poolEntry?.status === 'pending_google_linking') return 'claimed';
   if (entitlement.paymentConfirmedAt && entitlement.status === 'pending_discord_verification') return 'available';
   return 'invalid';
 }
