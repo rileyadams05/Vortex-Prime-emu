@@ -192,6 +192,29 @@
       font-size: 0.9rem;
     }
 
+    .link-explainer {
+      border: 1px solid rgba(59, 130, 246, 0.24);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      background: rgba(59, 130, 246, 0.08);
+      color: #cbd5e1;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .link-explainer strong {
+      display: block;
+      color: #bfdbfe;
+      margin-bottom: 0.35rem;
+    }
+
+    .link-explainer small {
+      display: block;
+      color: #94a3b8;
+      margin-top: 0.45rem;
+      line-height: 1.45;
+    }
+
     .divider {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -329,6 +352,11 @@
 
       <section class="form-section" aria-labelledby="paymentDetailsHeading">
         <h2 id="paymentDetailsHeading">Payment details</h2>
+        <div class="link-explainer">
+          <strong>Optional — powered by Link</strong>
+          You do not need to save your details to complete this purchase. This option lets Link securely remember your payment information for faster checkout in the future.
+          <small>Providing a phone number here is optional and is handled by Link, not Vortex Prime. Vortex Prime does not receive or store raw card details.</small>
+        </div>
         <div class="stripe-shell">
           <div id="paymentElement" class="stripe-box">
             <div class="stripe-placeholder">Loading secure payment form...</div>
