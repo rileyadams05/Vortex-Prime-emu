@@ -700,6 +700,7 @@ async function handleStreamzProUpgradeSessionCode(request, env, origin) {
   return json({
     ok: true,
     ...sanitizeStreamzUpgradeSession(result.session),
+    purchaseCode: result.code,
     verificationCode: result.code,
     codeExpiresAt: result.expiresAt,
     activationPass: buildStreamzActivationPassResponse(result.entitlement, result.verification, result.code),
@@ -1033,8 +1034,10 @@ async function linkStreamzDiscordVerificationToGoogle(env, token, googleProfile)
     if (conflicting) return { db, value: buildStreamzDiscordSiteResult('conflict', entitlement) };
 
     const now = new Date().toISOString();
+    const activatedId = buildStreamzEntitlementIdFromAccountId(accountId, entitlement.product || STREAMZ_PRO_PRODUCT_ID);
     const activated = {
       ...entitlement,
+      id: activatedId,
       accountId,
       googleSub: googleProfile.sub,
       googleEmail: googleProfile.email || null,
@@ -1054,6 +1057,7 @@ async function linkStreamzDiscordVerificationToGoogle(env, token, googleProfile)
     if (verificationIndex >= 0) {
       verifications[verificationIndex] = {
         ...verification,
+        entitlementId: activated.id,
         status: 'active',
         purchaseCodeRedeemedAt: now,
         websiteTokenUsedAt: now,
