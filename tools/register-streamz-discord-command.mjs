@@ -17,7 +17,7 @@ const command = {
   options: [
     {
       name: "code",
-      description: "Your Streamz Pro verification code, for example VP-7K4M-92QX.",
+      description: "Your Streamz Pro purchase code, for example STZ-7K4M-92QX-8P2D.",
       type: 3,
       required: true,
     },

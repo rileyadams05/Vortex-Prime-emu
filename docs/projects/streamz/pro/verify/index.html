@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streamz Pro Purchase Verification</title>
+  <style>
+    :root { font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f8fafc; background: #05070b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 1.25rem; background: #05070b; }
+    main { width: min(720px, 100%); background: #0c111a; border: 1px solid rgba(255,255,255,.12); border-radius: 18px; padding: clamp(1.25rem, 4vw, 2.25rem); box-shadow: 0 20px 70px rgba(0,0,0,.45); }
+    h1 { margin: 0 0 .75rem; font-size: clamp(1.7rem, 6vw, 2.4rem); }
+    p { color: #cbd5e1; line-height: 1.6; }
+    label { display: block; margin: 1rem 0 .4rem; font-weight: 800; }
+    input { width: 100%; border: 1px solid rgba(255,255,255,.16); background: #111827; color: #f8fafc; border-radius: 10px; padding: .9rem 1rem; font-size: 1.05rem; text-transform: uppercase; letter-spacing: .04em; }
+    button, a.button { display: inline-flex; justify-content: center; align-items: center; border: 0; border-radius: 999px; padding: .78rem 1.1rem; font-weight: 850; color: #fff; background: linear-gradient(120deg, #6366f1, #8b5cf6); text-decoration: none; cursor: pointer; }
+    button.secondary, a.secondary { background: #1f2937; border: 1px solid rgba(255,255,255,.14); }
+    .actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1rem; }
+    .status { margin-top: 1rem; border-radius: 12px; padding: 1rem; border: 1px solid rgba(99,102,241,.28); background: rgba(99,102,241,.1); }
+    .status[data-variant="error"] { border-color: rgba(248,113,113,.35); background: rgba(248,113,113,.1); }
+    dl { display: grid; grid-template-columns: minmax(120px, .6fr) 1fr; gap: .6rem 1rem; margin: 1rem 0 0; }
+    dt { color: #94a3b8; font-weight: 750; }
+    dd { margin: 0; color: #f8fafc; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Streamz Pro purchase verification</h1>
+    <p>Enter the one-time purchase code printed on your activation pass. The permanent QR code does not contain personal information or payment data.</p>
+    <form id="verifyForm">
+      <label for="code">Purchase code</label>
+      <input id="code" name="code" autocomplete="off" inputmode="text" placeholder="STZ-XXXX-XXXX-XXXX" maxlength="18" required>
+      <div class="actions">
+        <button type="submit" id="verifyBtn">Check purchase</button>
+        <a class="button secondary" href="/projects/streamz/pro/">Return to checkout</a>
+      </div>
+    </form>
+    <section id="result" class="status" hidden></section>
+  </main>
+
+  <script>
+    const form = document.getElementById('verifyForm');
+    const codeInput = document.getElementById('code');
+    const result = document.getElementById('result');
+
+    function normalizeDisplayCode(value) {
+      const raw = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^STZ/, '');
+      const clipped = raw.slice(0, 12);
+      return ['STZ', clipped.slice(0, 4), clipped.slice(4, 8), clipped.slice(8, 12)].filter(Boolean).join('-');
+    }
+
+    function render(data, error = false) {
+      result.hidden = false;
+      result.dataset.variant = error ? 'error' : 'info';
+      const purchase = data.purchase;
+      result.innerHTML = `
+        <strong>${data.message || 'Purchase checked.'}</strong>
+        ${purchase ? `<dl>
+          <dt>Order</dt><dd>${purchase.orderNumber || ''}</dd>
+          <dt>Product</dt><dd>${purchase.productName || 'Streamz Pro'}</dd>
+          <dt>Customer</dt><dd>${purchase.customerName || 'Masked'}</dd>
+          <dt>Email</dt><dd>${purchase.maskedEmail || 'Masked'}</dd>
+          <dt>Payment</dt><dd>${purchase.paymentStatus || ''}</dd>
+          <dt>Redemption</dt><dd>${purchase.redemptionStatus || data.status}</dd>
+        </dl>` : ''}
+        ${data.status === 'available' || data.status === 'claimed' ? `<div class="actions">
+          <a class="button" href="${data.discordInviteUrl || 'https://discord.gg/TwMsbb97Mm'}">Join Discord</a>
+          <a class="button secondary" href="${data.discordVerifyUrl || 'https://discord.com/channels/@me'}">Open Discord verification</a>
+        </div>
+        <p>In Discord, run <strong>/verify-pro ${codeInput.value.trim()}</strong>. The bot will send a private Link Google Account button.</p>` : ''}
+      `;
+    }
+
+    codeInput.addEventListener('input', () => {
+      codeInput.value = normalizeDisplayCode(codeInput.value);
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const code = codeInput.value.trim();
+      result.hidden = false;
+      result.textContent = 'Checking purchase code...';
+      try {
+        const resp = await fetch('/api/streamz/pro/purchase-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        render(data, !resp.ok || !data.ok);
+      } catch (error) {
+        render({ message: 'Unable to check this purchase code right now.' }, true);
+      }
+    });
+  </script>
+</body>
+</html>

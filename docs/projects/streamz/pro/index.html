@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://js.stripe.com/v3/"></script>
+  <script src="/assets/js/pdf-lib.min.js"></script>
   <style>
     :root {
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -460,6 +461,7 @@
     let expressCheckoutElement = null;
     let stripeReady = false;
     let paymentInFlight = false;
+    let activationPassDownloaded = false;
 
     function setStatus(message, variant = 'info') {
       statusEl.textContent = message;
@@ -524,13 +526,15 @@
     function showPendingDiscordState(details = {}) {
       form.hidden = true;
       const code = details.verificationCode || '';
-      const codeLine = code ? `\n\nVerification code:\n${code}` : '';
+      const hasPass = Boolean(details.activationPass);
+      const codeLine = code ? `\n\nPurchase code:\n${code}` : '';
       renderStateCard({
         variant: 'pending',
         title: 'Streamz Pro payment received',
-        message: `Your Streamz Pro purchase is confirmed, but Pro is not active yet.\n\nTo activate it:\n1. Join the official Streamz Discord server.\n2. Run /verify-pro using the private code below.\n3. Press Verify account in the bot’s private message.\n4. Sign in with the Google account that will permanently own Streamz Pro.${codeLine}\n\nThe Discord bot will send a private automated message. Please do not reply to that message.`,
+        message: `Your Streamz Pro purchase is confirmed, but Pro is not active yet.\n\nTo activate it:\n1. Download and keep your activation pass.\n2. Scan the permanent QR code on the pass or open Discord directly.\n3. Run /verify-pro using the purchase code printed on the pass.\n4. Press Link Google Account in the bot’s private message.\n5. Sign in with the Google account that will permanently own Streamz Pro.${codeLine}\n\nThe Discord bot will send a private automated message. Please do not reply to that message.`,
         actions: [
-          ...(code ? [{ label: 'Copy verification code', action: 'copy-code' }] : []),
+          ...(hasPass ? [{ label: 'Download activation pass', action: 'download-pass' }] : []),
+          ...(code ? [{ label: 'Copy purchase code', action: 'copy-code' }] : []),
           { label: 'Join Discord', href: details.discordInviteUrl || 'https://discord.gg/TwMsbb97Mm' },
           { label: 'Open Discord verification', href: details.discordVerifyUrl || 'https://discord.com/channels/@me' },
           { label: 'Generate replacement code', action: 'replace-code' },
@@ -539,6 +543,7 @@
         ],
       });
       successScreen.dataset.verificationCode = code;
+      successScreen.activationPass = details.activationPass || null;
       setStatus('Payment received. Discord verification is required before activation.', 'info');
     }
 
@@ -706,7 +711,7 @@
     }
 
     async function requestDiscordVerificationCode() {
-      if (!upgradeSessionToken) throw new Error('This checkout session cannot generate a Discord verification code.');
+      if (!upgradeSessionToken) throw new Error('This checkout session cannot generate a purchase code.');
       const resp = await fetch('/api/streamz/pro/upgrade-session/code', {
         method: 'POST',
         credentials: 'include',
@@ -714,7 +719,7 @@
         body: JSON.stringify({ token: upgradeSessionToken }),
       });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) throw new Error(data?.message || 'Unable to generate a Discord verification code.');
+      if (!resp.ok) throw new Error(data?.message || 'Unable to generate a purchase code.');
       return data;
     }
 
@@ -724,7 +729,7 @@
         try {
           return await requestDiscordVerificationCode();
         } catch (error) {
-          setPaymentMessage(error.message || 'Payment received, but the verification code could not be generated yet. Try Generate replacement code.', 'error');
+          setPaymentMessage(error.message || 'Payment received, but the purchase code could not be generated yet. Try Generate replacement code.', 'error');
           return sessionStatus;
         }
       }
@@ -915,6 +920,10 @@
         if (resp.ok && data?.status === 'pending_discord_verification') {
           const details = await getPendingDiscordDetails(data.entitlement);
           showPendingDiscordState(details);
+          if (details?.activationPass && !activationPassDownloaded) {
+            activationPassDownloaded = true;
+            await downloadActivationPass(details.activationPass);
+          }
           setPaymentMessage('Payment received. Complete Discord verification to activate Streamz Pro.', 'info');
           setBusy(false);
           return true;
@@ -944,10 +953,11 @@
     async function generateReplacementCode() {
       try {
         if (!upgradeSessionToken) throw new Error('This checkout session cannot generate a replacement code.');
-        setPaymentMessage('Generating a replacement Discord verification code...', 'info');
+        setPaymentMessage('Generating a replacement purchase code...', 'info');
         const data = await requestDiscordVerificationCode();
         showPendingDiscordState(data);
-        setPaymentMessage('Replacement Discord verification code generated.', 'success');
+        if (data.activationPass) await downloadActivationPass(data.activationPass);
+        setPaymentMessage('Replacement purchase code generated.', 'success');
       } catch (error) {
         setPaymentMessage(error.message || 'Unable to generate a replacement code right now.', 'error');
       }
@@ -979,7 +989,13 @@
       if (action === 'copy-code') {
         const code = successScreen.dataset.verificationCode || '';
         if (code && navigator.clipboard) {
-          navigator.clipboard.writeText(code).then(() => setPaymentMessage('Verification code copied.', 'success'));
+          navigator.clipboard.writeText(code).then(() => setPaymentMessage('Purchase code copied.', 'success'));
+        }
+      } else if (action === 'download-pass') {
+        if (successScreen.activationPass) {
+          downloadActivationPass(successScreen.activationPass).catch((error) => {
+            setPaymentMessage(error.message || 'Unable to download activation pass.', 'error');
+          });
         }
       } else if (action === 'replace-code') {
         generateReplacementCode();
@@ -987,6 +1003,45 @@
         refreshActivationStatus();
       }
     });
+
+    async function downloadActivationPass(pass) {
+      if (!window.PDFLib) throw new Error('PDF tools are still loading. Try again in a moment.');
+      const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
+      const templateBytes = await fetch(pass.templateUrl, { cache: 'no-store' }).then((resp) => {
+        if (!resp.ok) throw new Error('Activation pass template is unavailable.');
+        return resp.arrayBuffer();
+      });
+      const pdfDoc = await PDFDocument.load(templateBytes);
+      const page = pdfDoc.getPage(0);
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const ink = rgb(0.06, 0.07, 0.1);
+      const accent = rgb(0.42, 0.22, 0.82);
+      const draw = (text, x, y, size = 22, chosenFont = regular, color = ink) => {
+        page.drawText(String(text || ''), { x, y, size, font: chosenFont, color });
+      };
+      const date = pass.purchaseDate ? new Date(pass.purchaseDate) : new Date();
+      draw(pass.customerName, 260, 532, 22);
+      draw(pass.customerEmail, 260, 481, 20);
+      draw(pass.orderNumber, 260, 430, 22);
+      draw(date.toLocaleDateString(), 260, 379, 22);
+      draw(date.toLocaleTimeString(), 260, 328, 22);
+      draw(pass.paymentMethod || 'Stripe', 260, 277, 22);
+      draw(pass.productName || 'Streamz Pro', 260, 226, 22);
+      draw(pass.paymentStatus || 'succeeded', 260, 183, 22);
+      draw(pass.purchaseCode, 760, 390, 40, font, accent);
+      draw(`Order ${pass.orderNumber}`, 760, 350, 18, regular, ink);
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Streamz-Pro-Activation-Pass-${pass.orderNumber || 'purchase'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
 
     form?.addEventListener('submit', (event) => {
       event.preventDefault();
