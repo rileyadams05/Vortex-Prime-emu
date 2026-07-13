@@ -284,6 +284,30 @@
       padding: 1rem;
       color: #d1fae5;
       line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .success-screen[data-variant="pending"] {
+      border-color: rgba(59, 130, 246, 0.35);
+      background: rgba(59, 130, 246, 0.1);
+      color: #dbeafe;
+    }
+
+    .checkout-notice {
+      border: 1px solid rgba(245, 158, 11, 0.32);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      background: rgba(245, 158, 11, 0.08);
+      color: #fde68a;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .checkout-notice small {
+      display: block;
+      color: #f8d48c;
+      margin-top: 0.45rem;
+      line-height: 1.45;
     }
 
     @media (max-width: 640px) {
@@ -311,7 +335,7 @@
     </div>
 
     <div id="successScreen" class="success-screen" hidden>
-      Streamz Pro ownership is active for this Google account.
+      Streamz Pro status will appear here.
     </div>
 
     <form id="checkoutForm" hidden>
@@ -334,9 +358,14 @@
           </label>
         </div>
 
+        <div class="checkout-notice">
+          After payment, you must verify your email address before Streamz Pro can be activated.
+          <small>You are responsible for maintaining access to this account. If you permanently lose access, licence recovery or transfer is not guaranteed and a new purchase may be required, except where required by applicable law.</small>
+        </div>
+
         <label class="terms-row">
           <input type="checkbox" id="termsAccepted" required>
-          <span>I accept the Streamz Pro purchase terms and understand this one-time payment is A$99.99.</span>
+          <span>I understand that Streamz Pro is a one-time purchase and will be permanently linked to the verified account used for this purchase.</span>
         </label>
       </section>
 
@@ -407,19 +436,40 @@
 
     function setBusy(isBusy, message = 'Processing payment...') {
       paymentInFlight = isBusy;
-      purchaseBtn.disabled = isBusy || !stripeReady;
+      updatePurchaseButtonState();
       purchaseBtn.textContent = isBusy ? message : PURCHASE_LABEL;
     }
 
-    function showOwnedState(entitlement) {
+    function showActiveState(entitlement) {
       form.hidden = true;
       successScreen.hidden = false;
+      successScreen.setAttribute('data-variant', 'success');
+      successScreen.textContent = entitlement?.emailMasked
+        ? `Streamz Pro is active for ${entitlement.emailMasked}.`
+        : 'Streamz Pro ownership is active for this account.';
       setStatus(
-        entitlement?.googleEmail
-          ? `Streamz Pro is active for ${entitlement.googleEmail}.`
-          : 'Streamz Pro is active for this Google account.',
+        entitlement?.emailMasked
+          ? `Streamz Pro is active for ${entitlement.emailMasked}.`
+          : 'Streamz Pro is active for this account.',
         'success',
       );
+    }
+
+    function showPendingVerificationState(entitlement) {
+      form.hidden = true;
+      successScreen.hidden = false;
+      successScreen.setAttribute('data-variant', 'pending');
+      const maskedEmail = entitlement?.emailMasked || maskEmail(googleEmail) || 'your email address';
+      successScreen.textContent = `Payment received\n\nWe’ll send a verification email to ${maskedEmail}. Streamz Pro will remain locked until the account is verified.`;
+      setStatus('Payment received. Email verification is required before activation.', 'info');
+    }
+
+    function showEntitlementState(entitlement) {
+      if (entitlement?.status === 'active') {
+        showActiveState(entitlement);
+      } else if (entitlement?.status === 'pending_email_verification') {
+        showPendingVerificationState(entitlement);
+      }
     }
 
     function enableForm(email) {
@@ -428,6 +478,31 @@
       emailInput.value = googleEmail;
       emailInput.readOnly = true;
       setStatus(googleEmail ? `Signed in as ${googleEmail}.` : 'Signed in.', 'success');
+      updatePurchaseButtonState();
+    }
+
+    function hasValidCheckoutInputs() {
+      const email = emailInput.value.trim().toLowerCase();
+      return Boolean(
+        fullNameInput.value.trim()
+        && dateOfBirthInput.value
+        && email
+        && googleEmail
+        && email === googleEmail.toLowerCase()
+        && termsAcceptedInput.checked
+      );
+    }
+
+    function updatePurchaseButtonState() {
+      purchaseBtn.disabled = paymentInFlight || !stripeReady || !hasValidCheckoutInputs();
+    }
+
+    function maskEmail(email) {
+      const normalized = String(email || '').trim().toLowerCase();
+      const [local, domain] = normalized.split('@');
+      if (!local || !domain) return '';
+      const visible = local.length <= 2 ? local[0] : `${local.slice(0, 2)}${'*'.repeat(Math.min(local.length - 2, 6))}`;
+      return `${visible}@${domain}`;
     }
 
     async function waitForGoogleClient() {
@@ -515,7 +590,11 @@
       enableForm(email);
       const config = await fetchStreamzProConfig();
       if (config?.entitlement?.status === 'active') {
-        showOwnedState(config.entitlement);
+        showActiveState(config.entitlement);
+        return;
+      }
+      if (config?.entitlement?.status === 'pending_email_verification') {
+        showPendingVerificationState(config.entitlement);
         return;
       }
 
@@ -599,7 +678,7 @@
         });
         paymentElement.on('ready', () => {
           stripeReady = true;
-          setBusy(false);
+          updatePurchaseButtonState();
           setPaymentMessage('', 'info');
         });
         paymentElement.on('loaderror', (event) => {
@@ -672,8 +751,8 @@
 
         setPaymentMessage('Preparing A$99.99 Streamz Pro payment...', 'info');
         const intent = await createPaymentIntent(details);
-        if (intent.alreadyOwned) {
-          showOwnedState(intent.entitlement);
+        if (intent.alreadyOwned || intent.pendingVerification) {
+          showEntitlementState(intent.entitlement);
           return;
         }
 
@@ -709,9 +788,15 @@
       for (let attempt = 0; attempt < 30; attempt += 1) {
         const resp = await fetch('/api/streamz/pro/entitlement', { credentials: 'include' });
         const data = await resp.json().catch(() => ({}));
-        if (resp.ok && data?.hasPro) {
-          showOwnedState(data.entitlement);
+        if (resp.ok && data?.status === 'active' && data?.ownsPro) {
+          showActiveState(data.entitlement);
           setPaymentMessage('Streamz Pro ownership confirmed.', 'success');
+          setBusy(false);
+          return true;
+        }
+        if (resp.ok && data?.status === 'pending_email_verification') {
+          showPendingVerificationState(data.entitlement);
+          setPaymentMessage('Payment received. Email verification setup is still being completed.', 'info');
           setBusy(false);
           return true;
         }
@@ -726,6 +811,11 @@
     form?.addEventListener('submit', (event) => {
       event.preventDefault();
       startPayment('card');
+    });
+
+    [fullNameInput, dateOfBirthInput, termsAcceptedInput].forEach((input) => {
+      input.addEventListener('input', updatePurchaseButtonState);
+      input.addEventListener('change', updatePurchaseButtonState);
     });
 
     initializeAuth();

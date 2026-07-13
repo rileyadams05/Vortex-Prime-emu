@@ -65,6 +65,17 @@ const STREAMZ_DEFAULT_DEEP_LINK = 'streamz://auth/callback';
 const STREAMZ_PRO_AMOUNT_CENTS = 9999;
 const STREAMZ_PRO_CURRENCY = 'aud';
 const STREAMZ_PRO_PRODUCT_NAME = 'Streamz Pro';
+const STREAMZ_PRO_PRODUCT_ID = 'streamz_pro';
+const STREAMZ_PRO_STATUSES = new Set([
+  'pending_payment',
+  'pending_email_verification',
+  'active',
+  'revoked',
+]);
+const STREAMZ_VERIFICATION_EMAIL_SENDER = {
+  name: 'Streamz Team',
+  address: 'streamz_team_official26@outlook.com',
+};
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
 
@@ -466,6 +477,10 @@ async function handleStreamzProConfig(request, env, origin) {
   const entitlement = session ? await getStreamzProEntitlement(env, session.sub).catch(() => null) : null;
   return json({
     ok: true,
+    configured: true,
+    authenticated: Boolean(session),
+    ownsPro: isActiveStreamzProEntitlement(entitlement),
+    status: entitlement?.status || null,
     user: sanitizeUserForResponse(session),
     entitlement: sanitizeStreamzProEntitlement(entitlement),
     stripe: buildStreamzProStripeConfig(env),
@@ -477,7 +492,7 @@ async function handleStreamzProPaymentIntent(request, env, origin) {
     throw httpError(405, 'Streamz Pro payment setup requires POST.');
   }
 
-  const user = await ensureAuthenticated(request, env);
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google before purchasing Streamz Pro.');
   const payload = await request.json().catch(() => null);
   if (!payload || typeof payload !== 'object') {
     throw httpError(400, 'Missing contact details.');
@@ -489,10 +504,11 @@ async function handleStreamzProPaymentIntent(request, env, origin) {
   }
 
   const existingEntitlement = await getStreamzProEntitlement(env, user.sub).catch(() => null);
-  if (existingEntitlement) {
+  if (isActiveStreamzProEntitlement(existingEntitlement) || existingEntitlement?.status === 'pending_email_verification') {
     return json({
       ok: true,
-      alreadyOwned: true,
+      alreadyOwned: isActiveStreamzProEntitlement(existingEntitlement),
+      pendingVerification: existingEntitlement?.status === 'pending_email_verification',
       entitlement: sanitizeStreamzProEntitlement(existingEntitlement),
     }, 200, origin);
   }
@@ -510,7 +526,6 @@ async function handleStreamzProPaymentIntent(request, env, origin) {
 
   return json({
     ok: true,
-    paymentIntentId: paymentIntent.id,
     clientSecret: paymentIntent.client_secret,
     amountCents: STREAMZ_PRO_AMOUNT_CENTS,
     currency: STREAMZ_PRO_CURRENCY,
@@ -522,12 +537,17 @@ async function handleStreamzProEntitlement(request, env, origin) {
     throw httpError(405, 'Streamz Pro entitlement lookup requires GET.');
   }
 
-  const user = await ensureAuthenticated(request, env);
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to check Streamz Pro entitlement.');
   const entitlement = await getStreamzProEntitlement(env, user.sub).catch(() => null);
+  const ownsPro = isActiveStreamzProEntitlement(entitlement);
 
   return json({
     ok: true,
-    hasPro: Boolean(entitlement),
+    configured: true,
+    authenticated: true,
+    ownsPro,
+    hasPro: ownsPro,
+    status: entitlement?.status || null,
     entitlement: sanitizeStreamzProEntitlement(entitlement),
   }, 200, origin);
 }
@@ -613,7 +633,10 @@ function validateStreamzProContact(payload, user) {
   if (!sessionEmail) {
     throw httpError(401, 'Signed-in Google account is missing an email address.');
   }
-  if (email && email !== sessionEmail) {
+  if (!isValidEmail(email)) {
+    throw httpError(400, 'A valid email address is required.');
+  }
+  if (email !== sessionEmail) {
     throw httpError(400, 'Email must match the signed-in Google account.');
   }
 
@@ -631,12 +654,14 @@ function buildStreamzProPaymentIntentParams(user, contact) {
     receipt_email: contact.email,
     description: STREAMZ_PRO_PRODUCT_NAME,
     'automatic_payment_methods[enabled]': 'true',
-    'metadata[product]': 'streamz_pro',
+    'metadata[product]': STREAMZ_PRO_PRODUCT_ID,
     'metadata[amount_cents]': String(STREAMZ_PRO_AMOUNT_CENTS),
     'metadata[currency]': STREAMZ_PRO_CURRENCY,
+    'metadata[account_id]': buildStreamzAccountIdFromGoogleSub(user.sub),
     'metadata[google_sub]': String(user.sub || ''),
     'metadata[google_email]': contact.email,
     'metadata[contact_full_name]': contact.fullName,
+    'metadata[contact_date_of_birth]': contact.dateOfBirth,
   });
 
   return params;
@@ -662,7 +687,7 @@ async function processStreamzProStripeEvent(env, event) {
     id: event.id,
     type: event.type,
     processedAt: new Date().toISOString(),
-    objectId: entitlement?.paymentIntentId || entitlement?.checkoutSessionId || null,
+    objectId: entitlement?.stripePaymentIntentId || entitlement?.stripeCheckoutSessionId || null,
   });
   db.stripeEvents = processedEvents.slice(-500);
 
@@ -677,29 +702,44 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
   const object = event.data?.object || {};
 
   if (event.type === 'payment_intent.succeeded') {
-    if (!isValidStreamzProStripePayment(object)) {
+    const validation = validateStreamzProPaymentIntentForEntitlement(object);
+    if (!validation.ok) {
       console.log('Ignoring non-Streamz Pro PaymentIntent webhook', {
         id: object.id || null,
         amount: object.amount || null,
+        amountReceived: object.amount_received || null,
         currency: object.currency || null,
         product: object.metadata?.product || null,
+        reason: validation.reason,
       });
       return null;
     }
 
+    const metadata = object.metadata || {};
+    const now = new Date().toISOString();
     return {
-      id: `streamz_pro:${object.metadata.google_sub}`,
-      googleSub: object.metadata.google_sub,
-      googleEmail: object.metadata.google_email || object.receipt_email || null,
-      contactFullName: object.metadata.contact_full_name || null,
-      product: 'streamz_pro',
-      status: 'active',
+      id: buildStreamzEntitlementId(metadata.google_sub, STREAMZ_PRO_PRODUCT_ID),
+      accountId: metadata.account_id || buildStreamzAccountIdFromGoogleSub(metadata.google_sub),
+      googleSub: metadata.google_sub,
+      email: metadata.google_email || object.receipt_email || null,
+      emailNormalized: normalizeEmail(metadata.google_email || object.receipt_email),
+      emailVerified: false,
+      fullName: metadata.contact_full_name || null,
+      dateOfBirth: metadata.contact_date_of_birth || null,
+      product: STREAMZ_PRO_PRODUCT_ID,
+      status: 'pending_email_verification',
       amountCents: STREAMZ_PRO_AMOUNT_CENTS,
       currency: STREAMZ_PRO_CURRENCY,
-      paymentIntentId: object.id,
+      stripePaymentIntentId: object.id,
+      stripeEventId: event.id,
       stripeCustomerId: object.customer || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      paymentConfirmedAt: now,
+      emailVerifiedAt: null,
+      activatedAt: null,
+      revokedAt: null,
+      accountLocked: false,
+      createdAt: now,
+      updatedAt: now,
     };
   }
 
@@ -708,8 +748,9 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
     const amountTotal = Number(object.amount_total || 0);
     const currency = String(object.currency || '').toLowerCase();
     if (
-      metadata.product !== 'streamz_pro'
+      metadata.product !== STREAMZ_PRO_PRODUCT_ID
       || !metadata.google_sub
+      || !metadata.google_email
       || object.payment_status !== 'paid'
       || amountTotal !== STREAMZ_PRO_AMOUNT_CENTS
       || currency !== STREAMZ_PRO_CURRENCY
@@ -717,50 +758,101 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
       return null;
     }
 
+    const now = new Date().toISOString();
     return {
-      id: `streamz_pro:${metadata.google_sub}`,
+      id: buildStreamzEntitlementId(metadata.google_sub, STREAMZ_PRO_PRODUCT_ID),
+      accountId: metadata.account_id || buildStreamzAccountIdFromGoogleSub(metadata.google_sub),
       googleSub: metadata.google_sub,
-      googleEmail: metadata.google_email || object.customer_details?.email || object.customer_email || null,
-      contactFullName: metadata.contact_full_name || null,
-      product: 'streamz_pro',
-      status: 'active',
+      email: metadata.google_email || object.customer_details?.email || object.customer_email || null,
+      emailNormalized: normalizeEmail(metadata.google_email || object.customer_details?.email || object.customer_email),
+      emailVerified: false,
+      fullName: metadata.contact_full_name || null,
+      dateOfBirth: isValidIsoDate(metadata.contact_date_of_birth) ? metadata.contact_date_of_birth : null,
+      product: STREAMZ_PRO_PRODUCT_ID,
+      status: 'pending_email_verification',
       amountCents: STREAMZ_PRO_AMOUNT_CENTS,
       currency: STREAMZ_PRO_CURRENCY,
-      paymentIntentId: object.payment_intent || null,
-      checkoutSessionId: object.id,
+      stripePaymentIntentId: object.payment_intent || null,
+      stripeCheckoutSessionId: object.id,
+      stripeEventId: event.id,
       stripeCustomerId: object.customer || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      paymentConfirmedAt: now,
+      emailVerifiedAt: null,
+      activatedAt: null,
+      revokedAt: null,
+      accountLocked: false,
+      createdAt: now,
+      updatedAt: now,
     };
   }
 
   return null;
 }
 
-function isValidStreamzProStripePayment(paymentIntent) {
+function validateStreamzProPaymentIntentForEntitlement(paymentIntent) {
   const metadata = paymentIntent?.metadata || {};
-  return metadata.product === 'streamz_pro'
-    && metadata.google_sub
-    && Number(paymentIntent.amount || 0) === STREAMZ_PRO_AMOUNT_CENTS
-    && String(paymentIntent.currency || '').toLowerCase() === STREAMZ_PRO_CURRENCY;
+  const amountReceived = Number(paymentIntent?.amount_received || 0);
+  const amount = Number(paymentIntent?.amount || 0);
+  const paidAmount = amountReceived || amount;
+  if (paymentIntent?.status !== 'succeeded') {
+    return { ok: false, reason: 'payment_intent_not_succeeded' };
+  }
+  if (paidAmount !== STREAMZ_PRO_AMOUNT_CENTS) {
+    return { ok: false, reason: 'amount_mismatch' };
+  }
+  if (String(paymentIntent?.currency || '').toLowerCase() !== STREAMZ_PRO_CURRENCY) {
+    return { ok: false, reason: 'currency_mismatch' };
+  }
+  if (metadata.product !== STREAMZ_PRO_PRODUCT_ID) {
+    return { ok: false, reason: 'product_mismatch' };
+  }
+  if (!metadata.google_sub) {
+    return { ok: false, reason: 'missing_google_sub' };
+  }
+  if (!isValidEmail(metadata.google_email)) {
+    return { ok: false, reason: 'missing_google_email' };
+  }
+  if (!metadata.contact_full_name) {
+    return { ok: false, reason: 'missing_contact_full_name' };
+  }
+  if (!isValidIsoDate(metadata.contact_date_of_birth)) {
+    return { ok: false, reason: 'missing_or_invalid_date_of_birth' };
+  }
+  return { ok: true };
 }
 
 function upsertStreamzProEntitlement(existing, incoming) {
   const list = normalizeStreamzProEntitlements(existing);
   const duplicatePayment = list.some((entry) => (
-    (incoming.paymentIntentId && entry.paymentIntentId === incoming.paymentIntentId)
-    || (incoming.checkoutSessionId && entry.checkoutSessionId === incoming.checkoutSessionId)
+    (incoming.stripePaymentIntentId && entry.stripePaymentIntentId === incoming.stripePaymentIntentId)
+    || (incoming.stripeCheckoutSessionId && entry.stripeCheckoutSessionId === incoming.stripeCheckoutSessionId)
   ));
   if (duplicatePayment) {
     return list;
   }
 
-  const index = list.findIndex((entry) => entry.googleSub === incoming.googleSub);
+  const index = list.findIndex((entry) => (
+    entry.product === incoming.product
+    && (
+      (entry.accountId && entry.accountId === incoming.accountId)
+      || (!entry.accountId && entry.googleSub === incoming.googleSub)
+    )
+  ));
   if (index >= 0) {
+    if (list[index].status === 'active') {
+      console.log('Ignoring duplicate Streamz Pro purchase for active entitlement', {
+        product: incoming.product,
+        stripePaymentIntentId: incoming.stripePaymentIntentId || null,
+      });
+      return list;
+    }
+
     list[index] = {
       ...list[index],
       ...incoming,
       createdAt: list[index].createdAt || incoming.createdAt,
+      emailVerifiedAt: list[index].emailVerifiedAt || incoming.emailVerifiedAt || null,
+      activatedAt: list[index].activatedAt || incoming.activatedAt || null,
       updatedAt: new Date().toISOString(),
     };
     return list;
@@ -772,12 +864,29 @@ function upsertStreamzProEntitlement(existing, incoming) {
 async function getStreamzProEntitlement(env, googleSub) {
   const db = await loadDatabase(env);
   const list = normalizeStreamzProEntitlements(db.streamzProEntitlements);
-  return list.find((entry) => entry.googleSub === googleSub && entry.status === 'active') || null;
+  return list.find((entry) => (
+    entry.googleSub === googleSub
+    && entry.product === STREAMZ_PRO_PRODUCT_ID
+    && entry.status !== 'revoked'
+  )) || null;
 }
 
 function normalizeStreamzProEntitlements(value) {
   return Array.isArray(value)
-    ? value.filter((entry) => entry && typeof entry === 'object' && entry.googleSub)
+    ? value
+      .filter((entry) => entry && typeof entry === 'object' && entry.googleSub)
+      .map((entry) => ({
+        ...entry,
+        product: entry.product || STREAMZ_PRO_PRODUCT_ID,
+        status: STREAMZ_PRO_STATUSES.has(entry.status) ? entry.status : 'pending_email_verification',
+        accountId: entry.accountId || buildStreamzAccountIdFromGoogleSub(entry.googleSub),
+        email: entry.email || entry.googleEmail || null,
+        emailNormalized: entry.emailNormalized || normalizeEmail(entry.email || entry.googleEmail),
+        emailVerified: Boolean(entry.emailVerified || entry.emailVerifiedAt),
+        stripePaymentIntentId: entry.stripePaymentIntentId || entry.paymentIntentId || null,
+        stripeCheckoutSessionId: entry.stripeCheckoutSessionId || entry.checkoutSessionId || null,
+        fullName: entry.fullName || entry.contactFullName || null,
+      }))
     : [];
 }
 
@@ -790,15 +899,45 @@ function normalizeStripeEvents(value) {
 function sanitizeStreamzProEntitlement(entitlement) {
   if (!entitlement) return null;
   return {
-    product: entitlement.product || 'streamz_pro',
-    status: entitlement.status || 'active',
-    googleEmail: entitlement.googleEmail || null,
-    contactFullName: entitlement.contactFullName || null,
+    product: entitlement.product || STREAMZ_PRO_PRODUCT_ID,
+    status: entitlement.status || 'pending_email_verification',
+    ownsPro: isActiveStreamzProEntitlement(entitlement),
+    emailMasked: maskEmail(entitlement.email || entitlement.googleEmail),
+    emailVerified: Boolean(entitlement.emailVerified || entitlement.emailVerifiedAt),
     amountCents: entitlement.amountCents || STREAMZ_PRO_AMOUNT_CENTS,
     currency: entitlement.currency || STREAMZ_PRO_CURRENCY,
-    paymentIntentId: entitlement.paymentIntentId || null,
+    paymentConfirmedAt: entitlement.paymentConfirmedAt || null,
     createdAt: entitlement.createdAt || null,
   };
+}
+
+function isActiveStreamzProEntitlement(entitlement) {
+  return Boolean(entitlement && entitlement.status === 'active');
+}
+
+function buildStreamzEntitlementId(googleSub, product) {
+  return `${product}:${buildStreamzAccountIdFromGoogleSub(googleSub)}`;
+}
+
+function buildStreamzAccountIdFromGoogleSub(googleSub) {
+  const value = String(googleSub || '').trim();
+  return value ? `google:${value}` : '';
+}
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email));
+}
+
+function maskEmail(email) {
+  const normalized = normalizeEmail(email);
+  const [local, domain] = normalized.split('@');
+  if (!local || !domain) return null;
+  const visible = local.length <= 2 ? local[0] : `${local.slice(0, 2)}${'*'.repeat(Math.min(local.length - 2, 6))}`;
+  return `${visible}@${domain}`;
 }
 
 async function stripeFormRequest(env, method, endpoint, formParams) {
@@ -1521,10 +1660,10 @@ function buildAuthSummary(env, sessionUser) {
   };
 }
 
-async function ensureAuthenticated(request, env) {
+async function ensureAuthenticated(request, env, message = 'Sign in with Google to upload.') {
   const session = await readSession(request, env);
   if (!session) {
-    throw httpError(401, 'Sign in with Google to upload.');
+    throw httpError(401, message);
   }
   return session;
 }

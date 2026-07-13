@@ -182,7 +182,29 @@ Stripe should be configured to send webhooks to:
 POST https://vortex-prime-emu.com/api/streamz/pro/webhook
 ```
 
-The Worker verifies the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET` before accepting the event. Streamz Pro ownership is created only after a verified `payment_intent.succeeded` event for the exact Streamz Pro amount and currency. The webhook handler also remains compatible with `checkout.session.completed` for any earlier Checkout Session tests. Processed Stripe event IDs and active Streamz Pro entitlements are stored in the Drive-backed database to avoid duplicate fulfilment when Stripe retries a webhook.
+The Worker verifies the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET` before accepting the event. After a verified `payment_intent.succeeded` event for the exact Streamz Pro amount, currency, product metadata, Google account identifier, email, name, and date of birth, the Worker creates or updates a paid entitlement with `status: "pending_email_verification"`. It does not activate Streamz Pro immediately.
+
+Implemented entitlement statuses:
+
+```text
+pending_payment
+pending_email_verification
+active
+revoked
+```
+
+Only `active` returns Pro access from the entitlement endpoint. `pending_email_verification`, `revoked`, and missing records return no Pro access.
+
+Processed Stripe event IDs and Streamz Pro entitlements are stored in the existing Drive-backed JSON database to avoid duplicate fulfilment when Stripe retries a webhook. There is one entitlement per account/product, currently keyed from the Google stable subject identifier until a broader internal account system exists.
+
+Future verification email delivery should use:
+
+```text
+Display name: Streamz Team
+Sender: streamz_team_official26@outlook.com
+```
+
+No transactional email provider or verification-token sender is implemented yet.
 
 The frontend checks ownership through:
 
