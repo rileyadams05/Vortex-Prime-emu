@@ -72,6 +72,12 @@ STREAMZ_KICK_CLIENT_SECRET
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 STRIPE_PUBLISHABLE_KEY
+DISCORD_APPLICATION_ID
+DISCORD_PUBLIC_KEY
+DISCORD_BOT_TOKEN
+DISCORD_GUILD_ID
+DISCORD_VERIFY_CHANNEL_ID
+STREAMZ_OWNER_GOOGLE_SUB
 ```
 
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` — The email for the service account that has Drive access.
@@ -87,6 +93,12 @@ STRIPE_PUBLISHABLE_KEY
 - `STRIPE_SECRET_KEY` — Stripe test or live secret key used only by the Worker to create Streamz Pro PaymentIntents.
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret for `/api/streamz/pro/webhook`.
 - `STRIPE_PUBLISHABLE_KEY` — Stripe publishable key returned by the Streamz Pro config endpoint for frontend diagnostics.
+- `DISCORD_APPLICATION_ID` — Discord application ID for the Streamz Pro verification command.
+- `DISCORD_PUBLIC_KEY` — Discord public key used to verify interaction signatures.
+- `DISCORD_BOT_TOKEN` — Discord bot token used only by setup scripts to register commands. Do not expose it to frontend code.
+- `DISCORD_GUILD_ID` — Official Streamz Discord server ID for guild command registration.
+- `DISCORD_VERIFY_CHANNEL_ID` — Optional dedicated verification channel ID.
+- `STREAMZ_OWNER_GOOGLE_SUB` — Owner Google stable subject identifier for the server-side developer grant.
 
 Optional Streamz OAuth Worker variables:
 
@@ -182,29 +194,73 @@ Stripe should be configured to send webhooks to:
 POST https://vortex-prime-emu.com/api/streamz/pro/webhook
 ```
 
-The Worker verifies the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET` before accepting the event. After a verified `payment_intent.succeeded` event for the exact Streamz Pro amount, currency, product metadata, Google account identifier, email, name, and date of birth, the Worker creates or updates a paid entitlement with `status: "pending_email_verification"`. It does not activate Streamz Pro immediately.
+The Worker verifies the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET` before accepting the event. After a verified `payment_intent.succeeded` event for the exact Streamz Pro amount, currency, product metadata, Google account identifier, email, name, and date of birth, the Worker creates or updates a paid entitlement with `status: "pending_discord_verification"`. It does not activate Streamz Pro immediately.
 
 Implemented entitlement statuses:
 
 ```text
 pending_payment
-pending_email_verification
+pending_discord_verification
 active
 revoked
 ```
 
-Only `active` returns Pro access from the entitlement endpoint. `pending_email_verification`, `revoked`, and missing records return no Pro access.
+Only `active` returns Pro access from the entitlement endpoint. `pending_discord_verification`, `revoked`, and missing records return no Pro access.
 
-Processed Stripe event IDs and Streamz Pro entitlements are stored in the existing Drive-backed JSON database to avoid duplicate fulfilment when Stripe retries a webhook. There is one entitlement per account/product, currently keyed from the Google stable subject identifier until a broader internal account system exists.
+Processed Stripe event IDs, Streamz Pro account records, payment history, entitlement ownership, Discord verification hashes, website verification token hashes, upgrade sessions, and rate-limit buckets are stored in the existing Drive-backed JSON database. Streamz Pro writes use a retry wrapper and every payment/webhook/verification operation is idempotent by Stripe event ID, PaymentIntent ID, entitlement ID, Discord claim state, and website token state.
 
-Future verification email delivery should use:
+The account model uses an internal account ID as the ownership key. For Google sign-in, the account also stores Google's stable subject identifier as a linked identity. Standard verified email identities can be added to the same `streamzAccounts` shape later without moving the entitlement or trusting a frontend email address.
+
+After a verified `payment_intent.succeeded` event, the Worker:
+
+1. Records a separate Streamz Pro payment history entry.
+2. Creates or updates one entitlement for the account/product.
+3. Sets `status: "pending_discord_verification"`.
+4. Creates a Discord verification session for the paid entitlement.
+5. Lets the checkout page generate a temporary human-readable code such as `VP-7K4M-92QX`.
+6. Stores only the SHA-256 hash of the normalized Discord code.
+7. Requires the customer to run `/verify-pro CODE` through Discord.
+8. Generates a separate 32-byte URL-safe website token after Discord claim.
+9. Stores only the SHA-256 hash of the website token.
+10. Activates the entitlement only after Google sign-in succeeds on the website verification page.
+
+Discord interaction route:
 
 ```text
-Display name: Streamz Team
-Sender: streamz_team_official26@outlook.com
+POST https://vortex-prime-emu.com/api/streamz/discord/interactions
 ```
 
-No transactional email provider or verification-token sender is implemented yet.
+Website verification route:
+
+```text
+https://vortex-prime-emu.com/projects/streamz/pro/verify-discord/?token=...
+GET/POST https://vortex-prime-emu.com/api/streamz/pro/verify-discord
+```
+
+Discord requests must include valid `X-Signature-Ed25519` and `X-Signature-Timestamp` headers. The Worker verifies the raw request body against Discord's public key before accepting `/verify-pro`.
+
+Register the guild slash command from a private shell with the Discord token available only in the environment:
+
+```powershell
+$env:DISCORD_APPLICATION_ID="1526084195263447171"
+$env:DISCORD_GUILD_ID="..."
+$env:DISCORD_BOT_TOKEN="..."
+node tools/register-streamz-discord-command.mjs
+```
+
+The Discord code expires after 30 minutes, is single-use, and is stored only as a hash. The website verification token also expires after 30 minutes, is single-use, and is stored only as a hash. The verification URL never contains Stripe IDs, Google IDs, Discord IDs, emails, internal account IDs, full names, or dates of birth.
+
+The final Pro licence owner is Google's stable subject identifier plus the internal entitlement record. Discord is only the secure bridge used to claim the paid session.
+
+Owner access is granted only server-side when the authenticated Google subject matches `STREAMZ_OWNER_GOOGLE_SUB`. The frontend cannot create this grant and no fake Stripe payment is created.
+
+App entitlement route:
+
+```text
+GET https://vortex-prime-emu.com/api/streamz/pro/app-entitlement
+```
+
+The app must unlock Pro only when the authenticated backend response has `status: "active"` and `ownsPro: true`. It must not trust local config, a frontend-only flag, a manually entered email, or a hard-coded licence value.
 
 The frontend checks ownership through:
 

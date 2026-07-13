@@ -293,6 +293,42 @@
       color: #dbeafe;
     }
 
+    .success-screen h2 {
+      margin-bottom: 0.5rem;
+      font-size: 1.25rem;
+    }
+
+    .success-screen p {
+      margin: 0 0 1rem;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+
+    .secondary-action {
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: #f8fafc;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border 0.2s, background 0.2s;
+    }
+
+    .secondary-action:hover,
+    .secondary-action:focus {
+      border-color: rgba(139, 92, 246, 0.7);
+      background: rgba(139, 92, 246, 0.18);
+      outline: none;
+    }
+
     .checkout-notice {
       border: 1px solid rgba(245, 158, 11, 0.32);
       border-radius: 12px;
@@ -359,13 +395,13 @@
         </div>
 
         <div class="checkout-notice">
-          After payment, you must verify your email address before Streamz Pro can be activated.
-          <small>You are responsible for maintaining access to this account. If you permanently lose access, licence recovery or transfer is not guaranteed and a new purchase may be required, except where required by applicable law.</small>
+          After payment, Discord verification and Google linking are required before Streamz Pro can be activated.
+          <small>Streamz Pro is a one-time purchase and will be permanently linked to the Google account used during activation. You are responsible for maintaining access to that account. If access is permanently lost, licence recovery or transfer is not guaranteed and a new purchase may be required, except where required by applicable law.</small>
         </div>
 
         <label class="terms-row">
           <input type="checkbox" id="termsAccepted" required>
-          <span>I understand that Streamz Pro is a one-time purchase and will be permanently linked to the verified account used for this purchase.</span>
+          <span>I understand that Streamz Pro is a one-time purchase and will be permanently linked to the Google account used during activation.</span>
         </label>
       </section>
 
@@ -413,8 +449,9 @@
     const expressCheckoutBox = document.getElementById('expressCheckoutBox');
     const expressCheckoutPlaceholder = document.getElementById('expressCheckoutPlaceholder');
 
+    const upgradeSessionToken = new URLSearchParams(window.location.search).get('upgrade_session') || '';
     const PURCHASE_LABEL = 'Purchase Streamz Pro — A$99.99';
-    const RETURN_URL = `${window.location.origin}/projects/streamz/pro/?payment_return=1`;
+    const RETURN_URL = `${window.location.origin}/projects/streamz/pro/?payment_return=1${upgradeSessionToken ? `&upgrade_session=${encodeURIComponent(upgradeSessionToken)}` : ''}`;
 
     let googleEmail = '';
     let stripe = null;
@@ -440,13 +477,42 @@
       purchaseBtn.textContent = isBusy ? message : PURCHASE_LABEL;
     }
 
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderStateCard({ variant = 'pending', title, message, actions = [] }) {
+      successScreen.hidden = false;
+      successScreen.setAttribute('data-variant', variant);
+      const actionHtml = actions.length
+        ? `<div class="action-row">${actions.map((action) => {
+          if (action.href) {
+            return `<a class="secondary-action" href="${escapeHtml(action.href)}">${escapeHtml(action.label)}</a>`;
+          }
+          return `<button type="button" class="secondary-action" data-action="${escapeHtml(action.action)}">${escapeHtml(action.label)}</button>`;
+        }).join('')}</div>`
+        : '';
+      successScreen.innerHTML = `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(message)}</p>${actionHtml}`;
+    }
+
     function showActiveState(entitlement) {
       form.hidden = true;
-      successScreen.hidden = false;
-      successScreen.setAttribute('data-variant', 'success');
-      successScreen.textContent = entitlement?.emailMasked
-        ? `Streamz Pro is active for ${entitlement.emailMasked}.`
-        : 'Streamz Pro ownership is active for this account.';
+      renderStateCard({
+        variant: 'success',
+        title: 'Streamz Pro activated',
+        message: entitlement?.emailMasked
+          ? `Streamz Pro is active for ${entitlement.emailMasked}.`
+          : 'Streamz Pro ownership is active for this account.',
+        actions: [
+          { label: 'Open Streamz', href: 'streamz://account/pro' },
+          { label: 'Return to Vortex Prime', href: '/' },
+        ],
+      });
       setStatus(
         entitlement?.emailMasked
           ? `Streamz Pro is active for ${entitlement.emailMasked}.`
@@ -455,20 +521,32 @@
       );
     }
 
-    function showPendingVerificationState(entitlement) {
+    function showPendingDiscordState(details = {}) {
       form.hidden = true;
-      successScreen.hidden = false;
-      successScreen.setAttribute('data-variant', 'pending');
-      const maskedEmail = entitlement?.emailMasked || maskEmail(googleEmail) || 'your email address';
-      successScreen.textContent = `Payment received\n\nWe’ll send a verification email to ${maskedEmail}. Streamz Pro will remain locked until the account is verified.`;
-      setStatus('Payment received. Email verification is required before activation.', 'info');
+      const code = details.verificationCode || '';
+      const codeLine = code ? `\n\nVerification code:\n${code}` : '';
+      renderStateCard({
+        variant: 'pending',
+        title: 'Streamz Pro payment received',
+        message: `Your Streamz Pro purchase is confirmed, but Pro is not active yet.\n\nTo activate it:\n1. Join the official Streamz Discord server.\n2. Run /verify-pro using the private code below.\n3. Press Verify account in the bot’s private message.\n4. Sign in with the Google account that will permanently own Streamz Pro.${codeLine}\n\nThe Discord bot will send a private automated message. Please do not reply to that message.`,
+        actions: [
+          ...(code ? [{ label: 'Copy verification code', action: 'copy-code' }] : []),
+          { label: 'Join Discord', href: details.discordInviteUrl || 'https://discord.gg/TwMsbb97Mm' },
+          { label: 'Open Discord verification', href: details.discordVerifyUrl || 'https://discord.com/channels/@me' },
+          { label: 'Generate replacement code', action: 'replace-code' },
+          { label: 'Check activation status', action: 'refresh-status' },
+          { label: 'Return to Vortex Prime', href: '/' },
+        ],
+      });
+      successScreen.dataset.verificationCode = code;
+      setStatus('Payment received. Discord verification is required before activation.', 'info');
     }
 
     function showEntitlementState(entitlement) {
       if (entitlement?.status === 'active') {
         showActiveState(entitlement);
-      } else if (entitlement?.status === 'pending_email_verification') {
-        showPendingVerificationState(entitlement);
+      } else if (entitlement?.status === 'pending_discord_verification') {
+        showPendingDiscordState(entitlement);
       }
     }
 
@@ -483,9 +561,10 @@
 
     function hasValidCheckoutInputs() {
       const email = emailInput.value.trim().toLowerCase();
+      const dob = parseDateInput(dateOfBirthInput.value);
       return Boolean(
         fullNameInput.value.trim()
-        && dateOfBirthInput.value
+        && dob.valid
         && email
         && googleEmail
         && email === googleEmail.toLowerCase()
@@ -593,8 +672,9 @@
         showActiveState(config.entitlement);
         return;
       }
-      if (config?.entitlement?.status === 'pending_email_verification') {
-        showPendingVerificationState(config.entitlement);
+      if (config?.entitlement?.status === 'pending_discord_verification') {
+        const details = await getPendingDiscordDetails(config.entitlement);
+        showPendingDiscordState(details);
         return;
       }
 
@@ -613,6 +693,42 @@
         throw new Error(data?.message || 'Unable to load Streamz Pro payment config.');
       }
       return data;
+    }
+
+    async function fetchUpgradeSessionStatus() {
+      if (!upgradeSessionToken) return null;
+      const url = new URL('/api/streamz/pro/upgrade-session', window.location.origin);
+      url.searchParams.set('token', upgradeSessionToken);
+      const resp = await fetch(url.toString(), { credentials: 'include' });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data?.message || 'Unable to load upgrade session.');
+      return data;
+    }
+
+    async function requestDiscordVerificationCode() {
+      if (!upgradeSessionToken) throw new Error('This checkout session cannot generate a Discord verification code.');
+      const resp = await fetch('/api/streamz/pro/upgrade-session/code', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: upgradeSessionToken }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data?.message || 'Unable to generate a Discord verification code.');
+      return data;
+    }
+
+    async function getPendingDiscordDetails(fallback = {}) {
+      const sessionStatus = upgradeSessionToken ? await fetchUpgradeSessionStatus().catch(() => null) : null;
+      if (sessionStatus?.status === 'pending_discord_verification' && !sessionStatus.verificationCode) {
+        try {
+          return await requestDiscordVerificationCode();
+        } catch (error) {
+          setPaymentMessage(error.message || 'Payment received, but the verification code could not be generated yet. Try Generate replacement code.', 'error');
+          return sessionStatus;
+        }
+      }
+      return sessionStatus || fallback;
     }
 
     async function initializeStripe(config) {
@@ -695,10 +811,11 @@
       const fullName = fullNameInput.value.trim();
       const dateOfBirth = dateOfBirthInput.value;
       const email = emailInput.value.trim().toLowerCase();
+      const dob = parseDateInput(dateOfBirth);
 
       if (!googleEmail) throw new Error('Sign in with Google before paying.');
       if (!fullName) throw new Error('Full name is required.');
-      if (!dateOfBirth) throw new Error('Date of birth is required.');
+      if (!dob.valid) throw new Error(dob.message || 'Date of birth must be valid.');
       if (email !== googleEmail.toLowerCase()) throw new Error('Email must match the signed-in Google account.');
       if (!termsAcceptedInput.checked) throw new Error('Purchase terms must be accepted before payment.');
 
@@ -707,6 +824,7 @@
         dateOfBirth,
         email,
         termsAccepted: true,
+        upgradeSessionToken,
       };
     }
 
@@ -794,9 +912,10 @@
           setBusy(false);
           return true;
         }
-        if (resp.ok && data?.status === 'pending_email_verification') {
-          showPendingVerificationState(data.entitlement);
-          setPaymentMessage('Payment received. Email verification setup is still being completed.', 'info');
+        if (resp.ok && data?.status === 'pending_discord_verification') {
+          const details = await getPendingDiscordDetails(data.entitlement);
+          showPendingDiscordState(details);
+          setPaymentMessage('Payment received. Complete Discord verification to activate Streamz Pro.', 'info');
           setBusy(false);
           return true;
         }
@@ -807,6 +926,67 @@
       setBusy(false);
       return false;
     }
+
+    function parseDateInput(value) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) {
+        return { valid: false, message: 'Date of birth must be a valid date.' };
+      }
+      const date = new Date(`${value}T00:00:00.000Z`);
+      if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+        return { valid: false, message: 'Date of birth must be a valid date.' };
+      }
+      if (date.getTime() >= Date.now()) {
+        return { valid: false, message: 'Date of birth cannot be in the future.' };
+      }
+      return { valid: true };
+    }
+
+    async function generateReplacementCode() {
+      try {
+        if (!upgradeSessionToken) throw new Error('This checkout session cannot generate a replacement code.');
+        setPaymentMessage('Generating a replacement Discord verification code...', 'info');
+        const data = await requestDiscordVerificationCode();
+        showPendingDiscordState(data);
+        setPaymentMessage('Replacement Discord verification code generated.', 'success');
+      } catch (error) {
+        setPaymentMessage(error.message || 'Unable to generate a replacement code right now.', 'error');
+      }
+    }
+
+    async function refreshActivationStatus() {
+      try {
+        setPaymentMessage('Refreshing activation status...', 'info');
+        const resp = await fetch('/api/streamz/pro/entitlement', { credentials: 'include' });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data?.message || 'Unable to refresh status.');
+        if (data?.ownsPro) {
+          showEntitlementState(data.entitlement);
+          setPaymentMessage('Streamz Pro ownership confirmed.', 'success');
+        } else {
+          const details = await getPendingDiscordDetails(data.entitlement || {});
+          showPendingDiscordState(details);
+          setPaymentMessage('Discord and Google verification are still required.', 'info');
+        }
+      } catch (error) {
+        setPaymentMessage(error.message || 'Unable to refresh status right now.', 'error');
+      }
+    }
+
+    successScreen.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      const action = button.getAttribute('data-action');
+      if (action === 'copy-code') {
+        const code = successScreen.dataset.verificationCode || '';
+        if (code && navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(() => setPaymentMessage('Verification code copied.', 'success'));
+        }
+      } else if (action === 'replace-code') {
+        generateReplacementCode();
+      } else if (action === 'refresh-status') {
+        refreshActivationStatus();
+      }
+    });
 
     form?.addEventListener('submit', (event) => {
       event.preventDefault();

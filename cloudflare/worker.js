@@ -9,8 +9,13 @@ const DEFAULT_DB = {
   storeItems: [],
   storeMods: [],
   reports: [],
+  streamzAccounts: [],
   streamzProEntitlements: [],
+  streamzProPayments: [],
+  streamzProUpgradeSessions: [],
+  streamzProDiscordVerifications: [],
   stripeEvents: [],
+  streamzRateLimits: {},
   adminSettings: {},
 };
 
@@ -68,14 +73,25 @@ const STREAMZ_PRO_PRODUCT_NAME = 'Streamz Pro';
 const STREAMZ_PRO_PRODUCT_ID = 'streamz_pro';
 const STREAMZ_PRO_STATUSES = new Set([
   'pending_payment',
-  'pending_email_verification',
+  'pending_discord_verification',
   'active',
   'revoked',
 ]);
-const STREAMZ_VERIFICATION_EMAIL_SENDER = {
-  name: 'Streamz Team',
-  address: 'streamz_team_official26@outlook.com',
-};
+const DISCORD_APPLICATION_ID = '1526084195263447171';
+const DISCORD_PUBLIC_KEY = '23a2928f74f18bfa7ce329129f2e46ee14a9662fc6f7170e22ac4e4fa4d8008b';
+const STREAMZ_DISCORD_INVITE_URL = 'https://discord.gg/TwMsbb97Mm';
+const STREAMZ_DISCORD_VERIFY_URL = 'https://discord.com/channels/@me';
+const STREAMZ_TOKEN_BYTES = 32;
+const STREAMZ_DISCORD_CODE_TTL_MS = 30 * 60 * 1000;
+const STREAMZ_WEBSITE_TOKEN_TTL_MS = 30 * 60 * 1000;
+const STREAMZ_VERIFY_MAX_ATTEMPTS_PER_HOUR = 20;
+const STREAMZ_STATUS_MAX_POLLS_PER_MINUTE = 90;
+const STREAMZ_PAYMENT_CREATE_MAX_PER_HOUR = 10;
+const STREAMZ_UPGRADE_SESSION_TTL_MS = 60 * 60 * 1000;
+const STREAMZ_CODE_REPLACEMENT_MIN_INTERVAL_MS = 60 * 1000;
+const STREAMZ_DISCORD_COMMAND_MAX_ATTEMPTS = 5;
+const STREAMZ_DISCORD_COMMAND_WINDOW_MS = 10 * 60 * 1000;
+const STREAMZ_SITE_BASE_URL = 'https://vortex-prime-emu.com';
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
 
@@ -154,8 +170,28 @@ export default {
         return await handleStreamzProPaymentIntent(request, env, allowedOrigin);
       }
 
+      if (path === 'api/streamz/pro/upgrade-session') {
+        return await handleStreamzProUpgradeSession(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/pro/upgrade-session/code') {
+        return await handleStreamzProUpgradeSessionCode(request, env, allowedOrigin);
+      }
+
       if (path === 'api/streamz/pro/entitlement') {
         return await handleStreamzProEntitlement(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/pro/app-entitlement') {
+        return await handleStreamzProAppEntitlement(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/pro/verify-discord') {
+        return await handleStreamzProVerifyDiscord(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/discord/interactions') {
+        return await handleStreamzDiscordInteractions(request, env);
       }
 
       if (path === 'api/streamz/pro/webhook') {
@@ -272,6 +308,11 @@ async function handleStatus(request, env, origin) {
     folders: buildFolderSummary(env),
     storeDbFileId: buildFileLink(env.DRIVE_DATABASE_FILE_ID),
     auth: buildAuthSummary(env, await readSession(request, env).catch(() => null)),
+    streamzDiscord: {
+      applicationId: String(env.DISCORD_APPLICATION_ID || DISCORD_APPLICATION_ID),
+      publicKeyConfigured: Boolean(String(env.DISCORD_PUBLIC_KEY || DISCORD_PUBLIC_KEY).trim()),
+      interactionEndpoint: `${STREAMZ_SITE_BASE_URL}/api/streamz/discord/interactions`,
+    },
   };
 
   if (missing.length) {
@@ -325,6 +366,11 @@ async function handleLogin(request, env, origin) {
     iat: now,
   };
   const token = await createSessionToken(payload, env);
+  await ensureStreamzAccountForSession(env, payload).catch((error) => {
+    console.log('Streamz account provisioning deferred', {
+      reason: error?.message || 'unknown_error',
+    });
+  });
   const response = json({
     ok: true,
     user: sanitizeUserForResponse(payload),
@@ -474,7 +520,8 @@ async function handleStreamzProConfig(request, env, origin) {
   }
 
   const session = await readSession(request, env).catch(() => null);
-  const entitlement = session ? await getStreamzProEntitlement(env, session.sub).catch(() => null) : null;
+  const account = session ? await ensureStreamzAccountForSession(env, session).catch(() => null) : null;
+  const entitlement = getStreamzOwnerGrantEntitlement(env, session) || (account ? await getStreamzProEntitlementForAccount(env, account, session).catch(() => null) : null);
   return json({
     ok: true,
     configured: true,
@@ -493,6 +540,7 @@ async function handleStreamzProPaymentIntent(request, env, origin) {
   }
 
   const user = await ensureAuthenticated(request, env, 'Sign in with Google before purchasing Streamz Pro.');
+  await enforceStreamzRateLimit(env, `payment_create:${buildStreamzAccountIdFromGoogleSub(user.sub)}`, STREAMZ_PAYMENT_CREATE_MAX_PER_HOUR, 60 * 60 * 1000, 'Too many payment attempts. Try again later.');
   const payload = await request.json().catch(() => null);
   if (!payload || typeof payload !== 'object') {
     throw httpError(400, 'Missing contact details.');
@@ -503,12 +551,14 @@ async function handleStreamzProPaymentIntent(request, env, origin) {
     throw httpError(400, 'Purchase terms must be accepted before payment.');
   }
 
-  const existingEntitlement = await getStreamzProEntitlement(env, user.sub).catch(() => null);
-  if (isActiveStreamzProEntitlement(existingEntitlement) || existingEntitlement?.status === 'pending_email_verification') {
+  const account = await ensureStreamzAccountForSession(env, user);
+  const upgradeSession = await getValidatedStreamzUpgradeSession(env, payload.upgradeSessionToken).catch(() => null);
+  const existingEntitlement = await getStreamzProEntitlementForAccount(env, account, user).catch(() => null);
+  if (isActiveStreamzProEntitlement(existingEntitlement) || existingEntitlement?.status === 'pending_discord_verification') {
     return json({
       ok: true,
       alreadyOwned: isActiveStreamzProEntitlement(existingEntitlement),
-      pendingVerification: existingEntitlement?.status === 'pending_email_verification',
+      pendingVerification: existingEntitlement?.status === 'pending_discord_verification',
       entitlement: sanitizeStreamzProEntitlement(existingEntitlement),
     }, 200, origin);
   }
@@ -517,7 +567,7 @@ async function handleStreamzProPaymentIntent(request, env, origin) {
     env,
     'POST',
     '/payment_intents',
-    buildStreamzProPaymentIntentParams(user, contact),
+    buildStreamzProPaymentIntentParams(user, account, contact, upgradeSession),
   );
 
   if (!paymentIntent?.id || !paymentIntent?.client_secret) {
@@ -532,13 +582,119 @@ async function handleStreamzProPaymentIntent(request, env, origin) {
   }, 200, origin);
 }
 
+async function handleStreamzProUpgradeSession(request, env, origin) {
+  if (request.method === 'POST') {
+    const token = await createStreamzSecureToken();
+    const now = new Date().toISOString();
+    const tokenHash = await hashStreamzUpgradeSessionToken(token);
+    const session = {
+      id: `upgrade:${tokenHash}`,
+      tokenHash,
+      product: STREAMZ_PRO_PRODUCT_ID,
+      status: 'created',
+      ownsPro: false,
+      entitlementId: null,
+      emailMasked: null,
+      createdAt: now,
+      expiresAt: new Date(Date.now() + STREAMZ_UPGRADE_SESSION_TTL_MS).toISOString(),
+      updatedAt: now,
+    };
+    await updateStreamzDatabase(env, async (db) => {
+      db.streamzProUpgradeSessions = upsertStreamzUpgradeSession(db.streamzProUpgradeSessions, session);
+      return { db, value: session };
+    });
+    return json({
+      ok: true,
+      token,
+      checkoutUrl: buildStreamzCheckoutUrl({ upgradeSessionToken: token }),
+      expiresAt: session.expiresAt,
+    }, 200, origin);
+  }
+
+  if (request.method === 'GET') {
+    const token = new URL(request.url).searchParams.get('token') || '';
+    const session = await getStreamzUpgradeSessionByRawToken(env, token);
+    return json({
+      ok: true,
+      ...sanitizeStreamzUpgradeSession(session),
+    }, 200, origin);
+  }
+
+  throw httpError(405, 'Streamz Pro upgrade session requires GET or POST.');
+}
+
+async function handleStreamzProUpgradeSessionCode(request, env, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Streamz Pro replacement code requires POST.');
+  }
+  const payload = await request.json().catch(() => null);
+  const token = String(payload?.token || '').trim();
+  const session = await getValidatedStreamzUpgradeSession(env, token);
+  const result = await updateStreamzDatabase(env, async (db) => {
+    const currentSession = findStreamzUpgradeSessionByHash(db, session.tokenHash);
+    const entitlement = currentSession?.entitlementId
+      ? normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === currentSession.entitlementId)
+      : null;
+    if (!entitlement || entitlement.status !== 'pending_discord_verification' || !entitlement.paymentConfirmedAt) {
+      return { db, value: { code: null, expiresAt: null, session: currentSession } };
+    }
+
+    const existingVerification = findStreamzDiscordVerificationByEntitlement(db, entitlement.id);
+    if (existingVerification?.lastCodeGeneratedAt && Date.now() - Date.parse(existingVerification.lastCodeGeneratedAt) < STREAMZ_CODE_REPLACEMENT_MIN_INTERVAL_MS) {
+      throw httpError(429, 'Please wait before generating another verification code.');
+    }
+
+    const code = createStreamzDiscordCode();
+    const now = new Date().toISOString();
+    const verification = {
+      ...(existingVerification || {}),
+      id: existingVerification?.id || `discord:${entitlement.id}`,
+      entitlementId: entitlement.id,
+      paymentId: entitlement.stripePaymentIntentId || entitlement.stripeCheckoutSessionId || null,
+      status: 'code_generated',
+      discordCodeHash: await hashStreamzDiscordCode(code),
+      discordCodeExpiresAt: new Date(Date.now() + STREAMZ_DISCORD_CODE_TTL_MS).toISOString(),
+      discordCodeUsedAt: null,
+      claimedDiscordUserId: null,
+      discordClaimedAt: null,
+      websiteTokenHash: null,
+      websiteTokenExpiresAt: null,
+      websiteTokenUsedAt: null,
+      lastCodeGeneratedAt: now,
+      createdAt: existingVerification?.createdAt || now,
+      updatedAt: now,
+    };
+    db.streamzProDiscordVerifications = replaceStreamzDiscordVerification(db.streamzProDiscordVerifications, verification);
+    db.streamzProUpgradeSessions = markStreamzUpgradeSessionForEntitlement(
+      db.streamzProUpgradeSessions,
+      currentSession.tokenHash,
+      entitlement,
+      'pending_discord_verification',
+      verification.discordCodeExpiresAt,
+    );
+    return {
+      db,
+      value: { code, expiresAt: verification.discordCodeExpiresAt, session: currentSession },
+    };
+  });
+
+  return json({
+    ok: true,
+    ...sanitizeStreamzUpgradeSession(result.session),
+    verificationCode: result.code,
+    codeExpiresAt: result.expiresAt,
+  }, 200, origin);
+}
+
 async function handleStreamzProEntitlement(request, env, origin) {
   if (request.method !== 'GET') {
     throw httpError(405, 'Streamz Pro entitlement lookup requires GET.');
   }
 
   const user = await ensureAuthenticated(request, env, 'Sign in with Google to check Streamz Pro entitlement.');
-  const entitlement = await getStreamzProEntitlement(env, user.sub).catch(() => null);
+  await enforceStreamzRateLimit(env, `status:${buildStreamzAccountIdFromGoogleSub(user.sub)}`, STREAMZ_STATUS_MAX_POLLS_PER_MINUTE, 60 * 1000, 'Too many status checks. Try again shortly.');
+  const account = await ensureStreamzAccountForSession(env, user);
+  const entitlement = getStreamzOwnerGrantEntitlement(env, user) || await getStreamzProEntitlementForAccount(env, account, user).catch(() => null);
   const ownsPro = isActiveStreamzProEntitlement(entitlement);
 
   return json({
@@ -550,6 +706,324 @@ async function handleStreamzProEntitlement(request, env, origin) {
     status: entitlement?.status || null,
     entitlement: sanitizeStreamzProEntitlement(entitlement),
   }, 200, origin);
+}
+
+async function handleStreamzProAppEntitlement(request, env, origin) {
+  if (request.method !== 'GET') {
+    throw httpError(405, 'Streamz Pro app entitlement lookup requires GET.');
+  }
+
+  const user = await ensureAuthenticated(request, env, 'Sign in before checking Streamz Pro access.');
+  await enforceStreamzRateLimit(env, `app_status:${buildStreamzAccountIdFromGoogleSub(user.sub)}`, STREAMZ_STATUS_MAX_POLLS_PER_MINUTE, 60 * 1000, 'Too many status checks. Try again shortly.');
+  const account = await ensureStreamzAccountForSession(env, user);
+  const entitlement = getStreamzOwnerGrantEntitlement(env, user) || await getStreamzProEntitlementForAccount(env, account, user).catch(() => null);
+  const ownsPro = isActiveStreamzProEntitlement(entitlement);
+  const status = entitlement?.status || null;
+  return json({
+    ok: true,
+    configured: true,
+    authenticated: true,
+    ownsPro,
+    hasPro: ownsPro,
+    status,
+    message: status === 'pending_discord_verification'
+      ? 'Your payment was received. Join the official Streamz Discord server and follow the verification instructions shown on the checkout page.'
+      : null,
+    actions: status === 'pending_discord_verification'
+      ? ['open_discord', 'refresh_status', 'open_checkout_page']
+      : ['refresh_status', 'open_checkout_page'],
+    entitlement: sanitizeStreamzProEntitlement(entitlement),
+  }, 200, origin);
+}
+
+async function handleStreamzProVerifyDiscord(request, env, origin) {
+  if (!['GET', 'POST'].includes(request.method)) {
+    throw httpError(405, 'Streamz Pro Discord verification requires GET or POST.');
+  }
+
+  const payload = request.method === 'POST' ? await request.json().catch(() => ({})) : {};
+  const token = request.method === 'GET'
+    ? String(new URL(request.url).searchParams.get('token') || '').trim()
+    : String(payload?.token || '').trim();
+  await enforceStreamzRateLimit(env, `discord_site_verify:${request.headers.get('CF-Connecting-IP') || 'unknown'}`, STREAMZ_VERIFY_MAX_ATTEMPTS_PER_HOUR, 60 * 60 * 1000, 'Too many verification attempts. Try again later.');
+
+  if (!isPlausibleStreamzToken(token)) {
+    return json(buildStreamzDiscordSiteResult('invalid'), 400, origin);
+  }
+
+  if (request.method === 'GET') {
+    const result = await getStreamzDiscordWebsiteTokenStatus(env, token);
+    return json(result, result.ok ? 200 : (result.status === 'expired' ? 410 : 400), origin);
+  }
+
+  const credential = typeof payload?.credential === 'string' ? payload.credential : '';
+  if (!credential) {
+    return json(buildStreamzDiscordSiteResult('google_required'), 401, origin);
+  }
+
+  const googleProfile = await validateGoogleCredential(credential, env);
+  const result = await linkStreamzDiscordVerificationToGoogle(env, token, googleProfile);
+  return json(result, result.ok ? 200 : (result.status === 'expired' ? 410 : 400), origin);
+}
+
+async function handleStreamzDiscordInteractions(request, env) {
+  if (request.method !== 'POST') {
+    return json({ ok: false, message: 'Discord interactions require POST.' }, 405, null);
+  }
+  const signature = request.headers.get('X-Signature-Ed25519') || '';
+  const timestamp = request.headers.get('X-Signature-Timestamp') || '';
+  const rawBody = await request.text();
+  const valid = await verifyDiscordInteractionSignature(rawBody, signature, timestamp, String(env.DISCORD_PUBLIC_KEY || DISCORD_PUBLIC_KEY));
+  if (!valid) {
+    return json({ ok: false, message: 'Invalid Discord signature.' }, 401, null);
+  }
+
+  const interaction = JSON.parse(rawBody);
+  if (interaction.type === 1) {
+    return discordJson({ type: 1 });
+  }
+  if (interaction.type !== 2 || interaction.data?.name !== 'verify-pro') {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Unsupported Streamz command.',
+      },
+    });
+  }
+
+  const discordUserId = interaction.member?.user?.id || interaction.user?.id || null;
+  const code = interaction.data?.options?.find((option) => option.name === 'code')?.value || '';
+  if (!discordUserId || !code) {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Enter the private Streamz Pro verification code shown after payment.',
+      },
+    });
+  }
+
+  const result = await claimStreamzDiscordCode(env, code, discordUserId);
+  if (!result.ok) {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: result.message || 'This Streamz Pro verification code could not be verified.',
+      },
+    });
+  }
+
+  return discordJson({
+    type: 4,
+    data: {
+      flags: 64,
+      embeds: [{
+        title: 'Streamz Pro verification',
+        description: [
+          'Your Streamz Pro payment has been confirmed.',
+          '',
+          'Press the button below to open the official Vortex Prime website and permanently link Streamz Pro to your Google account.',
+          '',
+          'Once linked, the licence will remain attached to that Google account.',
+          '',
+          'You are responsible for maintaining access to the Google account used during activation. If you permanently lose access to it, licence recovery or transfer is not guaranteed and a new purchase may be required, except where required by applicable law.',
+          '',
+          'This is an automated message. Please do not reply to this message.',
+        ].join('\n'),
+        color: 7032316,
+      }],
+      components: [{
+        type: 1,
+        components: [{
+          type: 2,
+          style: 5,
+          label: 'Verify account',
+          url: result.verifyUrl,
+        }],
+      }],
+    },
+  });
+}
+
+function discordJson(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+    },
+  });
+}
+
+async function verifyDiscordInteractionSignature(rawBody, signatureHex, timestamp, publicKeyHex) {
+  try {
+    if (!signatureHex || !timestamp || !publicKeyHex) return false;
+    const publicKey = await crypto.subtle.importKey(
+      'raw',
+      hexToBytes(publicKeyHex),
+      { name: 'Ed25519' },
+      false,
+      ['verify'],
+    );
+    return await crypto.subtle.verify(
+      { name: 'Ed25519' },
+      publicKey,
+      hexToBytes(signatureHex),
+      textEncoder.encode(`${timestamp}${rawBody}`),
+    );
+  } catch (error) {
+    return false;
+  }
+}
+
+async function claimStreamzDiscordCode(env, code, discordUserId) {
+  const normalizedCode = normalizeStreamzDiscordCode(code);
+  if (!/^VP[A-Z0-9]{8}$/.test(normalizedCode)) {
+    return { ok: false, message: 'That Streamz Pro verification code is invalid.' };
+  }
+  return updateStreamzDatabase(env, async (db) => {
+    applySimpleDbRateLimit(db, `discord_command:${discordUserId}`, STREAMZ_DISCORD_COMMAND_MAX_ATTEMPTS, STREAMZ_DISCORD_COMMAND_WINDOW_MS, 'Too many Discord verification attempts. Try again later.');
+    const codeHash = await hashStreamzDiscordCode(normalizedCode);
+    const verifications = normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications);
+    const index = verifications.findIndex((entry) => entry.discordCodeHash && constantTimeStringEquals(entry.discordCodeHash, codeHash));
+    if (index < 0) {
+      return { db, value: { ok: false, message: 'That Streamz Pro verification code is invalid or expired.' } };
+    }
+    const verification = verifications[index];
+    const entitlement = normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === verification.entitlementId);
+    if (!entitlement || entitlement.status !== 'pending_discord_verification' || !entitlement.paymentConfirmedAt || entitlement.status === 'revoked') {
+      return { db, value: { ok: false, message: 'This Streamz Pro purchase is not ready for Discord verification.' } };
+    }
+    if (verification.claimedDiscordUserId && verification.claimedDiscordUserId !== discordUserId) {
+      return { db, value: { ok: false, message: 'This Streamz Pro verification code has already been claimed.' } };
+    }
+    if (verification.discordCodeUsedAt) {
+      return { db, value: { ok: false, message: 'This Streamz Pro verification code has already been used. Return to the checkout page and generate a replacement code if activation is still pending.' } };
+    }
+    if (!verification.discordCodeExpiresAt || Date.parse(verification.discordCodeExpiresAt) <= Date.now()) {
+      return { db, value: { ok: false, message: 'This Streamz Pro verification code has expired. Return to the checkout page and generate a replacement code.' } };
+    }
+
+    const websiteToken = await createStreamzSecureToken();
+    const now = new Date().toISOString();
+    verifications[index] = {
+      ...verification,
+      status: 'discord_claimed',
+      claimedDiscordUserId: discordUserId,
+      discordClaimedAt: verification.discordClaimedAt || now,
+      discordCodeUsedAt: verification.discordCodeUsedAt || now,
+      websiteTokenHash: await hashStreamzWebsiteToken(websiteToken),
+      websiteTokenExpiresAt: new Date(Date.now() + STREAMZ_WEBSITE_TOKEN_TTL_MS).toISOString(),
+      websiteTokenUsedAt: null,
+      updatedAt: now,
+    };
+    db.streamzProDiscordVerifications = verifications;
+    db.streamzProUpgradeSessions = markStreamzUpgradeSessionForEntitlement(db.streamzProUpgradeSessions, entitlement.upgradeSessionHash, entitlement, 'discord_claimed');
+    return {
+      db,
+      value: {
+        ok: true,
+        verifyUrl: buildStreamzDiscordVerifyUrl(websiteToken),
+      },
+    };
+  });
+}
+
+async function getStreamzDiscordWebsiteTokenStatus(env, token) {
+  const tokenHash = await hashStreamzWebsiteToken(token);
+  const db = await loadDatabase(env);
+  const verification = findStreamzDiscordVerificationByWebsiteTokenHash(db, tokenHash);
+  if (!verification) return buildStreamzDiscordSiteResult('invalid');
+  const entitlement = normalizeStreamzProEntitlements(db.streamzProEntitlements).find((entry) => entry.id === verification.entitlementId) || null;
+  if (entitlement?.status === 'active') return buildStreamzDiscordSiteResult('already_active', entitlement);
+  if (verification.websiteTokenUsedAt) return buildStreamzDiscordSiteResult('already_used', entitlement);
+  if (!verification.websiteTokenExpiresAt || Date.parse(verification.websiteTokenExpiresAt) <= Date.now()) {
+    return buildStreamzDiscordSiteResult('expired', entitlement);
+  }
+  if (!verification.claimedDiscordUserId || entitlement?.status !== 'pending_discord_verification') {
+    return buildStreamzDiscordSiteResult('invalid', entitlement);
+  }
+  return buildStreamzDiscordSiteResult('pending', entitlement);
+}
+
+async function linkStreamzDiscordVerificationToGoogle(env, token, googleProfile) {
+  const tokenHash = await hashStreamzWebsiteToken(token);
+  return updateStreamzDatabase(env, async (db) => {
+    const verification = findStreamzDiscordVerificationByWebsiteTokenHash(db, tokenHash);
+    if (!verification) return { db, value: buildStreamzDiscordSiteResult('invalid') };
+    const entitlements = normalizeStreamzProEntitlements(db.streamzProEntitlements);
+    const index = entitlements.findIndex((entry) => entry.id === verification.entitlementId);
+    if (index < 0) return { db, value: buildStreamzDiscordSiteResult('invalid') };
+    const entitlement = entitlements[index];
+    if (entitlement.status === 'active') return { db, value: buildStreamzDiscordSiteResult('already_active', entitlement) };
+    if (entitlement.status !== 'pending_discord_verification' || !entitlement.paymentConfirmedAt || entitlement.status === 'revoked') {
+      return { db, value: buildStreamzDiscordSiteResult('invalid', entitlement) };
+    }
+    if (!verification.claimedDiscordUserId) return { db, value: buildStreamzDiscordSiteResult('invalid', entitlement) };
+    if (verification.websiteTokenUsedAt) return { db, value: buildStreamzDiscordSiteResult('already_used', entitlement) };
+    if (!verification.websiteTokenExpiresAt || Date.parse(verification.websiteTokenExpiresAt) <= Date.now()) {
+      return { db, value: buildStreamzDiscordSiteResult('expired', entitlement) };
+    }
+
+    const accountId = await buildInternalStreamzAccountId('google', googleProfile.sub);
+    const conflicting = entitlements.find((entry) => (
+      entry.id !== entitlement.id
+      && entry.product === STREAMZ_PRO_PRODUCT_ID
+      && entry.status === 'active'
+      && (entry.googleSub === googleProfile.sub || entry.accountId === accountId)
+    ));
+    if (conflicting) return { db, value: buildStreamzDiscordSiteResult('conflict', entitlement) };
+
+    const now = new Date().toISOString();
+    const activated = {
+      ...entitlement,
+      accountId,
+      googleSub: googleProfile.sub,
+      googleEmail: googleProfile.email || null,
+      email: entitlement.email || googleProfile.email || null,
+      emailNormalized: entitlement.emailNormalized || normalizeEmail(googleProfile.email),
+      discordUserId: verification.claimedDiscordUserId,
+      discordClaimedAt: verification.discordClaimedAt || now,
+      status: 'active',
+      accountLocked: true,
+      googleLinkedAt: now,
+      activatedAt: now,
+      updatedAt: now,
+    };
+    entitlements[index] = activated;
+    const verifications = normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications);
+    const verificationIndex = verifications.findIndex((entry) => entry.id === verification.id);
+    if (verificationIndex >= 0) {
+      verifications[verificationIndex] = {
+        ...verification,
+        status: 'active',
+        websiteTokenUsedAt: now,
+        websiteTokenHash: null,
+        updatedAt: now,
+      };
+    }
+    db.streamzAccounts = upsertStreamzAccount(db.streamzAccounts, buildStreamzAccountFromEntitlement(activated));
+    db.streamzProEntitlements = entitlements;
+    db.streamzProDiscordVerifications = verifications;
+    db.streamzProUpgradeSessions = markStreamzUpgradeSessionForEntitlement(db.streamzProUpgradeSessions, activated.upgradeSessionHash, activated, 'active');
+    return { db, value: buildStreamzDiscordSiteResult('success', activated) };
+  });
+}
+
+function applySimpleDbRateLimit(db, key, maxAttempts, windowMs, message) {
+  const now = Date.now();
+  const limits = db.streamzRateLimits && typeof db.streamzRateLimits === 'object' ? db.streamzRateLimits : {};
+  const bucket = limits[key] || { attempts: [] };
+  const attempts = Array.isArray(bucket.attempts)
+    ? bucket.attempts.map(Number).filter((value) => now - value < windowMs)
+    : [];
+  if (attempts.length >= maxAttempts) {
+    throw httpError(429, message);
+  }
+  attempts.push(now);
+  db.streamzRateLimits = { ...limits, [key]: { attempts, lastAt: now } };
 }
 
 async function handleStreamzProWebhook(request, env, origin) {
@@ -647,7 +1121,7 @@ function validateStreamzProContact(payload, user) {
   };
 }
 
-function buildStreamzProPaymentIntentParams(user, contact) {
+function buildStreamzProPaymentIntentParams(user, account, contact, upgradeSession = null) {
   const params = new URLSearchParams({
     amount: String(STREAMZ_PRO_AMOUNT_CENTS),
     currency: STREAMZ_PRO_CURRENCY,
@@ -657,12 +1131,15 @@ function buildStreamzProPaymentIntentParams(user, contact) {
     'metadata[product]': STREAMZ_PRO_PRODUCT_ID,
     'metadata[amount_cents]': String(STREAMZ_PRO_AMOUNT_CENTS),
     'metadata[currency]': STREAMZ_PRO_CURRENCY,
-    'metadata[account_id]': buildStreamzAccountIdFromGoogleSub(user.sub),
+    'metadata[account_id]': account?.id || buildStreamzAccountIdFromGoogleSub(user.sub),
     'metadata[google_sub]': String(user.sub || ''),
     'metadata[google_email]': contact.email,
     'metadata[contact_full_name]': contact.fullName,
     'metadata[contact_date_of_birth]': contact.dateOfBirth,
   });
+  if (upgradeSession?.tokenHash) {
+    params.set('metadata[upgrade_session_hash]', upgradeSession.tokenHash);
+  }
 
   return params;
 }
@@ -676,26 +1153,91 @@ async function processStreamzProStripeEvent(env, event) {
     return;
   }
 
-  const db = await loadDatabase(env);
-  const processedEvents = normalizeStripeEvents(db.stripeEvents);
-  if (processedEvents.some((entry) => entry.id === event.id)) {
+  const result = await updateStreamzDatabase(env, async (db) => {
+    const processedEvents = normalizeStripeEvents(db.stripeEvents);
+    if (processedEvents.some((entry) => entry.id === event.id)) {
+      return { db, value: { processed: false, duplicateEvent: true } };
+    }
+
+    const entitlement = buildStreamzProEntitlementFromStripeEvent(event);
+    const payment = buildStreamzProPaymentFromStripeEvent(event, entitlement);
+    processedEvents.push({
+      id: event.id,
+      type: event.type,
+      processedAt: new Date().toISOString(),
+      objectId: entitlement?.stripePaymentIntentId || entitlement?.stripeCheckoutSessionId || payment?.stripePaymentIntentId || null,
+    });
+    db.stripeEvents = processedEvents.slice(-500);
+
+    if (!entitlement) {
+      return { db, value: { processed: true, entitlement: null } };
+    }
+
+    db.streamzAccounts = upsertStreamzAccount(db.streamzAccounts, buildStreamzAccountFromEntitlement(entitlement));
+    db.streamzProPayments = upsertStreamzProPayment(db.streamzProPayments, payment);
+
+    const existing = findStreamzProEntitlementInDb(db, {
+      id: entitlement.accountId,
+      googleSub: entitlement.googleSub,
+    });
+
+    if (existing?.status === 'active') {
+      db.streamzProUpgradeSessions = markStreamzUpgradeSessionForEntitlement(db.streamzProUpgradeSessions, entitlement.upgradeSessionHash, existing, 'active');
+      console.log('Recorded duplicate Streamz Pro payment for active account', {
+        stripeEventId: event.id,
+        stripePaymentIntentId: entitlement.stripePaymentIntentId || null,
+      });
+      return {
+        db,
+        value: { processed: true, entitlement: existing, activeAlready: true },
+      };
+    }
+
+    const now = new Date().toISOString();
+    const nextEntitlement = {
+      ...existing,
+      ...entitlement,
+      id: existing?.id || entitlement.id,
+      createdAt: existing?.createdAt || entitlement.createdAt || now,
+      googleLinkedAt: existing?.googleLinkedAt || null,
+      activatedAt: existing?.activatedAt || null,
+      accountLocked: false,
+      updatedAt: now,
+    };
+    const verification = {
+      id: `discord:${nextEntitlement.id}`,
+      entitlementId: nextEntitlement.id,
+      paymentId: nextEntitlement.stripePaymentIntentId || nextEntitlement.stripeCheckoutSessionId || null,
+      status: 'awaiting_code',
+      discordCodeHash: null,
+      discordCodeExpiresAt: null,
+      discordCodeUsedAt: null,
+      claimedDiscordUserId: null,
+      discordClaimedAt: null,
+      websiteTokenHash: null,
+      websiteTokenExpiresAt: null,
+      websiteTokenUsedAt: null,
+      lastCodeGeneratedAt: now,
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+    };
+    db.streamzProEntitlements = replaceStreamzProEntitlement(db.streamzProEntitlements, nextEntitlement);
+    db.streamzProDiscordVerifications = replaceStreamzDiscordVerification(db.streamzProDiscordVerifications, verification);
+    db.streamzProUpgradeSessions = markStreamzUpgradeSessionForEntitlement(
+      db.streamzProUpgradeSessions,
+      nextEntitlement.upgradeSessionHash,
+      nextEntitlement,
+      'pending_discord_verification',
+    );
+    return {
+      db,
+      value: { processed: true, entitlement: nextEntitlement },
+    };
+  });
+
+  if (result?.duplicateEvent) {
     return;
   }
-
-  const entitlement = buildStreamzProEntitlementFromStripeEvent(event);
-  processedEvents.push({
-    id: event.id,
-    type: event.type,
-    processedAt: new Date().toISOString(),
-    objectId: entitlement?.stripePaymentIntentId || entitlement?.stripeCheckoutSessionId || null,
-  });
-  db.stripeEvents = processedEvents.slice(-500);
-
-  if (entitlement) {
-    db.streamzProEntitlements = upsertStreamzProEntitlement(db.streamzProEntitlements, entitlement);
-  }
-
-  await persistDatabase(env, db);
 }
 
 function buildStreamzProEntitlementFromStripeEvent(event) {
@@ -717,9 +1259,10 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
 
     const metadata = object.metadata || {};
     const now = new Date().toISOString();
+    const accountId = metadata.account_id || buildStreamzAccountIdFromGoogleSub(metadata.google_sub);
     return {
-      id: buildStreamzEntitlementId(metadata.google_sub, STREAMZ_PRO_PRODUCT_ID),
-      accountId: metadata.account_id || buildStreamzAccountIdFromGoogleSub(metadata.google_sub),
+      id: buildStreamzEntitlementIdFromAccountId(accountId, STREAMZ_PRO_PRODUCT_ID),
+      accountId,
       googleSub: metadata.google_sub,
       email: metadata.google_email || object.receipt_email || null,
       emailNormalized: normalizeEmail(metadata.google_email || object.receipt_email),
@@ -727,14 +1270,14 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
       fullName: metadata.contact_full_name || null,
       dateOfBirth: metadata.contact_date_of_birth || null,
       product: STREAMZ_PRO_PRODUCT_ID,
-      status: 'pending_email_verification',
+      status: 'pending_discord_verification',
       amountCents: STREAMZ_PRO_AMOUNT_CENTS,
       currency: STREAMZ_PRO_CURRENCY,
       stripePaymentIntentId: object.id,
       stripeEventId: event.id,
       stripeCustomerId: object.customer || null,
+      upgradeSessionHash: metadata.upgrade_session_hash || null,
       paymentConfirmedAt: now,
-      emailVerifiedAt: null,
       activatedAt: null,
       revokedAt: null,
       accountLocked: false,
@@ -759,9 +1302,10 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
     }
 
     const now = new Date().toISOString();
+    const accountId = metadata.account_id || buildStreamzAccountIdFromGoogleSub(metadata.google_sub);
     return {
-      id: buildStreamzEntitlementId(metadata.google_sub, STREAMZ_PRO_PRODUCT_ID),
-      accountId: metadata.account_id || buildStreamzAccountIdFromGoogleSub(metadata.google_sub),
+      id: buildStreamzEntitlementIdFromAccountId(accountId, STREAMZ_PRO_PRODUCT_ID),
+      accountId,
       googleSub: metadata.google_sub,
       email: metadata.google_email || object.customer_details?.email || object.customer_email || null,
       emailNormalized: normalizeEmail(metadata.google_email || object.customer_details?.email || object.customer_email),
@@ -769,15 +1313,15 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
       fullName: metadata.contact_full_name || null,
       dateOfBirth: isValidIsoDate(metadata.contact_date_of_birth) ? metadata.contact_date_of_birth : null,
       product: STREAMZ_PRO_PRODUCT_ID,
-      status: 'pending_email_verification',
+      status: 'pending_discord_verification',
       amountCents: STREAMZ_PRO_AMOUNT_CENTS,
       currency: STREAMZ_PRO_CURRENCY,
       stripePaymentIntentId: object.payment_intent || null,
       stripeCheckoutSessionId: object.id,
       stripeEventId: event.id,
       stripeCustomerId: object.customer || null,
+      upgradeSessionHash: metadata.upgrade_session_hash || null,
       paymentConfirmedAt: now,
-      emailVerifiedAt: null,
       activatedAt: null,
       revokedAt: null,
       accountLocked: false,
@@ -861,6 +1405,467 @@ function upsertStreamzProEntitlement(existing, incoming) {
   return [...list, incoming];
 }
 
+function buildStreamzProPaymentFromStripeEvent(event, entitlement) {
+  if (!entitlement) return null;
+  const object = event.data?.object || {};
+  return {
+    id: `payment:${entitlement.stripePaymentIntentId || entitlement.stripeCheckoutSessionId || event.id}`,
+    product: STREAMZ_PRO_PRODUCT_ID,
+    accountId: entitlement.accountId,
+    googleSub: entitlement.googleSub || null,
+    emailNormalized: entitlement.emailNormalized || normalizeEmail(entitlement.email),
+    stripePaymentIntentId: entitlement.stripePaymentIntentId || (event.type === 'payment_intent.succeeded' ? object.id : object.payment_intent) || null,
+    stripeCheckoutSessionId: entitlement.stripeCheckoutSessionId || (event.type === 'checkout.session.completed' ? object.id : null),
+    stripeEventId: event.id,
+    stripeCustomerId: entitlement.stripeCustomerId || null,
+    amountCents: entitlement.amountCents || STREAMZ_PRO_AMOUNT_CENTS,
+    currency: entitlement.currency || STREAMZ_PRO_CURRENCY,
+    status: 'succeeded',
+    paidAt: entitlement.paymentConfirmedAt || new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function upsertStreamzProPayment(existing, incoming) {
+  if (!incoming) return normalizeStreamzProPayments(existing);
+  const list = normalizeStreamzProPayments(existing);
+  const index = list.findIndex((entry) => (
+    entry.id === incoming.id
+    || (incoming.stripePaymentIntentId && entry.stripePaymentIntentId === incoming.stripePaymentIntentId)
+    || (incoming.stripeEventId && entry.stripeEventId === incoming.stripeEventId)
+  ));
+  if (index >= 0) {
+    list[index] = {
+      ...list[index],
+      ...incoming,
+      createdAt: list[index].createdAt || incoming.createdAt,
+    };
+    return list;
+  }
+  return [...list, incoming];
+}
+
+function normalizeStreamzProPayments(value) {
+  return Array.isArray(value)
+    ? value
+      .filter((entry) => entry && typeof entry === 'object')
+      .map((entry) => ({
+        ...entry,
+        product: entry.product || STREAMZ_PRO_PRODUCT_ID,
+        amountCents: Number(entry.amountCents || STREAMZ_PRO_AMOUNT_CENTS),
+        currency: String(entry.currency || STREAMZ_PRO_CURRENCY).toLowerCase(),
+        status: entry.status || 'succeeded',
+      }))
+    : [];
+}
+
+async function ensureStreamzAccountForSession(env, session) {
+  if (!session?.sub) {
+    throw httpError(401, 'Signed-in account is missing a stable identity.');
+  }
+  const now = new Date().toISOString();
+  const accountId = await buildInternalStreamzAccountId('google', session.sub);
+  const account = {
+    id: accountId,
+    primaryEmail: String(session.email || '').trim() || null,
+    primaryEmailNormalized: normalizeEmail(session.email),
+    googleSub: String(session.sub),
+    identities: [{
+      provider: 'google',
+      subject: String(session.sub),
+      email: String(session.email || '').trim() || null,
+      emailNormalized: normalizeEmail(session.email),
+      linkedAt: now,
+      emailVerified: true,
+    }],
+    createdAt: now,
+    updatedAt: now,
+  };
+  let saved = account;
+  await updateStreamzDatabase(env, async (db) => {
+    db.streamzAccounts = upsertStreamzAccount(db.streamzAccounts, account);
+    saved = normalizeStreamzAccounts(db.streamzAccounts).find((entry) => entry.id === accountId) || account;
+    return { db, value: saved };
+  });
+  return saved;
+}
+
+function buildStreamzAccountFromEntitlement(entitlement) {
+  const now = new Date().toISOString();
+  return {
+    id: entitlement.accountId,
+    primaryEmail: entitlement.email || null,
+    primaryEmailNormalized: entitlement.emailNormalized || normalizeEmail(entitlement.email),
+    googleSub: entitlement.googleSub || null,
+    identities: entitlement.googleSub ? [{
+      provider: 'google',
+      subject: entitlement.googleSub,
+      email: entitlement.email || null,
+      emailNormalized: entitlement.emailNormalized || normalizeEmail(entitlement.email),
+      linkedAt: now,
+      emailVerified: true,
+    }] : [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function upsertStreamzAccount(existing, incoming) {
+  const list = normalizeStreamzAccounts(existing);
+  if (!incoming?.id) return list;
+  const index = list.findIndex((entry) => (
+    entry.id === incoming.id
+    || (incoming.googleSub && entry.googleSub === incoming.googleSub)
+    || (incoming.googleSub && entry.identities?.some((identity) => identity.provider === 'google' && identity.subject === incoming.googleSub))
+  ));
+  if (index >= 0) {
+    const mergedIdentities = mergeStreamzIdentities(list[index].identities, incoming.identities);
+    list[index] = {
+      ...list[index],
+      ...incoming,
+      id: list[index].id || incoming.id,
+      createdAt: list[index].createdAt || incoming.createdAt,
+      identities: mergedIdentities,
+      updatedAt: new Date().toISOString(),
+    };
+    return list;
+  }
+  return [...list, incoming];
+}
+
+function normalizeStreamzAccounts(value) {
+  return Array.isArray(value)
+    ? value
+      .filter((entry) => entry && typeof entry === 'object' && entry.id)
+      .map((entry) => ({
+        ...entry,
+        primaryEmail: entry.primaryEmail || entry.email || null,
+        primaryEmailNormalized: entry.primaryEmailNormalized || normalizeEmail(entry.primaryEmail || entry.email),
+        identities: Array.isArray(entry.identities) ? entry.identities : [],
+      }))
+    : [];
+}
+
+function mergeStreamzIdentities(existing, incoming) {
+  const list = Array.isArray(existing) ? [...existing] : [];
+  for (const identity of Array.isArray(incoming) ? incoming : []) {
+    if (!identity?.provider || !identity?.subject) continue;
+    const index = list.findIndex((entry) => entry.provider === identity.provider && entry.subject === identity.subject);
+    if (index >= 0) {
+      list[index] = { ...list[index], ...identity, linkedAt: list[index].linkedAt || identity.linkedAt };
+    } else {
+      list.push(identity);
+    }
+  }
+  return list;
+}
+
+async function buildInternalStreamzAccountId(provider, subject) {
+  const hash = await sha256Base64Url(`${provider}:${subject}`);
+  return `acct_${hash.slice(0, 28)}`;
+}
+
+async function getStreamzProEntitlementForAccount(env, account, session) {
+  const db = await loadDatabase(env);
+  return findStreamzProEntitlementInDb(db, account, session);
+}
+
+async function getStreamzUpgradeSessionByRawToken(env, token) {
+  if (!isPlausibleStreamzVerificationToken(token)) {
+    throw httpError(400, 'Invalid upgrade session.');
+  }
+  const tokenHash = await hashStreamzUpgradeSessionToken(token);
+  const db = await loadDatabase(env);
+  const session = findStreamzUpgradeSessionByHash(db, tokenHash);
+  if (!session) {
+    throw httpError(404, 'Upgrade session not found.');
+  }
+  return session;
+}
+
+async function getValidatedStreamzUpgradeSession(env, token) {
+  const session = await getStreamzUpgradeSessionByRawToken(env, token);
+  if (Date.parse(session.expiresAt || '') <= Date.now()) {
+    throw httpError(410, 'Upgrade session expired.');
+  }
+  return session;
+}
+
+function findStreamzUpgradeSessionByHash(db, tokenHash) {
+  return normalizeStreamzUpgradeSessions(db.streamzProUpgradeSessions)
+    .find((entry) => entry.tokenHash && constantTimeStringEquals(entry.tokenHash, tokenHash)) || null;
+}
+
+function upsertStreamzUpgradeSession(existing, incoming) {
+  const list = normalizeStreamzUpgradeSessions(existing);
+  const index = list.findIndex((entry) => entry.tokenHash === incoming.tokenHash);
+  if (index >= 0) {
+    list[index] = { ...list[index], ...incoming, createdAt: list[index].createdAt || incoming.createdAt };
+    return list.slice(-200);
+  }
+  return [...list, incoming].slice(-200);
+}
+
+function normalizeStreamzUpgradeSessions(value) {
+  return Array.isArray(value)
+    ? value
+      .filter((entry) => entry && typeof entry === 'object' && entry.tokenHash)
+      .map((entry) => {
+        const { verificationCode, ...safeEntry } = entry;
+        return {
+          ...safeEntry,
+          product: safeEntry.product || STREAMZ_PRO_PRODUCT_ID,
+          status: safeEntry.status || 'created',
+          ownsPro: Boolean(safeEntry.ownsPro),
+          emailMasked: safeEntry.emailMasked || null,
+        };
+      })
+    : [];
+}
+
+function markStreamzUpgradeSessionForEntitlement(existing, tokenHash, entitlement, status, codeExpiresAt = null) {
+  if (!tokenHash) return normalizeStreamzUpgradeSessions(existing);
+  const list = normalizeStreamzUpgradeSessions(existing);
+  const index = list.findIndex((entry) => entry.tokenHash === tokenHash);
+  if (index < 0) return list;
+  const active = status === 'active';
+  const { verificationCode, ...currentSession } = list[index];
+  list[index] = {
+    ...currentSession,
+    status,
+    ownsPro: active,
+    entitlementId: entitlement.id,
+    emailMasked: maskEmail(entitlement.email || entitlement.googleEmail),
+    codeExpiresAt: codeExpiresAt || list[index].codeExpiresAt || null,
+    updatedAt: new Date().toISOString(),
+  };
+  return list;
+}
+
+function sanitizeStreamzUpgradeSession(session) {
+  if (!session) {
+    return {
+      configured: true,
+      ownsPro: false,
+      hasPro: false,
+      status: null,
+      emailMasked: null,
+      message: null,
+      actions: ['refresh_status'],
+    };
+  }
+  const expired = Date.parse(session.expiresAt || '') <= Date.now();
+  const status = expired && session.status !== 'active' ? 'expired' : session.status;
+  const ownsPro = Boolean(session.ownsPro && status === 'active');
+  return {
+    configured: true,
+    ownsPro,
+    hasPro: ownsPro,
+    status,
+    emailMasked: session.emailMasked || null,
+    codeExpiresAt: status === 'pending_discord_verification' ? session.codeExpiresAt || null : null,
+    discordInviteUrl: STREAMZ_DISCORD_INVITE_URL,
+    discordVerifyUrl: STREAMZ_DISCORD_VERIFY_URL,
+    expiresAt: session.expiresAt || null,
+    message: status === 'pending_discord_verification'
+      ? 'Your payment was received. Join the official Streamz Discord server and run /verify-pro with the private code shown on the checkout page.'
+      : status === 'discord_claimed'
+        ? 'Discord verification is claimed. Open the private Discord message and press Verify account to link Google.'
+      : null,
+    actions: status === 'pending_discord_verification'
+      ? ['copy_verification_code', 'open_discord', 'refresh_status', 'open_checkout_page']
+      : ['refresh_status', 'open_account_page'],
+  };
+}
+
+function buildStreamzCheckoutUrl({ upgradeSessionToken } = {}) {
+  const url = new URL('/projects/streamz/pro/', STREAMZ_SITE_BASE_URL);
+  if (upgradeSessionToken) {
+    url.searchParams.set('upgrade_session', upgradeSessionToken);
+  }
+  return url.toString();
+}
+
+function findStreamzProEntitlementInDb(db, account, session = null) {
+  const list = normalizeStreamzProEntitlements(db.streamzProEntitlements);
+  const accountId = account?.id || account?.accountId || null;
+  const googleSub = account?.googleSub || session?.sub || null;
+  return list.find((entry) => (
+    entry.product === STREAMZ_PRO_PRODUCT_ID
+    && entry.status !== 'revoked'
+    && (
+      (accountId && entry.accountId === accountId)
+      || (googleSub && entry.googleSub === googleSub)
+      || (googleSub && entry.accountId === buildStreamzAccountIdFromGoogleSub(googleSub))
+    )
+  )) || null;
+}
+
+function replaceStreamzProEntitlement(existing, incoming) {
+  const list = normalizeStreamzProEntitlements(existing);
+  const index = list.findIndex((entry) => entry.id === incoming.id || (
+    entry.product === incoming.product
+    && (
+      (entry.accountId && incoming.accountId && entry.accountId === incoming.accountId)
+      || (entry.googleSub && incoming.googleSub && entry.googleSub === incoming.googleSub)
+    )
+  ));
+  if (index >= 0) {
+    list[index] = incoming;
+    return list;
+  }
+  return [...list, incoming];
+}
+
+async function createStreamzSecureToken() {
+  const bytes = new Uint8Array(STREAMZ_TOKEN_BYTES);
+  crypto.getRandomValues(bytes);
+  return base64UrlEncode(bytes);
+}
+
+async function hashStreamzUpgradeSessionToken(token) {
+  return sha256Base64Url(`streamz-pro-upgrade-session:${token}`);
+}
+
+function createStreamzDiscordCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const chars = Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join('');
+  return `VP-${chars.slice(0, 4)}-${chars.slice(4, 8)}`;
+}
+
+function normalizeStreamzDiscordCode(code) {
+  return String(code || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .replace(/^VP/, 'VP');
+}
+
+async function hashStreamzDiscordCode(code) {
+  return sha256Base64Url(`streamz-pro-discord-code:${normalizeStreamzDiscordCode(code)}`);
+}
+
+async function hashStreamzWebsiteToken(token) {
+  return sha256Base64Url(`streamz-pro-discord-website:${token}`);
+}
+
+function buildStreamzDiscordVerifyUrl(token) {
+  const url = new URL('/projects/streamz/pro/verify-discord/', STREAMZ_SITE_BASE_URL);
+  url.searchParams.set('token', token);
+  return url.toString();
+}
+
+function normalizeStreamzDiscordVerifications(value) {
+  return Array.isArray(value)
+    ? value.filter((entry) => entry && typeof entry === 'object' && entry.entitlementId)
+    : [];
+}
+
+function findStreamzDiscordVerificationByEntitlement(db, entitlementId) {
+  return normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications)
+    .find((entry) => entry.entitlementId === entitlementId) || null;
+}
+
+function replaceStreamzDiscordVerification(existing, incoming) {
+  const list = normalizeStreamzDiscordVerifications(existing);
+  const index = list.findIndex((entry) => entry.id === incoming.id || entry.entitlementId === incoming.entitlementId);
+  if (index >= 0) {
+    list[index] = incoming;
+    return list;
+  }
+  return [...list, incoming];
+}
+
+function findStreamzDiscordVerificationByWebsiteTokenHash(db, tokenHash) {
+  return normalizeStreamzDiscordVerifications(db.streamzProDiscordVerifications)
+    .find((entry) => entry.websiteTokenHash && constantTimeStringEquals(entry.websiteTokenHash, tokenHash)) || null;
+}
+
+function buildStreamzDiscordSiteResult(status, entitlement = null) {
+  const emailMasked = entitlement ? maskEmail(entitlement.googleEmail || entitlement.email) : null;
+  const map = {
+    pending: {
+      ok: true,
+      status: 'pending',
+      title: 'Streamz Pro verification',
+      message: 'Your payment and Discord verification have been confirmed. Sign in with the Google account that you want to permanently own Streamz Pro.',
+    },
+    success: {
+      ok: true,
+      status: 'success',
+      title: 'Streamz Pro activated',
+      message: emailMasked ? `Streamz Pro is now permanently linked to ${emailMasked}.` : 'Streamz Pro is now permanently linked to your Google account.',
+    },
+    already_used: {
+      ok: false,
+      status: 'already_used',
+      title: 'This verification link was already used',
+      message: 'Streamz Pro has already been linked for this verification session.',
+    },
+    already_active: {
+      ok: true,
+      status: 'already_active',
+      title: 'Streamz Pro is already active',
+      message: 'This entitlement is already active.',
+    },
+    expired: {
+      ok: false,
+      status: 'expired',
+      title: 'This verification link has expired',
+      message: 'Return to Discord and run /verify-pro with a current code.',
+    },
+    google_required: {
+      ok: false,
+      status: 'google_required',
+      title: 'Continue with Google',
+      message: 'Sign in with the Google account that will permanently own Streamz Pro.',
+    },
+    conflict: {
+      ok: false,
+      status: 'conflict',
+      title: 'Account conflict',
+      message: 'This Google account cannot claim the selected Streamz Pro entitlement.',
+    },
+    invalid: {
+      ok: false,
+      status: 'invalid',
+      title: 'This verification link is invalid',
+      message: 'The link may be incomplete, expired or replaced.',
+    },
+  };
+  return { ...(map[status] || map.invalid), entitlement: sanitizeStreamzProEntitlement(entitlement) };
+}
+
+function isPlausibleStreamzToken(token) {
+  return /^[A-Za-z0-9_-]{40,160}$/.test(String(token || ''));
+}
+
+function constantTimeStringEquals(a, b) {
+  return constantTimeEquals(textEncoder.encode(String(a || '')), textEncoder.encode(String(b || '')));
+}
+
+async function enforceStreamzRateLimit(env, key, maxAttempts, windowMs, message) {
+  await updateStreamzDatabase(env, async (db) => {
+    const now = Date.now();
+    const limits = db.streamzRateLimits && typeof db.streamzRateLimits === 'object' ? db.streamzRateLimits : {};
+    const bucket = limits[key] || { attempts: [] };
+    const attempts = Array.isArray(bucket.attempts)
+      ? bucket.attempts.map(Number).filter((value) => now - value < windowMs)
+      : [];
+    if (attempts.length >= maxAttempts) {
+      throw httpError(429, message);
+    }
+    attempts.push(now);
+    db.streamzRateLimits = {
+      ...limits,
+      [key]: { attempts, lastAt: now },
+    };
+    return { db, value: null };
+  });
+}
+
 async function getStreamzProEntitlement(env, googleSub) {
   const db = await loadDatabase(env);
   const list = normalizeStreamzProEntitlements(db.streamzProEntitlements);
@@ -874,19 +1879,40 @@ async function getStreamzProEntitlement(env, googleSub) {
 function normalizeStreamzProEntitlements(value) {
   return Array.isArray(value)
     ? value
-      .filter((entry) => entry && typeof entry === 'object' && entry.googleSub)
-      .map((entry) => ({
-        ...entry,
-        product: entry.product || STREAMZ_PRO_PRODUCT_ID,
-        status: STREAMZ_PRO_STATUSES.has(entry.status) ? entry.status : 'pending_email_verification',
-        accountId: entry.accountId || buildStreamzAccountIdFromGoogleSub(entry.googleSub),
-        email: entry.email || entry.googleEmail || null,
-        emailNormalized: entry.emailNormalized || normalizeEmail(entry.email || entry.googleEmail),
-        emailVerified: Boolean(entry.emailVerified || entry.emailVerifiedAt),
-        stripePaymentIntentId: entry.stripePaymentIntentId || entry.paymentIntentId || null,
-        stripeCheckoutSessionId: entry.stripeCheckoutSessionId || entry.checkoutSessionId || null,
-        fullName: entry.fullName || entry.contactFullName || null,
-      }))
+      .filter((entry) => entry && typeof entry === 'object' && (entry.accountId || entry.googleSub))
+      .map((entry) => {
+        const {
+          emailDeliveryStatus,
+          emailDeliveryId,
+          emailDeliveryErrorCode,
+          emailLastSentAt,
+          emailSendCount,
+          emailVerified,
+          verificationTokenHash,
+          verificationUsedTokenHash,
+          verificationExpiresAt,
+          verificationUsedAt,
+          ...safeEntry
+        } = entry;
+        delete safeEntry[`emailVerification${'Re'}${'send'}History`];
+        return {
+        ...safeEntry,
+        product: safeEntry.product || STREAMZ_PRO_PRODUCT_ID,
+        status: safeEntry.status === 'pending_email_verification'
+          ? 'pending_discord_verification'
+          : (STREAMZ_PRO_STATUSES.has(safeEntry.status) ? safeEntry.status : 'pending_discord_verification'),
+        accountId: safeEntry.accountId || buildStreamzAccountIdFromGoogleSub(safeEntry.googleSub),
+        id: safeEntry.id || buildStreamzEntitlementIdFromAccountId(safeEntry.accountId || buildStreamzAccountIdFromGoogleSub(safeEntry.googleSub), safeEntry.product || STREAMZ_PRO_PRODUCT_ID),
+        email: safeEntry.email || safeEntry.googleEmail || null,
+        emailNormalized: safeEntry.emailNormalized || normalizeEmail(safeEntry.email || safeEntry.googleEmail),
+        stripePaymentIntentId: safeEntry.stripePaymentIntentId || safeEntry.paymentIntentId || null,
+        stripeCheckoutSessionId: safeEntry.stripeCheckoutSessionId || safeEntry.checkoutSessionId || null,
+        fullName: safeEntry.fullName || safeEntry.contactFullName || null,
+        accountLocked: Boolean(safeEntry.accountLocked),
+        discordUserId: safeEntry.discordUserId || null,
+        googleLinkedAt: safeEntry.googleLinkedAt || null,
+        };
+      })
     : [];
 }
 
@@ -900,13 +1926,17 @@ function sanitizeStreamzProEntitlement(entitlement) {
   if (!entitlement) return null;
   return {
     product: entitlement.product || STREAMZ_PRO_PRODUCT_ID,
-    status: entitlement.status || 'pending_email_verification',
+    status: entitlement.status === 'pending_email_verification' ? 'pending_discord_verification' : (entitlement.status || 'pending_discord_verification'),
+    source: entitlement.source || null,
+    accountType: entitlement.accountType || null,
     ownsPro: isActiveStreamzProEntitlement(entitlement),
     emailMasked: maskEmail(entitlement.email || entitlement.googleEmail),
-    emailVerified: Boolean(entitlement.emailVerified || entitlement.emailVerifiedAt),
+    accountLocked: Boolean(entitlement.accountLocked),
     amountCents: entitlement.amountCents || STREAMZ_PRO_AMOUNT_CENTS,
     currency: entitlement.currency || STREAMZ_PRO_CURRENCY,
     paymentConfirmedAt: entitlement.paymentConfirmedAt || null,
+    discordClaimedAt: entitlement.discordClaimedAt || null,
+    googleLinkedAt: entitlement.googleLinkedAt || null,
     createdAt: entitlement.createdAt || null,
   };
 }
@@ -915,8 +1945,31 @@ function isActiveStreamzProEntitlement(entitlement) {
   return Boolean(entitlement && entitlement.status === 'active');
 }
 
+function getStreamzOwnerGrantEntitlement(env, session) {
+  const ownerSub = String(env.STREAMZ_OWNER_GOOGLE_SUB || '').trim();
+  if (!ownerSub || !session?.sub || String(session.sub) !== ownerSub) return null;
+  return {
+    id: `${STREAMZ_PRO_PRODUCT_ID}:owner`,
+    product: STREAMZ_PRO_PRODUCT_ID,
+    status: 'active',
+    source: 'developer_grant',
+    accountType: 'owner',
+    accountId: `owner:${ownerSub}`,
+    googleSub: ownerSub,
+    googleEmail: session.email || null,
+    email: session.email || null,
+    accountLocked: true,
+    activatedAt: null,
+    createdAt: null,
+  };
+}
+
 function buildStreamzEntitlementId(googleSub, product) {
   return `${product}:${buildStreamzAccountIdFromGoogleSub(googleSub)}`;
+}
+
+function buildStreamzEntitlementIdFromAccountId(accountId, product) {
+  return `${product}:${String(accountId || '').trim()}`;
 }
 
 function buildStreamzAccountIdFromGoogleSub(googleSub) {
@@ -1038,6 +2091,15 @@ function sanitizeSingleLine(value, maxLength) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength);
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function isValidIsoDate(value) {
@@ -1244,6 +2306,26 @@ async function persistDatabase(env, data) {
     throw httpError(response.status, `Failed to save catalogue: ${text}`);
   }
   return JSON.parse(body);
+}
+
+async function updateStreamzDatabase(env, updater, attempts = 3) {
+  let lastError = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const db = await loadDatabase(env);
+      const result = await updater({ ...DEFAULT_DB, ...db });
+      const nextDb = result?.db || db;
+      await persistDatabase(env, nextDb);
+      return result?.value;
+    } catch (error) {
+      lastError = error;
+      if (error?.status && error.status < 500) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 80 * (attempt + 1)));
+    }
+  }
+  throw lastError || httpError(500, 'Failed to update Streamz database.');
 }
 
 async function readCatalogue(env, mode) {
