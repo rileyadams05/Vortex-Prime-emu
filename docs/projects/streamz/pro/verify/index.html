@@ -29,7 +29,7 @@
     <p>Enter the one-time purchase code printed on your activation pass. The permanent QR code does not contain personal information or payment data.</p>
     <form id="verifyForm">
       <label for="code">Purchase code</label>
-      <input id="code" name="code" autocomplete="off" inputmode="text" placeholder="STZ-XXXX-XXXX-XXXX" maxlength="18" required>
+      <input id="code" name="code" autocomplete="off" inputmode="text" placeholder="A1B2C3D4E5" maxlength="10" required>
       <div class="actions">
         <button type="submit" id="verifyBtn">Check purchase</button>
         <a class="button secondary" href="/projects/streamz/pro/">Return to checkout</a>
@@ -44,9 +44,7 @@
     const result = document.getElementById('result');
 
     function normalizeDisplayCode(value) {
-      const raw = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^STZ/, '');
-      const clipped = raw.slice(0, 12);
-      return ['STZ', clipped.slice(0, 4), clipped.slice(4, 8), clipped.slice(8, 12)].filter(Boolean).join('-');
+      return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
     }
 
     function render(data, error = false) {

@@ -538,7 +538,7 @@
           { label: 'Open verification page', href: '/projects/streamz/pro/verify/' },
           { label: 'Join Discord', href: details.discordInviteUrl || 'https://discord.gg/TwMsbb97Mm' },
           { label: 'Open Discord verification', href: details.discordVerifyUrl || 'https://discord.com/channels/@me' },
-          { label: 'Generate replacement code', action: 'replace-code' },
+          { label: 'Prepare activation pass', action: 'prepare-pass' },
           { label: 'Check activation status', action: 'refresh-status' },
           { label: 'Return to Vortex Prime', href: '/' },
         ],
@@ -712,7 +712,7 @@
     }
 
     async function requestDiscordVerificationCode() {
-      if (!upgradeSessionToken) throw new Error('This checkout session cannot generate a purchase code.');
+      if (!upgradeSessionToken) throw new Error('This checkout session cannot prepare an activation pass.');
       const resp = await fetch('/api/streamz/pro/upgrade-session/code', {
         method: 'POST',
         credentials: 'include',
@@ -720,7 +720,7 @@
         body: JSON.stringify({ token: upgradeSessionToken }),
       });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) throw new Error(data?.message || 'Unable to generate a purchase code.');
+      if (!resp.ok) throw new Error(data?.message || 'Unable to prepare the activation pass.');
       return data;
     }
 
@@ -730,7 +730,7 @@
         try {
           return await requestDiscordVerificationCode();
         } catch (error) {
-          setPaymentMessage(error.message || 'Payment received, but the purchase code could not be generated yet. Try Generate replacement code.', 'error');
+          setPaymentMessage(error.message || 'Payment received, but the activation pass is still being prepared. Try again in a moment.', 'error');
           return sessionStatus;
         }
       }
@@ -951,16 +951,16 @@
       return { valid: true };
     }
 
-    async function generateReplacementCode() {
+    async function prepareActivationPass() {
       try {
-        if (!upgradeSessionToken) throw new Error('This checkout session cannot generate a replacement code.');
-        setPaymentMessage('Generating a replacement purchase code...', 'info');
+        if (!upgradeSessionToken) throw new Error('This checkout session cannot prepare an activation pass.');
+        setPaymentMessage('Preparing your Streamz Pro activation pass...', 'info');
         const data = await requestDiscordVerificationCode();
         showPendingDiscordState(data);
         if (data.activationPass) await downloadActivationPass(data.activationPass);
-        setPaymentMessage('Replacement purchase code generated.', 'success');
+        setPaymentMessage('Activation pass prepared.', 'success');
       } catch (error) {
-        setPaymentMessage(error.message || 'Unable to generate a replacement code right now.', 'error');
+        setPaymentMessage(error.message || 'Unable to prepare the activation pass right now.', 'error');
       }
     }
 
@@ -998,8 +998,8 @@
             setPaymentMessage(error.message || 'Unable to download activation pass.', 'error');
           });
         }
-      } else if (action === 'replace-code') {
-        generateReplacementCode();
+      } else if (action === 'prepare-pass') {
+        prepareActivationPass();
       } else if (action === 'refresh-status') {
         refreshActivationStatus();
       }
