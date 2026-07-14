@@ -39,6 +39,49 @@ const commands = [
       },
     ],
   },
+  {
+    ...dmCommandBase,
+    name: "contact-support",
+    description: "DM-only private Streamz app support for bugs and technical problems.",
+    options: [
+      {
+        name: "description",
+        description: "Describe what is broken or not working in Streamz.",
+        type: 3,
+        required: true,
+      },
+      {
+        name: "streamz_version",
+        description: "Streamz app version, if you know it.",
+        type: 3,
+        required: false,
+      },
+      {
+        name: "operating_system",
+        description: "Your operating system, for example Windows 11.",
+        type: 3,
+        required: false,
+      },
+      {
+        name: "error_text",
+        description: "Any exact error text shown by Streamz.",
+        type: 3,
+        required: false,
+      },
+      {
+        name: "tried",
+        description: "What you already tried.",
+        type: 3,
+        required: false,
+      },
+      {
+        name: "attachment",
+        description: "Optional screenshot, log, or PDF that helps explain the issue.",
+        type: 11,
+        required: false,
+      },
+    ],
+  },
 ];
 
 if (guildId) {

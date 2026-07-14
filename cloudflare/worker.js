@@ -17,6 +17,10 @@ const DEFAULT_DB = {
   streamzProCodePool: [],
   streamzProSupportTickets: [],
   streamzProSupportStaff: [],
+  streamzBugReports: [],
+  streamzAppSupportCases: [],
+  streamzKnownIssues: [],
+  streamzSupportStaff: [],
   streamzProAuditLog: [],
   stripeEvents: [],
   streamzRateLimits: {},
@@ -85,6 +89,10 @@ const DISCORD_APPLICATION_ID = '1526084195263447171';
 const DISCORD_PUBLIC_KEY = '23a2928f74f18bfa7ce329129f2e46ee14a9662fc6f7170e22ac4e4fa4d8008b';
 const STREAMZ_DISCORD_INVITE_URL = 'https://discord.gg/TwMsbb97Mm';
 const STREAMZ_DISCORD_VERIFY_URL = 'https://discord.com/channels/@me';
+const STREAMZ_DEFAULT_BUGS_CHANNEL_ID = '1526100653586255974';
+const STREAMZ_AI_UNAVAILABLE_MESSAGE = 'Automated troubleshooting is temporarily unavailable. DM the Streamz bot and use /contact-support for private assistance.';
+const STREAMZ_GEMINI_PRIMARY_MODEL = 'gemini-3-flash-preview';
+const STREAMZ_GEMINI_FALLBACK_MODEL = 'gemini-2.5-flash';
 const STREAMZ_TOKEN_BYTES = 32;
 const STREAMZ_DISCORD_CODE_TTL_MS = 30 * 60 * 1000;
 const STREAMZ_PURCHASE_CODE_TTL_MS = 20 * 60 * 1000;
@@ -104,6 +112,9 @@ const STREAMZ_CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const STREAMZ_CODE_POOL_STATUSES = new Set(['unused', 'assigned', 'pending_google_linking', 'redeemed', 'expired', 'replaced', 'invalidated']);
 const STREAMZ_EXPIRED_CODE_REVIEW_STATUSES = new Set(['open', 'claimed', 'closed']);
 const STREAMZ_EXPIRED_CODE_REVIEW_ROLES = new Set(['owner', 'admin', 'reviewer']);
+const STREAMZ_APP_SUPPORT_STATUSES = new Set(['open', 'waiting_for_customer', 'investigating', 'resolved', 'closed']);
+const STREAMZ_APP_SUPPORT_ROLES = new Set(['owner', 'admin', 'support']);
+const STREAMZ_BUG_REPORT_STATUSES = new Set(['new', 'answered', 'known_issue', 'support_requested', 'resolved', 'ignored']);
 const STREAMZ_SITE_BASE_URL = 'https://vortex-prime-emu.com';
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
@@ -211,6 +222,14 @@ export default {
         return await handleStreamzProExpiredCodeReviewRequest(request, env, path, allowedOrigin);
       }
 
+      if (path.startsWith('api/streamz/support/')) {
+        return await handleStreamzSupportRequest(request, env, path, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/app/update') {
+        return await handleStreamzAppUpdate(request, env, allowedOrigin);
+      }
+
       if (path === 'api/streamz/discord/interactions') {
         return await handleStreamzDiscordInteractions(request, env);
       }
@@ -246,6 +265,9 @@ export default {
       const message = error.message || 'Internal server error';
       return json({ ok: false, message }, status, allowedOrigin);
     }
+  },
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(pollStreamzBugsChannel(env));
   },
 };
 
@@ -913,6 +935,9 @@ async function handleStreamzDiscordInteractions(request, env) {
   if (interaction.type === 1) {
     return discordJson({ type: 1 });
   }
+  if (interaction.type === 3) {
+    return await handleStreamzDiscordComponent(interaction, env);
+  }
   if (interaction.type !== 2) {
     return discordJson({
       type: 4,
@@ -929,6 +954,9 @@ async function handleStreamzDiscordInteractions(request, env) {
   if (interaction.data?.name === 'code-expired') {
     return await handleStreamzDiscordCodeExpiredCommand(interaction, env);
   }
+  if (interaction.data?.name === 'contact-support') {
+    return await handleStreamzDiscordContactSupportCommand(interaction, env);
+  }
   {
     return discordJson({
       type: 4,
@@ -938,6 +966,42 @@ async function handleStreamzDiscordInteractions(request, env) {
       },
     });
   }
+}
+
+async function handleStreamzDiscordComponent(interaction, env) {
+  const customId = String(interaction.data?.custom_id || '');
+  const user = interaction.member?.user || interaction.user || {};
+  if (customId.startsWith('streamz_bug_contact:')) {
+    const bugId = customId.slice('streamz_bug_contact:'.length);
+    const result = await createStreamzAppSupportCaseFromBug(env, bugId, user);
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: result.ok
+          ? `Private Streamz support case ${result.caseNumber} was created. Check your DMs with the Streamz bot.`
+          : (result.message || 'Unable to open private support right now. DM the Streamz bot and use /contact-support.'),
+      },
+    });
+  }
+  if (customId.startsWith('streamz_bug_fixed:')) {
+    const bugId = customId.slice('streamz_bug_fixed:'.length);
+    await markStreamzBugReportResolved(env, bugId, user.id || null);
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Thanks. I marked this troubleshooting reply as helpful.',
+      },
+    });
+  }
+  return discordJson({
+    type: 4,
+    data: {
+      flags: 64,
+      content: 'Unsupported Streamz action.',
+    },
+  });
 }
 
 async function handleStreamzDiscordVerifyProCommand(interaction, env) {
@@ -1052,6 +1116,56 @@ async function handleStreamzDiscordCodeExpiredCommand(interaction, env) {
       content: result.ok
         ? `Expired-code review ${result.ticketNumber} was created. An authorised team member will review the original PDF and can issue a new 20-minute code if it is valid.`
         : (result.message || 'Unable to create an expired-code review right now.'),
+    },
+  });
+}
+
+async function handleStreamzDiscordContactSupportCommand(interaction, env) {
+  if (interaction.guild_id) {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Directly message the Streamz bot and run /contact-support there. This command is for private app support only.',
+      },
+    });
+  }
+  const discordUser = interaction.member?.user || interaction.user || {};
+  const discordUserId = discordUser.id || null;
+  const options = Array.isArray(interaction.data?.options) ? interaction.data.options : [];
+  const description = String(options.find((option) => option.name === 'description')?.value || '').trim();
+  const version = String(options.find((option) => option.name === 'streamz_version')?.value || '').trim();
+  const os = String(options.find((option) => option.name === 'operating_system')?.value || '').trim();
+  const errorText = String(options.find((option) => option.name === 'error_text')?.value || '').trim();
+  const tried = String(options.find((option) => option.name === 'tried')?.value || '').trim();
+  const attachmentId = String(options.find((option) => option.name === 'attachment')?.value || '').trim();
+  const attachment = attachmentId ? interaction.data?.resolved?.attachments?.[attachmentId] || null : null;
+  if (!discordUserId || !description) {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Tell Streamz Support what is broken. Run /contact-support in a DM with a clear description.',
+      },
+    });
+  }
+  const result = await createStreamzAppSupportCase(env, {
+    source: 'discord_dm_command',
+    discordUser,
+    description,
+    version,
+    os,
+    errorText,
+    tried,
+    attachments: attachment ? [sanitizeDiscordAttachment(attachment)] : [],
+  });
+  return discordJson({
+    type: 4,
+    data: {
+      flags: 64,
+      content: result.ok
+        ? `Private Streamz support case ${result.caseNumber} was created. A Streamz Support team member can reply through this bot.`
+        : (result.message || 'Unable to create private support right now.'),
     },
   });
 }
@@ -1621,6 +1735,539 @@ function normalizeStreamzSupportTickets(value) {
         replies: Array.isArray(entry.replies) ? entry.replies : [],
       }))
     : [];
+}
+
+async function handleStreamzSupportRequest(request, env, path, origin) {
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to access Streamz Support.');
+  const staff = await requireStreamzAppSupportStaff(env, user);
+  const route = path.replace(/^api\/streamz\/support\/?/, '');
+
+  if (route === 'staff' && request.method === 'GET') {
+    return json({ ok: true, staff, members: await listStreamzAppSupportStaff(env) }, 200, origin);
+  }
+  if (route === 'cases' && request.method === 'GET') {
+    const db = await loadDatabase(env);
+    return json({
+      ok: true,
+      cases: normalizeStreamzAppSupportCases(db.streamzAppSupportCases).slice(-150).reverse(),
+      bugs: normalizeStreamzBugReports(db.streamzBugReports).slice(-150).reverse(),
+      knownIssues: normalizeStreamzKnownIssues(db.streamzKnownIssues).slice(-100).reverse(),
+    }, 200, origin);
+  }
+  if (route === 'cases/action' && request.method === 'POST') {
+    const payload = await request.json().catch(() => ({}));
+    return json(await updateStreamzAppSupportCase(env, payload, staff), 200, origin);
+  }
+  if (route === 'bugs/action' && request.method === 'POST') {
+    const payload = await request.json().catch(() => ({}));
+    return json(await updateStreamzBugReport(env, payload, staff), 200, origin);
+  }
+  throw httpError(404, 'Streamz support route not found.');
+}
+
+async function pollStreamzBugsChannel(env) {
+  const token = String(env.DISCORD_BOT_TOKEN || '').trim();
+  const channelId = getStreamzBugsChannelId(env);
+  if (!token || !channelId) return { ok: false, message: 'Discord bot token or Bugs channel ID is not configured.' };
+
+  const db = await loadDatabase(env);
+  const lastSeenId = String(db.adminSettings?.streamzBugsLastMessageId || '').trim();
+  const endpoint = new URL(`https://discord.com/api/v10/channels/${encodeURIComponent(channelId)}/messages`);
+  endpoint.searchParams.set('limit', lastSeenId ? '25' : '1');
+  if (lastSeenId) endpoint.searchParams.set('after', lastSeenId);
+
+  const messages = await discordApi(env, endpoint.toString()).catch(() => []);
+  if (!Array.isArray(messages) || !messages.length) return { ok: true, processed: 0 };
+  const sorted = messages.sort((a, b) => compareDiscordSnowflakes(a.id, b.id));
+  if (!lastSeenId) {
+    await updateStreamzDatabase(env, async (current) => {
+      current.adminSettings = { ...(current.adminSettings || {}), streamzBugsLastMessageId: sorted[sorted.length - 1].id };
+      return { db: current, value: { ok: true, initialized: true } };
+    });
+    return { ok: true, initialized: true, processed: 0 };
+  }
+
+  let processed = 0;
+  for (const message of sorted) {
+    if (await processStreamzBugsMessage(env, message, channelId)) processed += 1;
+  }
+  await updateStreamzDatabase(env, async (current) => {
+    current.adminSettings = { ...(current.adminSettings || {}), streamzBugsLastMessageId: sorted[sorted.length - 1].id };
+    return { db: current, value: { ok: true, processed } };
+  });
+  return { ok: true, processed };
+}
+
+async function processStreamzBugsMessage(env, message, channelId) {
+  if (!message?.id || message.author?.bot || message.webhook_id) return false;
+  const content = String(message.content || '').trim();
+  const attachments = Array.isArray(message.attachments) ? message.attachments.map(sanitizeDiscordAttachment) : [];
+  if (!isLikelyStreamzBugReport(content, attachments)) return false;
+
+  const fingerprint = await sha256Base64Url(`streamz-bug:${message.author?.id || ''}:${content.slice(0, 1000)}:${attachments.map((a) => a.filename).join('|')}`);
+  const created = await updateStreamzDatabase(env, async (db) => {
+    applySimpleDbRateLimit(db, `bugs_channel:${message.author?.id || 'unknown'}`, 6, 10 * 60 * 1000, 'Too many bug reports.');
+    const existing = normalizeStreamzBugReports(db.streamzBugReports).find((entry) => entry.discordMessageId === message.id || entry.fingerprint === fingerprint);
+    if (existing) return { db, value: null };
+    const now = new Date().toISOString();
+    const report = {
+      id: `bug_${crypto.randomUUID()}`,
+      fingerprint,
+      status: 'new',
+      source: 'discord_bugs_channel',
+      discordMessageId: message.id,
+      discordChannelId: channelId,
+      discordUserId: message.author?.id || null,
+      discordUsername: buildDiscordDisplayName(message.author),
+      messageUrl: buildDiscordMessageUrl(message.guild_id || env.DISCORD_GUILD_ID, channelId, message.id),
+      content,
+      attachments,
+      streamzVersion: extractStreamzVersion(content),
+      operatingSystem: extractOperatingSystem(content),
+      errorText: extractErrorText(content),
+      actionsTried: extractActionsTried(content),
+      createdAt: message.timestamp || now,
+      updatedAt: now,
+      events: [{ type: 'created', at: now, actor: 'discord_poll' }],
+    };
+    db.streamzBugReports = [...normalizeStreamzBugReports(db.streamzBugReports), report].slice(-500);
+    appendStreamzAuditEvent(db, 'streamz_bug_report_detected', { bugId: report.id, discordMessageId: message.id, discordUserId: report.discordUserId }, now);
+    return { db, value: report };
+  }).catch((error) => (error?.status === 429 ? null : Promise.reject(error)));
+  if (!created) return false;
+
+  const ai = await generateStreamzTroubleshootingReply(env, created);
+  await updateStreamzDatabase(env, async (db) => {
+    db.streamzBugReports = normalizeStreamzBugReports(db.streamzBugReports).map((entry) => (
+      entry.id === created.id
+        ? {
+          ...entry,
+          status: ai.ok ? 'answered' : 'new',
+          aiModel: ai.model || null,
+          aiReply: ai.reply,
+          aiSucceeded: ai.ok,
+          updatedAt: new Date().toISOString(),
+        }
+        : entry
+    ));
+    return { db, value: true };
+  });
+  await postStreamzBugTroubleshootingReply(env, created, ai.reply);
+  return true;
+}
+
+function isLikelyStreamzBugReport(content, attachments = []) {
+  const text = String(content || '').toLowerCase();
+  if (text.length < 12 && attachments.length === 0) return false;
+  const bugWords = [
+    'bug', 'error', 'crash', 'crashed', 'broken', 'not working', 'doesn\'t work', 'wont work', 'won\'t work',
+    'failed', 'fails', 'freeze', 'frozen', 'blank', 'black screen', 'login issue', 'qr', 'pro won',
+    'update failed', 'install failed', 'can\'t open', 'cant open', 'cannot open',
+  ];
+  if (bugWords.some((word) => text.includes(word))) return true;
+  return attachments.some((file) => /image|text|log|pdf|json/.test(file.contentType || '') || /\.(png|jpe?g|webp|gif|txt|log|json|pdf)$/i.test(file.filename || ''));
+}
+
+async function generateStreamzTroubleshootingReply(env, report) {
+  const models = [
+    String(env.GEMINI_PRIMARY_MODEL || STREAMZ_GEMINI_PRIMARY_MODEL).trim(),
+    String(env.GEMINI_FALLBACK_MODEL || STREAMZ_GEMINI_FALLBACK_MODEL).trim(),
+  ].filter(Boolean);
+  const apiKey = String(env.GEMINI_API_KEY || env.GOOGLE_AI_API_KEY || '').trim();
+  if (!apiKey) return { ok: false, model: null, reply: STREAMZ_AI_UNAVAILABLE_MESSAGE };
+  let lastError = null;
+  for (let i = 0; i < models.length; i += 1) {
+    const attempts = i === 0 ? 2 : 1;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      try {
+        const reply = await callGeminiTroubleshooter(apiKey, models[i], report);
+        if (reply) return { ok: true, model: models[i], reply };
+      } catch (error) {
+        lastError = error;
+      }
+    }
+  }
+  console.log('Streamz Gemini troubleshooting unavailable', { reason: lastError?.message || 'unknown', bugId: report.id });
+  return { ok: false, model: null, reply: STREAMZ_AI_UNAVAILABLE_MESSAGE };
+}
+
+async function callGeminiTroubleshooter(apiKey, model, report) {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const prompt = [
+    'You are Streamz automated troubleshooting inside the official Discord Bugs channel.',
+    'Reply publicly with practical steps only. Be concise, friendly, and do not claim a human reviewed it.',
+    'If private account/payment details are needed, tell the user to DM the Streamz bot and use /contact-support.',
+    'Do not request activation codes, Google IDs, Stripe IDs, card details, passwords, or secrets.',
+    '',
+    `Bug report ID: ${report.id}`,
+    `Streamz version: ${report.streamzVersion || 'unknown'}`,
+    `OS: ${report.operatingSystem || 'unknown'}`,
+    `Error text: ${report.errorText || 'not provided'}`,
+    `Actions tried: ${report.actionsTried || 'not provided'}`,
+    `User message: ${report.content}`,
+    `Attachments: ${(report.attachments || []).map((item) => item.filename).join(', ') || 'none'}`,
+  ].join('\n');
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.25, maxOutputTokens: 900 },
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Gemini ${model} failed with ${response.status}`);
+  }
+  const data = await response.json().catch(() => null);
+  const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
+  return sanitizeDiscordMessage(text || '');
+}
+
+async function postStreamzBugTroubleshootingReply(env, report, reply) {
+  const channelId = report.discordChannelId || getStreamzBugsChannelId(env);
+  if (!channelId) return false;
+  const body = {
+    content: reply.slice(0, 1800),
+    message_reference: {
+      message_id: report.discordMessageId,
+      channel_id: channelId,
+      fail_if_not_exists: false,
+    },
+    components: [{
+      type: 1,
+      components: [
+        { type: 2, style: 2, label: 'Contact Streamz Support', custom_id: `streamz_bug_contact:${report.id}` },
+        { type: 2, style: 3, label: 'This fixed my problem', custom_id: `streamz_bug_fixed:${report.id}` },
+      ],
+    }],
+  };
+  return discordApi(env, `https://discord.com/api/v10/channels/${encodeURIComponent(channelId)}/messages`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }).then(() => true).catch(() => false);
+}
+
+async function createStreamzAppSupportCaseFromBug(env, bugId, discordUser) {
+  const db = await loadDatabase(env);
+  const bug = normalizeStreamzBugReports(db.streamzBugReports).find((entry) => entry.id === bugId);
+  if (!bug) return { ok: false, message: 'That bug report could not be found.' };
+  if (bug.discordUserId && discordUser?.id && bug.discordUserId !== discordUser.id) {
+    return { ok: false, message: 'Only the person who posted the bug report can open a private case from this button.' };
+  }
+  return createStreamzAppSupportCase(env, {
+    source: 'discord_bug_button',
+    bugReportId: bug.id,
+    discordUser,
+    description: bug.content,
+    version: bug.streamzVersion || '',
+    os: bug.operatingSystem || '',
+    errorText: bug.errorText || '',
+    tried: bug.actionsTried || '',
+    attachments: bug.attachments || [],
+  });
+}
+
+async function createStreamzAppSupportCase(env, input) {
+  const discordUserId = String(input.discordUser?.id || '').trim();
+  if (!discordUserId) return { ok: false, message: 'Discord user is missing.' };
+  const description = String(input.description || '').trim();
+  if (!description) return { ok: false, message: 'Support description is required.' };
+  return updateStreamzDatabase(env, async (db) => {
+    applySimpleDbRateLimit(db, `contact_support:${discordUserId}`, 5, 10 * 60 * 1000, 'Too many support requests. Try again later.');
+    const now = new Date().toISOString();
+    const cases = normalizeStreamzAppSupportCases(db.streamzAppSupportCases);
+    const caseNumber = `STZ-SUP-${String(cases.length + 1).padStart(5, '0')}`;
+    const supportCase = {
+      id: `case_${crypto.randomUUID()}`,
+      caseNumber,
+      status: 'open',
+      source: input.source || 'discord_dm_command',
+      bugReportId: input.bugReportId || null,
+      discordUserId,
+      discordUsername: buildDiscordDisplayName(input.discordUser),
+      description: description.slice(0, 2000),
+      streamzVersion: String(input.version || '').slice(0, 120),
+      operatingSystem: String(input.os || '').slice(0, 120),
+      errorText: String(input.errorText || '').slice(0, 1000),
+      actionsTried: String(input.tried || '').slice(0, 1000),
+      attachments: Array.isArray(input.attachments) ? input.attachments.map(sanitizeDiscordAttachment).slice(0, 5) : [],
+      createdAt: now,
+      updatedAt: now,
+      events: [{ type: 'created', at: now, actor: 'discord_user' }],
+      replies: [],
+    };
+    db.streamzAppSupportCases = [...cases, supportCase].slice(-500);
+    db.streamzBugReports = normalizeStreamzBugReports(db.streamzBugReports).map((bug) => (
+      bug.id === input.bugReportId ? { ...bug, status: 'support_requested', supportCaseId: supportCase.id, updatedAt: now } : bug
+    ));
+    appendStreamzAuditEvent(db, 'streamz_app_support_case_created', { caseId: supportCase.id, caseNumber, discordUserId, bugReportId: input.bugReportId || null }, now);
+    return { db, value: { ok: true, caseId: supportCase.id, caseNumber } };
+  }).then(async (result) => {
+    await sendStreamzAppSupportDm(env, discordUserId, `Private Streamz support case ${result.caseNumber} was created. A Streamz Support team member can reply through this bot.`);
+    return result;
+  });
+}
+
+async function updateStreamzAppSupportCase(env, payload, staff) {
+  const action = String(payload?.action || '').trim();
+  const caseId = String(payload?.caseId || '').trim();
+  if (!caseId) throw httpError(400, 'Support case ID is required.');
+  return updateStreamzDatabase(env, async (db) => {
+    const cases = normalizeStreamzAppSupportCases(db.streamzAppSupportCases);
+    const index = cases.findIndex((entry) => entry.id === caseId);
+    if (index < 0) throw httpError(404, 'Support case not found.');
+    const now = new Date().toISOString();
+    const supportCase = cases[index];
+    if (action === 'reply') {
+      const message = String(payload?.message || '').trim().slice(0, 1800);
+      if (!message) throw httpError(400, 'Reply message is required.');
+      cases[index] = {
+        ...supportCase,
+        status: 'waiting_for_customer',
+        replies: [...(supportCase.replies || []), { message, staffGoogleSub: staff.googleSub, role: staff.role, at: now }],
+        events: [...(supportCase.events || []), { type: 'staff_reply', staffGoogleSub: staff.googleSub, at: now }],
+        updatedAt: now,
+      };
+      await sendStreamzAppSupportDm(env, supportCase.discordUserId, message);
+    } else if (action === 'status') {
+      const status = String(payload?.status || '').trim();
+      if (!STREAMZ_APP_SUPPORT_STATUSES.has(status)) throw httpError(400, 'Invalid support status.');
+      cases[index] = {
+        ...supportCase,
+        status,
+        events: [...(supportCase.events || []), { type: 'status_changed', status, staffGoogleSub: staff.googleSub, at: now }],
+        updatedAt: now,
+      };
+    } else {
+      throw httpError(400, 'Unsupported support action.');
+    }
+    db.streamzAppSupportCases = cases;
+    appendStreamzAuditEvent(db, 'streamz_app_support_case_updated', { caseId, action, staffGoogleSub: staff.googleSub }, now);
+    return { db, value: { ok: true, case: cases[index] } };
+  });
+}
+
+async function updateStreamzBugReport(env, payload, staff) {
+  const bugId = String(payload?.bugId || '').trim();
+  const status = String(payload?.status || '').trim();
+  if (!bugId || !STREAMZ_BUG_REPORT_STATUSES.has(status)) throw httpError(400, 'Valid bug ID and status are required.');
+  return updateStreamzDatabase(env, async (db) => {
+    const now = new Date().toISOString();
+    db.streamzBugReports = normalizeStreamzBugReports(db.streamzBugReports).map((entry) => (
+      entry.id === bugId
+        ? { ...entry, status, updatedAt: now, events: [...(entry.events || []), { type: 'status_changed', status, staffGoogleSub: staff.googleSub, at: now }] }
+        : entry
+    ));
+    appendStreamzAuditEvent(db, 'streamz_bug_report_updated', { bugId, status, staffGoogleSub: staff.googleSub }, now);
+    return { db, value: { ok: true } };
+  });
+}
+
+async function markStreamzBugReportResolved(env, bugId, discordUserId) {
+  return updateStreamzDatabase(env, async (db) => {
+    const now = new Date().toISOString();
+    db.streamzBugReports = normalizeStreamzBugReports(db.streamzBugReports).map((entry) => (
+      entry.id === bugId ? { ...entry, status: 'resolved', resolvedByDiscordUserId: discordUserId, resolvedAt: now, updatedAt: now } : entry
+    ));
+    return { db, value: { ok: true } };
+  });
+}
+
+async function sendStreamzAppSupportDm(env, discordUserId, message) {
+  const content = `A Streamz Support team member has joined this conversation.\n\n${message}`;
+  return sendDiscordDm(env, discordUserId, content);
+}
+
+async function sendDiscordDm(env, discordUserId, content) {
+  const token = String(env.DISCORD_BOT_TOKEN || '').trim();
+  if (!token || !discordUserId || !content) return false;
+  const channel = await discordApi(env, 'https://discord.com/api/v10/users/@me/channels', {
+    method: 'POST',
+    body: JSON.stringify({ recipient_id: discordUserId }),
+  }).catch(() => null);
+  if (!channel?.id) return false;
+  await discordApi(env, `https://discord.com/api/v10/channels/${encodeURIComponent(channel.id)}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ content: sanitizeDiscordMessage(content).slice(0, 1900) }),
+  }).catch(() => null);
+  return true;
+}
+
+async function discordApi(env, url, init = {}) {
+  const token = requireEnv(env, 'DISCORD_BOT_TOKEN');
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      Authorization: `Bot ${token}`,
+      'Content-Type': 'application/json',
+      ...(init.headers || {}),
+    },
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    throw httpError(response.status, `Discord API request failed: ${response.status}`);
+  }
+  return data;
+}
+
+async function listStreamzAppSupportStaff(env) {
+  const db = await loadDatabase(env);
+  return normalizeStreamzAppSupportStaff(db.streamzSupportStaff, env);
+}
+
+async function requireStreamzAppSupportStaff(env, user) {
+  const sub = String(user?.sub || '').trim();
+  if (!sub) throw httpError(401, 'Google sign-in required.');
+  const staff = await listStreamzAppSupportStaff(env);
+  const member = staff.find((entry) => entry.googleSub === sub);
+  if (!member) throw httpError(403, 'This Google account is not approved for Streamz Support.');
+  return member;
+}
+
+function normalizeStreamzAppSupportStaff(value, env = {}) {
+  const ownerSub = String(env.STREAMZ_OWNER_GOOGLE_SUB || '').trim();
+  const merged = new Map();
+  if (ownerSub) merged.set(ownerSub, { googleSub: ownerSub, role: 'owner', source: 'owner_secret' });
+  for (const entry of parseStreamzAppSupportStaffEnv(env)) merged.set(entry.googleSub, entry);
+  for (const entry of Array.isArray(value) ? value : []) {
+    const googleSub = String(entry?.googleSub || '').trim();
+    const role = normalizeStreamzAppSupportRole(entry?.role);
+    if (googleSub && STREAMZ_APP_SUPPORT_ROLES.has(role)) merged.set(googleSub, { ...entry, googleSub, role });
+  }
+  return [...merged.values()];
+}
+
+function parseStreamzAppSupportStaffEnv(env) {
+  return String(env.STREAMZ_APP_SUPPORT_STAFF || '').trim().split(/[,\n]+/).map((item) => {
+    const [googleSub, roleRaw] = item.split(':').map((part) => String(part || '').trim());
+    const role = normalizeStreamzAppSupportRole(roleRaw || 'support');
+    return googleSub && STREAMZ_APP_SUPPORT_ROLES.has(role) ? { googleSub, role, source: 'app_support_secret' } : null;
+  }).filter(Boolean);
+}
+
+function normalizeStreamzAppSupportRole(role) {
+  return String(role || '').trim().toLowerCase();
+}
+
+function normalizeStreamzBugReports(value) {
+  return Array.isArray(value)
+    ? value.filter((entry) => entry && typeof entry === 'object' && entry.id).map((entry) => ({
+      ...entry,
+      status: STREAMZ_BUG_REPORT_STATUSES.has(entry.status) ? entry.status : 'new',
+      attachments: Array.isArray(entry.attachments) ? entry.attachments.map(sanitizeDiscordAttachment) : [],
+      events: Array.isArray(entry.events) ? entry.events : [],
+    }))
+    : [];
+}
+
+function normalizeStreamzAppSupportCases(value) {
+  return Array.isArray(value)
+    ? value.filter((entry) => entry && typeof entry === 'object' && entry.id).map((entry) => ({
+      ...entry,
+      status: STREAMZ_APP_SUPPORT_STATUSES.has(entry.status) ? entry.status : 'open',
+      attachments: Array.isArray(entry.attachments) ? entry.attachments.map(sanitizeDiscordAttachment) : [],
+      events: Array.isArray(entry.events) ? entry.events : [],
+      replies: Array.isArray(entry.replies) ? entry.replies : [],
+    }))
+    : [];
+}
+
+function normalizeStreamzKnownIssues(value) {
+  return Array.isArray(value) ? value.filter((entry) => entry && typeof entry === 'object' && entry.id) : [];
+}
+
+async function handleStreamzAppUpdate(request, env, origin) {
+  if (request.method !== 'GET') {
+    throw httpError(405, 'Streamz update check requires GET.');
+  }
+  const url = new URL(request.url);
+  const currentVersion = normalizeVersion(url.searchParams.get('version'));
+  const latestVersion = normalizeVersion(env.STREAMZ_LATEST_VERSION || '0.1.0');
+  const downloadUrl = String(env.STREAMZ_UPDATE_DOWNLOAD_URL || 'https://vortex-prime-emu.com/projects/streamz/').trim();
+  const releaseNotesUrl = String(env.STREAMZ_UPDATE_NOTES_URL || 'https://vortex-prime-emu.com/projects/streamz/help/').trim();
+  const updateAvailable = compareSemver(latestVersion, currentVersion) > 0;
+  return json({
+    ok: true,
+    product: 'streamz',
+    currentVersion,
+    latestVersion,
+    updateAvailable,
+    mandatory: String(env.STREAMZ_UPDATE_MANDATORY || '').toLowerCase() === 'true',
+    downloadUrl,
+    releaseNotesUrl,
+    checkedAt: new Date().toISOString(),
+  }, 200, origin);
+}
+
+function normalizeVersion(value) {
+  const match = String(value || '').trim().match(/[0-9]+(?:\.[0-9]+){0,3}/);
+  return match ? match[0] : '0.0.0';
+}
+
+function compareSemver(left, right) {
+  const a = normalizeVersion(left).split('.').map((part) => Number(part) || 0);
+  const b = normalizeVersion(right).split('.').map((part) => Number(part) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length, 3); i += 1) {
+    const diff = (a[i] || 0) - (b[i] || 0);
+    if (diff !== 0) return diff > 0 ? 1 : -1;
+  }
+  return 0;
+}
+
+function sanitizeDiscordAttachment(attachment) {
+  return {
+    id: String(attachment?.id || ''),
+    filename: String(attachment?.filename || attachment?.name || '').slice(0, 200),
+    contentType: String(attachment?.content_type || attachment?.contentType || attachment?.type || '').slice(0, 120),
+    size: Number(attachment?.size || 0) || 0,
+    url: String(attachment?.url || '').slice(0, 500),
+  };
+}
+
+function sanitizeDiscordMessage(value) {
+  return String(value || '').replace(/@everyone/g, '@\u200beveryone').replace(/@here/g, '@\u200bhere').trim();
+}
+
+function getStreamzBugsChannelId(env) {
+  return String(env.STREAMZ_BUGS_CHANNEL_ID || STREAMZ_DEFAULT_BUGS_CHANNEL_ID).trim();
+}
+
+function buildDiscordMessageUrl(guildId, channelId, messageId) {
+  return guildId && channelId && messageId ? `https://discord.com/channels/${guildId}/${channelId}/${messageId}` : null;
+}
+
+function compareDiscordSnowflakes(a, b) {
+  try {
+    const left = BigInt(a);
+    const right = BigInt(b);
+    return left < right ? -1 : left > right ? 1 : 0;
+  } catch {
+    return String(a).localeCompare(String(b));
+  }
+}
+
+function extractStreamzVersion(text) {
+  return String(text || '').match(/\b(?:version|v)\s*[:=]?\s*([0-9]+(?:\.[0-9]+){1,3})\b/i)?.[1] || null;
+}
+
+function extractOperatingSystem(text) {
+  const value = String(text || '');
+  if (/windows\s*11/i.test(value)) return 'Windows 11';
+  if (/windows\s*10/i.test(value)) return 'Windows 10';
+  if (/\bmac(?:os)?\b/i.test(value)) return 'macOS';
+  if (/\blinux\b/i.test(value)) return 'Linux';
+  return null;
+}
+
+function extractErrorText(text) {
+  const value = String(text || '');
+  return value.match(/(?:error|exception|failed|crash(?:ed)?)[\s:.-]+(.{1,240})/i)?.[0] || null;
+}
+
+function extractActionsTried(text) {
+  const value = String(text || '');
+  return value.match(/(?:tried|already tried|i tried)[\s:.-]+(.{1,300})/i)?.[1] || null;
 }
 
 function appendStreamzAuditEvent(db, type, details = {}, at = new Date().toISOString()) {

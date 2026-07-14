@@ -6,3 +6,11 @@ workers_dev = true
 routes = [
   { pattern = "vortex-prime-emu.com/api/*", zone_name = "vortex-prime-emu.com" }
 ]
+
+[triggers]
+crons = ["*/1 * * * *"]
+
+[vars]
+STREAMZ_BUGS_CHANNEL_ID = "1526100653586255974"
+GEMINI_PRIMARY_MODEL = "gemini-3-flash-preview"
+GEMINI_FALLBACK_MODEL = "gemini-2.5-flash"

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streamz Support Dashboard</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root { font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f8fafc; background: #05070b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #05070b; padding: 1rem; }
+    main { width: min(1180px, 100%); margin: 0 auto; }
+    header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin: 1rem 0 1.5rem; }
+    h1, h2, h3 { margin: 0; }
+    section { border: 1px solid rgba(255,255,255,.12); background: #0c111a; border-radius: 12px; padding: 1rem; margin: 1rem 0; }
+    textarea, select { width: 100%; border: 1px solid rgba(255,255,255,.16); background: #111827; color: #f8fafc; border-radius: 8px; padding: .75rem; }
+    textarea { min-height: 84px; resize: vertical; }
+    button { border: 0; border-radius: 999px; padding: .72rem 1rem; font-weight: 850; color: #fff; background: linear-gradient(120deg, #0ea5e9, #6366f1); cursor: pointer; }
+    button.secondary { background: #1f2937; border: 1px solid rgba(255,255,255,.14); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1rem; }
+    .row { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; }
+    .status { color: #cbd5e1; line-height: 1.55; white-space: pre-wrap; }
+    .case, .bug { border-top: 1px solid rgba(255,255,255,.1); padding: .9rem 0; }
+    .case:first-child, .bug:first-child { border-top: 0; }
+    .badge { display: inline-flex; border-radius: 999px; padding: .2rem .55rem; background: #1f2937; color: #bfdbfe; font-size: .8rem; font-weight: 800; }
+    dl { display: grid; grid-template-columns: 140px 1fr; gap: .45rem .8rem; }
+    dt { color: #94a3b8; font-weight: 800; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    a { color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Streamz Support Dashboard</h1>
+        <p class="status">Private app-support cases, Bugs channel AI troubleshooting, and staff replies through the Streamz bot.</p>
+      </div>
+      <div id="googleButton"></div>
+    </header>
+
+    <section>
+      <div class="row">
+        <h2>Private Support Cases</h2>
+        <button id="refreshBtn" class="secondary">Refresh</button>
+      </div>
+      <div id="caseList" class="status">Sign in to load support cases.</div>
+    </section>
+
+    <section>
+      <h2>Bugs Channel Reports</h2>
+      <div id="bugList" class="status"></div>
+    </section>
+  </main>
+
+  <script>
+    const googleButton = document.getElementById('googleButton');
+    const caseList = document.getElementById('caseList');
+    const bugList = document.getElementById('bugList');
+
+    async function api(path, options = {}) {
+      const resp = await fetch(path, { credentials: 'include', ...options });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.message || 'Request failed.');
+      return data;
+    }
+
+    function esc(value) {
+      return String(value || '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    }
+
+    async function init() {
+      const config = await api('/api/auth/config');
+      await new Promise((resolve) => {
+        const started = Date.now();
+        const timer = setInterval(() => {
+          if (window.google?.accounts?.id || Date.now() - started > 6000) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 100);
+      });
+      if (window.google?.accounts?.id && config.googleClientId) {
+        google.accounts.id.initialize({
+          client_id: config.googleClientId,
+          callback: async (response) => {
+            await api('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ credential: response.credential }),
+            });
+            await loadSupport();
+          },
+        });
+        google.accounts.id.renderButton(googleButton, { theme: 'outline', size: 'large', shape: 'pill' });
+      }
+      await loadSupport();
+    }
+
+    async function loadSupport() {
+      const staff = await api('/api/streamz/support/staff');
+      const data = await api('/api/streamz/support/cases');
+      renderCases(data.cases || [], staff.staff?.role || 'support');
+      renderBugs(data.bugs || []);
+    }
+
+    function renderCases(cases, role) {
+      caseList.innerHTML = cases.map((item) => `
+        <div class="case">
+          <div class="row"><h3>${esc(item.caseNumber)}</h3><span class="badge">${esc(item.status)}</span><span class="badge">${esc(role)}</span></div>
+          <dl>
+            <dt>Discord</dt><dd>${esc(item.discordUsername)} ${esc(item.discordUserId)}</dd>
+            <dt>Version</dt><dd>${esc(item.streamzVersion || 'Unknown')}</dd>
+            <dt>OS</dt><dd>${esc(item.operatingSystem || 'Unknown')}</dd>
+            <dt>Description</dt><dd>${esc(item.description)}</dd>
+            <dt>Error</dt><dd>${esc(item.errorText || 'Not provided')}</dd>
+          </dl>
+          <label>Reply through Streamz bot<textarea data-reply="${esc(item.id)}" placeholder="Write the private support reply"></textarea></label>
+          <div class="row">
+            <button data-action="reply" data-id="${esc(item.id)}">Send reply</button>
+            <select data-status="${esc(item.id)}">
+              <option value="open">open</option>
+              <option value="investigating">investigating</option>
+              <option value="waiting_for_customer">waiting_for_customer</option>
+              <option value="resolved">resolved</option>
+              <option value="closed">closed</option>
+            </select>
+            <button class="secondary" data-action="status" data-id="${esc(item.id)}">Update status</button>
+          </div>
+        </div>
+      `).join('') || 'No private support cases.';
+
+      caseList.querySelectorAll('button[data-action]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const caseId = button.dataset.id;
+          const action = button.dataset.action;
+          try {
+            if (action === 'reply') {
+              const textarea = caseList.querySelector(`textarea[data-reply="${CSS.escape(caseId)}"]`);
+              await api('/api/streamz/support/cases/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reply', caseId, message: textarea?.value || '' }),
+              });
+            } else {
+              const select = caseList.querySelector(`select[data-status="${CSS.escape(caseId)}"]`);
+              await api('/api/streamz/support/cases/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'status', caseId, status: select?.value || 'open' }),
+              });
+            }
+            await loadSupport();
+          } catch (error) {
+            alert(error.message);
+          }
+        });
+      });
+    }
+
+    function renderBugs(bugs) {
+      bugList.innerHTML = bugs.map((item) => `
+        <div class="bug">
+          <div class="row"><h3>${esc(item.discordUsername || 'Discord user')}</h3><span class="badge">${esc(item.status)}</span></div>
+          <dl>
+            <dt>Message</dt><dd>${item.messageUrl ? `<a href="${esc(item.messageUrl)}">Open Discord message</a>` : 'Unavailable'}</dd>
+            <dt>Version</dt><dd>${esc(item.streamzVersion || 'Unknown')}</dd>
+            <dt>OS</dt><dd>${esc(item.operatingSystem || 'Unknown')}</dd>
+            <dt>Report</dt><dd>${esc(item.content)}</dd>
+            <dt>AI reply</dt><dd>${esc(item.aiReply || 'Not generated yet')}</dd>
+          </dl>
+        </div>
+      `).join('') || 'No Bugs channel reports.';
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => loadSupport().catch((error) => { caseList.textContent = error.message; }));
+    init().catch((error) => { caseList.textContent = error.message; });
+  </script>
+</body>
+</html>

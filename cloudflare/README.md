@@ -97,8 +97,13 @@ STREAMZ_OWNER_GOOGLE_SUB
 - `DISCORD_PUBLIC_KEY` — Discord public key used to verify interaction signatures.
 - `DISCORD_BOT_TOKEN` — Discord bot token used by command setup and the Worker for private bot replies. Do not expose it to frontend code.
 - `DISCORD_GUILD_ID` — Optional official Streamz Discord server ID used only to clear old server commands during command registration.
+- `STREAMZ_BUGS_CHANNEL_ID` — Official public Discord Bugs channel ID polled by the Worker for Streamz app bug reports.
+- `STREAMZ_APP_SUPPORT_STAFF` — Optional comma-separated `googleSub:role` entries for private Streamz app support access, where role is `owner`, `admin`, or `support`.
 - `STREAMZ_EXPIRED_CODE_REVIEW_STAFF` — Optional comma-separated `googleSub:role` entries for expired-code review access, where role is `owner`, `admin`, or `reviewer`.
 - `STREAMZ_OWNER_GOOGLE_SUB` — Owner Google stable subject identifier for the server-side developer grant.
+- `GEMINI_API_KEY` — Google AI Studio API key used only by the Worker for Bugs channel automated troubleshooting. Do not expose it to frontend code.
+- `GEMINI_PRIMARY_MODEL` — Optional override for the primary troubleshooting model. Default: `gemini-3-flash-preview`.
+- `GEMINI_FALLBACK_MODEL` — Optional override for the fallback troubleshooting model. Default: `gemini-2.5-flash`.
 
 Optional Streamz OAuth Worker variables:
 
@@ -237,7 +242,7 @@ https://vortex-prime-emu.com/projects/streamz/pro/verify-discord/?token=...
 GET/POST https://vortex-prime-emu.com/api/streamz/pro/verify-discord
 ```
 
-Discord requests must include valid `X-Signature-Ed25519` and `X-Signature-Timestamp` headers. The Worker verifies the raw request body against Discord's public key before accepting `/verify-pro` or `/code-expired`. Both commands are DM-only and are rejected if used inside the server.
+Discord requests must include valid `X-Signature-Ed25519` and `X-Signature-Timestamp` headers. The Worker verifies the raw request body against Discord's public key before accepting `/verify-pro`, `/code-expired`, or `/contact-support`. All three commands are DM-only and are rejected if used inside the server.
 
 Register the DM slash commands from a private shell with the Discord token available only in the environment. If `DISCORD_GUILD_ID` is present, the script clears old server commands and then registers global DM commands:
 
@@ -249,6 +254,25 @@ node tools/register-streamz-discord-command.mjs
 ```
 
 The activation code expires after 20 minutes, is single-use, and is stored only as a hash. If it expires unused, the customer must directly message the Streamz bot and run `/code-expired` with the original activation-pass PDF attached. The Worker extracts the code from the PDF, confirms the code belongs to a real paid order and expired unused, then adds the request to the private expired-code review dashboard. The website verification token expires after 30 minutes, is single-use, and is stored only as a hash. The verification URL never contains Stripe IDs, Google IDs, Discord IDs, emails, internal account IDs, full names, or dates of birth.
+
+## Streamz app support and AI troubleshooting
+
+General Streamz app support is separate from Streamz Pro activation and expired-code review.
+
+Support routes:
+
+```text
+https://vortex-prime-emu.com/projects/streamz/support/
+GET/POST https://vortex-prime-emu.com/api/streamz/support/...
+```
+
+The Worker polls the official Discord `Bugs` channel configured by `STREAMZ_BUGS_CHANNEL_ID`, detects likely bug reports, records the Discord user, message link, channel, timestamp, app version, OS, error text, actions tried, and attachments metadata, then asks Gemini for a concise troubleshooting reply. The primary model is `gemini-3-flash-preview`; if it fails once and still cannot respond, the Worker falls back to `gemini-2.5-flash`. If both models fail, the public reply is exactly:
+
+```text
+Automated troubleshooting is temporarily unavailable. DM the Streamz bot and use /contact-support for private assistance.
+```
+
+Private support uses the DM-only `/contact-support` command. Staff manage cases through the protected support dashboard after Google sign-in. Staff replies are delivered by the official Streamz Discord bot, not by personal Discord accounts. The `/contact-support` system does not replace `/verify-pro` or `/code-expired` and does not post private cases into Discord channels.
 
 The final Pro licence owner is Google's stable subject identifier plus the internal entitlement record. Discord is only the secure bridge used to claim the paid session.
 
