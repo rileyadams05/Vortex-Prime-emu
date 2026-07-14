@@ -524,7 +524,7 @@
         const seconds = Math.floor((remaining % 60000) / 1000);
         el.textContent = remaining > 0
           ? `Activation code expires in ${minutes}:${String(seconds).padStart(2, '0')}.`
-          : 'Activation code expired. Contact Streamz Support for assistance.';
+          : 'Activation code expired. DM the Streamz bot and use /code-expired with your original activation-pass PDF.';
       };
       setTimeout(update, 0);
       activationCountdownTimer = setInterval(update, 1000);
@@ -561,14 +561,13 @@
       renderStateCard({
         variant: 'pending',
         title: 'Streamz Pro payment received',
-        message: `Your Streamz Pro purchase is confirmed, but Pro is not active yet.\n\nTo activate it:\n1. Download and keep your activation pass.\n2. Scan the permanent QR code on the pass or open /projects/streamz/pro/verify.\n3. Enter the one-time purchase code printed on the pass.\n4. Run /verify-pro using the same purchase code in the official Streamz Discord.\n5. Press Link Google Account in the bot’s private message.${codeLine}\n\nThe Discord bot will send a private automated message. Please do not reply to that message.`,
+        message: `Your Streamz Pro purchase is confirmed, but Pro is not active yet.\n\nTo activate it:\n1. Download and keep your activation pass.\n2. Scan the permanent QR code on the pass or open /projects/streamz/pro/verify.\n3. Enter the one-time purchase code printed on the pass.\n4. Directly message the Streamz bot in Discord and run /verify-pro with the same purchase code.\n5. Press Link Google Account in the bot’s private message.${codeLine}\n\nIf the 20-minute code expires before you use it, directly message the Streamz bot and run /code-expired with the original activation-pass PDF attached. The Discord bot will send a private automated message. Please do not reply to that message.`,
         extraHtml: renderActivationCountdown(expiresAt),
         actions: [
           ...(hasPass ? [{ label: 'Download activation pass', action: 'download-pass' }] : []),
           ...(code ? [{ label: 'Copy purchase code', action: 'copy-code' }] : []),
           { label: 'Open verification page', href: '/projects/streamz/pro/verify/' },
-          { label: 'Join Discord', href: details.discordInviteUrl || 'https://discord.gg/TwMsbb97Mm' },
-          { label: 'Open Discord verification', href: details.discordVerifyUrl || 'https://discord.com/channels/@me' },
+          { label: 'Open Discord bot DM', href: details.discordVerifyUrl || 'https://discord.com/channels/@me' },
           { label: 'Prepare activation pass', action: 'prepare-pass' },
           { label: 'Check activation status', action: 'refresh-status' },
           { label: 'Return to Vortex Prime', href: '/' },

@@ -102,8 +102,8 @@ const STREAMZ_CODE_BATCH_SIZE = 10;
 const STREAMZ_CODE_LOW_WATERMARK = 2;
 const STREAMZ_CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const STREAMZ_CODE_POOL_STATUSES = new Set(['unused', 'assigned', 'pending_google_linking', 'redeemed', 'expired', 'replaced', 'invalidated']);
-const STREAMZ_SUPPORT_TICKET_STATUSES = new Set(['open', 'claimed', 'closed']);
-const STREAMZ_SUPPORT_ROLES = new Set(['owner', 'admin', 'support']);
+const STREAMZ_EXPIRED_CODE_REVIEW_STATUSES = new Set(['open', 'claimed', 'closed']);
+const STREAMZ_EXPIRED_CODE_REVIEW_ROLES = new Set(['owner', 'admin', 'reviewer']);
 const STREAMZ_SITE_BASE_URL = 'https://vortex-prime-emu.com';
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
@@ -207,8 +207,8 @@ export default {
         return await handleStreamzProVerifyDiscord(request, env, allowedOrigin);
       }
 
-      if (path.startsWith('api/streamz/pro/support/')) {
-        return await handleStreamzProSupportRequest(request, env, path, allowedOrigin);
+      if (path.startsWith('api/streamz/pro/expired-code-review/')) {
+        return await handleStreamzProExpiredCodeReviewRequest(request, env, path, allowedOrigin);
       }
 
       if (path === 'api/streamz/discord/interactions') {
@@ -824,7 +824,7 @@ async function handleStreamzProAppEntitlement(request, env, origin) {
     hasPro: ownsPro,
     status,
     message: status === 'pending_discord_verification'
-      ? 'Your payment was received. Join the official Streamz Discord server and follow the verification instructions shown on the checkout page.'
+      ? 'Your payment was received. Download your activation pass, then directly message the Streamz bot and run /verify-pro with the purchase code printed on the pass.'
       : null,
     actions: status === 'pending_discord_verification'
       ? ['open_discord', 'refresh_status', 'open_checkout_page']
@@ -863,16 +863,16 @@ async function handleStreamzProVerifyDiscord(request, env, origin) {
   return json(result, result.ok ? 200 : (result.status === 'expired' ? 410 : 400), origin);
 }
 
-async function handleStreamzProSupportRequest(request, env, path, origin) {
-  const user = await ensureAuthenticated(request, env, 'Sign in with Google to access Streamz Support.');
+async function handleStreamzProExpiredCodeReviewRequest(request, env, path, origin) {
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to access Streamz expired-code review.');
   const staff = await requireStreamzSupportStaff(env, user);
-  const route = path.replace(/^api\/streamz\/pro\/support\/?/, '');
+  const route = path.replace(/^api\/streamz\/pro\/expired-code-review\/?/, '');
 
   if (route === 'staff' && request.method === 'GET') {
     return json({ ok: true, staff, members: await listStreamzSupportStaff(env) }, 200, origin);
   }
   if (route === 'staff' && request.method === 'POST') {
-    if (staff.role !== 'owner') throw httpError(403, 'Only the owner can manage Streamz Support staff.');
+    if (staff.role !== 'owner') throw httpError(403, 'Only the owner can manage Streamz expired-code review staff.');
     const payload = await request.json().catch(() => ({}));
     const result = await updateStreamzSupportStaff(env, payload, user);
     return json(result, 200, origin);
@@ -894,7 +894,7 @@ async function handleStreamzProSupportRequest(request, env, path, origin) {
     return json(await issueStreamzSupportReplacementCode(env, payload, staff, user), 200, origin);
   }
 
-  throw httpError(404, 'Streamz Support route not found.');
+  throw httpError(404, 'Streamz expired-code review route not found.');
 }
 
 async function handleStreamzDiscordInteractions(request, env) {
@@ -923,10 +923,13 @@ async function handleStreamzDiscordInteractions(request, env) {
     });
   }
 
-  if (interaction.data?.name === 'support') {
-    return await handleStreamzDiscordSupportCommand(interaction, env);
+  if (interaction.data?.name === 'verify-pro') {
+    return await handleStreamzDiscordVerifyProCommand(interaction, env);
   }
-  if (interaction.data?.name !== 'verify-pro') {
+  if (interaction.data?.name === 'code-expired') {
+    return await handleStreamzDiscordCodeExpiredCommand(interaction, env);
+  }
+  {
     return discordJson({
       type: 4,
       data: {
@@ -935,13 +938,20 @@ async function handleStreamzDiscordInteractions(request, env) {
       },
     });
   }
-
-  return await handleStreamzDiscordVerifyProCommand(interaction, env);
 }
 
 async function handleStreamzDiscordVerifyProCommand(interaction, env) {
   const discordUserId = interaction.member?.user?.id || interaction.user?.id || null;
   const code = interaction.data?.options?.find((option) => option.name === 'code')?.value || '';
+  if (interaction.guild_id) {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Directly message the Streamz bot and run /verify-pro there. This command is not used inside the server.',
+      },
+    });
+  }
   if (!discordUserId || !code) {
     return discordJson({
       type: 4,
@@ -995,28 +1005,27 @@ async function handleStreamzDiscordVerifyProCommand(interaction, env) {
   });
 }
 
-async function handleStreamzDiscordSupportCommand(interaction, env) {
+async function handleStreamzDiscordCodeExpiredCommand(interaction, env) {
   if (interaction.guild_id) {
     return discordJson({
       type: 4,
       data: {
         flags: 64,
-        content: 'For Streamz Pro activation support, message this bot directly and run /support with your original activation-pass PDF attached.',
+        content: 'Directly message the Streamz bot and run /code-expired there with your original activation-pass PDF attached.',
       },
     });
   }
   const discordUser = interaction.member?.user || interaction.user || {};
   const discordUserId = discordUser.id || null;
   const options = Array.isArray(interaction.data?.options) ? interaction.data.options : [];
-  const description = String(options.find((option) => option.name === 'description')?.value || '').trim();
   const attachmentId = String(options.find((option) => option.name === 'activation_pass')?.value || '').trim();
   const attachment = interaction.data?.resolved?.attachments?.[attachmentId] || null;
-  if (!discordUserId || !description || !attachment) {
+  if (!discordUserId || !attachment) {
     return discordJson({
       type: 4,
       data: {
         flags: 64,
-        content: 'Run /support with a short description and the original Streamz Pro Activation Pass PDF attached.',
+        content: 'Run /code-expired in a direct message with this bot and attach the original Streamz Pro Activation Pass PDF.',
       },
     });
   }
@@ -1027,14 +1036,13 @@ async function handleStreamzDiscordSupportCommand(interaction, env) {
       type: 4,
       data: {
         flags: 64,
-        content: 'Streamz Support requires the original activation-pass PDF. Screenshots, images, photos, copied text and recreated files are not accepted.',
+        content: 'Only the original Streamz Pro Activation Pass PDF is accepted. Screenshots, PNGs, JPGs, photos and recreated PDFs are rejected.',
       },
     });
   }
 
-  const result = await createStreamzSupportTicketFromDiscord(env, {
+  const result = await createStreamzExpiredCodeReviewFromDiscord(env, {
     discordUser,
-    description,
     attachment,
   });
   return discordJson({
@@ -1042,8 +1050,8 @@ async function handleStreamzDiscordSupportCommand(interaction, env) {
     data: {
       flags: 64,
       content: result.ok
-        ? `Streamz Support ticket ${result.ticketNumber} was created. A support team member will review the original PDF.`
-        : (result.message || 'Unable to create a support ticket right now.'),
+        ? `Expired-code review ${result.ticketNumber} was created. An authorised team member will review the original PDF and can issue a new 20-minute code if it is valid.`
+        : (result.message || 'Unable to create an expired-code review right now.'),
     },
   });
 }
@@ -1097,7 +1105,7 @@ async function claimStreamzDiscordCode(env, code, discordUserId) {
       const message = poolEntry?.status === 'redeemed'
         ? 'This activation code has already been redeemed.'
         : ['expired', 'replaced'].includes(poolEntry?.status)
-          ? 'This activation code has expired. Contact Streamz Support for assistance.'
+          ? 'Your activation code has expired. DM the Streamz bot and use /code-expired with your original activation-pass PDF.'
           : 'This activation code is invalid.';
       return { db, value: { ok: false, message } };
     }
@@ -1136,7 +1144,7 @@ async function claimStreamzDiscordCode(env, code, discordUserId) {
           : entry
       ));
       db.streamzProDiscordVerifications = verifications;
-      return { db, value: { ok: false, message: 'This activation code has expired. Contact Streamz Support for assistance.' } };
+      return { db, value: { ok: false, message: 'Your activation code has expired. DM the Streamz bot and use /code-expired with your original activation-pass PDF.' } };
     }
     if (!entitlement || entitlement.status !== 'pending_discord_verification' || !entitlement.paymentConfirmedAt || entitlement.status === 'revoked') {
       return { db, value: { ok: false, message: 'This Streamz Pro purchase is not ready for Discord verification.' } };
@@ -1305,11 +1313,11 @@ function applySimpleDbRateLimit(db, key, maxAttempts, windowMs, message) {
   db.streamzRateLimits = { ...limits, [key]: { attempts, lastAt: now } };
 }
 
-async function createStreamzSupportTicketFromDiscord(env, input) {
+async function createStreamzExpiredCodeReviewFromDiscord(env, input) {
   const attachmentUrl = String(input.attachment?.url || '').trim();
   const now = new Date().toISOString();
   let extractedCode = null;
-  let lookup = { ok: false, status: 'manual_review', message: 'PDF text extraction did not find an activation code.' };
+  let lookup = { ok: false, status: 'invalid', message: 'PDF text extraction did not find an activation code.' };
   if (attachmentUrl) {
     const pdfBytes = await fetch(attachmentUrl).then((resp) => (resp.ok ? resp.arrayBuffer() : null)).catch(() => null);
     extractedCode = pdfBytes ? extractStreamzActivationCodeFromPdfBytes(pdfBytes) : null;
@@ -1318,10 +1326,21 @@ async function createStreamzSupportTicketFromDiscord(env, input) {
       lookup = await lookupStreamzActivationCodeInDb(db, extractedCode);
     }
   }
+  if (!extractedCode) {
+    return { ok: false, message: 'No valid Streamz Pro activation code was found in the uploaded PDF. Upload the original activation-pass PDF.' };
+  }
+  if (lookup.status !== 'expired') {
+    const message = lookup.status === 'redeemed'
+      ? 'This purchase code has already been redeemed.'
+      : lookup.status === 'available' || lookup.status === 'claimed'
+        ? 'This activation code has not expired. DM the Streamz bot and use /verify-pro with the active code.'
+        : 'The uploaded PDF does not match an expired, unused Streamz Pro paid order.';
+    return { ok: false, message };
+  }
   const ticket = await updateStreamzDatabase(env, async (db) => {
     const tickets = normalizeStreamzSupportTickets(db.streamzProSupportTickets);
     const ticketId = `stzsup_${crypto.randomUUID()}`;
-    const ticketNumber = `STZ-SUP-${String(tickets.length + 1).padStart(5, '0')}`;
+    const ticketNumber = `STZ-EXP-${String(tickets.length + 1).padStart(5, '0')}`;
     const nextTicket = {
       id: ticketId,
       ticketNumber,
@@ -1329,17 +1348,18 @@ async function createStreamzSupportTicketFromDiscord(env, input) {
       discordUserId: String(input.discordUser?.id || ''),
       discordUsername: buildDiscordDisplayName(input.discordUser),
       discordMention: input.discordUser?.id ? `<@${input.discordUser.id}>` : null,
-      description: String(input.description || '').slice(0, 2000),
+      description: 'Expired activation-code replacement request submitted by DM command.',
       attachmentUrl,
       attachmentFilename: String(input.attachment?.filename || ''),
       activationCode: extractedCode,
       backendVerification: lookup,
+      requestType: 'expired_code_replacement',
       createdAt: now,
       updatedAt: now,
       events: [{ type: 'created', at: now, actor: 'discord_user' }],
     };
     db.streamzProSupportTickets = [...tickets, nextTicket].slice(-300);
-    appendStreamzAuditEvent(db, 'support_ticket_created', {
+    appendStreamzAuditEvent(db, 'expired_code_review_created', {
       ticketId,
       ticketNumber,
       discordUserId: nextTicket.discordUserId,
@@ -1370,7 +1390,7 @@ async function requireStreamzSupportStaff(env, user) {
   if (!sub) throw httpError(401, 'Google sign-in required.');
   const staff = await listStreamzSupportStaff(env);
   const member = staff.find((entry) => entry.googleSub === sub);
-  if (!member) throw httpError(403, 'This Google account is not approved for Streamz Support.');
+  if (!member) throw httpError(403, 'This Google account is not approved for Streamz expired-code review.');
   return member;
 }
 
@@ -1381,26 +1401,26 @@ function normalizeStreamzSupportStaff(value, env = {}) {
   for (const entry of parseStreamzSupportStaffEnv(env)) merged.set(entry.googleSub, entry);
   for (const entry of Array.isArray(value) ? value : []) {
     const googleSub = String(entry?.googleSub || '').trim();
-    const role = String(entry?.role || '').trim().toLowerCase();
-    if (googleSub && STREAMZ_SUPPORT_ROLES.has(role)) merged.set(googleSub, { ...entry, googleSub, role });
+    const role = normalizeExpiredCodeReviewRole(entry?.role);
+    if (googleSub && STREAMZ_EXPIRED_CODE_REVIEW_ROLES.has(role)) merged.set(googleSub, { ...entry, googleSub, role });
   }
   return [...merged.values()];
 }
 
 function parseStreamzSupportStaffEnv(env) {
-  return String(env.STREAMZ_SUPPORT_STAFF || '').trim().split(/[,\n]+/).map((item) => {
+  return String(env.STREAMZ_EXPIRED_CODE_REVIEW_STAFF || '').trim().split(/[,\n]+/).map((item) => {
     const [googleSub, roleRaw] = item.split(':').map((part) => String(part || '').trim());
-    const role = roleRaw || 'support';
-    return googleSub && STREAMZ_SUPPORT_ROLES.has(role) ? { googleSub, role, source: 'staff_secret' } : null;
+    const role = normalizeExpiredCodeReviewRole(roleRaw || 'reviewer');
+    return googleSub && STREAMZ_EXPIRED_CODE_REVIEW_ROLES.has(role) ? { googleSub, role, source: 'review_staff_secret' } : null;
   }).filter(Boolean);
 }
 
 async function updateStreamzSupportStaff(env, payload, actor) {
   const action = String(payload?.action || '').trim();
   const googleSub = String(payload?.googleSub || '').trim();
-  const role = String(payload?.role || 'support').trim().toLowerCase();
+  const role = normalizeExpiredCodeReviewRole(payload?.role || 'reviewer');
   if (!googleSub) throw httpError(400, 'Google sub is required.');
-  if (action !== 'remove' && !STREAMZ_SUPPORT_ROLES.has(role)) throw httpError(400, 'Invalid support role.');
+  if (action !== 'remove' && !STREAMZ_EXPIRED_CODE_REVIEW_ROLES.has(role)) throw httpError(400, 'Invalid expired-code review role.');
   return updateStreamzDatabase(env, async (db) => {
     let staff = normalizeStreamzSupportStaff(db.streamzProSupportStaff, {});
     if (action === 'remove') {
@@ -1412,9 +1432,14 @@ async function updateStreamzSupportStaff(env, payload, actor) {
       else staff.push(next);
     }
     db.streamzProSupportStaff = staff;
-    appendStreamzAuditEvent(db, 'support_staff_updated', { action, googleSub, role, actorSub: actor.sub });
+    appendStreamzAuditEvent(db, 'expired_code_review_staff_updated', { action, googleSub, role, actorSub: actor.sub });
     return { db, value: { ok: true, staff } };
   });
+}
+
+function normalizeExpiredCodeReviewRole(role) {
+  const normalized = String(role || '').trim().toLowerCase();
+  return normalized;
 }
 
 async function lookupStreamzSupportCode(env, code) {
@@ -1488,7 +1513,7 @@ async function issueStreamzSupportReplacementCode(env, payload, staff, actor) {
       codeHash: replacementHash,
       status: 'assigned',
       source: 'internal_csprng',
-      issueType: 'support_replacement',
+      issueType: 'expired_code_replacement',
       staffGoogleSub: staff.googleSub,
       staffRole: staff.role,
       reason,
@@ -1513,8 +1538,8 @@ async function issueStreamzSupportReplacementCode(env, payload, staff, actor) {
       purchaseCodeAssignedAt: now,
       purchaseCodeExpiresAt: expiresAt,
       activationPassCode: replacementCode,
-      supportReplacementHistory: [
-        ...(verification.supportReplacementHistory || []),
+      expiredCodeReplacementHistory: [
+        ...(verification.expiredCodeReplacementHistory || []),
         { oldCodeHash: verification.purchaseCodeHash || null, newCodeHash: replacementHash, staffGoogleSub: staff.googleSub, reason, issuedAt: now, expiresAt },
       ],
       claimedDiscordUserId: null,
@@ -1560,7 +1585,7 @@ async function updateStreamzSupportTicket(env, payload, staff) {
       throw httpError(400, 'Unsupported ticket action.');
     }
     db.streamzProSupportTickets = tickets;
-    appendStreamzAuditEvent(db, 'support_ticket_updated', { ticketId, action, staffGoogleSub: staff.googleSub }, now);
+    appendStreamzAuditEvent(db, 'expired_code_review_updated', { ticketId, action, staffGoogleSub: staff.googleSub }, now);
     return { db, value: { ok: true, ticket: tickets[index] } };
   });
 }
@@ -1576,7 +1601,7 @@ async function sendStreamzSupportDm(env, discordUserId, message) {
   if (!dmResp.ok) return false;
   const channel = await dmResp.json().catch(() => null);
   if (!channel?.id) return false;
-  const content = `A Streamz Support team member has joined this conversation.\n\n${message}`;
+  const content = `A Streamz expired-code reviewer has joined this conversation.\n\n${message}`;
   const msgResp = await fetch(`https://discord.com/api/v10/channels/${encodeURIComponent(channel.id)}/messages`, {
     method: 'POST',
     headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
@@ -1591,7 +1616,7 @@ function normalizeStreamzSupportTickets(value) {
       .filter((entry) => entry && typeof entry === 'object' && entry.id)
       .map((entry) => ({
         ...entry,
-        status: STREAMZ_SUPPORT_TICKET_STATUSES.has(entry.status) ? entry.status : 'open',
+        status: STREAMZ_EXPIRED_CODE_REVIEW_STATUSES.has(entry.status) ? entry.status : 'open',
         events: Array.isArray(entry.events) ? entry.events : [],
         replies: Array.isArray(entry.replies) ? entry.replies : [],
       }))
@@ -2311,7 +2336,7 @@ function sanitizeStreamzUpgradeSession(session) {
     discordVerifyUrl: STREAMZ_DISCORD_VERIFY_URL,
     expiresAt: session.expiresAt || null,
     message: status === 'pending_discord_verification'
-      ? 'Your payment was received. Download your activation pass, then join the official Streamz Discord server and run /verify-pro with the purchase code printed on the pass.'
+      ? 'Your payment was received. Download your activation pass, then directly message the Streamz bot and run /verify-pro with the purchase code printed on the pass.'
       : status === 'discord_claimed'
         ? 'Discord verification is claimed. Open the private Discord message and press Link Google Account.'
       : null,
@@ -2600,9 +2625,9 @@ function buildStreamzPurchaseCodeResult(status, entitlement = null, verification
       : status === 'canceled'
         ? 'This purchase was canceled and Streamz Pro is disabled.'
       : status === 'expired'
-        ? 'This activation code has expired. Contact Streamz Support for assistance.'
+        ? 'Your activation code has expired. DM the Streamz bot and use /code-expired with your original activation-pass PDF.'
       : status === 'replaced'
-        ? 'This activation code has expired. Contact Streamz Support for assistance.'
+        ? 'Your activation code has expired. DM the Streamz bot and use /code-expired with your original activation-pass PDF.'
       : 'This activation code is invalid.',
     purchase: entitlement ? {
       orderNumber: entitlement.orderNumber || buildStreamzOrderNumber(entitlement),

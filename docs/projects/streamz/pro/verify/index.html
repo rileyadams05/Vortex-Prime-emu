@@ -62,10 +62,10 @@
           <dt>Redemption</dt><dd>${purchase.redemptionStatus || data.status}</dd>
         </dl>` : ''}
         ${data.status === 'available' || data.status === 'claimed' ? `<div class="actions">
-          <a class="button" href="${data.discordInviteUrl || 'https://discord.gg/TwMsbb97Mm'}">Join Discord</a>
-          <a class="button secondary" href="${data.discordVerifyUrl || 'https://discord.com/channels/@me'}">Open Discord verification</a>
+          <a class="button" href="${data.discordVerifyUrl || 'https://discord.com/channels/@me'}">Open Discord bot DM</a>
         </div>
-        <p>In Discord, run <strong>/verify-pro ${codeInput.value.trim()}</strong>. The bot will send a private Link Google Account button.</p>` : ''}
+        <p>Directly message the Streamz bot and run <strong>/verify-pro ${codeInput.value.trim()}</strong>. The bot will send a private Link Google Account button.</p>` : ''}
+        ${data.status === 'expired' || data.status === 'replaced' ? '<p>Your activation code has expired. DM the Streamz bot and use <strong>/code-expired</strong> with your original activation-pass PDF.</p>' : ''}
       `;
     }
 

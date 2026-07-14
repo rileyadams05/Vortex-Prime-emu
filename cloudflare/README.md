@@ -76,8 +76,7 @@ DISCORD_APPLICATION_ID
 DISCORD_PUBLIC_KEY
 DISCORD_BOT_TOKEN
 DISCORD_GUILD_ID
-DISCORD_VERIFY_CHANNEL_ID
-STREAMZ_SUPPORT_STAFF
+STREAMZ_EXPIRED_CODE_REVIEW_STAFF
 STREAMZ_OWNER_GOOGLE_SUB
 ```
 
@@ -96,10 +95,9 @@ STREAMZ_OWNER_GOOGLE_SUB
 - `STRIPE_PUBLISHABLE_KEY` — Stripe publishable key returned by the Streamz Pro config endpoint for frontend diagnostics.
 - `DISCORD_APPLICATION_ID` — Discord application ID for the Streamz Pro verification command.
 - `DISCORD_PUBLIC_KEY` — Discord public key used to verify interaction signatures.
-- `DISCORD_BOT_TOKEN` — Discord bot token used by command setup and the Worker for private support notifications/replies. Do not expose it to frontend code.
-- `DISCORD_GUILD_ID` — Official Streamz Discord server ID for guild command registration.
-- `DISCORD_VERIFY_CHANNEL_ID` — Optional dedicated verification channel ID.
-- `STREAMZ_SUPPORT_STAFF` — Optional comma-separated `googleSub:role` entries for staff access, where role is `owner`, `admin`, or `support`.
+- `DISCORD_BOT_TOKEN` — Discord bot token used by command setup and the Worker for private bot replies. Do not expose it to frontend code.
+- `DISCORD_GUILD_ID` — Optional official Streamz Discord server ID used only to clear old server commands during command registration.
+- `STREAMZ_EXPIRED_CODE_REVIEW_STAFF` — Optional comma-separated `googleSub:role` entries for expired-code review access, where role is `owner`, `admin`, or `reviewer`.
 - `STREAMZ_OWNER_GOOGLE_SUB` — Owner Google stable subject identifier for the server-side developer grant.
 
 Optional Streamz OAuth Worker variables:
@@ -219,9 +217,9 @@ After a verified `payment_intent.succeeded` event, the Worker:
 2. Creates or updates one entitlement for the account/product.
 3. Sets `status: "pending_discord_verification"`.
 4. Creates a Discord verification session for the paid entitlement.
-5. Lets the checkout page generate a temporary human-readable code such as `VP-7K4M-92QX`.
-6. Stores only the SHA-256 hash of the normalized Discord code.
-7. Requires the customer to run `/verify-pro CODE` through Discord.
+5. Lets the checkout page generate a temporary human-readable code printed on the activation-pass PDF.
+6. Stores only the SHA-256 hash of the normalized activation code.
+7. Requires the customer to directly message the Streamz bot and run `/verify-pro CODE`.
 8. Generates a separate 32-byte URL-safe website token after Discord claim.
 9. Stores only the SHA-256 hash of the website token.
 10. Activates the entitlement only after Google sign-in succeeds on the website verification page.
@@ -239,9 +237,9 @@ https://vortex-prime-emu.com/projects/streamz/pro/verify-discord/?token=...
 GET/POST https://vortex-prime-emu.com/api/streamz/pro/verify-discord
 ```
 
-Discord requests must include valid `X-Signature-Ed25519` and `X-Signature-Timestamp` headers. The Worker verifies the raw request body against Discord's public key before accepting `/verify-pro`.
+Discord requests must include valid `X-Signature-Ed25519` and `X-Signature-Timestamp` headers. The Worker verifies the raw request body against Discord's public key before accepting `/verify-pro` or `/code-expired`. Both commands are DM-only and are rejected if used inside the server.
 
-Register the guild slash command from a private shell with the Discord token available only in the environment:
+Register the DM slash commands from a private shell with the Discord token available only in the environment. If `DISCORD_GUILD_ID` is present, the script clears old server commands and then registers global DM commands:
 
 ```powershell
 $env:DISCORD_APPLICATION_ID="1526084195263447171"
@@ -250,7 +248,7 @@ $env:DISCORD_BOT_TOKEN="..."
 node tools/register-streamz-discord-command.mjs
 ```
 
-The Discord code expires after 30 minutes, is single-use, and is stored only as a hash. The website verification token also expires after 30 minutes, is single-use, and is stored only as a hash. The verification URL never contains Stripe IDs, Google IDs, Discord IDs, emails, internal account IDs, full names, or dates of birth.
+The activation code expires after 20 minutes, is single-use, and is stored only as a hash. If it expires unused, the customer must directly message the Streamz bot and run `/code-expired` with the original activation-pass PDF attached. The Worker extracts the code from the PDF, confirms the code belongs to a real paid order and expired unused, then adds the request to the private expired-code review dashboard. The website verification token expires after 30 minutes, is single-use, and is stored only as a hash. The verification URL never contains Stripe IDs, Google IDs, Discord IDs, emails, internal account IDs, full names, or dates of birth.
 
 The final Pro licence owner is Google's stable subject identifier plus the internal entitlement record. Discord is only the secure bridge used to claim the paid session.
 

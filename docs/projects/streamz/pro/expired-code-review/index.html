@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Streamz Support Dashboard</title>
+  <title>Streamz Expired-Code Review</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root { font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f8fafc; background: #05070b; }
@@ -32,8 +32,8 @@
   <main>
     <header>
       <div>
-        <h1>Streamz Support</h1>
-        <p class="status">Staff-only activation-code and support dashboard.</p>
+        <h1>Streamz Expired-Code Review</h1>
+        <p class="status">Owner/staff review for expired Streamz Pro activation-pass PDF requests.</p>
       </div>
       <div id="googleButton"></div>
     </header>
@@ -59,8 +59,8 @@
 
     <section>
       <div class="row">
-        <h2>Support Tickets</h2>
-        <button id="refreshTickets" class="secondary">Refresh tickets</button>
+        <h2>Expired-Code Requests</h2>
+        <button id="refreshTickets" class="secondary">Refresh requests</button>
       </div>
       <div id="tickets" class="status"></div>
     </section>
@@ -117,13 +117,13 @@
     }
 
     async function loadStaff() {
-      const data = await api('/api/streamz/pro/support/staff');
-      lookupResult.textContent = `Signed in as Streamz Support ${data.staff.role}.`;
+      const data = await api('/api/streamz/pro/expired-code-review/staff');
+      lookupResult.textContent = `Signed in as Streamz expired-code reviewer ${data.staff.role}.`;
       await loadTickets();
     }
 
     async function loadTickets() {
-      const data = await api('/api/streamz/pro/support/tickets');
+      const data = await api('/api/streamz/pro/expired-code-review/tickets');
       tickets.innerHTML = (data.tickets || []).map((ticket) => `
         <div class="ticket">
           <strong>${ticket.ticketNumber}</strong> (${ticket.status})
@@ -131,16 +131,16 @@
             <dt>Discord</dt><dd>${ticket.discordUsername || ''} ${ticket.discordUserId || ''}</dd>
             <dt>Code</dt><dd>${ticket.activationCode || 'Manual review'}</dd>
             <dt>Result</dt><dd>${ticket.backendVerification?.status || 'manual_review'}</dd>
-            <dt>Issue</dt><dd>${ticket.description || ''}</dd>
+            <dt>Request</dt><dd>${ticket.description || ''}</dd>
           </dl>
         </div>
-      `).join('') || 'No tickets.';
+      `).join('') || 'No expired-code requests.';
     }
 
     document.getElementById('lookupBtn').addEventListener('click', async () => {
       lookupResult.textContent = 'Searching...';
       try {
-        const data = await api(`/api/streamz/pro/support/search?code=${encodeURIComponent(cleanCode(lookupCode.value))}`);
+        const data = await api(`/api/streamz/pro/expired-code-review/search?code=${encodeURIComponent(cleanCode(lookupCode.value))}`);
         lookupResult.textContent = JSON.stringify(data, null, 2);
       } catch (error) {
         lookupResult.textContent = error.message;
@@ -150,7 +150,7 @@
     document.getElementById('replaceBtn').addEventListener('click', async () => {
       replaceResult.textContent = 'Issuing replacement...';
       try {
-        const data = await api('/api/streamz/pro/support/replacement', {
+        const data = await api('/api/streamz/pro/expired-code-review/replacement', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: cleanCode(replaceCode.value), reason: replaceReason.value }),

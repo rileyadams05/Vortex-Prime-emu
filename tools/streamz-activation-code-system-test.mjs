@@ -128,7 +128,7 @@ function issueReplacement(db, originalHash, reason = "technical issue") {
     codeHash: hashCode(code),
     status: "assigned",
     orderId: original.orderId,
-    issueType: "support_replacement",
+    issueType: "expired_code_replacement",
     reason,
     expiresAt: new Date(Date.now() + TTL_MS).toISOString(),
   };
@@ -136,7 +136,7 @@ function issueReplacement(db, originalHash, reason = "technical issue") {
   return { code, codeHash: replacement.codeHash };
 }
 
-function supportAcceptsAttachment(file) {
+function codeExpiredAcceptsAttachment(file) {
   const name = String(file.name || "").toLowerCase();
   const type = String(file.type || "").toLowerCase();
   return name.endsWith(".pdf") && (!type || type === "application/pdf");
@@ -182,8 +182,8 @@ const simultaneous = await assignCode(db, "order-race");
 assert.equal(claim(db, simultaneous.codeHash, "discord-1"), "ok", "first simultaneous claim wins");
 assert.equal(claim(db, simultaneous.codeHash, "discord-2"), "claimed", "second simultaneous claim rejected");
 
-assert.equal(supportAcceptsAttachment({ name: "pass.png", type: "image/png" }), false, "/support rejects screenshots and images");
-assert.equal(supportAcceptsAttachment({ name: "Streamz-Pro-Activation-Pass.pdf", type: "application/pdf" }), true, "/support accepts original PDF type");
+assert.equal(codeExpiredAcceptsAttachment({ name: "pass.png", type: "image/png" }), false, "/code-expired rejects screenshots and images");
+assert.equal(codeExpiredAcceptsAttachment({ name: "Streamz-Pro-Activation-Pass.pdf", type: "application/pdf" }), true, "/code-expired accepts original PDF type");
 
 const staff = [{ googleSub: "owner-sub", role: "owner" }];
 assert.equal(Boolean(staff.find((entry) => entry.googleSub === "random-customer")), false, "unauthorised Google account denied staff access");
