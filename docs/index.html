@@ -1408,6 +1408,50 @@
             margin: 1rem 0 0.8rem;
         }
 
+        .streamz-plugin-connect-actions {
+            display: grid;
+            gap: 0.5rem;
+            margin-top: 0.85rem;
+        }
+
+        .streamz-plugin-connect-button {
+            width: 100%;
+            min-height: 34px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            background: #2a2a2a;
+            color: #f8fafc;
+            padding: 0.55rem 0.7rem;
+            font: inherit;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .streamz-plugin-connect-button:hover {
+            background: #343434;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .streamz-plugin-connect-button[data-provider="twitch"] {
+            border-color: rgba(145, 70, 255, 0.55);
+        }
+
+        .streamz-plugin-connect-button[data-provider="youtube"] {
+            border-color: rgba(255, 0, 0, 0.55);
+        }
+
+        .streamz-plugin-connect-button[data-provider="kick"] {
+            border-color: rgba(83, 252, 24, 0.45);
+        }
+
+        .streamz-plugin-connect-button:disabled {
+            cursor: wait;
+            opacity: 0.6;
+        }
+
         .streamz-plugin-sidebar-button {
             flex: 1;
             font-size: 0.68rem;
@@ -3429,6 +3473,11 @@
                         <div class="streamz-plugin-sidebar-toolbar">
                             <button class="streamz-plugin-sidebar-button" type="button" data-streamz-refresh-channels>Refresh</button>
                         </div>
+                        <div class="streamz-plugin-connect-actions" aria-label="Connect streaming accounts">
+                            <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="twitch" data-provider="twitch">Connect Twitch</button>
+                            <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="youtube" data-provider="youtube">Connect YouTube</button>
+                            <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="kick" data-provider="kick">Connect Kick</button>
+                        </div>
                         <div class="streamz-plugin-empty-state" id="streamzChannelEmptyState">
                             <div>
                                 <strong>No channels connected</strong>
@@ -4427,6 +4476,14 @@
 
                     window.addEventListener('streamz:credentials-loaded', (event) => {
                         startLocalStreamzRelay(event.detail);
+                    });
+                    document.querySelectorAll('[data-streamz-connect]').forEach((button) => {
+                        button.addEventListener('click', () => {
+                            const provider = button.getAttribute('data-streamz-connect');
+                            if (!provider) return;
+                            button.disabled = true;
+                            window.location.href = `/api/streamz/auth/${encodeURIComponent(provider)}/start?redirect=1&return_to=${encodeURIComponent('/streamz-pro-plugin/')}`;
+                        });
                     });
                     document.querySelector('[data-streamz-refresh-channels]')?.addEventListener('click', loadStreamzDashboardData);
                     loadStreamzDashboardData();
