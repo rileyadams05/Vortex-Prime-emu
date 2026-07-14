@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/remote-schema.json",
+  "identifier": "streamz-remote",
+  "description": "Allow the trusted Vortex Prime website to control the local FFmpeg relay.",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["https://vortex-prime-emu.com/**"]
+  },
+  "permissions": [
+    "core:default",
+    "streamz-relay"
+  ]
+}

@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "streamz-relay"
+description = "Allow the trusted website to start and stop the local FFmpeg relay."
+commands.allow = ["start_ffmpeg_relay", "stop_ffmpeg_relay"]

@@ -9,6 +9,7 @@
     "frontendDist": "../empty-dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Vortex Prime",
