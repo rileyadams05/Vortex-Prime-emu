@@ -44,3 +44,15 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Purge Cloudflare Cache
+        run: |
+          echo "Attempting to purge Cloudflare cache for vortex-prime-emu.com..."
+          ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=vortex-prime-emu.com" -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" -H "Content-Type: application/json" | jq -r '.result[0].id // empty')
+          if [ -n "$ZONE_ID" ]; then
+            RESPONSE=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" -H "Content-Type: application/json" --data '{"purge_everything":true}')
+            echo "Purge response: $RESPONSE"
+          else
+            echo "Warning: Could not fetch Zone ID. Token might lack Zone Read permissions or is missing."
+          fi
+        continue-on-error: true
