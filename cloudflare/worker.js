@@ -127,7 +127,13 @@ const STREAMZ_OAUTH_PROVIDERS = {
     clientIdEnv: 'STREAMZ_TWITCH_CLIENT_ID',
     redirectUriEnv: 'STREAMZ_TWITCH_REDIRECT_URI',
     defaultRedirectUri: `${STREAMZ_CALLBACK_BASE}/twitch/callback`,
-    defaultScopes: [],
+    defaultScopes: [
+      'moderator:read:followers',
+      'channel:read:subscriptions',
+      'bits:read',
+      'channel:read:redemptions',
+      'channel:read:charity',
+    ],
     usesPkce: true,
   },
   kick: {
@@ -138,7 +144,7 @@ const STREAMZ_OAUTH_PROVIDERS = {
     clientSecretEnv: 'STREAMZ_KICK_CLIENT_SECRET',
     redirectUriEnv: 'STREAMZ_KICK_REDIRECT_URI',
     defaultRedirectUri: `${STREAMZ_CALLBACK_BASE}/kick/callback`,
-    defaultScopes: [],
+    defaultScopes: ['user:read', 'channel:read', 'events:subscribe'],
     usesPkce: true,
   },
   youtube: {
@@ -446,7 +452,7 @@ async function handleLogout(env, origin) {
 }
 
 async function handleStreamzAuthRequest(request, env, path, origin) {
-  const match = path.match(/^api\/streamz\/auth\/(twitch|kick|youtube)\/(start|callback)$/);
+  const match = path.match(/^api\/streamz\/auth\/(twitch|kick|youtube)\/(start|callback|refresh)$/);
   if (!match) {
     throw httpError(404, 'Streamz OAuth route not found.');
   }
@@ -459,6 +465,9 @@ async function handleStreamzAuthRequest(request, env, path, origin) {
 
   if (action === 'start') {
     return handleStreamzAuthStart(request, env, providerKey, provider, origin);
+  }
+  if (action === 'refresh') {
+    return handleStreamzAuthRefresh(request, env, providerKey, provider, origin);
   }
   return handleStreamzAuthCallback(request, env, providerKey, provider, origin);
 }
@@ -568,6 +577,7 @@ async function handleStreamzAuthCallback(request, env, providerKey, provider, or
     deepLinkParams.payload = await encryptStreamzHandoff(state.handoffKey, {
       provider: providerKey,
       token: tokenResponse,
+      clientId: requireEnv(env, provider.clientIdEnv),
       authorizedAt: new Date().toISOString(),
     });
   }
@@ -579,6 +589,32 @@ async function handleStreamzAuthCallback(request, env, providerKey, provider, or
     message: `${provider.label} authorization completed. Return to Streamz to continue.`,
     deepLink,
     token: sanitizeStreamzTokenResponse(tokenResponse, Boolean(state.handoffKey)),
+  }, 200, origin);
+}
+
+async function handleStreamzAuthRefresh(request, env, providerKey, provider, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Streamz OAuth refresh requires POST.');
+  }
+
+  const payload = await request.json().catch(() => null);
+  const refreshToken = String(payload?.refreshToken || '').trim();
+  if (!refreshToken) {
+    throw httpError(400, 'Missing refresh token.');
+  }
+
+  const tokenResponse = await refreshStreamzAccessToken(env, provider, refreshToken);
+  return json({
+    ok: true,
+    provider: providerKey,
+    clientId: requireEnv(env, provider.clientIdEnv),
+    token: sanitizeStreamzTokenResponse(tokenResponse, false),
+    accessToken: tokenResponse.access_token || null,
+    refreshToken: tokenResponse.refresh_token || refreshToken,
+    expiresIn: tokenResponse.expires_in || null,
+    tokenType: tokenResponse.token_type || null,
+    scope: normalizeScopeForResponse(tokenResponse.scope) || null,
+    refreshedAt: new Date().toISOString(),
   }, 200, origin);
 }
 
@@ -2354,6 +2390,35 @@ async function exchangeStreamzAuthorizationCode(env, provider, code, state) {
   if (!response.ok || !data?.access_token) {
     const detail = data?.error_description || data?.message || data?.error || response.statusText;
     throw httpError(response.status || 502, `Failed to exchange authorization code: ${detail}`);
+  }
+
+  return data;
+}
+
+async function refreshStreamzAccessToken(env, provider, refreshToken) {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    client_id: requireEnv(env, provider.clientIdEnv),
+    refresh_token: refreshToken,
+  });
+
+  if (provider.clientSecretEnv) {
+    body.set('client_secret', requireEnv(env, provider.clientSecretEnv));
+  }
+
+  const response = await fetch(provider.tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+    },
+    body,
+  });
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok || !data?.access_token) {
+    const detail = data?.error_description || data?.message || data?.error || response.statusText;
+    throw httpError(response.status || 502, `Failed to refresh access token: ${detail}`);
   }
 
   return data;
