@@ -131,6 +131,7 @@ const STREAMZ_OAUTH_PROVIDERS = {
     defaultScopes: [
       'moderator:read:followers',
       'channel:read:subscriptions',
+      'channel:read:stream_key',
       'bits:read',
       'channel:read:redemptions',
       'channel:read:charity',
