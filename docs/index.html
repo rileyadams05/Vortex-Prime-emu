@@ -4340,6 +4340,97 @@
                         setPlannedStreamsModal(false);
                     });
 
+                    window.streamzDashboardState = {
+                        channels: [],
+                        credentials: [],
+                        loaded: false,
+                    };
+
+                    function renderStreamzChannels(channels) {
+                        const list = document.getElementById('streamzChannelList');
+                        const emptyState = document.getElementById('streamzChannelEmptyState');
+                        const count = document.getElementById('streamzChannelCount');
+                        if (!list || !emptyState || !count) return;
+                        list.replaceChildren();
+                        count.textContent = `${channels.length} connected`;
+                        emptyState.hidden = channels.length > 0;
+                        list.hidden = channels.length === 0;
+                        channels.forEach((channel) => {
+                            const row = document.createElement('div');
+                            row.className = 'streamz-plugin-channel';
+                            const main = document.createElement('div');
+                            main.className = 'streamz-plugin-channel-main';
+                            const avatar = document.createElement('img');
+                            avatar.className = 'streamz-plugin-channel-avatar';
+                            avatar.src = channel.avatar || '/favicon-192x192.png';
+                            avatar.alt = '';
+                            const copy = document.createElement('div');
+                            copy.className = 'streamz-plugin-channel-copy';
+                            const title = document.createElement('span');
+                            title.className = 'streamz-plugin-channel-title';
+                            title.textContent = channel.username || channel.platform;
+                            const subtitle = document.createElement('span');
+                            subtitle.className = 'streamz-plugin-channel-subtitle';
+                            subtitle.textContent = channel.error || `${channel.platform}${channel.hasStreamKey ? ' · Ready' : ' · Stream key unavailable'}`;
+                            copy.append(title, subtitle);
+                            main.append(avatar, copy);
+                            row.append(main);
+                            list.append(row);
+                        });
+                    }
+
+                    async function loadStreamzDashboardData() {
+                        try {
+                            const authResponse = await fetch('/api/auth/config', { credentials: 'include' });
+                            const auth = await authResponse.json().catch(() => ({}));
+                            if (!auth.authenticated) return;
+                            const [channelsResponse, credentialsResponse] = await Promise.all([
+                                fetch('/api/streamz/channels', { credentials: 'include' }),
+                                fetch('/api/streamz/credentials', { credentials: 'include' }),
+                            ]);
+                            const channelsPayload = await channelsResponse.json();
+                            const credentialsPayload = await credentialsResponse.json();
+                            window.streamzDashboardState.channels = Array.isArray(channelsPayload.channels) ? channelsPayload.channels : [];
+                            window.streamzDashboardState.credentials = Array.isArray(credentialsPayload.credentials) ? credentialsPayload.credentials : [];
+                            window.streamzDashboardState.loaded = true;
+                            renderStreamzChannels(window.streamzDashboardState.channels);
+                            const primaryCredential = window.streamzDashboardState.credentials.find((entry) => entry?.serverUrl && entry?.streamKey);
+                            const serverField = document.getElementById('streamzRtmpsUrl');
+                            const keyField = document.getElementById('streamzStreamKey');
+                            const copyButtons = document.querySelectorAll('.streamz-plugin-copy');
+                            if (primaryCredential && serverField && keyField) {
+                                serverField.value = primaryCredential.serverUrl;
+                                serverField.placeholder = '';
+                                keyField.value = primaryCredential.streamKey;
+                                keyField.placeholder = '';
+                                copyButtons.forEach((button) => { button.disabled = false; });
+                            }
+                            window.dispatchEvent(new CustomEvent('streamz:credentials-loaded', { detail: window.streamzDashboardState.credentials }));
+                        } catch (error) {
+                            console.error('Unable to load Streamz account data', error);
+                        }
+                    }
+
+                    async function startLocalStreamzRelay(credentials) {
+                        const invoke = window.__TAURI__?.core?.invoke;
+                        if (!invoke || !Array.isArray(credentials)) return;
+                        const targets = credentials
+                            .filter((entry) => entry?.serverUrl && entry?.streamKey)
+                            .map((entry) => `${String(entry.serverUrl).replace(/\/$/, '')}/${encodeURIComponent(entry.streamKey)}`);
+                        if (targets.length === 0) return;
+                        try {
+                            await invoke('start_ffmpeg_relay', { targets });
+                        } catch (error) {
+                            console.error('Unable to start the local Streamz relay', error);
+                        }
+                    }
+
+                    window.addEventListener('streamz:credentials-loaded', (event) => {
+                        startLocalStreamzRelay(event.detail);
+                    });
+                    document.querySelector('[data-streamz-refresh-channels]')?.addEventListener('click', loadStreamzDashboardData);
+                    loadStreamzDashboardData();
+
                     document.addEventListener('click', (event) => {
                         const trigger = event.target.closest('[data-page]');
                         if (!trigger) return;

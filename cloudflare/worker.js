@@ -146,7 +146,7 @@ const STREAMZ_OAUTH_PROVIDERS = {
     clientSecretEnv: 'STREAMZ_KICK_CLIENT_SECRET',
     redirectUriEnv: 'STREAMZ_KICK_REDIRECT_URI',
     defaultRedirectUri: `${STREAMZ_CALLBACK_BASE}/kick/callback`,
-    defaultScopes: ['user:read', 'channel:read', 'events:subscribe'],
+    defaultScopes: ['user:read', 'channel:read', 'streamkey:read', 'events:subscribe'],
     usesPkce: true,
   },
   youtube: {
@@ -208,6 +208,14 @@ export default {
 
       if (path.startsWith('api/streamz/auth/')) {
         return await handleStreamzAuthRequest(request, env, path, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/channels') {
+        return await handleStreamzChannels(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/streamz/credentials') {
+        return await handleStreamzCredentials(request, env, allowedOrigin);
       }
 
       if (path === 'api/streamz/pro/config') {
@@ -568,6 +576,12 @@ async function handleStreamzAuthCallback(request, env, providerKey, provider, or
   }
 
   const tokenResponse = await exchangeStreamzAuthorizationCode(env, provider, code, state);
+  const session = await readSession(request, env).catch(() => null);
+  if (!session?.sub) {
+    throw httpError(401, 'Sign in to Streamz before connecting a streaming account.');
+  }
+  const account = await ensureStreamzAccountForSession(env, session);
+  await saveStreamzProviderTokens(env, account.id, providerKey, tokenResponse);
   const deepLinkParams = {
     provider: providerKey,
     status: 'success',
@@ -590,8 +604,130 @@ async function handleStreamzAuthCallback(request, env, providerKey, provider, or
     provider: providerKey,
     message: `${provider.label} authorization completed. Return to Streamz to continue.`,
     deepLink,
-    token: sanitizeStreamzTokenResponse(tokenResponse, Boolean(state.handoffKey)),
+    connection: sanitizeStreamzConnection(providerKey, tokenResponse),
   }, 200, origin);
+}
+
+async function handleStreamzChannels(request, env, origin) {
+  if (request.method !== 'GET') throw httpError(405, 'Streamz channels requires GET.');
+  const { account, connections } = await getAuthenticatedStreamzConnections(request, env);
+  const channels = [];
+  for (const connection of connections) {
+    try {
+      const result = await fetchStreamzProviderData(env, connection.provider, connection.tokens);
+      channels.push({
+        provider: connection.provider,
+        platform: STREAMZ_OAUTH_PROVIDERS[connection.provider].label,
+        ...result.profile,
+        hasStreamKey: Boolean(result.streamKey),
+        serverUrl: result.serverUrl || null,
+      });
+      await persistRefreshedStreamzTokens(env, account.id, connection);
+    } catch (error) {
+      channels.push({
+        provider: connection.provider,
+        platform: STREAMZ_OAUTH_PROVIDERS[connection.provider].label,
+        error: error?.message || 'Unable to load channel data.',
+      });
+    }
+  }
+  return json({ ok: true, channels }, 200, origin);
+}
+
+async function handleStreamzCredentials(request, env, origin) {
+  if (request.method !== 'GET') throw httpError(405, 'Streamz credentials requires GET.');
+  const { account, connections } = await getAuthenticatedStreamzConnections(request, env);
+  const credentials = [];
+  for (const connection of connections) {
+    try {
+      const result = await fetchStreamzProviderData(env, connection.provider, connection.tokens);
+      if (result.streamKey && result.serverUrl) {
+        credentials.push({
+          provider: connection.provider,
+          serverUrl: result.serverUrl,
+          streamKey: result.streamKey,
+        });
+      }
+      await persistRefreshedStreamzTokens(env, account.id, connection);
+    } catch (error) {
+      credentials.push({
+        provider: connection.provider,
+        error: error?.message || 'Unable to load stream credentials.',
+      });
+    }
+  }
+  return json({ ok: true, credentials }, 200, origin);
+}
+
+async function getAuthenticatedStreamzConnections(request, env) {
+  const session = await readSession(request, env);
+  if (!session?.sub) throw httpError(401, 'Sign in to Streamz first.');
+  const account = await ensureStreamzAccountForSession(env, session);
+  const connections = (Array.isArray(account.providerConnections) ? account.providerConnections : [])
+    .filter((connection) => STREAMZ_OAUTH_PROVIDERS[connection.provider] && connection.accessToken)
+    .map((connection) => ({ ...connection, tokens: null }));
+  for (const connection of connections) {
+    connection.tokens = await decryptStreamzProviderTokens(env, connection.accessToken);
+    if (connection.expiresAt && Date.parse(connection.expiresAt) <= Date.now() + 60_000 && connection.refreshToken) {
+      const refreshPayload = await decryptStreamzProviderTokens(env, connection.refreshToken);
+      const refreshed = await refreshStreamzAccessToken(env, STREAMZ_OAUTH_PROVIDERS[connection.provider], refreshPayload.refresh_token);
+      connection.tokens = refreshed;
+      connection.accessToken = await encryptStreamzProviderTokens(env, refreshed);
+      connection.refreshToken = refreshed.refresh_token
+        ? await encryptStreamzProviderTokens(env, { refresh_token: refreshed.refresh_token })
+        : connection.refreshToken;
+      connection.expiresAt = new Date(Date.now() + Number(refreshed.expires_in || 3600) * 1000).toISOString();
+      connection.updatedAt = new Date().toISOString();
+    }
+  }
+  return { account, connections };
+}
+
+async function persistRefreshedStreamzTokens(env, accountId, connection) {
+  if (!connection.updatedAt) return;
+  await updateStreamzDatabase(env, async (db) => {
+    const accounts = normalizeStreamzAccounts(db.streamzAccounts);
+    const index = accounts.findIndex((entry) => entry.id === accountId);
+    if (index < 0) return { db, value: null };
+    const providerConnections = accounts[index].providerConnections.map((entry) => (
+      entry.provider === connection.provider
+        ? { ...entry, accessToken: connection.accessToken, refreshToken: connection.refreshToken, expiresAt: connection.expiresAt, updatedAt: connection.updatedAt }
+        : entry
+    ));
+    accounts[index] = { ...accounts[index], providerConnections, updatedAt: new Date().toISOString() };
+    db.streamzAccounts = accounts;
+    return { db, value: null };
+  });
+}
+
+async function fetchStreamzProviderData(env, providerKey, tokens) {
+  const accessToken = String(tokens?.access_token || '').trim();
+  if (!accessToken) throw httpError(401, `Missing ${STREAMZ_OAUTH_PROVIDERS[providerKey].label} access token.`);
+  if (providerKey === 'twitch') {
+    const profile = await providerJson('https://api.twitch.tv/helix/users', accessToken, { 'Client-Id': requireEnv(env, 'STREAMZ_TWITCH_CLIENT_ID') });
+    const user = profile.data?.[0];
+    if (!user?.id) throw httpError(502, 'Twitch profile was not returned.');
+    const key = await providerJson(`https://api.twitch.tv/helix/streams/key?broadcaster_id=${encodeURIComponent(user.id)}`, accessToken, { 'Client-Id': requireEnv(env, 'STREAMZ_TWITCH_CLIENT_ID') });
+    return { profile: { id: user.id, username: user.display_name || user.login, avatar: user.profile_image_url || null }, serverUrl: 'rtmps://live.twitch.tv/app', streamKey: key.data?.[0]?.stream_key || null };
+  }
+  if (providerKey === 'youtube') {
+    const profile = await providerJson('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', accessToken);
+    const channel = profile.items?.[0];
+    if (!channel?.id) throw httpError(502, 'YouTube channel was not returned.');
+    const streams = await providerJson('https://www.googleapis.com/youtube/v3/liveStreams?part=cdn&mine=true', accessToken);
+    const stream = streams.items?.find((entry) => entry.cdn?.ingestionInfo?.streamName);
+    return { profile: { id: channel.id, username: channel.snippet?.title || 'YouTube channel', avatar: channel.snippet?.thumbnails?.default?.url || null }, serverUrl: stream?.cdn?.ingestionInfo?.ingestionAddress || null, streamKey: stream?.cdn?.ingestionInfo?.streamName || null };
+  }
+  const channels = await providerJson('https://api.kick.com/public/v1/channels', accessToken);
+  const channel = Array.isArray(channels.data) ? channels.data[0] : null;
+  return { profile: { id: channel?.broadcaster_user_id || channel?.user_id || null, username: channel?.username || channel?.slug || 'Kick channel', avatar: channel?.profile_picture || null }, serverUrl: channel?.stream_url || null, streamKey: channel?.stream_key || null };
+}
+
+async function providerJson(url, accessToken, headers = {}) {
+  const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json', ...headers } });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) throw httpError(response.status || 502, payload?.message || payload?.error_description || 'Provider API request failed.');
+  return payload || {};
 }
 
 async function handleStreamzAuthRefresh(request, env, providerKey, provider, origin) {
@@ -2864,6 +3000,39 @@ function normalizeStreamzProPayments(value) {
         status: entry.status || 'succeeded',
       }))
     : [];
+}
+
+async function saveStreamzProviderTokens(env, accountId, providerKey, tokenResponse) {
+  const now = new Date().toISOString();
+  const providerConnection = {
+    provider: providerKey,
+    accessToken: await encryptStreamzProviderTokens(env, tokenResponse),
+    refreshToken: tokenResponse.refresh_token
+      ? await encryptStreamzProviderTokens(env, { refresh_token: tokenResponse.refresh_token })
+      : null,
+    expiresAt: new Date(Date.now() + Number(tokenResponse.expires_in || 3600) * 1000).toISOString(),
+    tokenType: tokenResponse.token_type || 'Bearer',
+    scope: normalizeScopeForResponse(tokenResponse.scope) || null,
+    updatedAt: now,
+  };
+  await updateStreamzDatabase(env, async (db) => {
+    const accounts = normalizeStreamzAccounts(db.streamzAccounts);
+    const index = accounts.findIndex((entry) => entry.id === accountId);
+    if (index < 0) throw httpError(404, 'Streamz account was not found.');
+    const existing = Array.isArray(accounts[index].providerConnections) ? accounts[index].providerConnections : [];
+    const providerConnections = existing.filter((entry) => entry.provider !== providerKey);
+    accounts[index] = { ...accounts[index], providerConnections: [...providerConnections, providerConnection], updatedAt: now };
+    db.streamzAccounts = accounts;
+    return { db, value: null };
+  });
+}
+
+async function encryptStreamzProviderTokens(env, payload) {
+  return encryptStreamzState(payload, env);
+}
+
+async function decryptStreamzProviderTokens(env, token) {
+  return decryptStreamzState(token, env);
 }
 
 async function ensureStreamzAccountForSession(env, session) {
