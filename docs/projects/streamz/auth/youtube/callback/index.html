@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connecting YouTube | Streamz</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --color-primary: #10B981;
+      --color-primary-light: #34D399;
+      --color-bg-dark: #09090B;
+      --color-bg-card: #18181B;
+      --color-border: #3F3F46;
+      --color-text: #FAFAFA;
+      --color-text-secondary: #A1A1AA;
+      --color-error: #F87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse at top, rgba(16, 185, 129, 0.15), transparent 65%),
+        var(--color-bg-dark);
+      color: var(--color-text);
+    }
+    .card {
+      width: min(440px, 100%);
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    }
+    .spinner {
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 1.25rem;
+      border-radius: 50%;
+      border: 4px solid rgba(16, 185, 129, 0.18);
+      border-top-color: var(--color-primary);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 {
+      margin: 0 0 0.65rem;
+      font-size: 1.35rem;
+    }
+    p {
+      margin: 0;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+    .status {
+      margin-top: 1.25rem;
+      font-weight: 700;
+      color: var(--color-primary-light);
+    }
+    .status.error { color: var(--color-error); }
+    .actions {
+      display: none;
+      margin-top: 1.25rem;
+    }
+    .actions a {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 44px;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      text-decoration: none;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="status" aria-live="polite">
+    <div class="spinner" id="spinner" aria-hidden="true"></div>
+    <h1 id="title">Connecting YouTube</h1>
+    <p id="message">Finishing the secure YouTube authorization for Streamz.</p>
+    <div class="status" id="status">Authorizing...</div>
+    <div class="actions" id="actions">
+      <a href="/projects/streamz/">Back to Streamz</a>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const provider = 'youtube';
+      const titleEl = document.getElementById('title');
+      const messageEl = document.getElementById('message');
+      const statusEl = document.getElementById('status');
+      const spinnerEl = document.getElementById('spinner');
+      const actionsEl = document.getElementById('actions');
+
+      function setState(title, message, status, isError) {
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        statusEl.textContent = status;
+        statusEl.classList.toggle('error', Boolean(isError));
+        spinnerEl.style.display = isError ? 'none' : '';
+        actionsEl.style.display = isError ? 'block' : 'none';
+      }
+
+      async function finishOAuth() {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+        const error = params.get('error');
+        const errorDescription = params.get('error_description');
+
+        if (!state) {
+          setState('YouTube authorization failed', 'The OAuth state value was missing. Start the connection again from Streamz.', 'Missing state.', true);
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/streamz/auth/youtube/callback', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ code, state, error, errorDescription })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || 'YouTube authorization could not be completed.');
+          }
+
+          setState('YouTube connected', 'Authorization completed. Returning you to Streamz.', 'Success.', false);
+          if (data.deepLink) {
+            setTimeout(() => {
+              window.location.href = data.deepLink;
+            }, 900);
+          }
+        } catch (err) {
+          setState('YouTube authorization failed', err.message || 'Streamz could not complete YouTube authorization.', 'Connection failed.', true);
+        }
+      }
+
+      finishOAuth();
+    })();
+  </script>
+</body>
+</html>
+

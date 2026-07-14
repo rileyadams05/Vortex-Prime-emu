@@ -141,6 +141,22 @@ const STREAMZ_OAUTH_PROVIDERS = {
     defaultScopes: [],
     usesPkce: true,
   },
+  youtube: {
+    label: 'YouTube',
+    authorizeUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    clientIdEnv: 'STREAMZ_YOUTUBE_CLIENT_ID',
+    clientSecretEnv: 'STREAMZ_YOUTUBE_CLIENT_SECRET',
+    redirectUriEnv: 'STREAMZ_YOUTUBE_REDIRECT_URI',
+    defaultRedirectUri: `${STREAMZ_CALLBACK_BASE}/youtube/callback`,
+    defaultScopes: ['https://www.googleapis.com/auth/youtube.readonly'],
+    usesPkce: true,
+    authorizationParams: {
+      access_type: 'offline',
+      include_granted_scopes: 'true',
+      prompt: 'consent',
+    },
+  },
 };
 
 const textEncoder = new TextEncoder();
@@ -430,7 +446,7 @@ async function handleLogout(env, origin) {
 }
 
 async function handleStreamzAuthRequest(request, env, path, origin) {
-  const match = path.match(/^api\/streamz\/auth\/(twitch|kick)\/(start|callback)$/);
+  const match = path.match(/^api\/streamz\/auth\/(twitch|kick|youtube)\/(start|callback)$/);
   if (!match) {
     throw httpError(404, 'Streamz OAuth route not found.');
   }
@@ -485,6 +501,11 @@ async function handleStreamzAuthStart(request, env, providerKey, provider, origi
   if (scopeValue) {
     authUrl.searchParams.set('scope', scopeValue);
   }
+  if (provider.authorizationParams && typeof provider.authorizationParams === 'object') {
+    for (const [key, value] of Object.entries(provider.authorizationParams)) {
+      authUrl.searchParams.set(key, String(value));
+    }
+  }
 
   if (provider.usesPkce) {
     const codeVerifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(64)));
@@ -494,6 +515,10 @@ async function handleStreamzAuthStart(request, env, providerKey, provider, origi
   }
 
   authUrl.searchParams.set('state', await encryptStreamzState(statePayload, env));
+
+  if (url.searchParams.get('redirect') === '1' || url.searchParams.get('redirect') === 'true') {
+    return Response.redirect(authUrl.toString(), 302);
+  }
 
   return json({
     ok: true,

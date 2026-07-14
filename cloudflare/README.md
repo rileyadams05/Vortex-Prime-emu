@@ -69,6 +69,8 @@ STREAMZ_OAUTH_STATE_SECRET
 STREAMZ_TWITCH_CLIENT_ID
 STREAMZ_KICK_CLIENT_ID
 STREAMZ_KICK_CLIENT_SECRET
+STREAMZ_YOUTUBE_CLIENT_ID
+STREAMZ_YOUTUBE_CLIENT_SECRET
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 STRIPE_PUBLISHABLE_KEY
@@ -90,6 +92,7 @@ STREAMZ_OWNER_GOOGLE_SUB
 - `STREAMZ_OAUTH_STATE_SECRET` — Random string used to encrypt and validate Streamz OAuth state payloads (at least 32 characters).
 - `STREAMZ_TWITCH_CLIENT_ID` — Twitch public client ID for Streamz. Twitch uses PKCE and does not require a client secret for this website callback flow.
 - `STREAMZ_KICK_CLIENT_ID` / `STREAMZ_KICK_CLIENT_SECRET` — Kick app credentials for Streamz. Never commit the secret.
+- `STREAMZ_YOUTUBE_CLIENT_ID` / `STREAMZ_YOUTUBE_CLIENT_SECRET` — Google OAuth client credentials used only by the Worker for YouTube channel authorization. Never commit the secret.
 - `STRIPE_SECRET_KEY` — Stripe test or live secret key used only by the Worker to create Streamz Pro PaymentIntents.
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret for `/api/streamz/pro/webhook`.
 - `STRIPE_PUBLISHABLE_KEY` — Stripe publishable key returned by the Streamz Pro config endpoint for frontend diagnostics.
@@ -110,6 +113,7 @@ Optional Streamz OAuth Worker variables:
 ```
 STREAMZ_TWITCH_REDIRECT_URI=https://vortex-prime-emu.com/projects/streamz/auth/twitch/callback
 STREAMZ_KICK_REDIRECT_URI=https://vortex-prime-emu.com/projects/streamz/auth/kick/callback
+STREAMZ_YOUTUBE_REDIRECT_URI=https://vortex-prime-emu.com/projects/streamz/auth/youtube/callback
 STREAMZ_DEFAULT_DEEP_LINK=streamz://auth/callback
 STREAMZ_ALLOWED_DEEP_LINK_SCHEMES=streamz
 ```
@@ -156,6 +160,7 @@ Start endpoints:
 ```text
 GET or POST https://vortex-prime-emu.com/api/streamz/auth/twitch/start
 GET or POST https://vortex-prime-emu.com/api/streamz/auth/kick/start
+GET or POST https://vortex-prime-emu.com/api/streamz/auth/youtube/start
 ```
 
 Callback routes registered with the providers:
@@ -163,9 +168,10 @@ Callback routes registered with the providers:
 ```text
 https://vortex-prime-emu.com/projects/streamz/auth/twitch/callback
 https://vortex-prime-emu.com/projects/streamz/auth/kick/callback
+https://vortex-prime-emu.com/projects/streamz/auth/youtube/callback
 ```
 
-For Twitch and Kick, the Worker generates the PKCE verifier and challenge server-side and stores the verifier inside encrypted OAuth state. The browser callback page forwards only `code` and `state` to the Worker. The Worker validates state before exchanging authorization codes. Twitch uses public-client PKCE without a client secret. Kick uses server-side token exchange with `STREAMZ_KICK_CLIENT_SECRET`.
+For Twitch, Kick, and YouTube, the Worker generates the PKCE verifier and challenge server-side and stores the verifier inside encrypted OAuth state. The browser callback page forwards only `code` and `state` to the Worker. The Worker validates state before exchanging authorization codes. Twitch uses public-client PKCE without a client secret. Kick and YouTube use server-side token exchange with their Worker secrets.
 
 For secure desktop token handoff, Streamz can include a random 32-byte base64url `handoffKey` and a `returnTo` deep link when calling the `start` endpoint. The Worker encrypts the provider token response with that handoff key and sends only the encrypted payload back through the deep link.
 
