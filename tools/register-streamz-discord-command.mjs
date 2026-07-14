@@ -10,54 +10,70 @@ if (!botToken) {
   throw new Error("DISCORD_BOT_TOKEN is required.");
 }
 
-const commands = [
-  {
-    name: "verify-pro",
-    description: "Privately verify a paid Streamz Pro purchase.",
-    type: 1,
-    options: [
-      {
-        name: "code",
-        description: "Your 10-character Streamz Pro activation code from the PDF pass.",
-        type: 3,
-        required: true,
-      },
-    ],
-  },
-  {
-    name: "support",
-    description: "Open a private Streamz Pro support request using your original activation-pass PDF.",
-    type: 1,
-    options: [
-      {
-        name: "description",
-        description: "Briefly describe the problem.",
-        type: 3,
-        required: true,
-      },
-      {
-        name: "activation_pass",
-        description: "Attach the original Streamz Pro Activation Pass PDF.",
-        type: 11,
-        required: true,
-      },
-    ],
-  },
-];
+const verifyProCommand = {
+  name: "verify-pro",
+  description: "Privately verify a paid Streamz Pro purchase.",
+  type: 1,
+  options: [
+    {
+      name: "code",
+      description: "Your 10-character Streamz Pro activation code from the PDF pass.",
+      type: 3,
+      required: true,
+    },
+  ],
+};
 
-const endpoint = `https://discord.com/api/v10/applications/${applicationId}/guilds/${guildId}/commands`;
-const response = await fetch(endpoint, {
+const supportCommand = {
+  name: "support",
+  description: "Open a private Streamz Pro support request using your original activation-pass PDF.",
+  type: 1,
+  contexts: [1],
+  integration_types: [0],
+  options: [
+    {
+      name: "description",
+      description: "Briefly describe the problem.",
+      type: 3,
+      required: true,
+    },
+    {
+      name: "activation_pass",
+      description: "Attach the original Streamz Pro Activation Pass PDF.",
+      type: 11,
+      required: true,
+    },
+  ],
+};
+
+const guildEndpoint = `https://discord.com/api/v10/applications/${applicationId}/guilds/${guildId}/commands`;
+const guildResponse = await fetch(guildEndpoint, {
   method: "PUT",
   headers: {
     Authorization: `Bot ${botToken}`,
     "Content-Type": "application/json",
   },
-  body: JSON.stringify(commands),
+  body: JSON.stringify([verifyProCommand]),
 });
 
-const data = await response.json().catch(() => ({}));
-if (!response.ok) {
-  throw new Error(`Discord command registration failed: ${response.status} ${JSON.stringify(data)}`);
+const guildData = await guildResponse.json().catch(() => ({}));
+if (!guildResponse.ok) {
+  throw new Error(`Discord guild command registration failed: ${guildResponse.status} ${JSON.stringify(guildData)}`);
 }
 
-console.log(`Registered Streamz Discord commands: ${(Array.isArray(data) ? data.map((command) => `/${command.name}`).join(", ") : "ok")}`);
+const globalEndpoint = `https://discord.com/api/v10/applications/${applicationId}/commands`;
+const globalResponse = await fetch(globalEndpoint, {
+  method: "POST",
+  headers: {
+    Authorization: `Bot ${botToken}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(supportCommand),
+});
+
+const globalData = await globalResponse.json().catch(() => ({}));
+if (!globalResponse.ok) {
+  throw new Error(`Discord DM support command registration failed: ${globalResponse.status} ${JSON.stringify(globalData)}`);
+}
+
+console.log(`Registered Streamz Discord commands: guild /verify-pro, DM /support`);

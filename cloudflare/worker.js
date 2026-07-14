@@ -996,6 +996,15 @@ async function handleStreamzDiscordVerifyProCommand(interaction, env) {
 }
 
 async function handleStreamzDiscordSupportCommand(interaction, env) {
+  if (interaction.guild_id) {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'For Streamz Pro activation support, message this bot directly and run /support with your original activation-pass PDF attached.',
+      },
+    });
+  }
   const discordUser = interaction.member?.user || interaction.user || {};
   const discordUserId = discordUser.id || null;
   const options = Array.isArray(interaction.data?.options) ? interaction.data.options : [];
@@ -1338,7 +1347,6 @@ async function createStreamzSupportTicketFromDiscord(env, input) {
     }, now);
     return { db, value: nextTicket };
   });
-  await postStreamzSupportTicketToDiscord(env, ticket).catch(() => {});
   return { ok: true, ticketId: ticket.id, ticketNumber: ticket.ticketNumber };
 }
 
@@ -1350,35 +1358,6 @@ function extractStreamzActivationCodeFromPdfBytes(buffer) {
 
 function buildDiscordDisplayName(user) {
   return String(user?.global_name || user?.username || 'Unknown Discord user').trim();
-}
-
-async function postStreamzSupportTicketToDiscord(env, ticket) {
-  const channelId = String(env.STREAMZ_SUPPORT_CHANNEL_ID || env.DISCORD_SUPPORT_CHANNEL_ID || '').trim();
-  const token = String(env.DISCORD_BOT_TOKEN || '').trim();
-  if (!channelId || !token) return false;
-  const resp = await fetch(`https://discord.com/api/v10/channels/${encodeURIComponent(channelId)}/messages`, {
-    method: 'POST',
-    headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: `New Streamz Support ticket ${ticket.ticketNumber}`,
-      embeds: [{
-        title: ticket.ticketNumber,
-        description: 'Original activation-pass PDF submitted through /support.',
-        color: 7032316,
-        fields: [
-          { name: 'Customer', value: `${ticket.discordMention || ticket.discordUsername}\n${ticket.discordUserId}`, inline: false },
-          { name: 'Issue', value: ticket.description || 'No description supplied.', inline: false },
-          { name: 'Activation code', value: ticket.activationCode || 'Manual PDF review required', inline: true },
-          { name: 'Backend result', value: ticket.backendVerification?.status || 'manual_review', inline: true },
-        ],
-      }],
-      components: ticket.attachmentUrl ? [{
-        type: 1,
-        components: [{ type: 2, style: 5, label: 'Open original PDF', url: ticket.attachmentUrl }],
-      }] : [],
-    }),
-  });
-  return resp.ok;
 }
 
 async function listStreamzSupportStaff(env) {
@@ -2587,7 +2566,7 @@ function buildStreamzActivationPassResponse(entitlement, verification, rawCode) 
   if (!entitlement || !rawCode) return null;
   const paymentDate = entitlement.paymentConfirmedAt || new Date().toISOString();
   return {
-    templateUrl: '/assets/streamz/streamz-pro-activation-pass-template.pdf',
+    templateUrl: '/assets/STREAMZ PRO Activation Pass .pdf',
     purchaseCode: rawCode,
     orderNumber: entitlement.orderNumber || buildStreamzOrderNumber(entitlement),
     customerName: entitlement.fullName || '',

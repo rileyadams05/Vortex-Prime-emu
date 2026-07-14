@@ -77,7 +77,6 @@ DISCORD_PUBLIC_KEY
 DISCORD_BOT_TOKEN
 DISCORD_GUILD_ID
 DISCORD_VERIFY_CHANNEL_ID
-STREAMZ_SUPPORT_CHANNEL_ID
 STREAMZ_SUPPORT_STAFF
 STREAMZ_OWNER_GOOGLE_SUB
 ```
@@ -100,7 +99,6 @@ STREAMZ_OWNER_GOOGLE_SUB
 - `DISCORD_BOT_TOKEN` — Discord bot token used by command setup and the Worker for private support notifications/replies. Do not expose it to frontend code.
 - `DISCORD_GUILD_ID` — Official Streamz Discord server ID for guild command registration.
 - `DISCORD_VERIFY_CHANNEL_ID` — Optional dedicated verification channel ID.
-- `STREAMZ_SUPPORT_CHANNEL_ID` — Private staff-only Discord channel ID where `/support` tickets are posted.
 - `STREAMZ_SUPPORT_STAFF` — Optional comma-separated `googleSub:role` entries for staff access, where role is `owner`, `admin`, or `support`.
 - `STREAMZ_OWNER_GOOGLE_SUB` — Owner Google stable subject identifier for the server-side developer grant.
 

@@ -1053,8 +1053,6 @@
         page.drawText(String(text || ''), { x, y, size, font: chosenFont, color });
       };
       const date = pass.purchaseDate ? new Date(pass.purchaseDate) : new Date();
-      const issueDate = pass.issueTime ? new Date(pass.issueTime) : date;
-      const expiryDate = pass.expiresAt ? new Date(pass.expiresAt) : null;
       draw(pass.customerName, 260, 532, 22);
       draw(pass.customerEmail, 260, 481, 20);
       draw(pass.orderNumber, 260, 430, 22);
@@ -1063,11 +1061,7 @@
       draw(pass.paymentMethod || 'Stripe', 260, 277, 22);
       draw(pass.productName || 'Streamz Pro', 260, 226, 22);
       draw(pass.paymentStatus || 'succeeded', 260, 183, 22);
-      draw(pass.purchaseCode, 760, 390, 40, font, accent);
-      draw(`Order ${pass.orderNumber}`, 760, 350, 18, regular, ink);
-      draw(`Issued: ${issueDate.toLocaleString()}`, 760, 318, 14, regular, ink);
-      draw(`Expires: ${expiryDate ? expiryDate.toLocaleString() : '20 minutes after issue'}`, 760, 296, 14, regular, ink);
-      draw('The activation code expires 20 minutes after issue.', 760, 274, 12, regular, ink);
+      draw(pass.purchaseCode, 1085, 455, 44, font, accent);
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
