@@ -1158,7 +1158,8 @@
 
         .streamz-plugin-header-button,
         .streamz-plugin-sidebar-button,
-        .streamz-plugin-copy {
+        .streamz-plugin-copy,
+        .streamz-plugin-primary-button {
             min-height: 36px;
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 8px;
@@ -1173,7 +1174,8 @@
 
         .streamz-plugin-header-button:hover,
         .streamz-plugin-sidebar-button:hover,
-        .streamz-plugin-copy:hover {
+        .streamz-plugin-copy:hover,
+        .streamz-plugin-primary-button:hover {
             background: #343434;
             border-color: rgba(255, 255, 255, 0.25);
         }
@@ -1228,34 +1230,6 @@
             text-align: center;
         }
 
-        .streamz-plugin-protocols {
-            display: flex;
-            gap: 0.15rem;
-            width: fit-content;
-            margin: 0 auto 1.1rem;
-            padding: 0.25rem;
-            border-radius: 6px;
-            background: #202020;
-        }
-
-        .streamz-plugin-protocol {
-            border: 0;
-            border-radius: 4px;
-            background: transparent;
-            color: #cbd5e1;
-            padding: 0.5rem 0.7rem;
-            font: inherit;
-            font-size: 0.7rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .streamz-plugin-protocol.active,
-        .streamz-plugin-protocol:hover {
-            background: #3a3a3a;
-            color: #ffffff;
-        }
-
         .streamz-plugin-field {
             display: flex;
             flex-direction: column;
@@ -1289,15 +1263,116 @@
             font-size: 0.72rem;
         }
 
-        .streamz-plugin-notice {
-            margin-top: 0.75rem;
-            padding: 0.55rem 0.75rem;
-            border: 1px solid rgba(99, 102, 241, 0.75);
-            border-radius: 5px;
-            background: rgba(79, 70, 229, 0.25);
-            color: #dbeafe;
-            font-size: 0.7rem;
+        .streamz-plugin-copy:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        .streamz-plugin-empty-state {
+            display: grid;
+            place-items: center;
+            min-height: 220px;
+            padding: 1.5rem;
+            color: #94a3b8;
+            font-size: 0.75rem;
             text-align: center;
+        }
+
+        .streamz-plugin-empty-state strong {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        .streamz-plugin-primary-button {
+            background: #635bff;
+            border-color: #817bff;
+            color: #ffffff;
+        }
+
+        .streamz-plugin-modal[hidden] {
+            display: none;
+        }
+
+        .streamz-plugin-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.72);
+        }
+
+        .streamz-plugin-modal-dialog {
+            width: min(520px, 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            background: #202020;
+            color: #f8fafc;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        .streamz-plugin-modal-header,
+        .streamz-plugin-modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .streamz-plugin-modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .streamz-plugin-modal-header h2 {
+            font-size: 1rem;
+        }
+
+        .streamz-plugin-modal-close {
+            border: 0;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-plan-form {
+            display: grid;
+            gap: 1rem;
+            padding: 1.25rem;
+        }
+
+        .streamz-plugin-plan-form label {
+            display: grid;
+            gap: 0.4rem;
+            color: #cbd5e1;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .streamz-plugin-plan-form input,
+        .streamz-plugin-plan-form textarea {
+            width: 100%;
+            border: 1px solid #3a3a3a;
+            border-radius: 7px;
+            background: #292929;
+            color: #f8fafc;
+            padding: 0.65rem 0.7rem;
+            font: inherit;
+            font-size: 0.8rem;
+        }
+
+        .streamz-plugin-plan-form textarea {
+            min-height: 92px;
+            resize: vertical;
+        }
+
+        .streamz-plugin-modal-footer {
+            justify-content: flex-end;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .streamz-plugin-sidebar {
@@ -3314,9 +3389,9 @@
                 <div class="streamz-plugin-shell">
                     <header class="streamz-plugin-header">
                         <a class="streamz-plugin-brand" href="/" data-page="home" data-no-gate="true">Streamz</a>
-                        <span class="streamz-plugin-header-title">Streamz Pro Plugin</span>
+                        <span class="streamz-plugin-header-title">Dashboard</span>
                         <div class="streamz-plugin-header-actions">
-                            <button class="streamz-plugin-header-button" type="button">Get Clips</button>
+                            <button class="streamz-plugin-primary-button" id="openPlannedStreams" type="button">Planned Streams</button>
                         </div>
                     </header>
 
@@ -3325,32 +3400,23 @@
                             <section class="streamz-plugin-connect" aria-label="Connect your encoder">
                                 <span class="streamz-plugin-offline">OFFLINE</span>
                                 <h1>Connect your encoder</h1>
-                                <p>Copy and paste these details into your streaming software.</p>
-
-                                <div class="streamz-plugin-protocols" role="tablist" aria-label="Streaming protocol">
-                                    <button class="streamz-plugin-protocol active" type="button" role="tab" aria-selected="true">RTMPS</button>
-                                    <button class="streamz-plugin-protocol" type="button" role="tab" aria-selected="false">RTMP</button>
-                                    <button class="streamz-plugin-protocol" type="button" role="tab" aria-selected="false">SRT</button>
-                                    <button class="streamz-plugin-protocol" type="button" role="tab" aria-selected="false">WHIP</button>
-                                </div>
+                                <p>Use the secure Streamz connection details below in OBS.</p>
 
                                 <label class="streamz-plugin-field">
-                                    RTMPS URL
+                                    Server URL
                                     <span class="streamz-plugin-field-control">
-                                        <input id="streamzRtmpsUrl" type="text" value="rtmps://streamz.vortex-prime-emu.com/live" readonly>
-                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzRtmpsUrl').value)" aria-label="Copy RTMPS URL">Copy</button>
+                                        <input id="streamzRtmpsUrl" type="text" value="" placeholder="Available after account connection" readonly>
+                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzRtmpsUrl').value)" aria-label="Copy server URL" disabled>Copy</button>
                                     </span>
                                 </label>
 
                                 <label class="streamz-plugin-field">
                                     Stream key
                                     <span class="streamz-plugin-field-control">
-                                        <input id="streamzStreamKey" type="password" value="streamz-pro-demo-key" readonly>
-                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzStreamKey').value)" aria-label="Copy stream key">Copy</button>
+                                        <input id="streamzStreamKey" type="password" value="" placeholder="Available after account connection" readonly>
+                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzStreamKey').value)" aria-label="Copy stream key" disabled>Copy</button>
                                     </span>
                                 </label>
-
-                                <div class="streamz-plugin-notice">For production streams, Streamz will issue a private key for each channel.</div>
                             </section>
                         </div>
                     </main>
@@ -3358,56 +3424,47 @@
                     <aside class="streamz-plugin-sidebar" aria-label="Your channels">
                         <div class="streamz-plugin-sidebar-heading">
                             <span>Your Channels</span>
-                            <span>Paired Channels ›</span>
+                            <span id="streamzChannelCount">0 connected</span>
                         </div>
                         <div class="streamz-plugin-sidebar-toolbar">
-                            <button class="streamz-plugin-sidebar-button" type="button">＋ Add Channel</button>
-                            <button class="streamz-plugin-sidebar-button" type="button">↻ Update Titles</button>
+                            <button class="streamz-plugin-sidebar-button" type="button" data-streamz-refresh-channels>Refresh</button>
                         </div>
-
-                        <div class="streamz-plugin-channel">
-                            <div class="streamz-plugin-channel-main">
-                                <div class="streamz-plugin-channel-avatar">B</div>
-                                <div class="streamz-plugin-channel-copy">
-                                    <span class="streamz-plugin-channel-title">Streamz Main Channel</span>
-                                    <span class="streamz-plugin-channel-subtitle">Offline</span>
-                                </div>
-                            </div>
-                            <div class="streamz-plugin-channel-actions">
-                                <button class="streamz-plugin-edit" type="button">Edit</button>
-                                <button class="streamz-plugin-toggle active" type="button" aria-label="Toggle Streamz Main Channel"></button>
+                        <div class="streamz-plugin-empty-state" id="streamzChannelEmptyState">
+                            <div>
+                                <strong>No channels connected</strong>
+                                Link a streaming account to see its channel here.
                             </div>
                         </div>
-
-                        <div class="streamz-plugin-channel">
-                            <div class="streamz-plugin-channel-main">
-                                <div class="streamz-plugin-channel-avatar">C</div>
-                                <div class="streamz-plugin-channel-copy">
-                                    <span class="streamz-plugin-channel-title">Streamz Clips</span>
-                                    <span class="streamz-plugin-channel-subtitle">Offline</span>
-                                </div>
-                            </div>
-                            <div class="streamz-plugin-channel-actions">
-                                <button class="streamz-plugin-edit" type="button">Edit</button>
-                                <button class="streamz-plugin-toggle" type="button" aria-label="Toggle Streamz Clips"></button>
-                            </div>
-                        </div>
-
-                        <div class="streamz-plugin-channel">
-                            <div class="streamz-plugin-channel-main">
-                                <div class="streamz-plugin-channel-avatar">P</div>
-                                <div class="streamz-plugin-channel-copy">
-                                    <span class="streamz-plugin-channel-title">Streamz Preview</span>
-                                    <span class="streamz-plugin-channel-subtitle">Offline</span>
-                                </div>
-                            </div>
-                            <div class="streamz-plugin-channel-actions">
-                                <button class="streamz-plugin-edit" type="button">Edit</button>
-                                <button class="streamz-plugin-toggle active" type="button" aria-label="Toggle Streamz Preview"></button>
-                            </div>
-                        </div>
+                        <div id="streamzChannelList" hidden></div>
                     </aside>
                 </div>
+
+                <section class="streamz-plugin-modal" id="plannedStreamsModal" hidden role="dialog" aria-modal="true" aria-labelledby="plannedStreamsTitle">
+                    <div class="streamz-plugin-modal-dialog">
+                        <div class="streamz-plugin-modal-header">
+                            <h2 id="plannedStreamsTitle">Plan a stream</h2>
+                            <button class="streamz-plugin-modal-close" id="closePlannedStreams" type="button" aria-label="Close planned streams">×</button>
+                        </div>
+                        <form class="streamz-plugin-plan-form" id="plannedStreamForm">
+                            <label>
+                                Stream title
+                                <input name="title" type="text" required placeholder="Enter a stream title">
+                            </label>
+                            <label>
+                                Start time
+                                <input name="startTime" type="datetime-local" required>
+                            </label>
+                            <label>
+                                Description
+                                <textarea name="description" placeholder="Add details for your audience"></textarea>
+                            </label>
+                            <div class="streamz-plugin-modal-footer">
+                                <button class="streamz-plugin-sidebar-button" id="cancelPlannedStreams" type="button">Cancel</button>
+                                <button class="streamz-plugin-primary-button" type="submit">Save Planned Stream</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
             </div>
             <!-- Store Page -->
                 <div class="page" id="page-store">
@@ -4185,6 +4242,11 @@
                         document.querySelectorAll('.mobile-nav-link').forEach((link) => link.classList.remove('active'));
 
                         const page = document.getElementById('page-' + pageId);
+                        const pageTitles = {
+                            home: 'Home | Vortex Prime Store',
+                            'streamz-plugin': 'Dashboard | Streamz Pro Plugin',
+                        };
+                        document.title = pageTitles[pageId] || document.title;
                         const navPageId = pageId === 'streamz' ? 'projects' : pageId;
                         const nav = document.getElementById('nav-' + navPageId);
                         const mobileNav = document.getElementById('mobile-nav-' + navPageId);
@@ -4253,19 +4315,29 @@
                         return routes[path] || 'home';
                     }
 
-                    document.querySelectorAll('.streamz-plugin-protocol').forEach((button) => {
-                        button.addEventListener('click', () => {
-                            document.querySelectorAll('.streamz-plugin-protocol').forEach((tab) => {
-                                tab.classList.remove('active');
-                                tab.setAttribute('aria-selected', 'false');
-                            });
-                            button.classList.add('active');
-                            button.setAttribute('aria-selected', 'true');
-                        });
-                    });
+                    const plannedStreamsModal = document.getElementById('plannedStreamsModal');
+                    const plannedStreamsForm = document.getElementById('plannedStreamForm');
 
-                    document.querySelectorAll('.streamz-plugin-toggle').forEach((button) => {
-                        button.addEventListener('click', () => button.classList.toggle('active'));
+                    function setPlannedStreamsModal(open) {
+                        if (!plannedStreamsModal) return;
+                        plannedStreamsModal.hidden = !open;
+                        if (open) {
+                            plannedStreamsForm?.querySelector('input')?.focus();
+                        }
+                    }
+
+                    document.getElementById('openPlannedStreams')?.addEventListener('click', () => setPlannedStreamsModal(true));
+                    document.getElementById('closePlannedStreams')?.addEventListener('click', () => setPlannedStreamsModal(false));
+                    document.getElementById('cancelPlannedStreams')?.addEventListener('click', () => setPlannedStreamsModal(false));
+                    plannedStreamsModal?.addEventListener('click', (event) => {
+                        if (event.target === plannedStreamsModal) setPlannedStreamsModal(false);
+                    });
+                    plannedStreamsForm?.addEventListener('submit', (event) => {
+                        event.preventDefault();
+                        window.dispatchEvent(new CustomEvent('streamz:planned-stream-created', {
+                            detail: Object.fromEntries(new FormData(plannedStreamsForm).entries()),
+                        }));
+                        setPlannedStreamsModal(false);
                     });
 
                     document.addEventListener('click', (event) => {
