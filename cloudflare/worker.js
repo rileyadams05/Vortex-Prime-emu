@@ -125,6 +125,7 @@ const STREAMZ_OAUTH_PROVIDERS = {
     authorizeUrl: 'https://id.twitch.tv/oauth2/authorize',
     tokenUrl: 'https://id.twitch.tv/oauth2/token',
     clientIdEnv: 'STREAMZ_TWITCH_CLIENT_ID',
+    clientSecretEnv: 'STREAMZ_TWITCH_CLIENT_SECRET',
     redirectUriEnv: 'STREAMZ_TWITCH_REDIRECT_URI',
     defaultRedirectUri: `${STREAMZ_CALLBACK_BASE}/twitch/callback`,
     defaultScopes: [
