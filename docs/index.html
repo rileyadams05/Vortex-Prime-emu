@@ -767,7 +767,8 @@
         #page-store-mods,
         #page-games,
         #page-projects,
-        #page-streamz {
+        #page-streamz,
+        #page-streamz-plugin {
             padding-top: calc(110px + 2.5rem);
         }
 
@@ -1107,6 +1108,348 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem 4rem;
+        }
+
+        .streamz-plugin-shell {
+            width: min(1500px, calc(100% - 2rem));
+            min-height: calc(100vh - 150px);
+            margin: 0 auto 2rem;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            grid-template-rows: auto minmax(0, 1fr);
+            background: #191919;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+        }
+
+        .streamz-plugin-header {
+            grid-column: 1 / -1;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.25rem;
+            background: #202020;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .streamz-plugin-brand {
+            color: #f8fafc;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            text-decoration: none;
+        }
+
+        .streamz-plugin-header-title {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            padding-left: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .streamz-plugin-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .streamz-plugin-header-button,
+        .streamz-plugin-sidebar-button,
+        .streamz-plugin-copy {
+            min-height: 36px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            background: #2a2a2a;
+            color: #e2e8f0;
+            padding: 0.5rem 0.8rem;
+            font: inherit;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-header-button:hover,
+        .streamz-plugin-sidebar-button:hover,
+        .streamz-plugin-copy:hover {
+            background: #343434;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .streamz-plugin-main {
+            min-width: 0;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            background: #111111;
+            padding: 1rem;
+        }
+
+        .streamz-plugin-preview {
+            flex: 1;
+            min-height: 520px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            background: #050505;
+        }
+
+        .streamz-plugin-connect {
+            width: min(430px, calc(100% - 2rem));
+            color: #f8fafc;
+        }
+
+        .streamz-plugin-offline {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.45rem;
+            border-radius: 3px;
+            background: #e5e7eb;
+            color: #111827;
+            font-size: 0.58rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
+        .streamz-plugin-connect h1 {
+            margin: 3.5rem 0 0.35rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .streamz-plugin-connect > p {
+            margin: 0 0 1rem;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .streamz-plugin-protocols {
+            display: flex;
+            gap: 0.15rem;
+            width: fit-content;
+            margin: 0 auto 1.1rem;
+            padding: 0.25rem;
+            border-radius: 6px;
+            background: #202020;
+        }
+
+        .streamz-plugin-protocol {
+            border: 0;
+            border-radius: 4px;
+            background: transparent;
+            color: #cbd5e1;
+            padding: 0.5rem 0.7rem;
+            font: inherit;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-protocol.active,
+        .streamz-plugin-protocol:hover {
+            background: #3a3a3a;
+            color: #ffffff;
+        }
+
+        .streamz-plugin-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-top: 0.75rem;
+            color: #94a3b8;
+            font-size: 0.7rem;
+        }
+
+        .streamz-plugin-field-control {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .streamz-plugin-field input {
+            min-width: 0;
+            flex: 1;
+            border: 1px solid #343434;
+            border-radius: 5px;
+            background: #272727;
+            color: #e2e8f0;
+            padding: 0.55rem 0.6rem;
+            font: inherit;
+            font-size: 0.75rem;
+        }
+
+        .streamz-plugin-copy {
+            min-width: 34px;
+            padding: 0.4rem;
+            font-size: 0.72rem;
+        }
+
+        .streamz-plugin-notice {
+            margin-top: 0.75rem;
+            padding: 0.55rem 0.75rem;
+            border: 1px solid rgba(99, 102, 241, 0.75);
+            border-radius: 5px;
+            background: rgba(79, 70, 229, 0.25);
+            color: #dbeafe;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        .streamz-plugin-sidebar {
+            min-width: 0;
+            background: #232323;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1rem;
+        }
+
+        .streamz-plugin-sidebar-heading,
+        .streamz-plugin-sidebar-toolbar,
+        .streamz-plugin-channel,
+        .streamz-plugin-channel-main,
+        .streamz-plugin-channel-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .streamz-plugin-sidebar-heading {
+            justify-content: space-between;
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .streamz-plugin-sidebar-heading span:last-child {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .streamz-plugin-sidebar-toolbar {
+            gap: 0.5rem;
+            margin: 1rem 0 0.8rem;
+        }
+
+        .streamz-plugin-sidebar-button {
+            flex: 1;
+            font-size: 0.68rem;
+        }
+
+        .streamz-plugin-channel {
+            gap: 0.6rem;
+            padding: 0.75rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .streamz-plugin-channel-main {
+            min-width: 0;
+            flex: 1;
+            gap: 0.6rem;
+        }
+
+        .streamz-plugin-channel-avatar {
+            width: 30px;
+            height: 30px;
+            flex: 0 0 30px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 50%;
+            background: #475569;
+            color: #f8fafc;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .streamz-plugin-channel-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .streamz-plugin-channel-copy {
+            min-width: 0;
+        }
+
+        .streamz-plugin-channel-title,
+        .streamz-plugin-channel-subtitle {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .streamz-plugin-channel-title {
+            color: #f8fafc;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .streamz-plugin-channel-subtitle {
+            margin-top: 0.2rem;
+            color: #94a3b8;
+            font-size: 0.63rem;
+        }
+
+        .streamz-plugin-channel-actions {
+            gap: 0.4rem;
+        }
+
+        .streamz-plugin-edit {
+            border: 0;
+            background: transparent;
+            color: #cbd5e1;
+            font: inherit;
+            font-size: 0.65rem;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-toggle {
+            width: 31px;
+            height: 18px;
+            position: relative;
+            border: 0;
+            border-radius: 999px;
+            background: #475569;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f8fafc;
+            transition: transform 0.2s;
+        }
+
+        .streamz-plugin-toggle.active {
+            background: #2563eb;
+        }
+
+        .streamz-plugin-toggle.active::after {
+            transform: translateX(13px);
+        }
+
+        @media (max-width: 900px) {
+            .streamz-plugin-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .streamz-plugin-sidebar {
+                border-left: 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .streamz-plugin-preview {
+                min-height: 440px;
+            }
         }
 
         .streamz-placeholder-grid {
@@ -2569,7 +2912,7 @@
             }
             /* Help page heading clearance on mobile (smaller nav height) */
             #page-help { padding-top: calc(64px + 2.5rem); }
-            #page-store, #page-store-mods, #page-games, #page-projects, #page-streamz { padding-top: calc(64px + 2.5rem); }
+            #page-store, #page-store-mods, #page-games, #page-projects, #page-streamz, #page-streamz-plugin { padding-top: calc(64px + 2.5rem); }
             .projects-grid { grid-template-columns: 1fr; padding: 0 1rem 3rem; }
             .project-meta-row { flex-direction: column; gap: 0.25rem; }
             .project-meta-row strong { text-align: left; }
@@ -2610,6 +2953,7 @@
                     
                     <div class="nav-links">
                         <a href="/" class="nav-link active" id="nav-home" data-no-gate="true" data-page="home">Home</a>
+                        <a href="/streamz-pro-plugin/" class="nav-link" id="nav-streamz-plugin" data-no-gate="true" data-page="streamz-plugin">Streamz Pro Plugin</a>
                         <a href="/store/" class="nav-link" id="nav-store" data-no-gate="true" data-page="store">Store</a>
                         <a href="/store-mods/" class="nav-link" id="nav-store-mods" data-no-gate="true" data-page="store-mods">Mods</a>
                         <a href="/games/" class="nav-link" id="nav-games" data-no-gate="true" data-page="games">Games</a>
@@ -2664,6 +3008,7 @@
 
                 <!-- Primary nav — plain text, no emojis -->
                 <a href="/" class="mobile-nav-link active" id="mobile-nav-home" data-no-gate="true" data-page="home">Home</a>
+                <a href="/streamz-pro-plugin/" class="mobile-nav-link" id="mobile-nav-streamz-plugin" data-no-gate="true" data-page="streamz-plugin">Streamz Pro Plugin</a>
                 <a href="/store/" class="mobile-nav-link" id="mobile-nav-store" data-no-gate="true" data-page="store">Store</a>
                 <a href="/store-mods/" class="mobile-nav-link" id="mobile-nav-store-mods" data-no-gate="true" data-page="store-mods">Mods</a>
                 <a href="/games/" class="mobile-nav-link" id="mobile-nav-games" data-no-gate="true" data-page="games">Games</a>
@@ -2962,6 +3307,106 @@
                             <p>Placeholder.</p>
                         </section>
                     </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-streamz-plugin">
+                <div class="streamz-plugin-shell">
+                    <header class="streamz-plugin-header">
+                        <a class="streamz-plugin-brand" href="/" data-page="home" data-no-gate="true">Streamz</a>
+                        <span class="streamz-plugin-header-title">Streamz Pro Plugin</span>
+                        <div class="streamz-plugin-header-actions">
+                            <button class="streamz-plugin-header-button" type="button">Get Clips</button>
+                        </div>
+                    </header>
+
+                    <main class="streamz-plugin-main">
+                        <div class="streamz-plugin-preview">
+                            <section class="streamz-plugin-connect" aria-label="Connect your encoder">
+                                <span class="streamz-plugin-offline">OFFLINE</span>
+                                <h1>Connect your encoder</h1>
+                                <p>Copy and paste these details into your streaming software.</p>
+
+                                <div class="streamz-plugin-protocols" role="tablist" aria-label="Streaming protocol">
+                                    <button class="streamz-plugin-protocol active" type="button" role="tab" aria-selected="true">RTMPS</button>
+                                    <button class="streamz-plugin-protocol" type="button" role="tab" aria-selected="false">RTMP</button>
+                                    <button class="streamz-plugin-protocol" type="button" role="tab" aria-selected="false">SRT</button>
+                                    <button class="streamz-plugin-protocol" type="button" role="tab" aria-selected="false">WHIP</button>
+                                </div>
+
+                                <label class="streamz-plugin-field">
+                                    RTMPS URL
+                                    <span class="streamz-plugin-field-control">
+                                        <input id="streamzRtmpsUrl" type="text" value="rtmps://streamz.vortex-prime-emu.com/live" readonly>
+                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzRtmpsUrl').value)" aria-label="Copy RTMPS URL">Copy</button>
+                                    </span>
+                                </label>
+
+                                <label class="streamz-plugin-field">
+                                    Stream key
+                                    <span class="streamz-plugin-field-control">
+                                        <input id="streamzStreamKey" type="password" value="streamz-pro-demo-key" readonly>
+                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzStreamKey').value)" aria-label="Copy stream key">Copy</button>
+                                    </span>
+                                </label>
+
+                                <div class="streamz-plugin-notice">For production streams, Streamz will issue a private key for each channel.</div>
+                            </section>
+                        </div>
+                    </main>
+
+                    <aside class="streamz-plugin-sidebar" aria-label="Your channels">
+                        <div class="streamz-plugin-sidebar-heading">
+                            <span>Your Channels</span>
+                            <span>Paired Channels ›</span>
+                        </div>
+                        <div class="streamz-plugin-sidebar-toolbar">
+                            <button class="streamz-plugin-sidebar-button" type="button">＋ Add Channel</button>
+                            <button class="streamz-plugin-sidebar-button" type="button">↻ Update Titles</button>
+                        </div>
+
+                        <div class="streamz-plugin-channel">
+                            <div class="streamz-plugin-channel-main">
+                                <div class="streamz-plugin-channel-avatar">B</div>
+                                <div class="streamz-plugin-channel-copy">
+                                    <span class="streamz-plugin-channel-title">Streamz Main Channel</span>
+                                    <span class="streamz-plugin-channel-subtitle">Offline</span>
+                                </div>
+                            </div>
+                            <div class="streamz-plugin-channel-actions">
+                                <button class="streamz-plugin-edit" type="button">Edit</button>
+                                <button class="streamz-plugin-toggle active" type="button" aria-label="Toggle Streamz Main Channel"></button>
+                            </div>
+                        </div>
+
+                        <div class="streamz-plugin-channel">
+                            <div class="streamz-plugin-channel-main">
+                                <div class="streamz-plugin-channel-avatar">C</div>
+                                <div class="streamz-plugin-channel-copy">
+                                    <span class="streamz-plugin-channel-title">Streamz Clips</span>
+                                    <span class="streamz-plugin-channel-subtitle">Offline</span>
+                                </div>
+                            </div>
+                            <div class="streamz-plugin-channel-actions">
+                                <button class="streamz-plugin-edit" type="button">Edit</button>
+                                <button class="streamz-plugin-toggle" type="button" aria-label="Toggle Streamz Clips"></button>
+                            </div>
+                        </div>
+
+                        <div class="streamz-plugin-channel">
+                            <div class="streamz-plugin-channel-main">
+                                <div class="streamz-plugin-channel-avatar">P</div>
+                                <div class="streamz-plugin-channel-copy">
+                                    <span class="streamz-plugin-channel-title">Streamz Preview</span>
+                                    <span class="streamz-plugin-channel-subtitle">Offline</span>
+                                </div>
+                            </div>
+                            <div class="streamz-plugin-channel-actions">
+                                <button class="streamz-plugin-edit" type="button">Edit</button>
+                                <button class="streamz-plugin-toggle active" type="button" aria-label="Toggle Streamz Preview"></button>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
             </div>
             <!-- Store Page -->
@@ -3780,6 +4225,7 @@
                             games: '/games/',
                             projects: '/projects/',
                             streamz: '/projects/streamz/',
+                            'streamz-plugin': '/streamz-pro-plugin/',
                             help: '/help/'
                         };
                         return routes[pageId] || '/';
@@ -3801,10 +4247,26 @@
                             '/games': 'games',
                             '/projects': 'projects',
                             '/projects/streamz': 'streamz',
+                            '/streamz-pro-plugin': 'streamz-plugin',
                             '/help': 'help'
                         };
                         return routes[path] || 'home';
                     }
+
+                    document.querySelectorAll('.streamz-plugin-protocol').forEach((button) => {
+                        button.addEventListener('click', () => {
+                            document.querySelectorAll('.streamz-plugin-protocol').forEach((tab) => {
+                                tab.classList.remove('active');
+                                tab.setAttribute('aria-selected', 'false');
+                            });
+                            button.classList.add('active');
+                            button.setAttribute('aria-selected', 'true');
+                        });
+                    });
+
+                    document.querySelectorAll('.streamz-plugin-toggle').forEach((button) => {
+                        button.addEventListener('click', () => button.classList.toggle('active'));
+                    });
 
                     document.addEventListener('click', (event) => {
                         const trigger = event.target.closest('[data-page]');
