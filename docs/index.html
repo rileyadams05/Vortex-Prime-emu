@@ -1472,6 +1472,54 @@
             gap: 0.5rem;
             min-height: 420px;
             align-content: start;
+            overflow-y: auto;
+        }
+
+        .streamz-plugin-chat-composer {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .streamz-plugin-chat-composer input {
+            min-width: 0;
+            flex: 1;
+            border: 1px solid #3f3f46;
+            border-radius: 7px;
+            background: #18181b;
+            color: #f8fafc;
+            padding: 0.65rem 0.7rem;
+            font: inherit;
+            font-size: 0.72rem;
+        }
+
+        .streamz-plugin-send-button {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #fb923c;
+            border-radius: 7px;
+            background: #ea580c;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-send-button:hover {
+            background: #f97316;
+        }
+
+        .streamz-plugin-send-button svg {
+            width: 17px;
+            height: 17px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
         }
 
         .streamz-plugin-chat-message {
@@ -3599,16 +3647,16 @@
                                 <label class="streamz-plugin-field">
                                     Server URL
                                     <span class="streamz-plugin-field-control">
-                                        <input id="streamzRtmpsUrl" type="text" value="" placeholder="Available after account connection" readonly>
-                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzRtmpsUrl').value)" aria-label="Copy server URL" disabled>Copy</button>
+                                        <input id="streamzRtmpsUrl" type="text" value="rtmp://vortex-prime-emu.com/streamz" readonly>
+                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzRtmpsUrl').value)" aria-label="Copy server URL">Copy</button>
                                     </span>
                                 </label>
 
                                 <label class="streamz-plugin-field">
                                     Stream key
                                     <span class="streamz-plugin-field-control">
-                                        <input id="streamzStreamKey" type="password" value="" placeholder="Available after account connection" readonly>
-                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzStreamKey').value)" aria-label="Copy stream key" disabled>Copy</button>
+                                        <input id="streamzStreamKey" type="password" value="streamz_live_pro" readonly>
+                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzStreamKey').value)" aria-label="Copy stream key">Copy</button>
                                     </span>
                                 </label>
                             </section>
@@ -3652,6 +3700,12 @@
                                 <div class="streamz-plugin-chat-feed" id="streamzChatFeed" aria-live="polite">
                                     <div class="streamz-plugin-empty-state"><div><strong>No chat messages yet</strong>Messages from connected channels will appear here.</div></div>
                                 </div>
+                                <form class="streamz-plugin-chat-composer" id="streamzChatComposer">
+                                    <input id="streamzChatInput" type="text" autocomplete="off" placeholder="Type a message..." aria-label="Chat message" required>
+                                    <button class="streamz-plugin-send-button" type="submit" aria-label="Send chat message">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 8-16 8 3-8zM7 12h13"/></svg>
+                                    </button>
+                                </form>
                             </section>
                             <section class="streamz-plugin-right-view" data-right-view="settings" hidden aria-labelledby="streamzSettingsTitle">
                                 <div class="streamz-plugin-sidebar-heading"><span id="streamzSettingsTitle">Panel Settings</span></div>
@@ -3696,21 +3750,6 @@
                                 <button class="streamz-plugin-primary-button" type="submit">Save Planned Stream</button>
                             </div>
                         </form>
-                    </div>
-                </section>
-
-                <section class="streamz-plugin-modal" id="embedChatModal" hidden role="dialog" aria-modal="true" aria-labelledby="embedChatTitle">
-                    <div class="streamz-plugin-modal-dialog">
-                        <div class="streamz-plugin-modal-header">
-                            <h2 id="embedChatTitle">Embed Chat in OBS</h2>
-                            <button class="streamz-plugin-modal-close" id="closeEmbedChat" type="button" aria-label="Close embed chat">×</button>
-                        </div>
-                        <div class="streamz-plugin-embed-content">
-                            <p>Use this borderless URL in an OBS Browser Source. It stays transparent and receives the same aggregated chat feed.</p>
-                            <label class="streamz-plugin-field">Overlay URL
-                                <span class="streamz-plugin-field-control"><input id="streamzChatOverlayUrl" type="text" readonly><button class="streamz-plugin-copy" id="copyChatOverlay" type="button">Copy</button></span>
-                            </label>
-                        </div>
                     </div>
                 </section>
 
@@ -4671,19 +4710,28 @@
                     document.querySelectorAll('[data-right-panel]').forEach((button) => {
                         button.addEventListener('click', () => setActiveRightPanel(button.dataset.rightPanel));
                     });
-                    document.getElementById('embedChatButton')?.addEventListener('click', () => {
-                        const field = document.getElementById('streamzChatOverlayUrl');
-                        if (field) field.value = streamzChatOverlayUrl();
-                        openStreamzModal('embedChatModal', true);
+                    document.getElementById('embedChatButton')?.addEventListener('click', async (event) => {
+                        const button = event.currentTarget;
+                        const originalLabel = button.textContent;
+                        try {
+                            await navigator.clipboard.writeText(streamzChatOverlayUrl());
+                            button.textContent = 'Copied!';
+                        } catch (error) {
+                            console.warn('Unable to copy the production chat overlay URL.', error);
+                            button.textContent = 'Copy failed';
+                        }
+                        window.setTimeout(() => { button.textContent = originalLabel; }, 1800);
                     });
-                    document.getElementById('closeEmbedChat')?.addEventListener('click', () => openStreamzModal('embedChatModal', false));
                     document.getElementById('chatSettingsButton')?.addEventListener('click', () => openStreamzModal('chatSettingsModal', true));
                     document.getElementById('closeChatSettings')?.addEventListener('click', () => openStreamzModal('chatSettingsModal', false));
-                    document.getElementById('copyChatOverlay')?.addEventListener('click', async () => {
-                        const field = document.getElementById('streamzChatOverlayUrl');
-                        if (!field) return;
-                        await navigator.clipboard?.writeText(field.value);
-                        document.getElementById('copyChatOverlay').textContent = 'Copied';
+                    document.getElementById('streamzChatComposer')?.addEventListener('submit', (event) => {
+                        event.preventDefault();
+                        const input = document.getElementById('streamzChatInput');
+                        const text = input?.value.trim();
+                        if (!text) return;
+                        addStreamzChatMessage({ platform: 'You', author: 'You', text });
+                        input.value = '';
+                        input.focus();
                     });
                     window.addEventListener('streamz:chat-message', (event) => addStreamzChatMessage(event.detail));
                     setActiveRightPanel(activeRightPanel);
