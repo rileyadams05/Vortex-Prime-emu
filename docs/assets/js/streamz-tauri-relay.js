@@ -14,22 +14,12 @@ function requireStreamKey(value, name) {
   return key;
 }
 
-export function buildStreamTargets({ twitchStreamKey, youtubeStreamKey }) {
-  const targets = [];
-
-  if (twitchStreamKey) {
-    targets.push(`rtmps://live.twitch.tv/app/${encodeURIComponent(requireStreamKey(twitchStreamKey, 'Twitch'))}`);
-  }
-
-  if (youtubeStreamKey) {
-    targets.push(`rtmps://a.rtmp.youtube.com/live2/${encodeURIComponent(requireStreamKey(youtubeStreamKey, 'YouTube'))}`);
-  }
-
-  if (targets.length === 0) {
-    throw new Error('At least one Twitch or YouTube stream key is required.');
-  }
-
-  return targets;
+export function buildStreamTargets({ twitchStreamKey, youtubeStreamKey, kickStreamKey }) {
+  return [
+    `rtmps://live.twitch.tv/app/${encodeURIComponent(requireStreamKey(twitchStreamKey, 'Twitch'))}`,
+    `rtmps://a.rtmp.youtube.com/live2/${encodeURIComponent(requireStreamKey(youtubeStreamKey, 'YouTube'))}`,
+    `rtmps://fa7ae5a97aa4.global-contribute.live-video.net/app/${encodeURIComponent(requireStreamKey(kickStreamKey, 'Kick'))}`,
+  ];
 }
 
 export async function startStreamRelay(credentials) {

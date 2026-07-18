@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 
 const TWITCH_RTMPS_BASE = 'rtmps://live.twitch.tv/app/';
 const YOUTUBE_RTMPS_BASE = 'rtmps://a.rtmp.youtube.com/live2/';
+const KICK_RTMPS_BASE = 'rtmps://fa7ae5a97aa4.global-contribute.live-video.net/app/';
 
 function requireKey(value, name) {
   const key = String(value || '').trim();
@@ -11,20 +12,12 @@ function requireKey(value, name) {
   return key;
 }
 
-export function buildStreamTargets({ twitchStreamKey, youtubeStreamKey }) {
-  const targets = [];
-
-  if (twitchStreamKey) {
-    targets.push(`${TWITCH_RTMPS_BASE}${encodeURIComponent(requireKey(twitchStreamKey, 'Twitch'))}`);
-  }
-
-  if (youtubeStreamKey) {
-    targets.push(`${YOUTUBE_RTMPS_BASE}${encodeURIComponent(requireKey(youtubeStreamKey, 'YouTube'))}`);
-  }
-
-  if (targets.length === 0) {
-    throw new Error('At least one Twitch or YouTube stream key is required.');
-  }
+export function buildStreamTargets({ twitchStreamKey, youtubeStreamKey, kickStreamKey }) {
+  const targets = [
+    `${TWITCH_RTMPS_BASE}${encodeURIComponent(requireKey(twitchStreamKey, 'Twitch'))}`,
+    `${YOUTUBE_RTMPS_BASE}${encodeURIComponent(requireKey(youtubeStreamKey, 'YouTube'))}`,
+    `${KICK_RTMPS_BASE}${encodeURIComponent(requireKey(kickStreamKey, 'Kick'))}`,
+  ];
 
   return targets;
 }
