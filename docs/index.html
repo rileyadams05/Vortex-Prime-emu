@@ -1375,11 +1375,152 @@
             border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .streamz-plugin-sidebar {
+        .streamz-plugin-right-panel {
             min-width: 0;
+            display: flex;
+            flex-direction: row;
             background: #232323;
             border-left: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .streamz-plugin-right-content {
+            min-width: 0;
+            flex: 1;
             padding: 1rem;
+            overflow: auto;
+        }
+
+        .streamz-plugin-right-view[hidden] {
+            display: none;
+        }
+
+        .streamz-plugin-right-nav {
+            width: 64px;
+            flex: 0 0 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem 0;
+            background: #09090b;
+            border-left: 1px solid #27272a;
+        }
+
+        .streamz-plugin-right-nav-button {
+            width: 48px;
+            min-height: 52px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #71717a;
+            font: inherit;
+            font-size: 0.58rem;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-right-nav-button:hover,
+        .streamz-plugin-right-nav-button.is-active {
+            background: rgba(249, 115, 22, 0.12);
+            color: #fb923c;
+        }
+
+        .streamz-plugin-right-nav-button svg {
+            width: 21px;
+            height: 21px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.7;
+        }
+
+        .streamz-plugin-chat-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .streamz-plugin-chat-header h2 {
+            margin: 0;
+            color: #f8fafc;
+            font-size: 1rem;
+        }
+
+        .streamz-plugin-chat-header span {
+            display: block;
+            margin-top: 0.25rem;
+            color: #94a3b8;
+            font-size: 0.65rem;
+        }
+
+        .streamz-plugin-chat-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 0.4rem;
+        }
+
+        .streamz-plugin-chat-feed {
+            display: grid;
+            gap: 0.5rem;
+            min-height: 420px;
+            align-content: start;
+        }
+
+        .streamz-plugin-chat-message {
+            padding: 0.55rem 0.65rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 7px;
+            background: #18181b;
+            color: #d4d4d8;
+            font-size: 0.72rem;
+        }
+
+        .streamz-plugin-chat-message-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.2rem;
+            color: #fb923c;
+            font-size: 0.62rem;
+            font-weight: 700;
+        }
+
+        .streamz-plugin-settings-card,
+        .streamz-plugin-embed-content {
+            display: grid;
+            gap: 0.5rem;
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        .streamz-plugin-settings-card {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            background: #18181b;
+        }
+
+        .streamz-plugin-settings-card strong,
+        .streamz-plugin-embed-content strong {
+            color: #f8fafc;
+        }
+
+        .streamz-plugin-embed-content {
+            padding: 1.25rem;
+        }
+
+        .streamz-plugin-embed-content p {
+            margin: 0;
+            line-height: 1.5;
         }
 
         .streamz-plugin-sidebar-heading,
@@ -1564,9 +1705,15 @@
                 grid-template-columns: 1fr;
             }
 
-            .streamz-plugin-sidebar {
+            .streamz-plugin-right-panel {
+                min-height: 360px;
                 border-left: 0;
                 border-top: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .streamz-plugin-right-nav {
+                width: 56px;
+                flex-basis: 56px;
             }
 
             .streamz-plugin-preview {
@@ -3468,26 +3615,60 @@
                         </div>
                     </main>
 
-                    <aside class="streamz-plugin-sidebar" aria-label="Your channels">
-                        <div class="streamz-plugin-sidebar-heading">
-                            <span>Your Channels</span>
-                            <span id="streamzChannelCount">0 connected</span>
+                    <aside class="streamz-plugin-right-panel" aria-label="Streamz tools">
+                        <div class="streamz-plugin-right-content">
+                            <section class="streamz-plugin-right-view" data-right-view="channels" aria-labelledby="streamzChannelsTitle">
+                                <div class="streamz-plugin-sidebar-heading">
+                                    <span id="streamzChannelsTitle">Your Channels</span>
+                                    <span id="streamzChannelCount">0 connected</span>
+                                </div>
+                                <div class="streamz-plugin-sidebar-toolbar">
+                                    <button class="streamz-plugin-sidebar-button" type="button" data-streamz-refresh-channels>Refresh</button>
+                                </div>
+                                <div class="streamz-plugin-connect-actions" aria-label="Connect streaming accounts">
+                                    <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="twitch" data-provider="twitch"><img class="streamz-plugin-provider-icon" src="/assets/streamz/twitch.svg" alt="">Connect Twitch</button>
+                                    <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="youtube" data-provider="youtube"><img class="streamz-plugin-provider-icon" src="/assets/streamz/youtube.svg" alt="">Connect YouTube</button>
+                                    <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="kick" data-provider="kick"><img class="streamz-plugin-provider-icon" src="/assets/streamz/kick.svg" alt="">Connect Kick</button>
+                                </div>
+                                <div class="streamz-plugin-empty-state" id="streamzChannelEmptyState">
+                                    <div>
+                                        <strong>No channels connected</strong>
+                                        Link a streaming account to see its channel here.
+                                    </div>
+                                </div>
+                                <div id="streamzChannelList" hidden></div>
+                            </section>
+                            <section class="streamz-plugin-right-view" data-right-view="chat" hidden aria-labelledby="streamzChatTitle">
+                                <div class="streamz-plugin-chat-header">
+                                    <div>
+                                        <h2 id="streamzChatTitle">Live Chat</h2>
+                                        <span>Aggregated from Twitch, YouTube and Kick</span>
+                                    </div>
+                                    <div class="streamz-plugin-chat-actions">
+                                        <button class="streamz-plugin-sidebar-button" type="button" id="embedChatButton">Embed Chat</button>
+                                        <button class="streamz-plugin-sidebar-button" type="button" id="chatSettingsButton">Chat Settings</button>
+                                    </div>
+                                </div>
+                                <div class="streamz-plugin-chat-feed" id="streamzChatFeed" aria-live="polite">
+                                    <div class="streamz-plugin-empty-state"><div><strong>No chat messages yet</strong>Messages from connected channels will appear here.</div></div>
+                                </div>
+                            </section>
+                            <section class="streamz-plugin-right-view" data-right-view="settings" hidden aria-labelledby="streamzSettingsTitle">
+                                <div class="streamz-plugin-sidebar-heading"><span id="streamzSettingsTitle">Panel Settings</span></div>
+                                <div class="streamz-plugin-settings-card"><strong>Streamz workspace</strong><span>Chat and channel preferences are saved locally for this dashboard.</span></div>
+                            </section>
                         </div>
-                        <div class="streamz-plugin-sidebar-toolbar">
-                            <button class="streamz-plugin-sidebar-button" type="button" data-streamz-refresh-channels>Refresh</button>
-                        </div>
-                        <div class="streamz-plugin-connect-actions" aria-label="Connect streaming accounts">
-                            <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="twitch" data-provider="twitch"><img class="streamz-plugin-provider-icon" src="/assets/streamz/twitch.svg" alt="">Connect Twitch</button>
-                            <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="youtube" data-provider="youtube"><img class="streamz-plugin-provider-icon" src="/assets/streamz/youtube.svg" alt="">Connect YouTube</button>
-                            <button class="streamz-plugin-connect-button" type="button" data-streamz-connect="kick" data-provider="kick"><img class="streamz-plugin-provider-icon" src="/assets/streamz/kick.svg" alt="">Connect Kick</button>
-                        </div>
-                        <div class="streamz-plugin-empty-state" id="streamzChannelEmptyState">
-                            <div>
-                                <strong>No channels connected</strong>
-                                Link a streaming account to see its channel here.
-                            </div>
-                        </div>
-                        <div id="streamzChannelList" hidden></div>
+                        <nav class="streamz-plugin-right-nav" aria-label="Dashboard panel navigation">
+                            <button class="streamz-plugin-right-nav-button is-active" type="button" data-right-panel="channels" aria-label="Channels" aria-pressed="true">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Channels</span>
+                            </button>
+                            <button class="streamz-plugin-right-nav-button" type="button" data-right-panel="chat" aria-label="Chat" aria-pressed="false">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v10H9l-4 3zM8 10h8M8 13h5"/></svg><span>Chat</span>
+                            </button>
+                            <button class="streamz-plugin-right-nav-button" type="button" data-right-panel="settings" aria-label="Settings" aria-pressed="false">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm0-5v2m0 13v2M3.5 12h2m13 0h2M5.9 5.9l1.4 1.4m9.4 9.4 1.4 1.4m0-12.2-1.4 1.4M7.3 16.7l-1.4 1.4"/></svg><span>Settings</span>
+                            </button>
+                        </nav>
                     </aside>
                 </div>
 
@@ -3515,6 +3696,31 @@
                                 <button class="streamz-plugin-primary-button" type="submit">Save Planned Stream</button>
                             </div>
                         </form>
+                    </div>
+                </section>
+
+                <section class="streamz-plugin-modal" id="embedChatModal" hidden role="dialog" aria-modal="true" aria-labelledby="embedChatTitle">
+                    <div class="streamz-plugin-modal-dialog">
+                        <div class="streamz-plugin-modal-header">
+                            <h2 id="embedChatTitle">Embed Chat in OBS</h2>
+                            <button class="streamz-plugin-modal-close" id="closeEmbedChat" type="button" aria-label="Close embed chat">×</button>
+                        </div>
+                        <div class="streamz-plugin-embed-content">
+                            <p>Use this borderless URL in an OBS Browser Source. It stays transparent and receives the same aggregated chat feed.</p>
+                            <label class="streamz-plugin-field">Overlay URL
+                                <span class="streamz-plugin-field-control"><input id="streamzChatOverlayUrl" type="text" readonly><button class="streamz-plugin-copy" id="copyChatOverlay" type="button">Copy</button></span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="streamz-plugin-modal" id="chatSettingsModal" hidden role="dialog" aria-modal="true" aria-labelledby="chatSettingsTitle">
+                    <div class="streamz-plugin-modal-dialog">
+                        <div class="streamz-plugin-modal-header">
+                            <h2 id="chatSettingsTitle">Chat Settings</h2>
+                            <button class="streamz-plugin-modal-close" id="closeChatSettings" type="button" aria-label="Close chat settings">×</button>
+                        </div>
+                        <div class="streamz-plugin-embed-content"><p>Customize the chat display from the OBS overlay using its browser source dimensions and theme controls.</p></div>
                     </div>
                 </section>
             </div>
@@ -4392,11 +4598,96 @@
                         setPlannedStreamsModal(false);
                     });
 
+                    let activeRightPanel = 'channels';
+                    const streamzChatChannel = 'BroadcastChannel' in window ? new BroadcastChannel('streamz-chat') : null;
                     window.streamzDashboardState = {
                         channels: [],
                         credentials: [],
+                        chatMessages: [],
                         loaded: false,
                     };
+
+                    function setActiveRightPanel(panel) {
+                        if (!['channels', 'chat', 'settings'].includes(panel)) return;
+                        activeRightPanel = panel;
+                        document.querySelectorAll('[data-right-view]').forEach((view) => {
+                            view.hidden = view.dataset.rightView !== activeRightPanel;
+                        });
+                        document.querySelectorAll('[data-right-panel]').forEach((button) => {
+                            const active = button.dataset.rightPanel === activeRightPanel;
+                            button.classList.toggle('is-active', active);
+                            button.setAttribute('aria-pressed', String(active));
+                        });
+                    }
+
+                    function renderStreamzChat(messages) {
+                        const feed = document.getElementById('streamzChatFeed');
+                        if (!feed) return;
+                        feed.replaceChildren();
+                        if (!messages.length) {
+                            const empty = document.createElement('div');
+                            empty.className = 'streamz-plugin-empty-state';
+                            empty.innerHTML = '<div><strong>No chat messages yet</strong>Messages from connected channels will appear here.</div>';
+                            feed.append(empty);
+                            return;
+                        }
+                        messages.slice(-100).forEach((message) => {
+                            const row = document.createElement('article');
+                            row.className = 'streamz-plugin-chat-message';
+                            const meta = document.createElement('div');
+                            meta.className = 'streamz-plugin-chat-message-meta';
+                            const author = document.createElement('span');
+                            author.textContent = `${message.platform || 'Chat'} · ${message.author || 'Viewer'}`;
+                            const time = document.createElement('time');
+                            time.textContent = message.time || '';
+                            meta.append(author, time);
+                            const body = document.createElement('div');
+                            body.textContent = message.text || '';
+                            row.append(meta, body);
+                            feed.append(row);
+                        });
+                        feed.scrollTop = feed.scrollHeight;
+                    }
+
+                    function addStreamzChatMessage(message) {
+                        if (!message || !message.text) return;
+                        const normalizedMessage = { ...message, time: message.time || new Date().toLocaleTimeString() };
+                        window.streamzDashboardState.chatMessages.push(normalizedMessage);
+                        streamzChatChannel?.postMessage(normalizedMessage);
+                        renderStreamzChat(window.streamzDashboardState.chatMessages);
+                    }
+
+                    function openStreamzModal(id, open) {
+                        const modal = document.getElementById(id);
+                        if (modal) modal.hidden = !open;
+                    }
+
+                    const STREAMZ_CHAT_OVERLAY_URL = 'https://vortex-prime-emu.com/streamz-pro-plugin/chat-overlay/';
+
+                    function streamzChatOverlayUrl() {
+                        return STREAMZ_CHAT_OVERLAY_URL;
+                    }
+
+                    document.querySelectorAll('[data-right-panel]').forEach((button) => {
+                        button.addEventListener('click', () => setActiveRightPanel(button.dataset.rightPanel));
+                    });
+                    document.getElementById('embedChatButton')?.addEventListener('click', () => {
+                        const field = document.getElementById('streamzChatOverlayUrl');
+                        if (field) field.value = streamzChatOverlayUrl();
+                        openStreamzModal('embedChatModal', true);
+                    });
+                    document.getElementById('closeEmbedChat')?.addEventListener('click', () => openStreamzModal('embedChatModal', false));
+                    document.getElementById('chatSettingsButton')?.addEventListener('click', () => openStreamzModal('chatSettingsModal', true));
+                    document.getElementById('closeChatSettings')?.addEventListener('click', () => openStreamzModal('chatSettingsModal', false));
+                    document.getElementById('copyChatOverlay')?.addEventListener('click', async () => {
+                        const field = document.getElementById('streamzChatOverlayUrl');
+                        if (!field) return;
+                        await navigator.clipboard?.writeText(field.value);
+                        document.getElementById('copyChatOverlay').textContent = 'Copied';
+                    });
+                    window.addEventListener('streamz:chat-message', (event) => addStreamzChatMessage(event.detail));
+                    setActiveRightPanel(activeRightPanel);
+                    renderStreamzChat([]);
 
                     function renderStreamzChannels(channels) {
                         const list = document.getElementById('streamzChannelList');

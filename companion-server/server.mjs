@@ -358,8 +358,8 @@ async function mountCompanion(appInstance, server) {
       },
     },
     server: {
-      host: getEnv('COMPANION_HOST', `localhost:${PORT}`),
-      protocol: getEnv('COMPANION_PROTOCOL', 'http'),
+      host: getEnv('COMPANION_HOST', 'vortex-prime-emu.com'),
+      protocol: getEnv('COMPANION_PROTOCOL', 'https'),
       path: COMPANION_PATH,
     },
     filePath: tmpDir,
@@ -385,6 +385,6 @@ await mountCompanion(app, server);
 
 server.listen(PORT, HOST, () => {
   const protocol = getEnv('COMPANION_PROTOCOL', 'http');
-  const hostLabel = HOST === '0.0.0.0' ? 'localhost' : HOST;
+  const hostLabel = HOST === '0.0.0.0' ? 'vortex-prime-emu.com' : HOST;
   console.log(`Vortex Companion server listening on ${protocol}://${hostLabel}:${PORT}`);
 });

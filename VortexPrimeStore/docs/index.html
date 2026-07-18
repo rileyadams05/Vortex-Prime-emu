@@ -3198,8 +3198,7 @@
                         });
                     }
 
-                    const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                    const API_BASE = window.VORTEX_API_BASE || (IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '/api');
+                    const API_BASE = window.VORTEX_API_BASE || 'https://vortex-prime-emu.com/api';
                     const STORE_DATA_URL = `${API_BASE}/store/themes`;
                     const MODS_DATA_URL = `${API_BASE}/store/mods`;
                     const CARDS_PER_PAGE = 10;

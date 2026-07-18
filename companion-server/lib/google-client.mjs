@@ -5,13 +5,8 @@ import { defaultClientPath, tokenPath } from './paths.mjs';
 import { getEnv } from './env.mjs';
 
 function selectDefaultRedirectUri(list = []) {
-  const port = getEnv('PORT', '4100');
-  const desired = `http://localhost:${port}/auth/google/callback`;
-  const match = list.find((uri) => uri === desired);
-  if (match) return match;
-  const localhostMatch = list.find((uri) => uri.startsWith(`http://localhost:${port}`));
-  if (localhostMatch) return localhostMatch;
-  return list.find((uri) => uri.startsWith('http://localhost')) || list[0];
+  const desired = 'https://vortex-prime-emu.com/auth/google/callback';
+  return list.find((uri) => uri === desired) || list[0];
 }
 
 function extractWebCredentials(json) {

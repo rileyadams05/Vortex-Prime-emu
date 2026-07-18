@@ -34,11 +34,7 @@ let googleSignInInitialized = false;
  * In local dev, handles proxying requests to the companion server on port 4100.
  */
 function buildApiUrl(path) {
-  const hostname = window.location.hostname;
-  const protocol = window.location.protocol;
-  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
-  const base = isLocal ? `${protocol}//${hostname}:4100` : "";
-  return `${base}${path}`;
+  return `https://vortex-prime-emu.com${path}`;
 }
 
 /**
@@ -110,25 +106,7 @@ function prepareDestination() {
  * Live production does NOT allow URL/localStorage parameters for authentication.
  */
 async function checkLoginState() {
-  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  
-  if (isLocal) {
-    console.log("[Security Gate] Running in LOCAL testing mode.");
-    // Allow URL parameter overrides only during local testing
-    if (params.get("authed") === "1" || params.get("logged_in") === "1" || params.get("user")) {
-      console.log("[Security Gate] Local test bypass active (URL parameter).");
-      return true;
-    }
-    // Allow localStorage bypass overrides only during local testing
-    try {
-      if (localStorage.getItem("user") || localStorage.getItem("authed") === "true") {
-        console.log("[Security Gate] Local test bypass active (localStorage).");
-        return true;
-      }
-    } catch (e) {}
-  } else {
-    console.log("[Security Gate] Running in PRODUCTION mode. Bypasses are strictly disabled.");
-  }
+  console.log("[Security Gate] Running in PRODUCTION mode. Bypasses are strictly disabled.");
 
   // Real production authentication check
   try {
@@ -273,10 +251,8 @@ async function runSecurityGate() {
 
   // 1. Check if user is logged in
   isLoggedIn = await checkLoginState();
-  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-
-  // Check if endpoint does not exist and we are not locally bypassed
-  if (authEndpointStatus === "missing" && (!isLocal || !isLoggedIn)) {
+  // Check if the production endpoint does not exist.
+  if (authEndpointStatus === "missing" && !isLoggedIn) {
     if (spinner) spinner.style.display = "none";
     if (feedback) {
       feedback.textContent = "Authentication service endpoint does not exist on this server.";

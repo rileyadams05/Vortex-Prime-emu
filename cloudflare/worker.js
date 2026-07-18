@@ -3,8 +3,6 @@ const PRODUCTION_ORIGINS = [
   'https://rileyadams05.github.io',
 ];
 
-const LOCAL_DEV_HOSTS = new Set(['localhost', '127.0.0.1']);
-
 const DEFAULT_DB = {
   storeItems: [],
   storeMods: [],
@@ -308,28 +306,7 @@ function resolveAllowedOrigin(origin) {
   if (PRODUCTION_ORIGINS.includes(origin)) {
     return origin;
   }
-  if (isAllowedLocalOrigin(origin)) {
-    return origin;
-  }
   return null;
-}
-
-function isAllowedLocalOrigin(origin) {
-  try {
-    const url = new URL(origin);
-    if (!['http:', 'https:'].includes(url.protocol)) {
-      return false;
-    }
-    if (!LOCAL_DEV_HOSTS.has(url.hostname)) {
-      return false;
-    }
-    if (url.port && Number.isNaN(Number(url.port))) {
-      return false;
-    }
-    return true;
-  } catch (error) {
-    return false;
-  }
 }
 
 function optionsResponse(origin) {

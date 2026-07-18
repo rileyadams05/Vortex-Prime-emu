@@ -1075,8 +1075,7 @@
     toast(`File ${filename} selected.`);
   }
 
-  const IS_LOCAL_BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const API_BASE = window.VORTEX_API_BASE || (IS_LOCAL_BACKEND ? 'http://localhost:8000/api' : '/api');
+  const API_BASE = window.VORTEX_API_BASE || 'https://vortex-prime-emu.com/api';
   const HAS_CONFIGURED_API = Boolean(API_BASE);
 
   async function ensureUploadApiAvailable() {

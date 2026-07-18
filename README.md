@@ -189,7 +189,7 @@ cd "D:\PROJECTS\Vortex-Prime-emu\VortexPrimeStore"
 python backend\server.py
 ```
 
-When the site is opened on `localhost`, it can use the local backend API for dynamic store data and uploads.
+The deployed site uses the production API under `https://vortex-prime-emu.com` for dynamic store data and uploads.
 
 ## Publishing To GitHub Pages
 

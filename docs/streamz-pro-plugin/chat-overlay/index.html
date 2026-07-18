@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Streamz Chat Overlay</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; }
+    html, body { margin: 0; min-height: 100%; background: transparent; overflow: hidden; }
+    #chat { display: grid; gap: 8px; padding: 12px; }
+    .message { width: fit-content; max-width: min(680px, 90vw); padding: 8px 11px; border-radius: 8px; background: rgba(9, 9, 11, .86); color: #f4f4f5; font-size: 14px; line-height: 1.35; box-shadow: 0 3px 14px rgba(0, 0, 0, .24); }
+    .meta { margin-bottom: 2px; color: #fb923c; font-size: 11px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main id="chat" aria-live="polite"></main>
+  <script>
+    const ALLOWED_ORIGIN = 'https://vortex-prime-emu.com';
+    const feed = document.getElementById('chat');
+    const channel = 'BroadcastChannel' in window ? new BroadcastChannel('streamz-chat') : null;
+    const messages = [];
+
+    function appendMessage(message) {
+      if (!message || !message.text) return;
+      messages.push(message);
+      const row = document.createElement('article');
+      row.className = 'message';
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = `${message.platform || 'Chat'} · ${message.author || 'Viewer'}`;
+      const text = document.createElement('div');
+      text.textContent = message.text;
+      row.append(meta, text);
+      feed.append(row);
+      while (feed.children.length > 100) feed.firstElementChild.remove();
+    }
+
+    channel?.addEventListener('message', (event) => appendMessage(event.data));
+    window.addEventListener('message', (event) => {
+      if (event.origin === ALLOWED_ORIGIN) appendMessage(event.data);
+    });
+  </script>
+</body>
+</html>

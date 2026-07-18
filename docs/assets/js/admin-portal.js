@@ -521,7 +521,6 @@ var require_namespace_emitter = __commonJS({
 });
 
 // ../../src/backend/config.js
-var DEFAULT_LOCAL_PORT = 4100;
 var PRODUCTION_BASE_URL = "https://vortex-prime-emu.com";
 function readGlobal(name) {
   if (typeof globalThis !== "undefined" && globalThis[name]) {
@@ -552,10 +551,6 @@ function readStored() {
 function resolveDefaultBase() {
   if (typeof window === "undefined" || !(window == null ? void 0 : window.location)) {
     return PRODUCTION_BASE_URL;
-  }
-  const { protocol, hostname } = window.location;
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return `${protocol}//${hostname}:${DEFAULT_LOCAL_PORT}`;
   }
   return PRODUCTION_BASE_URL;
 }

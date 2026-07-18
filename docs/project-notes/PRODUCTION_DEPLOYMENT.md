@@ -177,9 +177,9 @@ The permanent storage location is **My Drive → Vortex Prime Store**, which alr
 
 Files are uploaded using your personal Google account OAuth token, so they count against your personal storage quota (5 TB) and are owned by you, not a service account.
 
-## 11. Local development (optional)
+## 11. Production runtime
 
-For local testing you can still run the Companion Express server (`companion-server/`), set `window.localStorage.setItem('vortex-companion-base-url', 'http://localhost:4100')`, and reload the page. Production does not rely on this.
+The frontend uses the production Companion and API routes under `https://vortex-prime-emu.com`. Do not configure browser storage overrides for alternate API hosts in the deployed site.
 
 ## 12. Troubleshooting
 
@@ -187,6 +187,6 @@ For local testing you can still run the Companion Express server (`companion-ser
 - **CORS errors**: add the new frontend domain to `PRODUCTION_ORIGINS` inside `cloudflare/worker.js` and redeploy.
 - **Uploads or catalogues failing with a token error**: verify `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, and `GOOGLE_DRIVE_REFRESH_TOKEN` are set correctly in Cloudflare Worker Secrets. If the OAuth consent screen is still in Testing, publish it first; otherwise the replacement refresh token can expire again after 7 days.
 - **Admin actions rejected**: confirm the Google account is listed in `GOOGLE_ADMIN_EMAILS`. You can set whole domains with entries like `@yourteam.com`.
-- **Frontend still calling localhost**: ensure your production build of `docs/index.html` includes `<meta name="vortex-companion-base-url" content="https://vortex-prime-emu.com">`.
+- **Frontend API routing**: ensure the production build of `docs/index.html` includes `<meta name="vortex-companion-base-url" content="https://vortex-prime-emu.com">`.
 
 With these pieces in place, the site runs entirely online. You can remove the local repository after verifying the public deployment.
