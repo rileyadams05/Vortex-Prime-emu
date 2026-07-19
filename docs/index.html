@@ -3831,9 +3831,6 @@
                     <header class="streamz-plugin-header">
                         <a class="streamz-plugin-brand" href="/" data-page="home" data-no-gate="true">Streamz</a>
                         <span class="streamz-plugin-header-title">Dashboard</span>
-                        <div class="streamz-plugin-header-actions">
-                            <button class="streamz-plugin-primary-button" id="openPlannedStreams" type="button">Planned Streams</button>
-                        </div>
                     </header>
 
                     <aside class="streamz-plugin-left-nav" aria-label="Streamz workspace navigation">
@@ -3856,6 +3853,7 @@
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="clips"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 4 6 6M13 5 5 13l6 6 8-8M8 8l8 8"/></svg><span>Clips</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="storage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg><span>Storage</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="analytics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>Analytics</span><span class="streamz-plugin-new-badge">NEW</span></button>
+                            <button class="streamz-plugin-workspace-item" id="openScheduledStreams" type="button" data-workspace-item="scheduled-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h5"/></svg><span>Scheduled Streams</span></button>
                         </nav>
                     </aside>
 
@@ -3941,13 +3939,13 @@
                     </aside>
                 </div>
 
-                <section class="streamz-plugin-modal" id="plannedStreamsModal" hidden role="dialog" aria-modal="true" aria-labelledby="plannedStreamsTitle">
+                <section class="streamz-plugin-modal" id="scheduledStreamsModal" hidden role="dialog" aria-modal="true" aria-labelledby="scheduledStreamsTitle">
                     <div class="streamz-plugin-modal-dialog">
                         <div class="streamz-plugin-modal-header">
-                            <h2 id="plannedStreamsTitle">Plan a stream</h2>
-                            <button class="streamz-plugin-modal-close" id="closePlannedStreams" type="button" aria-label="Close planned streams">×</button>
+                            <h2 id="scheduledStreamsTitle">Schedule a stream</h2>
+                            <button class="streamz-plugin-modal-close" id="closeScheduledStreams" type="button" aria-label="Close scheduled streams">×</button>
                         </div>
-                        <form class="streamz-plugin-plan-form" id="plannedStreamForm">
+                        <form class="streamz-plugin-plan-form" id="scheduledStreamForm">
                             <label>
                                 Stream title
                                 <input name="title" type="text" required placeholder="Enter a stream title">
@@ -3961,8 +3959,8 @@
                                 <textarea name="description" placeholder="Add details for your audience"></textarea>
                             </label>
                             <div class="streamz-plugin-modal-footer">
-                                <button class="streamz-plugin-sidebar-button" id="cancelPlannedStreams" type="button">Cancel</button>
-                                <button class="streamz-plugin-primary-button" type="submit">Save Planned Stream</button>
+                                <button class="streamz-plugin-sidebar-button" id="cancelScheduledStreams" type="button">Cancel</button>
+                                <button class="streamz-plugin-primary-button" type="submit">Schedule Stream</button>
                             </div>
                         </form>
                     </div>
@@ -4879,29 +4877,29 @@
                         return routes[path] || 'home';
                     }
 
-                    const plannedStreamsModal = document.getElementById('plannedStreamsModal');
-                    const plannedStreamsForm = document.getElementById('plannedStreamForm');
+                    const scheduledStreamsModal = document.getElementById('scheduledStreamsModal');
+                    const scheduledStreamsForm = document.getElementById('scheduledStreamForm');
 
-                    function setPlannedStreamsModal(open) {
-                        if (!plannedStreamsModal) return;
-                        plannedStreamsModal.hidden = !open;
+                    function setScheduledStreamsModal(open) {
+                        if (!scheduledStreamsModal) return;
+                        scheduledStreamsModal.hidden = !open;
                         if (open) {
-                            plannedStreamsForm?.querySelector('input')?.focus();
+                            scheduledStreamsForm?.querySelector('input')?.focus();
                         }
                     }
 
-                    document.getElementById('openPlannedStreams')?.addEventListener('click', () => setPlannedStreamsModal(true));
-                    document.getElementById('closePlannedStreams')?.addEventListener('click', () => setPlannedStreamsModal(false));
-                    document.getElementById('cancelPlannedStreams')?.addEventListener('click', () => setPlannedStreamsModal(false));
-                    plannedStreamsModal?.addEventListener('click', (event) => {
-                        if (event.target === plannedStreamsModal) setPlannedStreamsModal(false);
+                    document.getElementById('openScheduledStreams')?.addEventListener('click', () => setScheduledStreamsModal(true));
+                    document.getElementById('closeScheduledStreams')?.addEventListener('click', () => setScheduledStreamsModal(false));
+                    document.getElementById('cancelScheduledStreams')?.addEventListener('click', () => setScheduledStreamsModal(false));
+                    scheduledStreamsModal?.addEventListener('click', (event) => {
+                        if (event.target === scheduledStreamsModal) setScheduledStreamsModal(false);
                     });
-                    plannedStreamsForm?.addEventListener('submit', (event) => {
+                    scheduledStreamsForm?.addEventListener('submit', (event) => {
                         event.preventDefault();
-                        window.dispatchEvent(new CustomEvent('streamz:planned-stream-created', {
-                            detail: Object.fromEntries(new FormData(plannedStreamsForm).entries()),
+                        window.dispatchEvent(new CustomEvent('streamz:scheduled-stream-created', {
+                            detail: Object.fromEntries(new FormData(scheduledStreamsForm).entries()),
                         }));
-                        setPlannedStreamsModal(false);
+                        setScheduledStreamsModal(false);
                     });
 
                     let activeRightPanel = 'channels';
