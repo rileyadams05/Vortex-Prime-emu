@@ -1183,6 +1183,7 @@
         .streamz-plugin-left-nav {
             grid-column: 1;
             grid-row: 2;
+            position: relative;
             min-width: 0;
             min-height: 0;
             height: 100%;
@@ -1246,14 +1247,20 @@
             color: #ffffff;
         }
 
-        .streamz-plugin-workspace-list {
-            display: grid;
-            align-content: start;
+        .streamz-plugin-left-nav .streamz-plugin-workspace-list {
+            position: static;
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            align-items: stretch;
+            align-content: stretch;
             gap: 0.25rem;
-            flex: 1;
+            margin: 1rem 0 0;
+            padding: 0;
         }
 
-        .streamz-plugin-workspace-item {
+        .streamz-plugin-left-nav .streamz-plugin-workspace-item {
+            position: static;
             display: flex;
             align-items: center;
             gap: 0.65rem;
