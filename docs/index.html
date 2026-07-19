@@ -1199,17 +1199,74 @@
             grid-template-columns: 38px minmax(0, 1fr) 18px;
             align-items: center;
             gap: 0.55rem;
+            width: 100%;
             padding: 0.35rem 0.25rem 1rem;
+            border: 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-account:hover {
+            background: #18181b;
+        }
+
+        .streamz-plugin-account-avatar-frame {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #52525b;
+            border-radius: 50%;
+            background: #18181b;
+            overflow: hidden;
         }
 
         .streamz-plugin-account-avatar {
-            width: 38px;
-            height: 38px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            background: #27272a;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
+        }
+
+        .streamz-plugin-account-avatar[hidden] {
+            display: none;
+        }
+
+        .streamz-plugin-account-menu {
+            position: relative;
+            z-index: 3;
+            display: grid;
+            gap: 0.25rem;
+            margin: 0.5rem 0 0;
+            padding: 0.35rem;
+            border: 1px solid #3f3f46;
+            border-radius: 7px;
+            background: #18181b;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+        }
+
+        .streamz-plugin-account-menu[hidden] {
+            display: none;
+        }
+
+        .streamz-plugin-account-menu button {
+            padding: 0.55rem 0.6rem;
+            border: 0;
+            border-radius: 5px;
+            background: transparent;
+            color: #e4e4e7;
+            font: inherit;
+            font-size: 0.72rem;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .streamz-plugin-account-menu button:hover {
+            background: #27272a;
+            color: #ffffff;
         }
 
         .streamz-plugin-account-copy {
@@ -3780,13 +3837,17 @@
                     </header>
 
                     <aside class="streamz-plugin-left-nav" aria-label="Streamz workspace navigation">
-                        <div class="streamz-plugin-account">
-                            <img class="streamz-plugin-account-avatar" id="streamzAccountAvatar" src="./favicon-96x96.png" alt="Google account profile">
-                            <div class="streamz-plugin-account-copy">
+                        <button class="streamz-plugin-account" id="streamzAccountToggle" type="button" aria-expanded="false" aria-controls="streamzAccountMenu">
+                            <span class="streamz-plugin-account-avatar-frame"><img class="streamz-plugin-account-avatar" id="streamzAccountAvatar" alt="Google account profile" hidden></span>
+                            <span class="streamz-plugin-account-copy">
                                 <strong class="streamz-plugin-account-name" id="streamzAccountName">Google account</strong>
                                 <span class="streamz-plugin-account-email" id="streamzAccountEmail">Sign in to load account</span>
-                            </div>
+                            </span>
                             <span class="streamz-plugin-account-chevron" aria-hidden="true">⌄</span>
+                        </button>
+                        <div class="streamz-plugin-account-menu" id="streamzAccountMenu" hidden>
+                            <button type="button" id="streamzAccountLogin">Continue with Google</button>
+                            <button type="button" id="streamzAccountLogout" hidden>Log out</button>
                         </div>
                         <nav class="streamz-plugin-workspace-list" aria-label="Workspace navigation">
                             <button class="streamz-plugin-workspace-item is-active" type="button" data-workspace-item="dashboard" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM9 20v-6h6v6"/></svg><span>Dashboard</span></button>
@@ -4267,7 +4328,16 @@
                         const profile = resolveDisplayProfile(user);
                         if (streamzAccountName) streamzAccountName.textContent = user ? (profile.displayName || 'Google account') : 'Google account';
                         if (streamzAccountEmail) streamzAccountEmail.textContent = user ? (user.email || 'Google account') : 'Sign in to load account';
-                        if (streamzAccountAvatar) streamzAccountAvatar.src = user ? profileAvatarFor(user) : './favicon-96x96.png';
+                        if (streamzAccountAvatar) {
+                            if (user && user.photoURL) {
+                                streamzAccountAvatar.src = user.photoURL;
+                                streamzAccountAvatar.hidden = false;
+                            } else {
+                                streamzAccountAvatar.removeAttribute('src');
+                                streamzAccountAvatar.hidden = true;
+                            }
+                        }
+                        updateStreamzAccountMenu(Boolean(user));
                         if (user) {
                             if (mainSignInBtn) mainSignInBtn.style.display = 'none';
                             if (mainUserBadge) {
@@ -4296,6 +4366,13 @@
                                 mainUserAvatar.removeAttribute('src');
                             }
                         }
+                    }
+
+                    function updateStreamzAccountMenu(isAuthenticated) {
+                        const loginButton = document.getElementById('streamzAccountLogin');
+                        const logoutButton = document.getElementById('streamzAccountLogout');
+                        if (loginButton) loginButton.hidden = isAuthenticated;
+                        if (logoutButton) logoutButton.hidden = !isAuthenticated;
                     }
 
                     let googleSignInReady = false;
@@ -4409,10 +4486,11 @@
                     }
 
                     function profileAvatarFor(user) {
-                        const profile = resolveDisplayProfile(user);
-                        return profile.photoURL || './favicon-96x96.png';
+                        return resolveDisplayProfile(user).photoURL || '';
                     }
 
+                    const streamzAccountToggle = document.getElementById('streamzAccountToggle');
+                    const streamzAccountMenu = document.getElementById('streamzAccountMenu');
                     const streamzAccountAvatar = document.getElementById('streamzAccountAvatar');
                     const streamzAccountName = document.getElementById('streamzAccountName');
                     const streamzAccountEmail = document.getElementById('streamzAccountEmail');
@@ -4575,6 +4653,35 @@
                             startGoogleSignIn();
                         });
                     }
+
+                    if (streamzAccountToggle) {
+                        streamzAccountToggle.addEventListener('click', () => {
+                            const open = streamzAccountMenu?.hidden !== false;
+                            if (streamzAccountMenu) streamzAccountMenu.hidden = !open;
+                            streamzAccountToggle.setAttribute('aria-expanded', String(open));
+                        });
+                    }
+
+                    document.getElementById('streamzAccountLogin')?.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        streamzAccountMenu.hidden = true;
+                        streamzAccountToggle?.setAttribute('aria-expanded', 'false');
+                        mainSignInBtn?.click();
+                    });
+
+                    document.getElementById('streamzAccountLogout')?.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        streamzAccountMenu.hidden = true;
+                        streamzAccountToggle?.setAttribute('aria-expanded', 'false');
+                        signOutMainUser();
+                    });
+
+                    document.addEventListener('click', (event) => {
+                        if (!event.target.closest('#streamzAccountToggle, #streamzAccountMenu')) {
+                            if (streamzAccountMenu) streamzAccountMenu.hidden = true;
+                            streamzAccountToggle?.setAttribute('aria-expanded', 'false');
+                        }
+                    });
 
                     if (mainLogoutBtn) {
                         mainLogoutBtn.addEventListener('click', (event) => {
