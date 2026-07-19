@@ -1505,7 +1505,7 @@
 
         .streamz-scheduled-filter.is-active,
         .streamz-scheduled-filter:hover {
-            border-bottom-color: #f97316;
+            border-bottom-color: #ffffff;
             color: #ffffff;
         }
 
@@ -5553,9 +5553,9 @@
                         // Hide encoder (mainView) if we are on any of the sub-pages
                         if (mainView) mainView.hidden = isScheduled || isChat || isPast || isClips;
                         
-                        // Right panel is only shown in dashboard or chat
+                        // Right panel is only shown in dashboard, scheduled streams, or chat
                         if (rightPanel) {
-                            rightPanel.hidden = isScheduled || isPast || isClips;
+                            rightPanel.hidden = isPast || isClips;
                             rightPanel.classList.toggle('streamz-chat-fullscreen', isChat);
                         }
 
