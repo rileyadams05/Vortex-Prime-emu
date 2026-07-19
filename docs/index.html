@@ -1816,6 +1816,34 @@
             display: none;
         }
 
+        /* Chat workspace: right panel expands to fill the whole content area */
+        .streamz-plugin-right-panel.streamz-chat-fullscreen {
+            grid-column: 2 / -1;
+            border-left: none;
+        }
+
+        .streamz-plugin-right-panel.streamz-chat-fullscreen .streamz-plugin-right-nav {
+            display: none;
+        }
+
+        .streamz-plugin-right-panel.streamz-chat-fullscreen .streamz-plugin-chat-feed {
+            min-height: 0;
+            flex: 1;
+        }
+
+        .streamz-plugin-right-panel.streamz-chat-fullscreen .streamz-plugin-right-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .streamz-plugin-right-panel.streamz-chat-fullscreen [data-right-view="chat"] {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+
+
         .streamz-plugin-right-nav {
             width: 64px;
             flex: 0 0 64px;
@@ -4137,7 +4165,6 @@
                                     </div>
                                     <div class="streamz-plugin-chat-actions">
                                         <button class="streamz-plugin-sidebar-button" type="button" id="embedChatButton">Embed Chat</button>
-                                        <button class="streamz-plugin-sidebar-button" type="button" id="chatSettingsButton">Chat Settings</button>
                                     </div>
                                 </div>
                                 <div class="streamz-plugin-chat-feed" id="streamzChatFeed" aria-live="polite">
@@ -4266,16 +4293,6 @@
                                 <button class="streamz-plugin-primary-button" id="saveStreamDescription" type="submit">Save</button>
                             </div>
                         </form>
-                    </div>
-                </section>
-
-                <section class="streamz-plugin-modal" id="chatSettingsModal" hidden role="dialog" aria-modal="true" aria-labelledby="chatSettingsTitle">
-                    <div class="streamz-plugin-modal-dialog">
-                        <div class="streamz-plugin-modal-header">
-                            <h2 id="chatSettingsTitle">Chat Settings</h2>
-                            <button class="streamz-plugin-modal-close" id="closeChatSettings" type="button" aria-label="Close chat settings">×</button>
-                        </div>
-                        <div class="streamz-plugin-embed-content"><p>Customize the chat display from the OBS overlay using its browser source dimensions and theme controls.</p></div>
                     </div>
                 </section>
             </div>
@@ -5486,16 +5503,22 @@
                         const mainView = document.querySelector('.streamz-plugin-main');
                         const rightPanel = document.querySelector('.streamz-plugin-right-panel');
                         const isScheduled = view === 'scheduled-streams';
+                        const isChat = view === 'chat';
+
                         if (scheduledView) scheduledView.hidden = !isScheduled;
                         if (scheduledEncoderView) scheduledEncoderView.hidden = true;
-                        if (mainView) mainView.hidden = isScheduled;
-                        if (rightPanel) rightPanel.hidden = false;
 
-                        if (isScheduled) {
-                            document.querySelector('.streamz-plugin-header-title').textContent = 'Scheduled Streams';
-                        } else {
-                            document.querySelector('.streamz-plugin-header-title').textContent = 'Dashboard';
+                        // Chat: hide encoder, expand right panel to fill the space
+                        if (mainView) mainView.hidden = isScheduled || isChat;
+                        if (rightPanel) {
+                            rightPanel.hidden = false;
+                            rightPanel.classList.toggle('streamz-chat-fullscreen', isChat);
                         }
+
+                        const titleEl = document.querySelector('.streamz-plugin-header-title');
+                        if (isScheduled && titleEl) titleEl.textContent = 'Scheduled Streams';
+                        else if (isChat && titleEl) titleEl.textContent = 'Chat';
+                        else if (titleEl) titleEl.textContent = 'Dashboard';
                     }
 
                     document.querySelectorAll('[data-scheduled-filter]').forEach((button) => {
@@ -5529,7 +5552,7 @@
                                 document.querySelector('.streamz-plugin-main')?.scrollIntoView({ block: 'start' });
                             }
                             if (button.dataset.workspaceItem === 'chat') {
-                                setStreamzWorkspaceView('dashboard');
+                                setStreamzWorkspaceView('chat');
                                 setActiveRightPanel('chat');
                             }
                             if (button.dataset.workspaceItem === 'scheduled-streams') {
@@ -5549,8 +5572,6 @@
                         }
                         window.setTimeout(() => { button.textContent = originalLabel; }, 1800);
                     });
-                    document.getElementById('chatSettingsButton')?.addEventListener('click', () => openStreamzModal('chatSettingsModal', true));
-                    document.getElementById('closeChatSettings')?.addEventListener('click', () => openStreamzModal('chatSettingsModal', false));
                     document.getElementById('streamzChatComposer')?.addEventListener('submit', (event) => {
                         event.preventDefault();
                         const input = document.getElementById('streamzChatInput');
