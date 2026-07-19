@@ -4110,8 +4110,6 @@
                             <button class="streamz-plugin-workspace-item" id="openScheduledStreams" type="button" data-workspace-item="scheduled-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h5"/></svg><span>Scheduled Streams</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Chat</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="past-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2M20 12a8 8 0 1 1-2.34-5.66"/></svg><span>Past streams</span></button>
-                            <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="clips"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 4 6 6M13 5 5 13l6 6 8-8M8 8l8 8"/></svg><span>Clips</span></button>
-                            <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="analytics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>Analytics</span><span class="streamz-plugin-new-badge">NEW</span></button>
                         </nav>
                     </aside>
 
@@ -4278,21 +4276,6 @@
                             <div>
                                 <strong>No clips found</strong>
                                 You haven't created any clips yet.
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="streamz-scheduled-view" id="streamzAnalyticsView" hidden aria-labelledby="analyticsViewTitle">
-                        <div class="streamz-scheduled-header">
-                            <div>
-                                <h1 id="analyticsViewTitle">Analytics</h1>
-                                <p>Stream performance and audience insights.</p>
-                            </div>
-                        </div>
-                        <div class="streamz-plugin-empty-state" style="margin-top: 2rem;">
-                            <div>
-                                <strong>No analytics available</strong>
-                                Complete a stream to see your analytics.
                             </div>
                         </div>
                     </section>
@@ -5554,7 +5537,6 @@
                         const scheduledEncoderView = document.getElementById('streamzScheduledEncoderView');
                         const pastStreamsView = document.getElementById('streamzPastStreamsView');
                         const clipsView = document.getElementById('streamzClipsView');
-                        const analyticsView = document.getElementById('streamzAnalyticsView');
                         const mainView = document.querySelector('.streamz-plugin-main');
                         const rightPanel = document.querySelector('.streamz-plugin-right-panel');
                         
@@ -5562,20 +5544,18 @@
                         const isChat = view === 'chat';
                         const isPast = view === 'past-streams';
                         const isClips = view === 'clips';
-                        const isAnalytics = view === 'analytics';
 
                         if (scheduledView) scheduledView.hidden = !isScheduled;
                         if (scheduledEncoderView) scheduledEncoderView.hidden = true;
                         if (pastStreamsView) pastStreamsView.hidden = !isPast;
                         if (clipsView) clipsView.hidden = !isClips;
-                        if (analyticsView) analyticsView.hidden = !isAnalytics;
 
                         // Hide encoder (mainView) if we are on any of the sub-pages
-                        if (mainView) mainView.hidden = isScheduled || isChat || isPast || isClips || isAnalytics;
+                        if (mainView) mainView.hidden = isScheduled || isChat || isPast || isClips;
                         
                         // Right panel is only shown in dashboard or chat
                         if (rightPanel) {
-                            rightPanel.hidden = isScheduled || isPast || isClips || isAnalytics;
+                            rightPanel.hidden = isScheduled || isPast || isClips;
                             rightPanel.classList.toggle('streamz-chat-fullscreen', isChat);
                         }
 
@@ -5584,7 +5564,6 @@
                         else if (isChat && titleEl) titleEl.textContent = 'Chat';
                         else if (isPast && titleEl) titleEl.textContent = 'Past Streams';
                         else if (isClips && titleEl) titleEl.textContent = 'Clips';
-                        else if (isAnalytics && titleEl) titleEl.textContent = 'Analytics';
                         else if (titleEl) titleEl.textContent = 'Dashboard';
                     }
 
@@ -5630,9 +5609,6 @@
                             }
                             if (button.dataset.workspaceItem === 'clips') {
                                 setStreamzWorkspaceView('clips');
-                            }
-                            if (button.dataset.workspaceItem === 'analytics') {
-                                setStreamzWorkspaceView('analytics');
                             }
                         });
                     });
