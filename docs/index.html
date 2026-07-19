@@ -1449,10 +1449,10 @@
         }
 
         .streamz-scheduled-new {
-            border: 1px solid #f97316;
+            border: 1px solid #52525b;
             border-radius: 7px;
-            background: #f97316;
-            color: #ffffff;
+            background: #27272a;
+            color: #e4e4e7;
             padding: 0.5rem 0.8rem;
             font: inherit;
             font-size: 0.72rem;
@@ -1460,15 +1460,21 @@
             cursor: pointer;
         }
 
-        .streamz-scheduled-new:hover {
-            background: #ea580c;
+        .streamz-scheduled-new:hover:not(:disabled) {
+            background: #3f3f46;
+            color: #ffffff;
+        }
+
+        .streamz-scheduled-new:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
         }
 
         .streamz-scheduled-encoder {
-            border: 1px solid #10B981;
+            border: 1px solid #52525b;
             border-radius: 7px;
-            background: #10B981;
-            color: #ffffff;
+            background: #27272a;
+            color: #e4e4e7;
             padding: 0.5rem 0.8rem;
             font: inherit;
             font-size: 0.72rem;
@@ -1477,7 +1483,8 @@
         }
 
         .streamz-scheduled-encoder:hover {
-            background: #059669;
+            background: #3f3f46;
+            color: #ffffff;
         }
 
         .streamz-scheduled-toolbar {
