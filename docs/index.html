@@ -1361,13 +1361,27 @@
         }
 
         .streamz-scheduled-view {
-            grid-column: 2 / -1;
+            grid-column: 2;
             grid-row: 2;
             min-width: 0;
             min-height: 600px;
             padding: 2rem 2.25rem;
             background: #181818;
             color: #f8fafc;
+        }
+
+        .streamz-scheduled-encoder-view {
+            grid-column: 2;
+            grid-row: 2;
+            min-width: 0;
+            min-height: 600px;
+            padding: 2rem 2.25rem;
+            background: #181818;
+            color: #f8fafc;
+        }
+
+        .streamz-scheduled-encoder-view[hidden] {
+            display: none;
         }
 
         .streamz-scheduled-view[hidden] {
@@ -1407,7 +1421,8 @@
         }
 
         .streamz-scheduled-update,
-        .streamz-scheduled-new {
+        .streamz-scheduled-new,
+        .streamz-scheduled-encoder {
             min-height: 34px;
             border-radius: 7px;
             padding: 0.5rem 0.8rem;
@@ -1447,6 +1462,22 @@
 
         .streamz-scheduled-new:hover {
             background: #ea580c;
+        }
+
+        .streamz-scheduled-encoder {
+            border: 1px solid #10B981;
+            border-radius: 7px;
+            background: #10B981;
+            color: #ffffff;
+            padding: 0.5rem 0.8rem;
+            font: inherit;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .streamz-scheduled-encoder:hover {
+            background: #059669;
         }
 
         .streamz-scheduled-toolbar {
@@ -1508,6 +1539,16 @@
             border-top: 1px solid #2d2d2d;
             color: #e4e4e7;
             font-size: 0.72rem;
+            cursor: pointer;
+        }
+
+        .streamz-scheduled-row:hover {
+            background: #27272a;
+        }
+
+        .streamz-scheduled-row.is-selected {
+            background: rgba(16, 185, 129, 0.15);
+            border-left: 3px solid #10B981;
         }
 
         .streamz-scheduled-row-status {
@@ -2121,7 +2162,8 @@
             .streamz-plugin-left-nav,
             .streamz-plugin-main,
             .streamz-plugin-right-panel,
-            .streamz-scheduled-view {
+            .streamz-scheduled-view,
+            .streamz-scheduled-encoder-view {
                 grid-column: 1;
                 grid-row: auto;
             }
@@ -4119,7 +4161,8 @@
                                 <p>Manage your drafts, scheduled broadcasts, and past streams.</p>
                             </div>
                             <div class="streamz-scheduled-actions">
-                                <button class="streamz-scheduled-update" id="updateStreamDescription" type="button" disabled>Update Description and Thumbnail</button>
+                                <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button">Encoder Scheduled Streams</button>
+                                <button class="streamz-scheduled-update" id="updateStreamDescription" type="button">Update Description and Thumbnail</button>
                                 <button class="streamz-scheduled-new" id="newScheduledStream" type="button">+ New Stream</button>
                             </div>
                         </div>
@@ -4133,6 +4176,39 @@
                             <div class="streamz-scheduled-empty" id="streamzScheduledEmpty"><div><strong>No streams yet</strong><span>Your drafts, scheduled streams, and past broadcasts will appear here.</span></div></div>
                             <div id="streamzScheduledRows" hidden></div>
                         </div>
+                    </section>
+
+                    <section class="streamz-scheduled-encoder-view" id="streamzScheduledEncoderView" hidden aria-labelledby="scheduledEncoderTitle">
+                        <div class="streamz-scheduled-header">
+                            <div>
+                                <h1 id="scheduledEncoderTitle">Encoder Scheduled Streams</h1>
+                                <p>Use these encoder details in OBS for scheduled streams.</p>
+                            </div>
+                            <div class="streamz-scheduled-actions">
+                                <button class="streamz-scheduled-update" id="backToScheduledStreams" type="button">Back to Scheduled Streams</button>
+                            </div>
+                        </div>
+                        <section class="streamz-plugin-connect" aria-label="Connect your encoder for scheduled streams">
+                            <span class="streamz-plugin-status-row"><span class="streamz-plugin-offline" id="streamzScheduledEncoderStatus">OFFLINE</span><span class="streamz-plugin-connected-label" id="streamzScheduledEncoderConnectionLabel" hidden>Connected</span></span>
+                            <h1>Connect your encoder</h1>
+                            <p>Use the secure Streamz connection details below in OBS for scheduled streams.</p>
+
+                            <label class="streamz-plugin-field">
+                                Server URL
+                                <span class="streamz-plugin-field-control">
+                                    <input id="streamzScheduledRtmpsUrl" type="text" value="rtmp://vortex-prime-emu.com/streamz-scheduled" readonly>
+                                    <button class="streamz-plugin-copy" id="streamzScheduledServerCopy" type="button" onclick="copyCode(this, document.getElementById('streamzScheduledRtmpsUrl').value)" aria-label="Copy server URL">Copy</button>
+                                </span>
+                            </label>
+
+                            <label class="streamz-plugin-field">
+                                Stream key
+                                <span class="streamz-plugin-field-control">
+                                    <input id="streamzScheduledStreamKey" type="password" value="streamz_scheduled_pro" readonly>
+                                    <button class="streamz-plugin-copy" id="streamzScheduledKeyCopy" type="button" onclick="copyCode(this, document.getElementById('streamzScheduledStreamKey').value)" aria-label="Copy stream key">Copy</button>
+                                </span>
+                            </label>
+                        </section>
                     </section>
                 </div>
 
@@ -4151,9 +4227,13 @@
                                 Start time
                                 <input name="startTime" type="datetime-local" required>
                             </label>
+                            <label>
+                                Description
+                                <textarea name="description" rows="6" maxlength="10000" placeholder="Write a description for your stream..." required></textarea>
+                            </label>
                             <div class="streamz-plugin-modal-footer">
                                 <button class="streamz-plugin-sidebar-button" id="cancelScheduledStreams" type="button">Cancel</button>
-                                <button class="streamz-plugin-primary-button" type="submit">Save</button>
+                                <button class="streamz-plugin-primary-button" id="saveScheduledStream" type="submit" disabled>Save</button>
                             </div>
                         </form>
                     </div>
@@ -5106,13 +5186,18 @@
                             window.streamzDashboardState.selectedScheduledStreamIndex = allStreams.length - 1;
                         }
                         const updateButton = document.getElementById('updateStreamDescription');
-                        if (updateButton) updateButton.disabled = allStreams.length === 0;
+                        const selectedStream = window.streamzDashboardState.selectedScheduledStreamIndex === null ? null : allStreams[window.streamzDashboardState.selectedScheduledStreamIndex];
+                        if (updateButton) updateButton.disabled = !selectedStream;
                         empty.hidden = streams.length > 0;
                         rows.hidden = streams.length === 0;
                         rows.replaceChildren();
-                        streams.forEach((stream) => {
+                        streams.forEach((stream, index) => {
+                            const allIndex = allStreams.indexOf(stream);
                             const row = document.createElement('div');
                             row.className = 'streamz-scheduled-row';
+                            if (allIndex === window.streamzDashboardState.selectedScheduledStreamIndex) {
+                                row.classList.add('is-selected');
+                            }
                             const title = document.createElement('span');
                             title.textContent = stream.title;
                             const status = document.createElement('span');
@@ -5122,6 +5207,10 @@
                             edited.className = 'streamz-scheduled-row-time';
                             edited.textContent = stream.startTime || 'Not scheduled';
                             row.append(title, status, edited);
+                            row.addEventListener('click', () => {
+                                window.streamzDashboardState.selectedScheduledStreamIndex = allIndex;
+                                renderScheduledStreams(filter);
+                            });
                             rows.append(row);
                         });
                     }
@@ -5150,20 +5239,73 @@
                     scheduledStreamsModal?.addEventListener('click', (event) => {
                         if (event.target === scheduledStreamsModal) setScheduledStreamsModal(false);
                     });
+
+                    const saveScheduledStreamButton = document.getElementById('saveScheduledStream');
+                    const descriptionTextarea = scheduledStreamsForm?.querySelector('textarea[name="description"]');
+
+                    function validateScheduledStreamForm() {
+                        const title = scheduledStreamsForm?.querySelector('input[name="title"]')?.value?.trim() || '';
+                        const startTime = scheduledStreamsForm?.querySelector('input[name="startTime"]')?.value || '';
+                        const description = descriptionTextarea?.value?.trim() || '';
+                        if (saveScheduledStreamButton) {
+                            saveScheduledStreamButton.disabled = !title || !startTime || !description;
+                        }
+                    }
+
+                    scheduledStreamsForm?.querySelector('input[name="title"]')?.addEventListener('input', validateScheduledStreamForm);
+                    scheduledStreamsForm?.querySelector('input[name="startTime"]')?.addEventListener('input', validateScheduledStreamForm);
+                    descriptionTextarea?.addEventListener('input', validateScheduledStreamForm);
+
                     scheduledStreamsForm?.addEventListener('submit', (event) => {
                         event.preventDefault();
                         const stream = Object.fromEntries(new FormData(scheduledStreamsForm).entries());
-                        window.streamzDashboardState.scheduledStreams.push({ ...stream, status: stream.startTime ? 'Scheduled' : 'Draft', thumbnail: '' });
+                        window.streamzDashboardState.scheduledStreams.push({ ...stream, status: stream.startTime ? 'Scheduled' : 'Draft', thumbnail: '', description: stream.description || '' });
                         window.streamzDashboardState.selectedScheduledStreamIndex = window.streamzDashboardState.scheduledStreams.length - 1;
                         saveScheduledStreams();
                         window.dispatchEvent(new CustomEvent('streamz:scheduled-stream-created', { detail: stream }));
                         scheduledStreamsForm.reset();
+                        if (saveScheduledStreamButton) saveScheduledStreamButton.disabled = true;
                         renderScheduledStreams();
                         setScheduledStreamsModal(false);
                     });
 
                     document.getElementById('closeStreamDescription')?.addEventListener('click', () => openStreamzModal('streamDescriptionModal', false));
                     document.getElementById('cancelStreamDescription')?.addEventListener('click', () => openStreamzModal('streamDescriptionModal', false));
+
+                    document.getElementById('encoderScheduledStreams')?.addEventListener('click', () => {
+                        const scheduledView = document.getElementById('streamzScheduledView');
+                        const encoderView = document.getElementById('streamzScheduledEncoderView');
+                        const rightPanel = document.querySelector('.streamz-plugin-right-panel');
+                        if (scheduledView) scheduledView.hidden = true;
+                        if (encoderView) encoderView.hidden = false;
+                        if (rightPanel) rightPanel.hidden = false;
+                        document.querySelector('.streamz-plugin-header-title').textContent = 'Encoder Scheduled Streams';
+                    });
+
+                    document.getElementById('backToScheduledStreams')?.addEventListener('click', () => {
+                        const scheduledView = document.getElementById('streamzScheduledView');
+                        const encoderView = document.getElementById('streamzScheduledEncoderView');
+                        const rightPanel = document.querySelector('.streamz-plugin-right-panel');
+                        if (scheduledView) scheduledView.hidden = false;
+                        if (encoderView) encoderView.hidden = true;
+                        if (rightPanel) rightPanel.hidden = false;
+                        document.querySelector('.streamz-plugin-header-title').textContent = 'Scheduled Streams';
+                    });
+
+                    function setStreamzScheduledEncoderStatus(online) {
+                        const status = document.getElementById('streamzScheduledEncoderStatus');
+                        const connectionLabel = document.getElementById('streamzScheduledEncoderConnectionLabel');
+                        const copyButtons = [document.getElementById('streamzScheduledServerCopy'), document.getElementById('streamzScheduledKeyCopy')];
+                        if (status) {
+                            status.textContent = online ? 'ONLINE' : 'OFFLINE';
+                            status.classList.toggle('online', online);
+                        }
+                        if (connectionLabel) connectionLabel.hidden = !online;
+                        copyButtons.forEach((button) => {
+                            if (button) button.hidden = online;
+                        });
+                    }
+
                     document.getElementById('streamDescriptionForm')?.addEventListener('submit', async (event) => {
                         event.preventDefault();
                         const index = window.streamzDashboardState.selectedScheduledStreamIndex;
@@ -5294,12 +5436,20 @@
 
                     function setStreamzWorkspaceView(view) {
                         const scheduledView = document.getElementById('streamzScheduledView');
+                        const scheduledEncoderView = document.getElementById('streamzScheduledEncoderView');
                         const mainView = document.querySelector('.streamz-plugin-main');
                         const rightPanel = document.querySelector('.streamz-plugin-right-panel');
                         const isScheduled = view === 'scheduled-streams';
                         if (scheduledView) scheduledView.hidden = !isScheduled;
+                        if (scheduledEncoderView) scheduledEncoderView.hidden = true;
                         if (mainView) mainView.hidden = isScheduled;
-                        if (rightPanel) rightPanel.hidden = isScheduled;
+                        if (rightPanel) rightPanel.hidden = false;
+
+                        if (isScheduled) {
+                            document.querySelector('.streamz-plugin-header-title').textContent = 'Scheduled Streams';
+                        } else {
+                            document.querySelector('.streamz-plugin-header-title').textContent = 'Dashboard';
+                        }
                     }
 
                     document.querySelectorAll('[data-scheduled-filter]').forEach((button) => {
@@ -5336,7 +5486,9 @@
                                 setStreamzWorkspaceView('dashboard');
                                 setActiveRightPanel('chat');
                             }
-                            if (button.dataset.workspaceItem === 'scheduled-streams') setStreamzWorkspaceView('scheduled-streams');
+                            if (button.dataset.workspaceItem === 'scheduled-streams') {
+                                setStreamzWorkspaceView('scheduled-streams');
+                            }
                         });
                     });
                     document.getElementById('embedChatButton')?.addEventListener('click', async (event) => {
