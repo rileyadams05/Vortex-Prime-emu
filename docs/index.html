@@ -1399,8 +1399,41 @@
             font-size: 0.72rem;
         }
 
+        .streamz-scheduled-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .streamz-scheduled-update,
         .streamz-scheduled-new {
             min-height: 34px;
+            border-radius: 7px;
+            padding: 0.5rem 0.8rem;
+            font: inherit;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .streamz-scheduled-update {
+            border: 1px solid #52525b;
+            background: #27272a;
+            color: #e4e4e7;
+        }
+
+        .streamz-scheduled-update:hover:not(:disabled) {
+            background: #3f3f46;
+            color: #ffffff;
+        }
+
+        .streamz-scheduled-update:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        .streamz-scheduled-new {
             border: 1px solid #f97316;
             border-radius: 7px;
             background: #f97316;
@@ -3989,12 +4022,12 @@
                         </div>
                         <nav class="streamz-plugin-workspace-list" aria-label="Workspace navigation">
                             <button class="streamz-plugin-workspace-item is-active" type="button" data-workspace-item="dashboard" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM9 20v-6h6v6"/></svg><span>Dashboard</span></button>
+                            <button class="streamz-plugin-workspace-item" id="openScheduledStreams" type="button" data-workspace-item="scheduled-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h5"/></svg><span>Scheduled Streams</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Chat</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="past-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2M20 12a8 8 0 1 1-2.34-5.66"/></svg><span>Past streams</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="clips"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 4 6 6M13 5 5 13l6 6 8-8M8 8l8 8"/></svg><span>Clips</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="storage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg><span>Storage</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="analytics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>Analytics</span><span class="streamz-plugin-new-badge">NEW</span></button>
-                            <button class="streamz-plugin-workspace-item" id="openScheduledStreams" type="button" data-workspace-item="scheduled-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h5"/></svg><span>Scheduled Streams</span></button>
                         </nav>
                     </aside>
 
@@ -4085,7 +4118,10 @@
                                 <h1 id="scheduledStreamsViewTitle">Scheduled Streams</h1>
                                 <p>Manage your drafts, scheduled broadcasts, and past streams.</p>
                             </div>
-                            <button class="streamz-scheduled-new" id="newScheduledStream" type="button">+ New Stream</button>
+                            <div class="streamz-scheduled-actions">
+                                <button class="streamz-scheduled-update" id="updateStreamDescription" type="button" disabled>Update Description and Thumbnail</button>
+                                <button class="streamz-scheduled-new" id="newScheduledStream" type="button">+ New Stream</button>
+                            </div>
                         </div>
                         <div class="streamz-scheduled-toolbar" role="tablist" aria-label="Stream status filters">
                             <button class="streamz-scheduled-filter is-active" type="button" data-scheduled-filter="all" role="tab" aria-selected="true">All</button>
@@ -4115,13 +4151,32 @@
                                 Start time
                                 <input name="startTime" type="datetime-local" required>
                             </label>
-                            <label>
-                                Description
-                                <textarea name="description" placeholder="Add details for your audience"></textarea>
-                            </label>
                             <div class="streamz-plugin-modal-footer">
                                 <button class="streamz-plugin-sidebar-button" id="cancelScheduledStreams" type="button">Cancel</button>
-                                <button class="streamz-plugin-primary-button" type="submit">Schedule Stream</button>
+                                <button class="streamz-plugin-primary-button" type="submit">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="streamz-plugin-modal" id="streamDescriptionModal" hidden role="dialog" aria-modal="true" aria-labelledby="streamDescriptionTitle">
+                    <div class="streamz-plugin-modal-dialog">
+                        <div class="streamz-plugin-modal-header">
+                            <h2 id="streamDescriptionTitle">Update Description and Thumbnail</h2>
+                            <button class="streamz-plugin-modal-close" id="closeStreamDescription" type="button" aria-label="Close description and thumbnail editor">×</button>
+                        </div>
+                        <form class="streamz-plugin-plan-form" id="streamDescriptionForm">
+                            <label>
+                                Description
+                                <textarea id="streamDescriptionInput" name="description" rows="12" maxlength="10000" placeholder="Write as much detail as you need about your stream..."></textarea>
+                            </label>
+                            <label>
+                                Thumbnail
+                                <input id="streamThumbnailInput" name="thumbnail" type="file" accept="image/png,image/jpeg,image/webp">
+                            </label>
+                            <div class="streamz-plugin-modal-footer">
+                                <button class="streamz-plugin-sidebar-button" id="cancelStreamDescription" type="button">Cancel</button>
+                                <button class="streamz-plugin-primary-button" type="submit">Save and Update</button>
                             </div>
                         </form>
                     </div>
@@ -5045,7 +5100,13 @@
                         const empty = document.getElementById('streamzScheduledEmpty');
                         const rows = document.getElementById('streamzScheduledRows');
                         if (!empty || !rows) return;
-                        const streams = window.streamzDashboardState.scheduledStreams.filter((stream) => filter === 'all' || stream.status === filter);
+                        const allStreams = window.streamzDashboardState.scheduledStreams;
+                        const streams = allStreams.filter((stream) => filter === 'all' || stream.status === filter);
+                        if (window.streamzDashboardState.selectedScheduledStreamIndex === null && allStreams.length) {
+                            window.streamzDashboardState.selectedScheduledStreamIndex = allStreams.length - 1;
+                        }
+                        const updateButton = document.getElementById('updateStreamDescription');
+                        if (updateButton) updateButton.disabled = allStreams.length === 0;
                         empty.hidden = streams.length > 0;
                         rows.hidden = streams.length === 0;
                         rows.replaceChildren();
@@ -5074,6 +5135,16 @@
                     }
 
                     document.getElementById('newScheduledStream')?.addEventListener('click', () => setScheduledStreamsModal(true));
+                    document.getElementById('updateStreamDescription')?.addEventListener('click', () => {
+                        const index = window.streamzDashboardState.selectedScheduledStreamIndex;
+                        const stream = index === null ? null : window.streamzDashboardState.scheduledStreams[index];
+                        if (!stream) return;
+                        const descriptionInput = document.getElementById('streamDescriptionInput');
+                        const thumbnailInput = document.getElementById('streamThumbnailInput');
+                        if (descriptionInput) descriptionInput.value = stream.description || '';
+                        if (thumbnailInput) thumbnailInput.value = '';
+                        openStreamzModal('streamDescriptionModal', true);
+                    });
                     document.getElementById('closeScheduledStreams')?.addEventListener('click', () => setScheduledStreamsModal(false));
                     document.getElementById('cancelScheduledStreams')?.addEventListener('click', () => setScheduledStreamsModal(false));
                     scheduledStreamsModal?.addEventListener('click', (event) => {
@@ -5082,12 +5153,58 @@
                     scheduledStreamsForm?.addEventListener('submit', (event) => {
                         event.preventDefault();
                         const stream = Object.fromEntries(new FormData(scheduledStreamsForm).entries());
-                        window.streamzDashboardState.scheduledStreams.push({ ...stream, status: stream.startTime ? 'Scheduled' : 'Draft' });
+                        window.streamzDashboardState.scheduledStreams.push({ ...stream, status: stream.startTime ? 'Scheduled' : 'Draft', thumbnail: '' });
+                        window.streamzDashboardState.selectedScheduledStreamIndex = window.streamzDashboardState.scheduledStreams.length - 1;
+                        saveScheduledStreams();
                         window.dispatchEvent(new CustomEvent('streamz:scheduled-stream-created', { detail: stream }));
                         scheduledStreamsForm.reset();
                         renderScheduledStreams();
                         setScheduledStreamsModal(false);
                     });
+
+                    document.getElementById('closeStreamDescription')?.addEventListener('click', () => openStreamzModal('streamDescriptionModal', false));
+                    document.getElementById('cancelStreamDescription')?.addEventListener('click', () => openStreamzModal('streamDescriptionModal', false));
+                    document.getElementById('streamDescriptionForm')?.addEventListener('submit', async (event) => {
+                        event.preventDefault();
+                        const index = window.streamzDashboardState.selectedScheduledStreamIndex;
+                        const stream = index === null ? null : window.streamzDashboardState.scheduledStreams[index];
+                        if (!stream) return;
+                        const descriptionInput = document.getElementById('streamDescriptionInput');
+                        const thumbnailInput = document.getElementById('streamThumbnailInput');
+                        const file = thumbnailInput?.files?.[0];
+                        let thumbnail = stream.thumbnail || '';
+                        if (file) {
+                            thumbnail = await new Promise((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve(String(reader.result || ''));
+                                reader.onerror = () => resolve(thumbnail);
+                                reader.readAsDataURL(file);
+                            });
+                        }
+                        stream.description = descriptionInput?.value || '';
+                        stream.thumbnail = thumbnail;
+                        stream.updatedAt = new Date().toISOString();
+                        saveScheduledStreams();
+                        renderScheduledStreams();
+                        openStreamzModal('streamDescriptionModal', false);
+                    });
+
+                    function loadScheduledStreams() {
+                        try {
+                            const stored = JSON.parse(localStorage.getItem('streamzScheduledStreams') || '[]');
+                            return Array.isArray(stored) ? stored : [];
+                        } catch (error) {
+                            return [];
+                        }
+                    }
+
+                    function saveScheduledStreams() {
+                        try {
+                            localStorage.setItem('streamzScheduledStreams', JSON.stringify(window.streamzDashboardState.scheduledStreams));
+                        } catch (error) {
+                            console.warn('Unable to save scheduled streams locally.', error);
+                        }
+                    }
 
                     let activeRightPanel = 'channels';
                     const streamzChatChannel = 'BroadcastChannel' in window ? new BroadcastChannel('streamz-chat') : null;
@@ -5095,7 +5212,8 @@
                         channels: [],
                         credentials: [],
                         chatMessages: [],
-                        scheduledStreams: [],
+                        scheduledStreams: loadScheduledStreams(),
+                        selectedScheduledStreamIndex: null,
                         loaded: false,
                     };
 
