@@ -4162,8 +4162,8 @@
                             </div>
                             <div class="streamz-scheduled-actions">
                                 <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button">Encoder Scheduled Streams</button>
-                                <button class="streamz-scheduled-update" id="updateStreamDescription" type="button">Update Description and Thumbnail</button>
-                                <button class="streamz-scheduled-new" id="newScheduledStream" type="button">+ New Stream</button>
+                                <button class="streamz-scheduled-update" id="updateStreamDescription" type="button">Description and Thumbnail</button>
+                                <button class="streamz-scheduled-new" id="newScheduledStream" type="button" disabled>+ New Stream</button>
                             </div>
                         </div>
                         <div class="streamz-scheduled-toolbar" role="tablist" aria-label="Stream status filters">
@@ -4242,7 +4242,7 @@
                 <section class="streamz-plugin-modal" id="streamDescriptionModal" hidden role="dialog" aria-modal="true" aria-labelledby="streamDescriptionTitle">
                     <div class="streamz-plugin-modal-dialog">
                         <div class="streamz-plugin-modal-header">
-                            <h2 id="streamDescriptionTitle">Update Description and Thumbnail</h2>
+                            <h2 id="streamDescriptionTitle">Description and Thumbnail</h2>
                             <button class="streamz-plugin-modal-close" id="closeStreamDescription" type="button" aria-label="Close description and thumbnail editor">×</button>
                         </div>
                         <form class="streamz-plugin-plan-form" id="streamDescriptionForm">
@@ -4251,12 +4251,12 @@
                                 <textarea id="streamDescriptionInput" name="description" rows="12" maxlength="10000" placeholder="Write as much detail as you need about your stream..."></textarea>
                             </label>
                             <label>
-                                Thumbnail
+                                Thumbnail <span style="color: var(--color-text-muted, #888); font-weight: 400; font-size: 0.85em;">(optional)</span>
                                 <input id="streamThumbnailInput" name="thumbnail" type="file" accept="image/png,image/jpeg,image/webp">
                             </label>
                             <div class="streamz-plugin-modal-footer">
                                 <button class="streamz-plugin-sidebar-button" id="cancelStreamDescription" type="button">Cancel</button>
-                                <button class="streamz-plugin-primary-button" type="submit">Save and Update</button>
+                                <button class="streamz-plugin-primary-button" id="saveStreamDescription" type="submit">Save</button>
                             </div>
                         </form>
                     </div>
@@ -5186,8 +5186,10 @@
                             window.streamzDashboardState.selectedScheduledStreamIndex = allStreams.length - 1;
                         }
                         const updateButton = document.getElementById('updateStreamDescription');
-                        const selectedStream = window.streamzDashboardState.selectedScheduledStreamIndex === null ? null : allStreams[window.streamzDashboardState.selectedScheduledStreamIndex];
-                        if (updateButton) updateButton.disabled = !selectedStream;
+                        const newStreamButton = document.getElementById('newScheduledStream');
+                        // Description & Thumbnail button is always enabled; + New Stream unlocks after description has been saved
+                        if (updateButton) updateButton.disabled = false;
+                        if (newStreamButton) newStreamButton.disabled = !window.streamzDashboardState.descriptionSaved;
                         empty.hidden = streams.length > 0;
                         rows.hidden = streams.length === 0;
                         rows.replaceChildren();
@@ -5227,10 +5229,10 @@
                     document.getElementById('updateStreamDescription')?.addEventListener('click', () => {
                         const index = window.streamzDashboardState.selectedScheduledStreamIndex;
                         const stream = index === null ? null : window.streamzDashboardState.scheduledStreams[index];
-                        if (!stream) return;
                         const descriptionInput = document.getElementById('streamDescriptionInput');
                         const thumbnailInput = document.getElementById('streamThumbnailInput');
-                        if (descriptionInput) descriptionInput.value = stream.description || '';
+                        // Pre-fill with existing data if a stream is selected
+                        if (descriptionInput) descriptionInput.value = stream?.description || window.streamzDashboardState.pendingDescription || '';
                         if (thumbnailInput) thumbnailInput.value = '';
                         openStreamzModal('streamDescriptionModal', true);
                     });
@@ -5256,10 +5258,22 @@
                     scheduledStreamsForm?.querySelector('input[name="startTime"]')?.addEventListener('input', validateScheduledStreamForm);
                     descriptionTextarea?.addEventListener('input', validateScheduledStreamForm);
 
+
                     scheduledStreamsForm?.addEventListener('submit', (event) => {
                         event.preventDefault();
                         const stream = Object.fromEntries(new FormData(scheduledStreamsForm).entries());
-                        window.streamzDashboardState.scheduledStreams.push({ ...stream, status: stream.startTime ? 'Scheduled' : 'Draft', thumbnail: '', description: stream.description || '' });
+                        // Apply any description/thumbnail saved before a stream was created
+                        const pendingDesc = window.streamzDashboardState.pendingDescription || '';
+                        const pendingThumb = window.streamzDashboardState.pendingThumbnail || '';
+                        window.streamzDashboardState.scheduledStreams.push({
+                            ...stream,
+                            status: stream.startTime ? 'Scheduled' : 'Draft',
+                            thumbnail: pendingThumb,
+                            description: pendingDesc || stream.description || '',
+                        });
+                        // Clear pending values now that they're applied
+                        window.streamzDashboardState.pendingDescription = '';
+                        window.streamzDashboardState.pendingThumbnail = '';
                         window.streamzDashboardState.selectedScheduledStreamIndex = window.streamzDashboardState.scheduledStreams.length - 1;
                         saveScheduledStreams();
                         window.dispatchEvent(new CustomEvent('streamz:scheduled-stream-created', { detail: stream }));
@@ -5268,6 +5282,7 @@
                         renderScheduledStreams();
                         setScheduledStreamsModal(false);
                     });
+
 
                     document.getElementById('closeStreamDescription')?.addEventListener('click', () => openStreamzModal('streamDescriptionModal', false));
                     document.getElementById('cancelStreamDescription')?.addEventListener('click', () => openStreamzModal('streamDescriptionModal', false));
@@ -5308,25 +5323,46 @@
 
                     document.getElementById('streamDescriptionForm')?.addEventListener('submit', async (event) => {
                         event.preventDefault();
-                        const index = window.streamzDashboardState.selectedScheduledStreamIndex;
-                        const stream = index === null ? null : window.streamzDashboardState.scheduledStreams[index];
-                        if (!stream) return;
                         const descriptionInput = document.getElementById('streamDescriptionInput');
                         const thumbnailInput = document.getElementById('streamThumbnailInput');
                         const file = thumbnailInput?.files?.[0];
-                        let thumbnail = stream.thumbnail || '';
+                        const index = window.streamzDashboardState.selectedScheduledStreamIndex;
+                        const stream = index === null ? null : window.streamzDashboardState.scheduledStreams[index];
+
+                        // Resolve thumbnail if a file was selected
+                        let thumbnailData = stream?.thumbnail || '';
                         if (file) {
-                            thumbnail = await new Promise((resolve) => {
+                            thumbnailData = await new Promise((resolve) => {
                                 const reader = new FileReader();
                                 reader.onload = () => resolve(String(reader.result || ''));
-                                reader.onerror = () => resolve(thumbnail);
+                                reader.onerror = () => resolve(thumbnailData);
                                 reader.readAsDataURL(file);
                             });
                         }
-                        stream.description = descriptionInput?.value || '';
-                        stream.thumbnail = thumbnail;
-                        stream.updatedAt = new Date().toISOString();
-                        saveScheduledStreams();
+
+                        const descriptionValue = descriptionInput?.value || '';
+
+                        if (stream) {
+                            // Update existing selected stream
+                            stream.description = descriptionValue;
+                            stream.thumbnail = thumbnailData;
+                            stream.updatedAt = new Date().toISOString();
+                            saveScheduledStreams();
+                        } else {
+                            // No stream selected yet — store as pending so + New Stream flow can use it
+                            window.streamzDashboardState.pendingDescription = descriptionValue;
+                            window.streamzDashboardState.pendingThumbnail = thumbnailData;
+                        }
+
+                        // Mark description as saved, unlock + New Stream, and update button label
+                        window.streamzDashboardState.descriptionSaved = true;
+                        const newStreamButton = document.getElementById('newScheduledStream');
+                        if (newStreamButton) newStreamButton.disabled = false;
+                        const updateButton = document.getElementById('updateStreamDescription');
+                        if (updateButton) updateButton.textContent = 'Update';
+                        const modalTitle = document.getElementById('streamDescriptionTitle');
+                        if (modalTitle) modalTitle.textContent = 'Update Description and Thumbnail';
+
                         renderScheduledStreams();
                         openStreamzModal('streamDescriptionModal', false);
                     });
@@ -5356,6 +5392,9 @@
                         chatMessages: [],
                         scheduledStreams: loadScheduledStreams(),
                         selectedScheduledStreamIndex: null,
+                        descriptionSaved: false,
+                        pendingDescription: '',
+                        pendingThumbnail: '',
                         loaded: false,
                     };
 
