@@ -1184,6 +1184,10 @@
             grid-column: 1;
             grid-row: 2;
             min-width: 0;
+            min-height: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             padding: 1.25rem 0.85rem;
             background: #0b0b0d;
             border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -1236,63 +1240,6 @@
             font-size: 1rem;
         }
 
-        .streamz-plugin-invite {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 0.55rem;
-            margin: 1rem 0 1.35rem;
-            border: 0;
-            background: transparent;
-            color: #e4e4e7;
-            font: inherit;
-            font-size: 0.78rem;
-            text-align: left;
-            cursor: pointer;
-        }
-
-        .streamz-plugin-invite:hover {
-            color: #fb923c;
-        }
-
-        .streamz-plugin-workspace-heading {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.55rem;
-            color: #a1a1aa;
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-
-        .streamz-plugin-workspace-add {
-            border: 0;
-            background: transparent;
-            color: #d4d4d8;
-            font-size: 1.1rem;
-            line-height: 1;
-            cursor: pointer;
-        }
-
-        .streamz-plugin-workspace-switcher {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            margin-bottom: 0.6rem;
-            padding: 0.5rem 0.55rem;
-            border: 0;
-            border-radius: 6px;
-            background: #27272a;
-            color: #f4f4f5;
-            font: inherit;
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-
-        .streamz-plugin-workspace-switcher:hover,
         .streamz-plugin-workspace-item:hover,
         .streamz-plugin-workspace-item.is-active {
             background: #27272a;
@@ -1301,7 +1248,9 @@
 
         .streamz-plugin-workspace-list {
             display: grid;
+            align-content: start;
             gap: 0.25rem;
+            flex: 1;
         }
 
         .streamz-plugin-workspace-item {
@@ -1326,8 +1275,7 @@
             font-weight: 700;
         }
 
-        .streamz-plugin-workspace-item svg,
-        .streamz-plugin-invite svg {
+        .streamz-plugin-workspace-item svg {
             width: 17px;
             height: 17px;
             flex: 0 0 17px;
@@ -1375,6 +1323,18 @@
             color: #f8fafc;
         }
 
+        .streamz-plugin-status-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .streamz-plugin-connected-label {
+            color: #4ade80;
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+
         .streamz-plugin-offline {
             display: inline-flex;
             align-items: center;
@@ -1385,6 +1345,11 @@
             font-size: 0.58rem;
             font-weight: 800;
             letter-spacing: 0.04em;
+        }
+
+        .streamz-plugin-offline.online {
+            background: #22c55e;
+            color: #052e16;
         }
 
         .streamz-plugin-connect h1 {
@@ -3816,14 +3781,9 @@
                             </div>
                             <span class="streamz-plugin-account-chevron" aria-hidden="true">⌄</span>
                         </div>
-                        <button class="streamz-plugin-invite" type="button" id="streamzInviteMembers">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7-5v6m3-3h-6"/></svg>
-                            <span>Invite members</span>
-                        </button>
-                        <div class="streamz-plugin-workspace-heading"><span>Workspaces</span><button class="streamz-plugin-workspace-add" type="button" aria-label="Add workspace">+</button></div>
-                        <button class="streamz-plugin-workspace-switcher" type="button"><span><strong aria-hidden="true">D</strong>&nbsp; Default</span><span aria-hidden="true">⌄</span></button>
                         <nav class="streamz-plugin-workspace-list" aria-label="Workspace navigation">
-                            <button class="streamz-plugin-workspace-item is-active" type="button" data-workspace-item="chat" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Chat</span></button>
+                            <button class="streamz-plugin-workspace-item is-active" type="button" data-workspace-item="dashboard" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM9 20v-6h6v6"/></svg><span>Dashboard</span></button>
+                            <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Chat</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="past-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2M20 12a8 8 0 1 1-2.34-5.66"/></svg><span>Past streams</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="clips"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 4 6 6M13 5 5 13l6 6 8-8M8 8l8 8"/></svg><span>Clips</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="storage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg><span>Storage</span></button>
@@ -3834,7 +3794,7 @@
                     <main class="streamz-plugin-main">
                         <div class="streamz-plugin-preview">
                             <section class="streamz-plugin-connect" aria-label="Connect your encoder">
-                                <span class="streamz-plugin-offline">OFFLINE</span>
+                                <span class="streamz-plugin-status-row"><span class="streamz-plugin-offline" id="streamzEncoderStatus">OFFLINE</span><span class="streamz-plugin-connected-label" id="streamzEncoderConnectionLabel" hidden>Connected</span></span>
                                 <h1>Connect your encoder</h1>
                                 <p>Use the secure Streamz connection details below in OBS.</p>
 
@@ -3842,7 +3802,7 @@
                                     Server URL
                                     <span class="streamz-plugin-field-control">
                                         <input id="streamzRtmpsUrl" type="text" value="rtmp://vortex-prime-emu.com/streamz" readonly>
-                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzRtmpsUrl').value)" aria-label="Copy server URL">Copy</button>
+                                        <button class="streamz-plugin-copy" id="streamzServerCopy" type="button" onclick="copyCode(this, document.getElementById('streamzRtmpsUrl').value)" aria-label="Copy server URL">Copy</button>
                                     </span>
                                 </label>
 
@@ -3850,7 +3810,7 @@
                                     Stream key
                                     <span class="streamz-plugin-field-control">
                                         <input id="streamzStreamKey" type="password" value="streamz_live_pro" readonly>
-                                        <button class="streamz-plugin-copy" type="button" onclick="copyCode(this, document.getElementById('streamzStreamKey').value)" aria-label="Copy stream key">Copy</button>
+                                        <button class="streamz-plugin-copy" id="streamzKeyCopy" type="button" onclick="copyCode(this, document.getElementById('streamzStreamKey').value)" aria-label="Copy stream key">Copy</button>
                                     </span>
                                 </label>
                             </section>
@@ -4894,6 +4854,20 @@
                         if (modal) modal.hidden = !open;
                     }
 
+                    function setStreamzEncoderStatus(online) {
+                        const status = document.getElementById('streamzEncoderStatus');
+                        const connectionLabel = document.getElementById('streamzEncoderConnectionLabel');
+                        const copyButtons = [document.getElementById('streamzServerCopy'), document.getElementById('streamzKeyCopy')];
+                        if (status) {
+                            status.textContent = online ? 'ONLINE' : 'OFFLINE';
+                            status.classList.toggle('online', online);
+                        }
+                        if (connectionLabel) connectionLabel.hidden = !online;
+                        copyButtons.forEach((button) => {
+                            if (button) button.hidden = online;
+                        });
+                    }
+
                     const STREAMZ_CHAT_OVERLAY_URL = 'https://vortex-prime-emu.com/streamz-pro-plugin/chat-overlay/';
 
                     function streamzChatOverlayUrl() {
@@ -4910,6 +4884,10 @@
                                 item.classList.toggle('is-active', active);
                                 item.toggleAttribute('aria-current', active);
                             });
+                            if (button.dataset.workspaceItem === 'dashboard') {
+                                setActiveRightPanel('channels');
+                                document.querySelector('.streamz-plugin-main')?.scrollIntoView({ block: 'start' });
+                            }
                             if (button.dataset.workspaceItem === 'chat') setActiveRightPanel('chat');
                         });
                     });
@@ -5019,7 +4997,10 @@
                         if (targets.length === 0) return;
                         try {
                             await invoke('start_ffmpeg_relay', { targets });
+                            setStreamzEncoderStatus(true);
+                            window.dispatchEvent(new CustomEvent('streamz:encoder-connected'));
                         } catch (error) {
+                            setStreamzEncoderStatus(false);
                             console.error('Unable to start the local Streamz relay', error);
                         }
                     }
@@ -5027,6 +5008,9 @@
                     window.addEventListener('streamz:credentials-loaded', (event) => {
                         startLocalStreamzRelay(event.detail);
                     });
+                    window.addEventListener('streamz:encoder-connected', () => setStreamzEncoderStatus(true));
+                    window.addEventListener('streamz:encoder-disconnected', () => setStreamzEncoderStatus(false));
+                    setStreamzEncoderStatus(false);
                     document.querySelectorAll('[data-streamz-connect]').forEach((button) => {
                         button.addEventListener('click', () => {
                             const provider = button.getAttribute('data-streamz-connect');
