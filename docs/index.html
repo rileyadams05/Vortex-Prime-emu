@@ -1360,6 +1360,146 @@
             font-weight: 800;
         }
 
+        .streamz-scheduled-view {
+            grid-column: 2 / -1;
+            grid-row: 2;
+            min-width: 0;
+            min-height: 600px;
+            padding: 2rem 2.25rem;
+            background: #181818;
+            color: #f8fafc;
+        }
+
+        .streamz-scheduled-view[hidden] {
+            display: none;
+        }
+
+        .streamz-scheduled-header,
+        .streamz-scheduled-toolbar,
+        .streamz-scheduled-table-head,
+        .streamz-scheduled-empty {
+            display: flex;
+            align-items: center;
+        }
+
+        .streamz-scheduled-header {
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .streamz-scheduled-header h1 {
+            margin: 0;
+            font-size: 1.35rem;
+        }
+
+        .streamz-scheduled-header p {
+            margin: 0.35rem 0 0;
+            color: #a1a1aa;
+            font-size: 0.72rem;
+        }
+
+        .streamz-scheduled-new {
+            min-height: 34px;
+            border: 1px solid #f97316;
+            border-radius: 7px;
+            background: #f97316;
+            color: #ffffff;
+            padding: 0.5rem 0.8rem;
+            font: inherit;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .streamz-scheduled-new:hover {
+            background: #ea580c;
+        }
+
+        .streamz-scheduled-toolbar {
+            gap: 1.1rem;
+            border-bottom: 1px solid #303030;
+        }
+
+        .streamz-scheduled-filter {
+            padding: 0.65rem 0.1rem;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: #a1a1aa;
+            font: inherit;
+            font-size: 0.72rem;
+            cursor: pointer;
+        }
+
+        .streamz-scheduled-filter.is-active,
+        .streamz-scheduled-filter:hover {
+            border-bottom-color: #f97316;
+            color: #ffffff;
+        }
+
+        .streamz-scheduled-table {
+            margin-top: 1rem;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .streamz-scheduled-table-head {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 120px 150px;
+            gap: 1rem;
+            padding: 0.7rem 1rem;
+            background: #202020;
+            color: #a1a1aa;
+            font-size: 0.62rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .streamz-scheduled-empty {
+            min-height: 280px;
+            justify-content: center;
+            padding: 2rem;
+            color: #a1a1aa;
+            text-align: center;
+        }
+
+        .streamz-scheduled-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 120px 150px;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            border-top: 1px solid #2d2d2d;
+            color: #e4e4e7;
+            font-size: 0.72rem;
+        }
+
+        .streamz-scheduled-row-status {
+            color: #fb923c;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+
+        .streamz-scheduled-row-time {
+            color: #a1a1aa;
+            font-size: 0.65rem;
+        }
+
+        .streamz-scheduled-empty strong {
+            display: block;
+            margin-bottom: 0.35rem;
+            color: #f4f4f5;
+            font-size: 0.9rem;
+        }
+
+        .streamz-scheduled-empty span {
+            display: block;
+            font-size: 0.7rem;
+        }
+
         .streamz-plugin-main {
             grid-column: 2;
             grid-row: 2;
@@ -1947,7 +2087,8 @@
 
             .streamz-plugin-left-nav,
             .streamz-plugin-main,
-            .streamz-plugin-right-panel {
+            .streamz-plugin-right-panel,
+            .streamz-scheduled-view {
                 grid-column: 1;
                 grid-row: auto;
             }
@@ -3937,6 +4078,26 @@
                             </button>
                         </nav>
                     </aside>
+
+                    <section class="streamz-scheduled-view" id="streamzScheduledView" hidden aria-labelledby="scheduledStreamsViewTitle">
+                        <div class="streamz-scheduled-header">
+                            <div>
+                                <h1 id="scheduledStreamsViewTitle">Scheduled Streams</h1>
+                                <p>Manage your drafts, scheduled broadcasts, and past streams.</p>
+                            </div>
+                            <button class="streamz-scheduled-new" id="newScheduledStream" type="button">+ New Stream</button>
+                        </div>
+                        <div class="streamz-scheduled-toolbar" role="tablist" aria-label="Stream status filters">
+                            <button class="streamz-scheduled-filter is-active" type="button" data-scheduled-filter="all" role="tab" aria-selected="true">All</button>
+                            <button class="streamz-scheduled-filter" type="button" data-scheduled-filter="drafts" role="tab" aria-selected="false">Drafts</button>
+                            <button class="streamz-scheduled-filter" type="button" data-scheduled-filter="scheduled" role="tab" aria-selected="false">Scheduled</button>
+                        </div>
+                        <div class="streamz-scheduled-table">
+                            <div class="streamz-scheduled-table-head"><span>Stream title</span><span>Status</span><span>Last edited</span></div>
+                            <div class="streamz-scheduled-empty" id="streamzScheduledEmpty"><div><strong>No streams yet</strong><span>Your drafts, scheduled streams, and past broadcasts will appear here.</span></div></div>
+                            <div id="streamzScheduledRows" hidden></div>
+                        </div>
+                    </section>
                 </div>
 
                 <section class="streamz-plugin-modal" id="scheduledStreamsModal" hidden role="dialog" aria-modal="true" aria-labelledby="scheduledStreamsTitle">
@@ -4880,6 +5041,30 @@
                     const scheduledStreamsModal = document.getElementById('scheduledStreamsModal');
                     const scheduledStreamsForm = document.getElementById('scheduledStreamForm');
 
+                    function renderScheduledStreams(filter = 'all') {
+                        const empty = document.getElementById('streamzScheduledEmpty');
+                        const rows = document.getElementById('streamzScheduledRows');
+                        if (!empty || !rows) return;
+                        const streams = window.streamzDashboardState.scheduledStreams.filter((stream) => filter === 'all' || stream.status === filter);
+                        empty.hidden = streams.length > 0;
+                        rows.hidden = streams.length === 0;
+                        rows.replaceChildren();
+                        streams.forEach((stream) => {
+                            const row = document.createElement('div');
+                            row.className = 'streamz-scheduled-row';
+                            const title = document.createElement('span');
+                            title.textContent = stream.title;
+                            const status = document.createElement('span');
+                            status.className = 'streamz-scheduled-row-status';
+                            status.textContent = stream.status;
+                            const edited = document.createElement('span');
+                            edited.className = 'streamz-scheduled-row-time';
+                            edited.textContent = stream.startTime || 'Not scheduled';
+                            row.append(title, status, edited);
+                            rows.append(row);
+                        });
+                    }
+
                     function setScheduledStreamsModal(open) {
                         if (!scheduledStreamsModal) return;
                         scheduledStreamsModal.hidden = !open;
@@ -4888,7 +5073,7 @@
                         }
                     }
 
-                    document.getElementById('openScheduledStreams')?.addEventListener('click', () => setScheduledStreamsModal(true));
+                    document.getElementById('newScheduledStream')?.addEventListener('click', () => setScheduledStreamsModal(true));
                     document.getElementById('closeScheduledStreams')?.addEventListener('click', () => setScheduledStreamsModal(false));
                     document.getElementById('cancelScheduledStreams')?.addEventListener('click', () => setScheduledStreamsModal(false));
                     scheduledStreamsModal?.addEventListener('click', (event) => {
@@ -4896,9 +5081,11 @@
                     });
                     scheduledStreamsForm?.addEventListener('submit', (event) => {
                         event.preventDefault();
-                        window.dispatchEvent(new CustomEvent('streamz:scheduled-stream-created', {
-                            detail: Object.fromEntries(new FormData(scheduledStreamsForm).entries()),
-                        }));
+                        const stream = Object.fromEntries(new FormData(scheduledStreamsForm).entries());
+                        window.streamzDashboardState.scheduledStreams.push({ ...stream, status: stream.startTime ? 'Scheduled' : 'Draft' });
+                        window.dispatchEvent(new CustomEvent('streamz:scheduled-stream-created', { detail: stream }));
+                        scheduledStreamsForm.reset();
+                        renderScheduledStreams();
                         setScheduledStreamsModal(false);
                     });
 
@@ -4908,6 +5095,7 @@
                         channels: [],
                         credentials: [],
                         chatMessages: [],
+                        scheduledStreams: [],
                         loaded: false,
                     };
 
@@ -4986,8 +5174,33 @@
                         return STREAMZ_CHAT_OVERLAY_URL;
                     }
 
+                    function setStreamzWorkspaceView(view) {
+                        const scheduledView = document.getElementById('streamzScheduledView');
+                        const mainView = document.querySelector('.streamz-plugin-main');
+                        const rightPanel = document.querySelector('.streamz-plugin-right-panel');
+                        const isScheduled = view === 'scheduled-streams';
+                        if (scheduledView) scheduledView.hidden = !isScheduled;
+                        if (mainView) mainView.hidden = isScheduled;
+                        if (rightPanel) rightPanel.hidden = isScheduled;
+                    }
+
+                    document.querySelectorAll('[data-scheduled-filter]').forEach((button) => {
+                        button.addEventListener('click', () => {
+                            document.querySelectorAll('[data-scheduled-filter]').forEach((filterButton) => {
+                                const active = filterButton === button;
+                                filterButton.classList.toggle('is-active', active);
+                                filterButton.setAttribute('aria-selected', String(active));
+                            });
+                            renderScheduledStreams(button.dataset.scheduledFilter);
+                        });
+                    });
+                    renderScheduledStreams();
+
                     document.querySelectorAll('[data-right-panel]').forEach((button) => {
-                        button.addEventListener('click', () => setActiveRightPanel(button.dataset.rightPanel));
+                        button.addEventListener('click', () => {
+                            setStreamzWorkspaceView('dashboard');
+                            setActiveRightPanel(button.dataset.rightPanel);
+                        });
                     });
                     document.querySelectorAll('[data-workspace-item]').forEach((button) => {
                         button.addEventListener('click', () => {
@@ -4997,10 +5210,15 @@
                                 item.toggleAttribute('aria-current', active);
                             });
                             if (button.dataset.workspaceItem === 'dashboard') {
+                                setStreamzWorkspaceView('dashboard');
                                 setActiveRightPanel('channels');
                                 document.querySelector('.streamz-plugin-main')?.scrollIntoView({ block: 'start' });
                             }
-                            if (button.dataset.workspaceItem === 'chat') setActiveRightPanel('chat');
+                            if (button.dataset.workspaceItem === 'chat') {
+                                setStreamzWorkspaceView('dashboard');
+                                setActiveRightPanel('chat');
+                            }
+                            if (button.dataset.workspaceItem === 'scheduled-streams') setStreamzWorkspaceView('scheduled-streams');
                         });
                     });
                     document.getElementById('embedChatButton')?.addEventListener('click', async (event) => {
