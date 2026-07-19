@@ -4188,7 +4188,7 @@
                             <button class="streamz-plugin-right-nav-button" type="button" data-right-panel="channels" aria-label="Channels" aria-pressed="false">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Channels</span>
                             </button>
-                            <button class="streamz-plugin-right-nav-button" type="button" data-right-panel="chat" aria-label="Chat" aria-pressed="false">
+                            <button class="streamz-plugin-right-nav-button" type="button" data-right-panel="chat" data-right-panel-chat-tab aria-label="Chat" aria-pressed="false">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v10H9l-4 3zM8 10h8M8 13h5"/></svg><span>Chat</span>
                             </button>
                         </nav>
@@ -5540,7 +5540,8 @@
                         const clipsView = document.getElementById('streamzClipsView');
                         const mainView = document.querySelector('.streamz-plugin-main');
                         const rightPanel = document.querySelector('.streamz-plugin-right-panel');
-                        
+                        const chatTabBtn = document.querySelector('[data-right-panel-chat-tab]');
+
                         const isScheduled = view === 'scheduled-streams';
                         const isChat = view === 'chat';
                         const isPast = view === 'past-streams';
@@ -5551,13 +5552,25 @@
                         if (pastStreamsView) pastStreamsView.hidden = !isPast;
                         if (clipsView) clipsView.hidden = !isClips;
 
-                        // Hide encoder (mainView) if we are on any of the sub-pages
+                        // Hide encoder for all sub-pages
                         if (mainView) mainView.hidden = isScheduled || isChat || isPast || isClips;
-                        
-                        // Right panel is only shown in dashboard, scheduled streams, or chat
+
+                        // Right panel: hidden on Past Streams and Clips
+                        // Shown on Dashboard (with both tabs), Scheduled Streams (channels-only), Chat (fullscreen)
                         if (rightPanel) {
                             rightPanel.hidden = isPast || isClips;
                             rightPanel.classList.toggle('streamz-chat-fullscreen', isChat);
+                        }
+
+                        // ARCHITECTURAL FIX: always reset chat panel to 'channels' when leaving chat.
+                        // This prevents the chat view from bleeding into Scheduled Streams or Dashboard.
+                        if (!isChat) {
+                            setActiveRightPanel('channels');
+                        }
+
+                        // On Scheduled Streams, hide the Chat tab button so users cannot switch to chat
+                        if (chatTabBtn) {
+                            chatTabBtn.hidden = isScheduled;
                         }
 
                         const titleEl = document.querySelector('.streamz-plugin-header-title');
