@@ -1654,6 +1654,209 @@
             text-align: center;
         }
 
+        .streamz-plugin-recording {
+            margin-top: 2rem;
+            width: min(640px, calc(100% - 2rem));
+        }
+
+        .streamz-recording-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1.5rem;
+        }
+
+        .streamz-recording-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .streamz-recording-header p {
+            margin: 0.35rem 0 0;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        .streamz-recording-badge {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            color: #bfdbfe;
+            border-radius: 999px;
+            padding: 0.3rem 0.9rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .streamz-recording-badge.is-override {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.35);
+            color: #a7f3d0;
+        }
+
+        .streamz-recording-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+            gap: 1.1rem;
+            margin: 1.25rem 0 1.5rem;
+        }
+
+        .streamz-recording-grid code {
+            display: block;
+            margin-top: 0.4rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            font-family: 'Inter', monospace;
+            font-size: 0.78rem;
+            color: #e2e8f0;
+            word-break: break-all;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .streamz-recording-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .streamz-recording-control {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .streamz-recording-control input {
+            flex: 1 1 220px;
+        }
+
+        .streamz-recording-control button {
+            flex: 0 0 auto;
+        }
+
+        .streamz-recording-message {
+            display: block;
+            margin-top: 0.6rem;
+            color: #cbd5f5;
+            font-size: 0.72rem;
+            opacity: 0.85;
+        }
+
+        .streamz-clips-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .streamz-clips-actions button {
+            min-width: 140px;
+        }
+
+        .streamz-clips-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .streamz-clips-status-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .streamz-clips-status-card header {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+        }
+
+        .streamz-clips-status-card strong {
+            font-size: 1.1rem;
+        }
+
+        .streamz-clips-status-card p {
+            margin: 0;
+            font-size: 0.78rem;
+            color: #cbd5f5;
+            opacity: 0.85;
+        }
+
+        .streamz-clips-status-actions {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .streamz-clips-progress {
+            margin-bottom: 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.12);
+            color: #dbeafe;
+            font-size: 0.85rem;
+        }
+
+        .streamz-clips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .streamz-clips-card {
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 14px;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .streamz-clips-card header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .streamz-clips-card strong {
+            font-size: 1rem;
+        }
+
+        .streamz-clips-card time {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .streamz-clips-card footer {
+            margin-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .streamz-clips-card footer button {
+            flex: 1;
+        }
+
+        .streamz-modal-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
         .streamz-plugin-field {
             display: flex;
             flex-direction: column;
@@ -4138,6 +4341,35 @@
                                     </span>
                                 </label>
                             </section>
+
+                            <section class="streamz-plugin-recording" id="streamzRecordingSection" hidden aria-label="Recording folder">
+                                <div class="streamz-recording-header">
+                                    <div>
+                                        <h2>Recording folder</h2>
+                                        <p>Streamz watches this folder for completed OBS recordings.</p>
+                                    </div>
+                                    <span class="streamz-recording-badge" id="streamzRecordingBadge">Detecting…</span>
+                                </div>
+                                <div class="streamz-recording-grid">
+                                    <div>
+                                        <span class="streamz-recording-label">Resolved path</span>
+                                        <code id="streamzRecordingResolved">Detecting…</code>
+                                    </div>
+                                    <div>
+                                        <span class="streamz-recording-label">OBS reported path</span>
+                                        <code id="streamzRecordingObsPath">Waiting for OBS</code>
+                                    </div>
+                                </div>
+                                <label class="streamz-plugin-field">
+                                    Override folder
+                                    <span class="streamz-plugin-field-control streamz-recording-control">
+                                        <input id="streamzRecordingOverrideInput" type="text" placeholder="Leave blank to use OBS recording directory" autocomplete="off">
+                                        <button class="streamz-plugin-copy" id="streamzRecordingSave" type="button">Save override</button>
+                                        <button class="streamz-plugin-sidebar-button" id="streamzRecordingReset" type="button">Use OBS folder</button>
+                                    </span>
+                                </label>
+                                <small class="streamz-recording-message" id="streamzRecordingMessage">OBS must be open with obs-websocket enabled to detect the recording directory.</small>
+                            </section>
                         </div>
                     </main>
 
@@ -4271,15 +4503,37 @@
                         <div class="streamz-scheduled-header">
                             <div>
                                 <h1 id="clipsViewTitle">Clips</h1>
-                                <p>Your stream clips will appear here.</p>
+                                <p>Save Replay Buffer clips from OBS and upload them directly to Streamz.</p>
+                            </div>
+                            <div class="streamz-clips-actions">
+                                <button class="streamz-plugin-sidebar-button" type="button" id="streamzObsSettingsButton">OBS WebSocket</button>
+                                <button class="streamz-plugin-primary-button" type="button" id="streamzCreateClipButton" disabled>Save Replay</button>
                             </div>
                         </div>
-                        <div class="streamz-plugin-empty-state" style="margin-top: 2rem;">
+                        <div class="streamz-clips-status-grid">
+                            <article class="streamz-clips-status-card">
+                                <header>Connection</header>
+                                <strong id="streamzObsStatus">Unavailable</strong>
+                                <p id="streamzObsStatusMessage">Open the desktop app to control OBS.</p>
+                                <div class="streamz-clips-status-actions" id="streamzObsControls" hidden>
+                                    <button class="streamz-plugin-sidebar-button" type="button" id="streamzConnectObsButton">Connect</button>
+                                    <button class="streamz-plugin-sidebar-button" type="button" id="streamzDisconnectObsButton">Disconnect</button>
+                                </div>
+                            </article>
+                            <article class="streamz-clips-status-card">
+                                <header>Replay Buffer</header>
+                                <strong id="streamzReplayStatus">Unknown</strong>
+                                <p id="streamzReplayStatusMessage">Waiting for OBS…</p>
+                            </article>
+                        </div>
+                        <div class="streamz-clips-progress" id="streamzClipProgress" hidden></div>
+                        <div class="streamz-plugin-empty-state" style="margin-top: 2rem;" id="streamzClipsEmpty">
                             <div>
                                 <strong>No clips yet</strong>
-                                Your clips will appear here after you've completed a stream and clips have been generated or created.
+                                Save a replay to publish your first clip.
                             </div>
                         </div>
+                        <div class="streamz-clips-grid" id="streamzClipsGrid" hidden></div>
                     </section>
                 </div>
 
@@ -4328,6 +4582,39 @@
                             <div class="streamz-plugin-modal-footer">
                                 <button class="streamz-plugin-sidebar-button" id="cancelStreamDescription" type="button">Cancel</button>
                                 <button class="streamz-plugin-primary-button" id="saveStreamDescription" type="submit">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="streamz-plugin-modal" id="streamzObsModal" hidden role="dialog" aria-modal="true" aria-labelledby="streamzObsModalTitle">
+                    <div class="streamz-plugin-modal-dialog">
+                        <div class="streamz-plugin-modal-header">
+                            <h2 id="streamzObsModalTitle">OBS WebSocket</h2>
+                            <button class="streamz-plugin-modal-close" type="button" id="closeStreamzObsModal" aria-label="Close OBS settings">×</button>
+                        </div>
+                        <form class="streamz-plugin-plan-form" id="streamzObsForm">
+                            <label>
+                                Host
+                                <input id="streamzObsHost" type="text" placeholder="127.0.0.1" autocomplete="off">
+                            </label>
+                            <label>
+                                Port
+                                <input id="streamzObsPort" type="number" min="1" max="65535" value="4455">
+                            </label>
+                            <label>
+                                Password <span style="color: var(--color-text-muted, #888); font-weight: 400; font-size: 0.85em;">(leave blank if none)</span>
+                                <input id="streamzObsPassword" type="password" autocomplete="off">
+                            </label>
+                            <label class="streamz-modal-checkbox">
+                                <input id="streamzObsAutoConnect" type="checkbox">
+                                Automatically reconnect when Streamz launches
+                            </label>
+                            <div class="streamz-plugin-modal-footer" style="gap: 0.5rem;">
+                                <button class="streamz-plugin-sidebar-button" type="button" id="streamzObsDisconnectButton">Disconnect</button>
+                                <span style="flex: 1 1 auto;"></span>
+                                <button class="streamz-plugin-sidebar-button" type="button" id="streamzObsSaveButton">Save</button>
+                                <button class="streamz-plugin-primary-button" type="submit">Connect</button>
                             </div>
                         </form>
                     </div>
@@ -5739,6 +6026,428 @@
                         }
                     }
 
+                    const streamzRecordingElements = {
+                        section: document.getElementById('streamzRecordingSection'),
+                        resolved: document.getElementById('streamzRecordingResolved'),
+                        obsPath: document.getElementById('streamzRecordingObsPath'),
+                        badge: document.getElementById('streamzRecordingBadge'),
+                        input: document.getElementById('streamzRecordingOverrideInput'),
+                        save: document.getElementById('streamzRecordingSave'),
+                        reset: document.getElementById('streamzRecordingReset'),
+                        message: document.getElementById('streamzRecordingMessage'),
+                    };
+                    let recordingSectionInitialized = false;
+                    let recordingFolderStatus = null;
+
+                    function getTauriInvoke() {
+                        return window.__TAURI__?.core?.invoke || null;
+                    }
+
+                    function setRecordingMessage(text, variant = 'info') {
+                        if (!streamzRecordingElements.message) return;
+                        streamzRecordingElements.message.textContent = text;
+                        streamzRecordingElements.message.style.color =
+                            variant === 'error' ? '#fecaca' : '#cbd5f5';
+                    }
+
+                    function setRecordingBusy(isBusy) {
+                        if (streamzRecordingElements.save) {
+                            streamzRecordingElements.save.disabled = isBusy;
+                        }
+                        if (streamzRecordingElements.reset) {
+                            streamzRecordingElements.reset.disabled = isBusy
+                                ? true
+                                : !(recordingFolderStatus?.config?.user_override_path);
+                        }
+                        if (streamzRecordingElements.input) {
+                            streamzRecordingElements.input.readOnly = isBusy;
+                        }
+                    }
+
+                    function renderRecordingFolderStatus(status) {
+                        if (!streamzRecordingElements.section || !status) return;
+                        recordingFolderStatus = status;
+                        const { config, resolved_path: resolvedPath, using_override: usingOverride } = status;
+                        streamzRecordingElements.section.hidden = false;
+                        if (streamzRecordingElements.resolved) {
+                            streamzRecordingElements.resolved.textContent = resolvedPath || 'Unknown';
+                        }
+                        if (streamzRecordingElements.obsPath) {
+                            streamzRecordingElements.obsPath.textContent =
+                                config?.obs_reported_path || 'Waiting for OBS';
+                        }
+                        if (streamzRecordingElements.badge) {
+                            streamzRecordingElements.badge.textContent = usingOverride ? 'Override active' : 'OBS default';
+                            streamzRecordingElements.badge.classList.toggle('is-override', Boolean(usingOverride));
+                        }
+                        if (streamzRecordingElements.input) {
+                            streamzRecordingElements.input.value = config?.user_override_path || '';
+                        }
+                        if (streamzRecordingElements.reset) {
+                            streamzRecordingElements.reset.disabled = !config?.user_override_path;
+                        }
+                        const updatedAt = config?.last_updated_at ? new Date(config.last_updated_at) : null;
+                        if (updatedAt && Number.isFinite(updatedAt.getTime())) {
+                            setRecordingMessage(`Last updated ${updatedAt.toLocaleString()}`);
+                        } else {
+                            setRecordingMessage('OBS must be open with obs-websocket enabled to detect the recording directory.');
+                        }
+                    }
+
+                    async function loadRecordingFolderStatus() {
+                        const invoke = getTauriInvoke();
+                        if (!invoke || !streamzRecordingElements.section) return;
+                        try {
+                            setRecordingMessage('Checking recording folder…');
+                            const status = await invoke('get_recording_folder');
+                            renderRecordingFolderStatus(status);
+                        } catch (error) {
+                            console.error('Unable to load recording folder status', error);
+                            setRecordingMessage(`Unable to load recording folder: ${error?.message || error}`, 'error');
+                        }
+                    }
+
+                    async function updateRecordingFolderOverride(path) {
+                        const invoke = getTauriInvoke();
+                        if (!invoke) return;
+                        try {
+                            setRecordingBusy(true);
+                            setRecordingMessage(path ? 'Saving override…' : 'Switching to OBS folder…');
+                            const status = await invoke('set_recording_folder_override', { path });
+                            renderRecordingFolderStatus(status);
+                            setRecordingMessage(path ? 'Override saved. Streamz will monitor the specified folder.' : 'Using the OBS recording folder.');
+                        } catch (error) {
+                            console.error('Unable to update recording folder', error);
+                            setRecordingMessage(`Unable to update recording folder: ${error?.message || error}`, 'error');
+                        } finally {
+                            setRecordingBusy(false);
+                        }
+                    }
+
+                    function initializeStreamzRecordingFolder() {
+                        if (!streamzRecordingElements.section || recordingSectionInitialized) return;
+                        recordingSectionInitialized = true;
+                        const invoke = getTauriInvoke();
+                        if (!invoke) {
+                            streamzRecordingElements.section.hidden = true;
+                            return;
+                        }
+                        streamzRecordingElements.section.hidden = false;
+                        streamzRecordingElements.save?.addEventListener('click', () => {
+                            const value = streamzRecordingElements.input?.value?.trim() || '';
+                            updateRecordingFolderOverride(value || null);
+                        });
+                        streamzRecordingElements.reset?.addEventListener('click', () => {
+                            if (streamzRecordingElements.input) {
+                                streamzRecordingElements.input.value = '';
+                            }
+                            updateRecordingFolderOverride(null);
+                        });
+                        loadRecordingFolderStatus();
+                    }
+
+                    const streamzObsState = {
+                        available: false,
+                        connected: false,
+                        replayActive: false,
+                        saving: false,
+                        listeners: [],
+                        config: null,
+                    };
+
+                    const streamzClipsState = {
+                        list: [],
+                    };
+
+                    async function initializeStreamzObsIntegration() {
+                        const clipsGrid = document.getElementById('streamzClipsGrid');
+                        clipsGrid?.addEventListener('click', handleClipDownload);
+                        await loadStreamzClips();
+
+                        const obsButton = document.getElementById('streamzObsSettingsButton');
+                        if (!obsButton) return;
+
+                        const invoke = getTauriInvoke();
+                        if (!invoke) {
+                            obsButton.disabled = true;
+                            setObsStatus('Browser mode', 'Run Streamz Desktop to control OBS.');
+                            return;
+                        }
+
+                        streamzObsState.available = true;
+                        obsButton.disabled = false;
+                        document.getElementById('streamzObsControls')?.removeAttribute('hidden');
+
+                        obsButton.addEventListener('click', () => openStreamzModal('streamzObsModal', true));
+                        document.getElementById('closeStreamzObsModal')?.addEventListener('click', () => openStreamzModal('streamzObsModal', false));
+                        document.getElementById('streamzObsForm')?.addEventListener('submit', handleObsFormSubmit);
+                        document.getElementById('streamzObsSaveButton')?.addEventListener('click', (event) => {
+                            event.preventDefault();
+                            handleObsSave(false);
+                        });
+                        document.getElementById('streamzObsDisconnectButton')?.addEventListener('click', handleObsDisconnect);
+                        document.getElementById('streamzConnectObsButton')?.addEventListener('click', async () => {
+                            const inv = getTauriInvoke();
+                            if (!inv) return;
+                            try {
+                                await inv('obs_connect');
+                            } catch (error) {
+                                setObsStatus('Error', error?.message || String(error));
+                            }
+                        });
+                        document.getElementById('streamzDisconnectObsButton')?.addEventListener('click', handleObsDisconnect);
+                        document.getElementById('streamzCreateClipButton')?.addEventListener('click', handleReplayClipRequest);
+
+                        await refreshObsConfig();
+
+                        const tauriEvent = window.__TAURI__?.event;
+                        if (tauriEvent?.listen) {
+                            tauriEvent.listen('streamz:obs-connection', ({ payload }) => handleObsConnectionEvent(payload || {}));
+                            tauriEvent.listen('streamz:obs-replay', ({ payload }) => handleReplayStateEvent(payload || {}));
+                            tauriEvent.listen('streamz:obs-stream', ({ payload }) => handleStreamStateEvent(payload || {}));
+                            tauriEvent.listen('streamz:clip-progress', ({ payload }) => handleClipProgressEvent(payload || {}));
+                            tauriEvent.listen('streamz:clip-created', ({ payload }) => handleClipCreatedEvent(payload || {}));
+                            tauriEvent.listen('streamz:clip-failed', ({ payload }) => handleClipFailedEvent(payload || {}));
+                        }
+                    }
+
+                    async function refreshObsConfig() {
+                        const invoke = getTauriInvoke();
+                        if (!invoke) return;
+                        try {
+                            const config = await invoke('get_obs_connection_config');
+                            streamzObsState.config = config;
+                            document.getElementById('streamzObsHost')?.setAttribute('value', config.host || '127.0.0.1');
+                            const hostInput = document.getElementById('streamzObsHost');
+                            if (hostInput) hostInput.value = config.host || '127.0.0.1';
+                            const portInput = document.getElementById('streamzObsPort');
+                            if (portInput) portInput.value = String(config.port || 4455);
+                            const passwordInput = document.getElementById('streamzObsPassword');
+                            if (passwordInput) passwordInput.value = config.password || '';
+                            const autoConnect = document.getElementById('streamzObsAutoConnect');
+                            if (autoConnect) autoConnect.checked = Boolean(config.auto_connect);
+                            if (config.last_status) {
+                                setObsStatus(config.last_status, config.last_error || 'Ready to connect.');
+                            }
+                        } catch (error) {
+                            console.warn('Unable to load OBS config', error);
+                        }
+                    }
+
+                    async function handleObsFormSubmit(event) {
+                        event.preventDefault();
+                        await handleObsSave(true);
+                    }
+
+                    async function handleObsSave(connectAfter) {
+                        const invoke = getTauriInvoke();
+                        if (!invoke) return;
+                        const host = document.getElementById('streamzObsHost')?.value?.trim() || '127.0.0.1';
+                        const portValue = parseInt(document.getElementById('streamzObsPort')?.value || '4455', 10) || 4455;
+                        const passwordValue = document.getElementById('streamzObsPassword')?.value || '';
+                        const autoConnect = Boolean(document.getElementById('streamzObsAutoConnect')?.checked);
+                        const payload = {
+                            host,
+                            port: Math.max(1, portValue),
+                            password: passwordValue ? passwordValue : null,
+                            auto_connect: autoConnect,
+                        };
+
+                        try {
+                            const config = await invoke('update_obs_connection_config', { input: payload });
+                            streamzObsState.config = config;
+                            if (connectAfter) {
+                                await invoke('obs_connect');
+                                openStreamzModal('streamzObsModal', false);
+                            } else {
+                                setObsStatus(config.last_status || 'Saved', config.last_error || 'OBS configuration updated.');
+                            }
+                        } catch (error) {
+                            setObsStatus('Error', error?.message || String(error));
+                        }
+                    }
+
+                    async function handleObsDisconnect(event) {
+                        event?.preventDefault();
+                        const invoke = getTauriInvoke();
+                        if (!invoke) return;
+                        try {
+                            await invoke('obs_disconnect');
+                        } catch (error) {
+                            console.warn('Unable to disconnect OBS', error);
+                        }
+                    }
+
+                    function handleObsConnectionEvent(payload) {
+                        const status = payload?.status || 'Unknown';
+                        const message = payload?.error || (status === 'connected' ? 'Ready to save clips.' : 'Waiting for OBS.');
+                        setObsStatus(status, message);
+                    }
+
+                    function handleReplayStateEvent(payload) {
+                        const active = Boolean(payload?.active);
+                        setReplayStatus(active, payload?.state);
+                    }
+
+                    function handleStreamStateEvent(payload) {
+                        if (!payload) return;
+                        if (!payload.active) {
+                            setClipProgressMessage(null);
+                        }
+                    }
+
+                    function handleClipProgressEvent(payload) {
+                        if (!payload) return;
+                        streamzObsState.saving = payload.phase !== 'complete' && payload.phase !== 'failed';
+                        if (payload.message) {
+                            setClipProgressMessage(payload.message, payload.phase === 'failed' ? 'error' : 'info');
+                        }
+                        updateClipButtonState();
+                    }
+
+                    function handleClipCreatedEvent(payload) {
+                        streamzObsState.saving = false;
+                        updateClipButtonState();
+                        setClipProgressMessage('Upload complete');
+                        if (payload?.clip) {
+                            streamzClipsState.list = [payload.clip, ...streamzClipsState.list.filter((clip) => clip.id !== payload.clip.id)];
+                            renderStreamzClips();
+                        }
+                    }
+
+                    function handleClipFailedEvent(payload) {
+                        streamzObsState.saving = false;
+                        updateClipButtonState();
+                        setClipProgressMessage(payload?.error || 'Clip upload failed', 'error');
+                    }
+
+                    function setObsStatus(status, message) {
+                        const normalized = (status || '').toLowerCase();
+                        streamzObsState.connected = normalized === 'connected';
+                        const statusEl = document.getElementById('streamzObsStatus');
+                        if (statusEl) statusEl.textContent = status || 'Unknown';
+                        const messageEl = document.getElementById('streamzObsStatusMessage');
+                        if (messageEl) messageEl.textContent = message || '';
+                        updateClipButtonState();
+                    }
+
+                    function setReplayStatus(active, state) {
+                        streamzObsState.replayActive = Boolean(active);
+                        const statusEl = document.getElementById('streamzReplayStatus');
+                        const messageEl = document.getElementById('streamzReplayStatusMessage');
+                        if (statusEl) statusEl.textContent = active ? 'Enabled' : 'Disabled';
+                        if (messageEl) {
+                            messageEl.textContent = active ? 'Replay Buffer is ready.' : 'Enable Replay Buffer in OBS to save clips.';
+                        }
+                        updateClipButtonState();
+                    }
+
+                    function setClipProgressMessage(text, variant = 'info') {
+                        const container = document.getElementById('streamzClipProgress');
+                        if (!container) return;
+                        if (!text) {
+                            container.hidden = true;
+                            container.textContent = '';
+                            return;
+                        }
+                        container.hidden = false;
+                        container.textContent = text;
+                        const isError = variant === 'error';
+                        container.style.borderColor = isError ? 'rgba(248, 113, 113, 0.5)' : 'rgba(59, 130, 246, 0.3)';
+                        container.style.background = isError ? 'rgba(248, 113, 113, 0.12)' : 'rgba(59, 130, 246, 0.12)';
+                        container.style.color = isError ? '#fee2e2' : '#dbeafe';
+                    }
+
+                    function updateClipButtonState() {
+                        const button = document.getElementById('streamzCreateClipButton');
+                        if (!button) return;
+                        const enabled = streamzObsState.available && streamzObsState.connected && streamzObsState.replayActive && !streamzObsState.saving;
+                        button.disabled = !enabled;
+                        button.textContent = streamzObsState.saving ? 'Saving…' : 'Save Replay';
+                    }
+
+                    async function handleReplayClipRequest(event) {
+                        event?.preventDefault();
+                        const invoke = getTauriInvoke();
+                        if (!invoke) return;
+                        streamzObsState.saving = true;
+                        updateClipButtonState();
+                        setClipProgressMessage('Requesting replay…');
+                        try {
+                            await invoke('request_replay_clip', { label: null });
+                        } catch (error) {
+                            streamzObsState.saving = false;
+                            updateClipButtonState();
+                            setClipProgressMessage(error?.message || String(error), 'error');
+                        }
+                    }
+
+                    async function loadStreamzClips() {
+                        try {
+                            const response = await fetch('https://vortex-prime-emu.com/api/streamz/clips', { credentials: 'include' });
+                            const data = await response.json().catch(() => ({}));
+                            streamzClipsState.list = Array.isArray(data.clips) ? data.clips : [];
+                        } catch (error) {
+                            console.warn('Unable to load Streamz clips', error);
+                            streamzClipsState.list = [];
+                        }
+                        renderStreamzClips();
+                    }
+
+                    function renderStreamzClips() {
+                        const grid = document.getElementById('streamzClipsGrid');
+                        const empty = document.getElementById('streamzClipsEmpty');
+                        if (!grid || !empty) return;
+                        const list = Array.isArray(streamzClipsState.list) ? streamzClipsState.list : [];
+                        if (list.length === 0) {
+                            empty.hidden = false;
+                            grid.hidden = true;
+                            grid.replaceChildren();
+                            return;
+                        }
+                        empty.hidden = true;
+                        grid.hidden = false;
+                        grid.innerHTML = list
+                            .map((clip) => {
+                                const download = clip?.file?.downloadUrl || clip?.file?.webContentLink || '';
+                                const status = clip?.status || 'Uploaded';
+                                const timestamp = formatClipTimestamp(clip?.uploadedAt || clip?.createdAt);
+                                const scene = clip?.scene ? `Scene: ${escapeHtml(clip.scene)}` : '';
+                                const game = clip?.game ? `Game: ${escapeHtml(clip.game)}` : '';
+                                const meta = [scene, game].filter(Boolean).join(' • ');
+                                return `
+                                    <article class="streamz-clips-card">
+                                        <header>
+                                            <strong>${escapeHtml(clip?.title || 'Replay Clip')}</strong>
+                                            <time>${escapeHtml(timestamp)}</time>
+                                        </header>
+                                        ${meta ? `<div style="font-size:0.8rem;color:#cbd5f5;">${meta}</div>` : ''}
+                                        <footer>
+                                            <span style="font-size:0.75rem;color:#94a3b8;">${escapeHtml(status)}</span>
+                                            <button class="streamz-plugin-sidebar-button" type="button" ${download ? '' : 'disabled'} data-streamz-download="${escapeAttribute(download)}">Download</button>
+                                        </footer>
+                                    </article>
+                                `;
+                            })
+                            .join('');
+                    }
+
+                    function handleClipDownload(event) {
+                        const trigger = event.target.closest('[data-streamz-download]');
+                        if (!trigger) return;
+                        const url = trigger.getAttribute('data-streamz-download');
+                        if (!url) return;
+                        event.preventDefault();
+                        window.open(url, '_blank', 'noopener');
+                    }
+
+                    function formatClipTimestamp(value) {
+                        if (!value) return 'Unknown';
+                        const date = new Date(value);
+                        if (!Number.isFinite(date.getTime())) return value;
+                        return date.toLocaleString();
+                    }
+
                     window.addEventListener('streamz:credentials-loaded', (event) => {
                         startLocalStreamzRelay(event.detail);
                     });
@@ -5755,6 +6464,8 @@
                     });
                     document.querySelector('[data-streamz-refresh-channels]')?.addEventListener('click', loadStreamzDashboardData);
                     loadStreamzDashboardData();
+                    initializeStreamzRecordingFolder();
+                    initializeStreamzObsIntegration();
 
                     document.addEventListener('click', (event) => {
                         const trigger = event.target.closest('[data-page]');

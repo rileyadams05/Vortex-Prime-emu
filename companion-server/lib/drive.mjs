@@ -15,6 +15,7 @@ const DEFAULT_DB = {
   storeMods: [],
   reports: [],
   adminSettings: {},
+  clips: [],
 };
 
 const FOLDER_STRUCTURE = [
@@ -25,6 +26,7 @@ const FOLDER_STRUCTURE = [
   { key: 'previews', name: 'Previews', parent: 'root' },
   { key: 'readmes', name: 'Readmes', parent: 'root' },
   { key: 'database', name: 'Database', parent: 'root' },
+  { key: 'clips', name: 'Clips', parent: 'root' },
 ];
 
 const STORE_DB_NAME = 'store-db.json';

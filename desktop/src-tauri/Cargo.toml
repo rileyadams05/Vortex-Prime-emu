@@ -15,3 +15,18 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+serde = { version = "1.0", features = ["derive"] }
+obws = { version = "0.15", features = ["tls", "events"] }
+tokio = { version = "1.37", features = ["rt-multi-thread", "macros", "time", "fs", "sync"] }
+tokio-util = { version = "0.7", features = ["full"] }
+tokio-stream = "0.1"
+reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
+futures-util = "0.3"
+mime_guess = "2.0"
+uuid = { version = "1.7", features = ["v4"] }
+chrono = { version = "0.4", features = ["clock", "serde"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+tempfile = "3.10"

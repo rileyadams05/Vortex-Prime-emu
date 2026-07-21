@@ -2,9 +2,19 @@ use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 
+use chrono::Utc;
+use serde::Deserialize;
 use tauri::{Manager, RunEvent, State};
 
-const FFMPEG_PATH: &str = r"F:\PROJECTS\Vortex-Prime-emu\docs\assets\FOR STREMZ\ffmpeg-8.1.2-full_build\bin\ffmpeg.exe";
+mod obs;
+mod storage;
+use obs::ObsBridge;
+use storage::{
+    ObsConnectionConfig, RecordingFolderStatus, StorageManager, StorageState, StorageStatus,
+};
+
+const FFMPEG_PATH: &str =
+    r"F:\PROJECTS\Vortex-Prime-emu\docs\assets\FOR STREMZ\ffmpeg-8.1.2-full_build\bin\ffmpeg.exe";
 const INPUT_URL: &str = "rtmp://127.0.0.1:1935/live/stream";
 
 struct FfmpegState {
@@ -83,7 +93,9 @@ fn validate_target(target: &str) -> Result<String, String> {
         .chars()
         .any(|character| matches!(character, '\n' | '\r' | '\0' | '|' | '[' | ']'))
     {
-        return Err("Streaming targets contain unsupported control characters or tee syntax.".to_string());
+        return Err(
+            "Streaming targets contain unsupported control characters or tee syntax.".to_string(),
+        );
     }
 
     Ok(value.to_string())
@@ -97,11 +109,16 @@ fn build_tee_output(targets: &[String]) -> String {
         .join("|")
 }
 
+#[derive(Deserialize)]
+struct ObsConnectionInput {
+    host: String,
+    port: u16,
+    password: Option<String>,
+    auto_connect: bool,
+}
+
 #[tauri::command]
-fn start_ffmpeg_relay(
-    targets: Vec<String>,
-    state: State<'_, FfmpegState>,
-) -> Result<(), String> {
+fn start_ffmpeg_relay(targets: Vec<String>, state: State<'_, FfmpegState>) -> Result<(), String> {
     if targets.is_empty() {
         return Err("At least one RTMP target is required.".to_string());
     }
@@ -163,19 +180,146 @@ fn stop_ffmpeg_relay(state: State<'_, FfmpegState>) -> Result<(), String> {
     stop_child(&state.child)
 }
 
+#[tauri::command]
+fn get_storage_status(storage: State<'_, StorageState>) -> Result<StorageStatus, String> {
+    storage
+        .manager()
+        .status()
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+fn get_recording_folder(storage: State<'_, StorageState>) -> Result<RecordingFolderStatus, String> {
+    storage
+        .manager()
+        .recording_folder_status()
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+async fn get_obs_connection_config(
+    storage: State<'_, StorageState>,
+) -> Result<ObsConnectionConfig, String> {
+    storage
+        .manager()
+        .obs_connection_config()
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+async fn update_obs_connection_config(
+    input: ObsConnectionInput,
+    storage: State<'_, StorageState>,
+    bridge: State<'_, ObsBridge>,
+) -> Result<ObsConnectionConfig, String> {
+    let mut config = storage
+        .manager()
+        .obs_connection_config()
+        .map_err(|error| error.to_string())?;
+
+    config.host = if input.host.trim().is_empty() {
+        "127.0.0.1".into()
+    } else {
+        input.host.trim().to_string()
+    };
+    config.port = input.port.max(1);
+    config.password = input.password.and_then(|value| {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    });
+    config.auto_connect = input.auto_connect;
+
+    bridge.update_config(config).await
+}
+
+#[tauri::command]
+async fn obs_connect(bridge: State<'_, ObsBridge>) -> Result<(), String> {
+    bridge.connect().await
+}
+
+#[tauri::command]
+async fn obs_disconnect(bridge: State<'_, ObsBridge>) -> Result<(), String> {
+    bridge.disconnect().await
+}
+
+#[tauri::command]
+async fn request_replay_clip(
+    label: Option<String>,
+    bridge: State<'_, ObsBridge>,
+) -> Result<String, String> {
+    bridge.request_clip(label).await
+}
+
+#[tauri::command]
+fn set_recording_folder_override(
+    path: Option<String>,
+    storage: State<'_, StorageState>,
+) -> Result<RecordingFolderStatus, String> {
+    let trimmed = path.as_ref().and_then(|value| {
+        let candidate = value.trim();
+        if candidate.is_empty() {
+            None
+        } else {
+            Some(candidate.to_string())
+        }
+    });
+
+    let mut config = storage
+        .manager()
+        .recording_folder_config()
+        .map_err(|error| error.to_string())?
+        .unwrap_or_default();
+
+    config.user_override_path = trimmed;
+    config.last_updated_at = Some(Utc::now().to_rfc3339());
+
+    storage
+        .manager()
+        .update_recording_folder(&config)
+        .map_err(|error| error.to_string())?;
+
+    storage
+        .manager()
+        .recording_folder_status()
+        .map_err(|error| error.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let ffmpeg_state = FfmpegState::default();
-
     tauri::Builder::default()
-        .manage(ffmpeg_state)
-        .invoke_handler(tauri::generate_handler![start_ffmpeg_relay, stop_ffmpeg_relay])
+        .manage(FfmpegState::default())
+        .setup(|app| {
+            let storage_manager = StorageManager::initialize(app.handle())?;
+            app.manage(StorageState::new(storage_manager.clone()));
+            let obs_bridge = ObsBridge::start(app.handle(), storage_manager.clone());
+            app.manage(obs_bridge);
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            start_ffmpeg_relay,
+            stop_ffmpeg_relay,
+            get_storage_status,
+            get_recording_folder,
+            set_recording_folder_override,
+            get_obs_connection_config,
+            update_obs_connection_config,
+            obs_connect,
+            obs_disconnect,
+            request_replay_clip
+        ])
         .build(tauri::generate_context!())
         .expect("error while building Vortex Prime")
         .run(|app_handle, event| {
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
                 let state = app_handle.state::<FfmpegState>();
                 let _ = stop_child(&state.child);
+                if let Some(obs_bridge) = app_handle.try_state::<ObsBridge>() {
+                    obs_bridge.shutdown();
+                }
             }
         });
 }
