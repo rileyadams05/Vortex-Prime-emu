@@ -3,11 +3,15 @@ use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Utc};
 use rusqlite::{Connection, OptionalExtension};
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde_json::{map::Map as JsonMap, Value as JsonValue};
 use tauri::AppHandle;
 use uuid::Uuid;
 
 const STORAGE_ROOT_NAME: &str = "Streamz";
+const KEY_PLANNED_STREAM_METADATA: &str = "planned_stream_metadata";
+const KEY_ACTIVE_STREAM_TARGETS: &str = "active_stream_targets";
+const KEY_ACTIVE_STREAM_SESSION: &str = "active_stream_session";
 
 const REQUIRED_SUBDIRS: &[&str] = &[
     "Config",
@@ -19,7 +23,27 @@ const REQUIRED_SUBDIRS: &[&str] = &[
     "Temp",
 ];
 
-const MIGRATIONS: &[&str] = &[r#"
+const STREAM_SESSION_COLUMNS: &str = "
+    id,
+    title,
+    platform,
+    started_at,
+    ended_at,
+    duration_ms,
+    scene,
+    category,
+    game,
+    state,
+    targets_json,
+    platforms_json,
+    metadata_json,
+    thumbnail_data_url,
+    created_at,
+    updated_at
+";
+
+const MIGRATIONS: &[&str] = &[
+    r#"
     CREATE TABLE IF NOT EXISTS recordings (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -76,13 +100,220 @@ const MIGRATIONS: &[&str] = &[r#"
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
     );
-    "#];
+    "#,
+    r#"
+    CREATE TABLE IF NOT EXISTS stream_sessions (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        platform TEXT,
+        started_at TEXT NOT NULL,
+        ended_at TEXT,
+        duration_ms INTEGER,
+        scene TEXT,
+        category TEXT,
+        game TEXT,
+        state TEXT,
+        targets_json TEXT,
+        platforms_json TEXT,
+        metadata_json TEXT,
+        thumbnail_data_url TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_stream_sessions_started_at
+        ON stream_sessions (started_at DESC);
+    "#,
+];
 
 #[derive(Debug)]
 pub enum StorageError {
     PathUnavailable,
     Io(std::io::Error),
     Database(rusqlite::Error),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ActiveStreamSessionState {
+    session_id: String,
+}
+
+impl StreamSessionRow {
+    fn into_stream_session(self) -> Result<StreamSession, StorageError> {
+        Ok(StreamSession {
+            id: self.id,
+            title: self.title,
+            platform: self.platform,
+            platforms: parse_string_vec(self.platforms_json)?,
+            started_at: parse_timestamp(&self.started_at)?,
+            ended_at: parse_optional_timestamp(self.ended_at)?,
+            duration_ms: self.duration_ms,
+            scene: self.scene,
+            category: self.category,
+            game: self.game,
+            state: self.state,
+            targets: parse_string_vec(self.targets_json)?,
+            metadata: parse_optional_json(self.metadata_json)?,
+            thumbnail_data_url: self.thumbnail_data_url,
+            created_at: parse_timestamp(&self.created_at)?,
+            updated_at: parse_timestamp(&self.updated_at)?,
+        })
+    }
+}
+
+fn parse_timestamp(value: &str) -> Result<DateTime<Utc>, StorageError> {
+    chrono::DateTime::parse_from_rfc3339(value)
+        .map(|dt| dt.with_timezone(&Utc))
+        .map_err(|error| StorageError::Io(as_io_error(error)))
+}
+
+fn parse_optional_timestamp(value: Option<String>) -> Result<Option<DateTime<Utc>>, StorageError> {
+    value
+        .map(|val| parse_timestamp(&val))
+        .transpose()
+}
+
+fn parse_string_vec(json: Option<String>) -> Result<Vec<String>, StorageError> {
+    if let Some(json) = json {
+        serde_json::from_str::<Vec<String>>(&json)
+            .map_err(|error| StorageError::Io(as_io_error(error)))
+    } else {
+        Ok(Vec::new())
+    }
+}
+
+fn parse_optional_json(json: Option<String>) -> Result<Option<JsonValue>, StorageError> {
+    if let Some(json) = json {
+        let value = serde_json::from_str(&json).map_err(|error| StorageError::Io(as_io_error(error)))?;
+        Ok(Some(value))
+    } else {
+        Ok(None)
+    }
+}
+
+fn merge_metadata(base: Option<JsonValue>, extra: Option<JsonValue>) -> Option<JsonValue> {
+    match (base, extra) {
+        (Some(JsonValue::Object(mut base_map)), Some(JsonValue::Object(extra_map))) => {
+            for (key, value) in extra_map {
+                base_map.insert(key, value);
+            }
+            Some(JsonValue::Object(base_map))
+        }
+        (None, Some(extra)) => Some(extra),
+        (Some(existing), None) => Some(existing),
+        (Some(_), Some(extra)) => Some(extra),
+        (None, None) => None,
+    }
+}
+
+fn json_string(value: &JsonValue) -> Result<String, StorageError> {
+    serde_json::to_string(value)
+        .map_err(|error| StorageError::Io(as_io_error(error)))
+}
+
+fn vec_json(values: &[String]) -> Result<Option<String>, StorageError> {
+    if values.is_empty() {
+        return Ok(None);
+    }
+    serde_json::to_string(values)
+        .map(Some)
+        .map_err(|error| StorageError::Io(as_io_error(error)))
+}
+
+fn clean_json_value(value: JsonValue) -> Option<JsonValue> {
+    match value {
+        JsonValue::Null => None,
+        JsonValue::Object(mut map) => {
+            map.retain(|_, v| !v.is_null());
+            if map.is_empty() {
+                None
+            } else {
+                Some(JsonValue::Object(map))
+            }
+        }
+        other => Some(other),
+    }
+}
+
+fn planned_metadata_json(
+    metadata: &PlannedStreamMetadata,
+) -> Result<Option<JsonValue>, StorageError> {
+    let value = serde_json::to_value(metadata)
+        .map_err(|error| StorageError::Io(as_io_error(error)))?;
+    Ok(clean_json_value(value))
+}
+
+fn clean_text(value: Option<String>) -> Option<String> {
+    value.and_then(|text| {
+        let trimmed = text.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    })
+}
+
+fn default_stream_title() -> String {
+    Utc::now().format("Stream on %Y-%m-%d %H:%M").to_string()
+}
+
+fn guess_platforms_from_targets(targets: &[String]) -> Vec<String> {
+    let mut result = Vec::new();
+    for target in targets {
+        if let Some(label) = guess_platform_from_target(target) {
+            if !result.iter().any(|existing| existing.eq_ignore_ascii_case(&label)) {
+                result.push(label);
+            }
+        }
+    }
+    result
+}
+
+fn guess_platform_from_target(target: &str) -> Option<String> {
+    let lower = target.to_ascii_lowercase();
+    if lower.contains("twitch.tv") {
+        return Some("Twitch".to_string());
+    }
+    if lower.contains("youtube.com") || lower.contains("ytimg.com") {
+        return Some("YouTube".to_string());
+    }
+    if lower.contains("kick.com") || lower.contains("global-contribute.live-video.net") {
+        return Some("Kick".to_string());
+    }
+    None
+}
+
+fn dedupe_strings(values: Vec<String>) -> Vec<String> {
+    let mut result: Vec<String> = Vec::new();
+    for value in values {
+        if let Some(clean) = clean_text(Some(value)) {
+            if !result.iter().any(|existing| existing.eq_ignore_ascii_case(&clean)) {
+                result.push(clean);
+            }
+        }
+    }
+    result
+}
+
+#[derive(Debug)]
+struct StreamSessionRow {
+    id: String,
+    title: String,
+    platform: Option<String>,
+    started_at: String,
+    ended_at: Option<String>,
+    duration_ms: Option<i64>,
+    scene: Option<String>,
+    category: Option<String>,
+    game: Option<String>,
+    state: Option<String>,
+    targets_json: Option<String>,
+    platforms_json: Option<String>,
+    metadata_json: Option<String>,
+    thumbnail_data_url: Option<String>,
+    created_at: String,
+    updated_at: String,
 }
 
 impl StorageManager {
@@ -107,6 +338,46 @@ impl StorageManager {
         } else {
             self.recordings_root()
         }
+    }
+
+    fn load_setting<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, StorageError> {
+        let conn = self.open_connection()?;
+        let record: Option<String> = conn
+            .query_row(
+                "SELECT value FROM settings WHERE key = ?1",
+                [key],
+                |row| row.get(0),
+            )
+            .optional()?;
+
+        if let Some(json) = record {
+            let value = serde_json::from_str(&json)
+                .map_err(|error| StorageError::Io(as_io_error(error)))?;
+            Ok(Some(value))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn save_setting<T: Serialize>(&self, key: &str, value: &T) -> Result<(), StorageError> {
+        let conn = self.open_connection()?;
+        let payload = serde_json::to_string(value)
+            .map_err(|error| StorageError::Io(as_io_error(error)))?;
+        conn.execute(
+            r#"
+            INSERT INTO settings (key, value)
+            VALUES (?1, ?2)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            "#,
+            (key, &payload),
+        )?;
+        Ok(())
+    }
+
+    fn delete_setting(&self, key: &str) -> Result<(), StorageError> {
+        let conn = self.open_connection()?;
+        conn.execute("DELETE FROM settings WHERE key = ?1", [key])?;
+        Ok(())
     }
 }
 
@@ -279,6 +550,321 @@ impl StorageManager {
         })
     }
 
+    pub fn planned_stream_metadata(&self) -> Result<Option<PlannedStreamMetadata>, StorageError> {
+        self.load_setting(KEY_PLANNED_STREAM_METADATA)
+    }
+
+    pub fn save_planned_stream_metadata(
+        &self,
+        metadata: &PlannedStreamMetadata,
+    ) -> Result<(), StorageError> {
+        self.save_setting(KEY_PLANNED_STREAM_METADATA, metadata)
+    }
+
+    pub fn clear_planned_stream_metadata(&self) -> Result<(), StorageError> {
+        self.delete_setting(KEY_PLANNED_STREAM_METADATA)
+    }
+
+    pub fn active_stream_targets(&self) -> Result<Vec<String>, StorageError> {
+        Ok(self
+            .load_setting::<Vec<String>>(KEY_ACTIVE_STREAM_TARGETS)?
+            .unwrap_or_default())
+    }
+
+    pub fn save_active_stream_targets(&self, targets: &[String]) -> Result<(), StorageError> {
+        if targets.is_empty() {
+            self.delete_setting(KEY_ACTIVE_STREAM_TARGETS)
+        } else {
+            self.save_setting(KEY_ACTIVE_STREAM_TARGETS, targets)
+        }
+    }
+
+    pub fn clear_active_stream_targets(&self) -> Result<(), StorageError> {
+        self.delete_setting(KEY_ACTIVE_STREAM_TARGETS)
+    }
+
+    pub fn active_stream_session_id(&self) -> Result<Option<String>, StorageError> {
+        Ok(self
+            .load_setting::<ActiveStreamSessionState>(KEY_ACTIVE_STREAM_SESSION)?
+            .map(|state| state.session_id))
+    }
+
+    pub fn save_active_stream_session_id(&self, session_id: &str) -> Result<(), StorageError> {
+        let payload = ActiveStreamSessionState {
+            session_id: session_id.to_string(),
+        };
+        self.save_setting(KEY_ACTIVE_STREAM_SESSION, &payload)
+    }
+
+    pub fn clear_active_stream_session_id(&self) -> Result<(), StorageError> {
+        self.delete_setting(KEY_ACTIVE_STREAM_SESSION)
+    }
+
+    pub fn begin_stream_session(
+        &self,
+        scene: Option<String>,
+        obs_state: Option<String>,
+    ) -> Result<StreamSession, StorageError> {
+        let planned = self.planned_stream_metadata()?.unwrap_or_default();
+        let targets = self.active_stream_targets()?;
+        let mut platforms = planned
+            .platforms
+            .clone()
+            .unwrap_or_else(|| guess_platforms_from_targets(&targets));
+        let mut platform = clean_text(planned.platform.clone());
+        if platform.is_none() {
+            platform = platforms.first().cloned();
+        }
+        if platforms.is_empty() {
+            if let Some(ref primary) = platform {
+                platforms.push(primary.clone());
+            }
+        }
+        platforms = dedupe_strings(platforms);
+        let title = clean_text(planned.title.clone()).unwrap_or_else(default_stream_title);
+        let planned_metadata = planned_metadata_json(&planned)?;
+        let mut extra_meta = JsonMap::new();
+        if let Some(ref scene_name) = scene {
+            extra_meta.insert("sceneAtStart".into(), JsonValue::String(scene_name.clone()));
+        }
+        if let Some(ref state_name) = obs_state {
+            extra_meta.insert("obsStateStart".into(), JsonValue::String(state_name.clone()));
+        }
+        if !targets.is_empty() {
+            extra_meta.insert(
+                "targets".into(),
+                JsonValue::Array(
+                    targets
+                        .iter()
+                        .map(|value| JsonValue::String(value.clone()))
+                        .collect(),
+                ),
+            );
+        }
+        let metadata = merge_metadata(
+            planned_metadata,
+            if extra_meta.is_empty() {
+                None
+            } else {
+                Some(JsonValue::Object(extra_meta))
+            },
+        );
+
+        let start = StreamSessionStart {
+            title,
+            platform,
+            platforms,
+            started_at: Utc::now(),
+            scene,
+            category: clean_text(planned.category.clone()),
+            game: clean_text(planned.game.clone()),
+            state: obs_state,
+            targets: targets.clone(),
+            metadata,
+            thumbnail_data_url: planned.thumbnail_data_url.clone(),
+        };
+
+        let session = self.create_stream_session(start)?;
+        self.save_active_stream_session_id(&session.id)?;
+        Ok(session)
+    }
+
+    pub fn create_stream_session(
+        &self,
+        start: StreamSessionStart,
+    ) -> Result<StreamSession, StorageError> {
+        let conn = self.open_connection()?;
+        let now = Utc::now().to_rfc3339();
+        let id = Uuid::new_v4().to_string();
+        let platforms_json = vec_json(&start.platforms)?;
+        let targets_json = vec_json(&start.targets)?;
+        let metadata_json = start
+            .metadata
+            .as_ref()
+            .map(|value| json_string(value))
+            .transpose()?;
+
+        conn.execute(
+            r#"
+            INSERT INTO stream_sessions (
+                id,
+                title,
+                platform,
+                started_at,
+                scene,
+                category,
+                game,
+                state,
+                targets_json,
+                platforms_json,
+                metadata_json,
+                thumbnail_data_url,
+                created_at,
+                updated_at
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?13)
+            "#,
+            (
+                &id,
+                &start.title,
+                &start.platform,
+                &start.started_at.to_rfc3339(),
+                &start.scene,
+                &start.category,
+                &start.game,
+                &start.state,
+                &targets_json,
+                &platforms_json,
+                &metadata_json,
+                &start.thumbnail_data_url,
+                &now,
+            ),
+        )?;
+
+        self.stream_session_by_id(&id)
+    }
+
+    pub fn finalize_stream_session(
+        &self,
+        session_id: &str,
+        ended_at: DateTime<Utc>,
+        duration_ms: Option<i64>,
+        metadata: Option<JsonValue>,
+    ) -> Result<Option<StreamSession>, StorageError> {
+        let conn = self.open_connection()?;
+        let metadata_json = metadata
+            .as_ref()
+            .map(|value| json_string(value))
+            .transpose()?;
+        let updated_at = Utc::now().to_rfc3339();
+        let ended_at_str = ended_at.to_rfc3339();
+        conn.execute(
+            r#"
+            UPDATE stream_sessions
+            SET ended_at = ?2,
+                duration_ms = COALESCE(?3, duration_ms),
+                metadata_json = COALESCE(?4, metadata_json),
+                updated_at = ?5
+            WHERE id = ?1
+            "#,
+            (
+                session_id,
+                &ended_at_str,
+                &duration_ms,
+                &metadata_json,
+                &updated_at,
+            ),
+        )?;
+        self.stream_session_by_id(session_id)
+    }
+
+    pub fn complete_stream_session(
+        &self,
+        session_id: &str,
+        obs_state: Option<String>,
+        scene: Option<String>,
+    ) -> Result<Option<StreamSession>, StorageError> {
+        let existing = match self.stream_session_by_id(session_id)? {
+            Some(session) => session,
+            None => {
+                self.clear_active_stream_session_id()?;
+                return Ok(None);
+            }
+        };
+
+        let ended_at = Utc::now();
+        let duration_ms = Some((ended_at - existing.started_at).num_milliseconds());
+        let mut extra_meta = JsonMap::new();
+        if let Some(ref scene_name) = scene {
+            extra_meta.insert("sceneAtEnd".into(), JsonValue::String(scene_name.clone()));
+        }
+        if let Some(ref state_value) = obs_state {
+            extra_meta.insert("obsStateEnd".into(), JsonValue::String(state_value.clone()));
+        }
+        let metadata = merge_metadata(
+            existing.metadata.clone(),
+            if extra_meta.is_empty() {
+                None
+            } else {
+                Some(JsonValue::Object(extra_meta))
+            },
+        );
+        let result = self.finalize_stream_session(session_id, ended_at, duration_ms, metadata)?;
+        self.clear_active_stream_session_id()?;
+        Ok(result)
+    }
+
+    pub fn stream_session_by_id(
+        &self,
+        session_id: &str,
+    ) -> Result<Option<StreamSession>, StorageError> {
+        let conn = self.open_connection()?;
+        let mut stmt = conn.prepare(&format!(
+            "SELECT {} FROM stream_sessions WHERE id = ?1 LIMIT 1",
+            STREAM_SESSION_COLUMNS
+        ))?;
+        let record = stmt
+            .query_row([session_id], |row| {
+                Ok(StreamSessionRow {
+                    id: row.get(0)?,
+                    title: row.get(1)?,
+                    platform: row.get(2)?,
+                    started_at: row.get(3)?,
+                    ended_at: row.get(4)?,
+                    duration_ms: row.get(5)?,
+                    scene: row.get(6)?,
+                    category: row.get(7)?,
+                    game: row.get(8)?,
+                    state: row.get(9)?,
+                    targets_json: row.get(10)?,
+                    platforms_json: row.get(11)?,
+                    metadata_json: row.get(12)?,
+                    thumbnail_data_url: row.get(13)?,
+                    created_at: row.get(14)?,
+                    updated_at: row.get(15)?,
+                })
+            })
+            .optional()?;
+
+        record.map(|row| row.into_stream_session()).transpose()
+    }
+
+    pub fn recent_stream_sessions(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<StreamSession>, StorageError> {
+        let conn = self.open_connection()?;
+        let mut stmt = conn.prepare(&format!(
+            "SELECT {} FROM stream_sessions WHERE ended_at IS NOT NULL ORDER BY ended_at DESC, started_at DESC LIMIT ?1",
+            STREAM_SESSION_COLUMNS
+        ))?;
+        let rows = stmt
+            .query_map([limit as i64], |row| {
+                Ok(StreamSessionRow {
+                    id: row.get(0)?,
+                    title: row.get(1)?,
+                    platform: row.get(2)?,
+                    started_at: row.get(3)?,
+                    ended_at: row.get(4)?,
+                    duration_ms: row.get(5)?,
+                    scene: row.get(6)?,
+                    category: row.get(7)?,
+                    game: row.get(8)?,
+                    state: row.get(9)?,
+                    targets_json: row.get(10)?,
+                    platforms_json: row.get(11)?,
+                    metadata_json: row.get(12)?,
+                    thumbnail_data_url: row.get(13)?,
+                    created_at: row.get(14)?,
+                    updated_at: row.get(15)?,
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
+
+        rows.into_iter()
+            .map(|row| row.into_stream_session())
+            .collect()
+    }
+
     pub fn obs_connection_config(&self) -> Result<ObsConnectionConfig, StorageError> {
         let conn = self.open_connection()?;
         let record: Option<String> = conn
@@ -449,6 +1035,54 @@ impl Default for RecordingFolderConfig {
             last_updated_at: None,
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PlannedStreamMetadata {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub category: Option<String>,
+    pub game: Option<String>,
+    pub platform: Option<String>,
+    pub platforms: Option<Vec<String>>,
+    pub targets: Option<Vec<String>>,
+    pub scheduled_start: Option<String>,
+    pub thumbnail_data_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StreamSession {
+    pub id: String,
+    pub title: String,
+    pub platform: Option<String>,
+    pub platforms: Vec<String>,
+    pub started_at: DateTime<Utc>,
+    pub ended_at: Option<DateTime<Utc>>,
+    pub duration_ms: Option<i64>,
+    pub scene: Option<String>,
+    pub category: Option<String>,
+    pub game: Option<String>,
+    pub state: Option<String>,
+    pub targets: Vec<String>,
+    pub metadata: Option<JsonValue>,
+    pub thumbnail_data_url: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug)]
+pub struct StreamSessionStart {
+    pub title: String,
+    pub platform: Option<String>,
+    pub platforms: Vec<String>,
+    pub started_at: DateTime<Utc>,
+    pub scene: Option<String>,
+    pub category: Option<String>,
+    pub game: Option<String>,
+    pub state: Option<String>,
+    pub targets: Vec<String>,
+    pub metadata: Option<JsonValue>,
+    pub thumbnail_data_url: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

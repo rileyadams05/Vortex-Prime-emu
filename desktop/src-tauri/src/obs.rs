@@ -13,7 +13,7 @@ use tokio_stream::StreamExt;
 use tokio_util::io::ReaderStream;
 use tokio_util::sync::CancellationToken;
 
-use crate::storage::{ObsConnectionConfig, StorageManager};
+use crate::storage::{ObsConnectionConfig, StorageManager, StreamSession};
 
 const EVENT_OBS_CONNECTION: &str = "streamz:obs-connection";
 const EVENT_OBS_REPLAY: &str = "streamz:obs-replay";
@@ -21,6 +21,7 @@ const EVENT_OBS_STREAM: &str = "streamz:obs-stream";
 const EVENT_OBS_SCENE: &str = "streamz:obs-scene";
 const EVENT_CLIP_CREATED: &str = "streamz:clip-created";
 const EVENT_CLIP_FAILED: &str = "streamz:clip-failed";
+const EVENT_PAST_STREAMS: &str = "streamz:past-streams";
 
 const BACKEND_DEFAULT_BASE: &str = "https://vortex-prime-emu.com";
 
@@ -201,6 +202,12 @@ struct ClipFailedPayload {
     error: String,
 }
 
+#[derive(Debug, Serialize)]
+struct PastStreamEventPayload {
+    event: String,
+    session: StreamSession,
+}
+
 #[derive(Serialize)]
 struct ClipUploadMetadata {
     title: String,
@@ -224,6 +231,11 @@ async fn run_supervisor(
     let mut config = storage.obs_connection_config().unwrap_or_default();
     let (event_tx, mut event_rx) = mpsc::channel(64);
     let mut worker: Option<ObsWorkerHandle> = None;
+    let mut active_session_id = storage
+        .active_stream_session_id()
+        .ok()
+        .flatten();
+    let mut last_scene: Option<String> = None;
 
     emit_connection(&app_handle, &config, "disconnected", None);
 
@@ -336,12 +348,37 @@ async fn run_supervisor(
                         }
                     }
                     WorkerEvent::StreamState { active, state } => {
-                        emit_event(&app_handle, EVENT_OBS_STREAM, &StateEventPayload { active, state });
+                        emit_event(&app_handle, EVENT_OBS_STREAM, &StateEventPayload { active, state: state.clone() });
+
+                        if active {
+                            if active_session_id.is_none() {
+                                match storage.begin_stream_session(last_scene.clone(), Some(state.clone())) {
+                                    Ok(session) => {
+                                        active_session_id = Some(session.id.clone());
+                                        emit_past_stream_event(&app_handle, "session_started", &session);
+                                    }
+                                    Err(err) => {
+                                        eprintln!("[Streamz][OBS] Unable to begin stream session: {err}");
+                                    }
+                                }
+                            }
+                        } else if let Some(current_id) = active_session_id.take() {
+                            match storage.complete_stream_session(&current_id, Some(state.clone()), last_scene.clone()) {
+                                Ok(Some(session)) => {
+                                    emit_past_stream_event(&app_handle, "session_completed", &session);
+                                }
+                                Ok(None) => {}
+                                Err(err) => {
+                                    eprintln!("[Streamz][OBS] Unable to finalize stream session: {err}");
+                                }
+                            }
+                        }
                     }
                     WorkerEvent::ReplayState { active, state } => {
                         emit_event(&app_handle, EVENT_OBS_REPLAY, &StateEventPayload { active, state });
                     }
                     WorkerEvent::SceneChanged { name } => {
+                        last_scene = Some(name.clone());
                         emit_event(&app_handle, EVENT_OBS_SCENE, &SceneEventPayload { name });
                     }
                     WorkerEvent::ClipUploaded(clip) => {
@@ -385,6 +422,14 @@ fn emit_event<T: Serialize>(app: &AppHandle, event: &str, payload: &T) {
     if let Err(err) = app.emit_all(event, payload) {
         eprintln!("[Streamz][OBS] Failed to emit {event}: {err}");
     }
+}
+
+fn emit_past_stream_event(app: &AppHandle, event: &str, session: &StreamSession) {
+    let payload = PastStreamEventPayload {
+        event: event.to_string(),
+        session: session.clone(),
+    };
+    emit_event(app, EVENT_PAST_STREAMS, &payload);
 }
 
 fn spawn_worker(
