@@ -11,7 +11,6 @@ mod storage;
 use obs::ObsBridge;
 use storage::{
     ObsConnectionConfig, RecordingFolderStatus, StorageManager, StorageState, StorageStatus,
-    StreamSession,
 };
 
 const FFMPEG_PATH: &str =
@@ -118,11 +117,7 @@ struct ObsConnectionInput {
 }
 
 #[tauri::command]
-fn start_ffmpeg_relay(
-    targets: Vec<String>,
-    state: State<'_, FfmpegState>,
-    storage: State<'_, StorageState>,
-) -> Result<(), String> {
+fn start_ffmpeg_relay(targets: Vec<String>, state: State<'_, FfmpegState>) -> Result<(), String> {
     if targets.is_empty() {
         return Err("At least one RTMP target is required.".to_string());
     }
@@ -177,22 +172,11 @@ fn start_ffmpeg_relay(
 
     *child_guard = Some(child);
 
-    storage
-        .manager()
-        .save_active_stream_targets(&validated_targets)
-        .map_err(|error| error.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-fn stop_ffmpeg_relay(
-    state: State<'_, FfmpegState>,
-    storage: State<'_, StorageState>,
-) -> Result<(), String> {
-    storage
-        .manager()
-        .clear_active_stream_targets()
-        .map_err(|error| error.to_string())?;
+fn stop_ffmpeg_relay(state: State<'_, FfmpegState>) -> Result<(), String> {
     stop_child(&state.child)
 }
 
@@ -263,17 +247,6 @@ async fn obs_disconnect(bridge: State<'_, ObsBridge>) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn get_past_streams(
-    limit: Option<usize>,
-    storage: State<'_, StorageState>,
-) -> Result<Vec<StreamSession>, String> {
-    storage
-        .manager()
-        .recent_stream_sessions(limit.unwrap_or(25))
-        .map_err(|error| error.to_string())
-}
-
-#[tauri::command]
 fn set_recording_folder_override(
     path: Option<String>,
     storage: State<'_, StorageState>,
@@ -327,8 +300,7 @@ pub fn run() {
             get_obs_connection_config,
             update_obs_connection_config,
             obs_connect,
-            obs_disconnect,
-            get_past_streams
+            obs_disconnect
         ])
         .build(tauri::generate_context!())
         .expect("error while building Vortex Prime")

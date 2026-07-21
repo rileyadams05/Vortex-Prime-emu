@@ -1269,120 +1269,6 @@
             color: #ffffff;
         }
 
-        .streamz-past-streams {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }
-
-        .streamz-past-streams-alert {
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            background: rgba(239, 68, 68, 0.1);
-            color: #fecaca;
-            padding: 0.9rem 1rem;
-            border-radius: 10px;
-            font-size: 0.9rem;
-        }
-
-        .streamz-past-stream-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1rem;
-        }
-
-        .streamz-past-stream-list[hidden] {
-            display: none;
-        }
-
-        .streamz-past-stream {
-            background: rgba(15, 15, 18, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .streamz-past-stream-header {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .streamz-past-stream-thumb {
-            width: 64px;
-            height: 64px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1rem;
-            color: #f8fafc;
-        }
-
-        .streamz-past-stream-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .streamz-past-stream-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .streamz-past-stream-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #f8fafc;
-            margin: 0;
-        }
-
-        .streamz-past-stream-subtitle {
-            font-size: 0.85rem;
-            color: #a1a1aa;
-        }
-
-        .streamz-past-stream-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 0.5rem;
-        }
-
-        .streamz-past-stream-tag {
-            font-size: 0.75rem;
-            color: #cbd5f5;
-            background: rgba(99, 102, 241, 0.12);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 999px;
-            padding: 0.2rem 0.6rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-
-        .streamz-past-stream-field {
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-        }
-
-        .streamz-past-stream-field strong {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: #a1a1aa;
-            letter-spacing: 0.08em;
-        }
-
-        .streamz-past-stream-field span {
-            font-size: 0.9rem;
-            color: #f8fafc;
-        }
-
         .streamz-plugin-account-copy {
             min-width: 0;
         }
@@ -4224,7 +4110,6 @@
                             <button class="streamz-plugin-workspace-item is-active" type="button" data-workspace-item="dashboard" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM9 20v-6h6v6"/></svg><span>Dashboard</span></button>
                             <button class="streamz-plugin-workspace-item" id="openScheduledStreams" type="button" data-workspace-item="scheduled-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h5"/></svg><span>Scheduled Streams</span></button>
                             <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Chat</span></button>
-                            <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="past-streams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2M20 12a8 8 0 1 1-2.34-5.66"/></svg><span>Past streams</span></button>
                         </nav>
                     </aside>
 
@@ -4312,7 +4197,7 @@
                         <div class="streamz-scheduled-header">
                             <div>
                                 <h1 id="scheduledStreamsViewTitle">Scheduled Streams</h1>
-                                <p>Manage your drafts, scheduled broadcasts, and past streams.</p>
+                                <p>Manage your drafts and scheduled broadcasts.</p>
                             </div>
                             <div class="streamz-scheduled-actions">
                                 <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button">Encoder Scheduled Streams</button>
@@ -4365,24 +4250,6 @@
                         </section>
                     </section>
 
-                    <section class="streamz-scheduled-view" id="streamzPastStreamsView" hidden aria-labelledby="pastStreamsViewTitle">
-                        <div class="streamz-scheduled-header">
-                            <div>
-                                <h1 id="pastStreamsViewTitle">Past Streams</h1>
-                                <p>Completed broadcasts are saved automatically after you stop streaming.</p>
-                            </div>
-                        </div>
-                        <div class="streamz-past-streams" id="streamzPastStreamsSection">
-                            <div class="streamz-plugin-empty-state" id="streamzPastStreamsEmpty">
-                                <div>
-                                    <strong>No past streams yet</strong>
-                                    Complete a broadcast with Streamz Pro to see it here.
-                                </div>
-                            </div>
-                            <div class="streamz-past-streams-alert" id="streamzPastStreamsAlert" hidden></div>
-                            <div class="streamz-past-stream-list" id="streamzPastStreamList" hidden></div>
-                        </div>
-                    </section>
                 </div>
 
                 <section class="streamz-plugin-modal" id="scheduledStreamsModal" hidden role="dialog" aria-modal="true" aria-labelledby="scheduledStreamsTitle">
@@ -4728,162 +4595,6 @@
                         if (variant && variant !== 'error') {
                             backendStatusBanner.classList.add(variant);
                         }
-                    }
-
-                    async function loadStreamzPastStreams(force = false) {
-                        const state = window.streamzPastStreamsState;
-                        if (state.loading) return state.items;
-                        if (state.loaded && !force) return state.items;
-                        const list = document.getElementById('streamzPastStreamList');
-                        const empty = document.getElementById('streamzPastStreamsEmpty');
-                        const alertBox = document.getElementById('streamzPastStreamsAlert');
-                        if (!window.__TAURI__?.core?.invoke) {
-                            if (alertBox) {
-                                alertBox.hidden = false;
-                                alertBox.textContent = 'Past streams are available inside the Streamz Pro desktop app.';
-                            }
-                            if (list) list.hidden = true;
-                            if (empty) empty.hidden = false;
-                            state.loaded = true;
-                            return [];
-                        }
-                        state.loading = true;
-                        if (alertBox) {
-                            alertBox.hidden = true;
-                            alertBox.textContent = '';
-                        }
-                        try {
-                            const sessions = await window.__TAURI__.core.invoke('get_past_streams', { limit: state.limit });
-                            state.items = Array.isArray(sessions) ? sessions : [];
-                            state.loaded = true;
-                            renderStreamzPastStreams(state.items);
-                            return state.items;
-                        } catch (error) {
-                            console.error('Unable to load past streams', error);
-                            if (alertBox) {
-                                alertBox.hidden = false;
-                                alertBox.textContent = 'Unable to load past streams. Try again after completing a broadcast.';
-                            }
-                            return [];
-                        } finally {
-                            state.loading = false;
-                        }
-                    }
-
-                    function renderStreamzPastStreams(sessions) {
-                        const list = document.getElementById('streamzPastStreamList');
-                        const empty = document.getElementById('streamzPastStreamsEmpty');
-                        if (!list || !empty) return;
-                        if (!Array.isArray(sessions) || !sessions.length) {
-                            empty.hidden = false;
-                            list.hidden = true;
-                            list.replaceChildren();
-                            return;
-                        }
-                        empty.hidden = true;
-                        list.hidden = false;
-                        list.replaceChildren();
-                        sessions.forEach((session) => {
-                            const card = document.createElement('article');
-                            card.className = 'streamz-past-stream';
-
-                            const header = document.createElement('div');
-                            header.className = 'streamz-past-stream-header';
-
-                            const thumb = document.createElement('div');
-                            thumb.className = 'streamz-past-stream-thumb';
-                            if (session.thumbnail_data_url) {
-                                const img = document.createElement('img');
-                                img.src = session.thumbnail_data_url;
-                                img.alt = session.title || 'Stream thumbnail';
-                                thumb.append(img);
-                            } else {
-                                thumb.textContent = (session.title || 'Stream')[0]?.toUpperCase() || 'S';
-                            }
-
-                            const meta = document.createElement('div');
-                            meta.className = 'streamz-past-stream-meta';
-                            const title = document.createElement('p');
-                            title.className = 'streamz-past-stream-title';
-                            title.textContent = session.title || 'Untitled stream';
-                            const subtitle = document.createElement('span');
-                            subtitle.className = 'streamz-past-stream-subtitle';
-                            subtitle.textContent = formatStreamzPastSubtitle(session);
-                            meta.append(title, subtitle);
-
-                            header.append(thumb, meta);
-
-                            const details = document.createElement('div');
-                            details.className = 'streamz-past-stream-details';
-                            details.append(
-                                buildPastStreamField('Duration', formatDuration(session.duration_ms)),
-                                buildPastStreamField('Platforms', formatPlatformList(session)),
-                                buildPastStreamField('Category', session.category || session.game || '—'),
-                                buildPastStreamField('Scene', (session.metadata?.sceneAtStart || session.scene || '—')),
-                            );
-
-                            if (Array.isArray(session.targets) && session.targets.length) {
-                                const targetsField = buildPastStreamField('Targets', `${session.targets.length} ingest URL${session.targets.length === 1 ? '' : 's'}`);
-                                details.append(targetsField);
-                            }
-
-                            card.append(header, details);
-                            list.append(card);
-                        });
-                    }
-
-                    function buildPastStreamField(label, value) {
-                        const field = document.createElement('div');
-                        field.className = 'streamz-past-stream-field';
-                        const strong = document.createElement('strong');
-                        strong.textContent = label;
-                        const span = document.createElement('span');
-                        span.textContent = value || '—';
-                        field.append(strong, span);
-                        return field;
-                    }
-
-                    function formatStreamzPastSubtitle(session) {
-                        const started = formatDateTime(session.started_at);
-                        const platform = session.platform || (Array.isArray(session.platforms) ? session.platforms[0] : 'Streamz');
-                        return `${platform || 'Streamz'} · ${started}`;
-                    }
-
-                    function formatDateTime(value) {
-                        if (!value) return '—';
-                        const date = new Date(value);
-                        if (!Number.isFinite(date.getTime())) return '—';
-                        return date.toLocaleString(undefined, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                        });
-                    }
-
-                    function formatDuration(value) {
-                        const ms = Number(value || 0);
-                        if (!Number.isFinite(ms) || ms <= 0) return '—';
-                        const totalSeconds = Math.max(1, Math.floor(ms / 1000));
-                        const hours = Math.floor(totalSeconds / 3600);
-                        const minutes = Math.floor((totalSeconds % 3600) / 60);
-                        const seconds = totalSeconds % 60;
-                        if (hours) {
-                            return `${hours}h ${minutes}m`;
-                        }
-                        if (minutes) {
-                            return `${minutes}m ${seconds}s`;
-                        }
-                        return `${seconds}s`;
-                    }
-
-                    function formatPlatformList(session) {
-                        const platforms = Array.isArray(session.platforms) ? session.platforms : [];
-                        if (platforms.length) {
-                            return platforms.join(', ');
-                        }
-                        return session.platform || '—';
                     }
 
                     let storeBackendApi = null;
@@ -5716,12 +5427,6 @@
                         pendingThumbnail: '',
                         loaded: false,
                     };
-                    window.streamzPastStreamsState = {
-                        loading: false,
-                        loaded: false,
-                        items: [],
-                        limit: 24,
-                    };
 
                     function setActiveRightPanel(panel) {
                         if (!['channels', 'chat'].includes(panel)) return;
@@ -5801,36 +5506,27 @@
                     function setStreamzWorkspaceView(view) {
                         const scheduledView = document.getElementById('streamzScheduledView');
                         const scheduledEncoderView = document.getElementById('streamzScheduledEncoderView');
-                        const pastStreamsView = document.getElementById('streamzPastStreamsView');
                         const mainView = document.querySelector('.streamz-plugin-main');
                         const rightPanel = document.querySelector('.streamz-plugin-right-panel');
                         const chatTabBtn = document.querySelector('[data-right-panel-chat-tab]');
 
                         const isScheduled = view === 'scheduled-streams';
                         const isChat = view === 'chat';
-                        const isPast = view === 'past-streams';
 
                         if (scheduledView) scheduledView.hidden = !isScheduled;
                         if (scheduledEncoderView) scheduledEncoderView.hidden = true;
-                        if (pastStreamsView) pastStreamsView.hidden = !isPast;
 
-                        // Hide encoder for all sub-pages
-                        if (mainView) mainView.hidden = isScheduled || isChat || isPast;
+                        if (mainView) mainView.hidden = isScheduled || isChat;
 
-                        // Right panel: hidden on Past Streams
-                        // Shown on Dashboard (with both tabs), Scheduled Streams (channels-only), Chat (fullscreen)
                         if (rightPanel) {
-                            rightPanel.hidden = isPast;
+                            rightPanel.hidden = false;
                             rightPanel.classList.toggle('streamz-chat-fullscreen', isChat);
                         }
 
-                        // ARCHITECTURAL FIX: always reset chat panel to 'channels' when leaving chat.
-                        // This prevents the chat view from bleeding into Scheduled Streams or Dashboard.
                         if (!isChat) {
                             setActiveRightPanel('channels');
                         }
 
-                        // On Scheduled Streams, hide the Chat tab button so users cannot switch to chat
                         if (chatTabBtn) {
                             chatTabBtn.hidden = isScheduled;
                         }
@@ -5838,12 +5534,7 @@
                         const titleEl = document.querySelector('.streamz-plugin-header-title');
                         if (isScheduled && titleEl) titleEl.textContent = 'Scheduled Streams';
                         else if (isChat && titleEl) titleEl.textContent = 'Chat';
-                        else if (isPast && titleEl) titleEl.textContent = 'Past Streams';
                         else if (titleEl) titleEl.textContent = 'Dashboard';
-
-                        if (isPast) {
-                            loadStreamzPastStreams();
-                        }
                     }
 
                     document.querySelectorAll('[data-scheduled-filter]').forEach((button) => {
@@ -5882,9 +5573,6 @@
                             }
                             if (button.dataset.workspaceItem === 'scheduled-streams') {
                                 setStreamzWorkspaceView('scheduled-streams');
-                            }
-                            if (button.dataset.workspaceItem === 'past-streams') {
-                                setStreamzWorkspaceView('past-streams');
                             }
                         });
                     });
@@ -6005,12 +5693,6 @@
                     });
                     window.addEventListener('streamz:encoder-connected', () => setStreamzEncoderStatus(true));
                     window.addEventListener('streamz:encoder-disconnected', () => setStreamzEncoderStatus(false));
-                    if (window.__TAURI__?.event?.listen) {
-                        window.__TAURI__.event.listen('streamz:past-streams', () => {
-                            window.streamzPastStreamsState.loaded = false;
-                            loadStreamzPastStreams(true);
-                        });
-                    }
                     setStreamzEncoderStatus(false);
                     document.querySelectorAll('[data-streamz-connect]').forEach((button) => {
                         button.addEventListener('click', () => {
