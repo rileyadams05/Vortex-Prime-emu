@@ -8,7 +8,6 @@ import session from 'express-session';
 import multer from 'multer';
 import fs from 'fs-extra';
 import * as companion from '@uppy/companion';
-import { nanoid } from 'nanoid';
 
 import { getEnv, setEnv } from './lib/env.mjs';
 import { dataDir, tmpDir, tokenPath } from './lib/paths.mjs';
@@ -179,7 +178,6 @@ const uploadTargets = {
   image: { folderKey: 'icons', allowed: ['.png', '.jpg', '.jpeg', '.webp'] },
   preview: { folderKey: 'previews', allowed: ['.png', '.jpg', '.jpeg', '.webp'] },
   readme: { folderKey: 'readmes', allowed: ['.txt', '.md', '.markdown'] },
-  clip: { folderKey: 'clips', allowed: ['.mp4', '.mov', '.mkv', '.avi', '.flv', '.ts'] },
 };
 
 function validateExtension(filename, allowed) {
@@ -284,64 +282,7 @@ app.get('/api/public/catalogue', async (req, res, next) => {
   }
 });
 
-app.get('/api/streamz/clips', async (req, res, next) => {
-  try {
-    const { db } = await loadCatalogue();
-    const clips = Array.isArray(db.clips) ? db.clips : [];
-    res.json({ clips });
-  } catch (error) {
-    next(error);
-  }
-});
 
-app.post('/api/streamz/clips', upload.single('file'), async (req, res, next) => {
-  try {
-    if (!req.file) {
-      res.status(400).json({ error: 'No clip file uploaded.' });
-      return;
-    }
-
-    const metadata = await readJsonBodyField(req.body?.metadata);
-    const { drive, config, db } = await loadCatalogue();
-    const folderId = config.folders.clips;
-    if (!folderId) {
-      throw new Error('Drive folder missing for clips.');
-    }
-
-    const fileInfo = await uploadLocalFileToDrive(drive, req.file.path, {
-      folderId,
-      fileName: req.file.originalname,
-      mimeType: req.file.mimetype,
-      makePublic: metadata?.makePublic !== false,
-    });
-
-    const now = new Date().toISOString();
-    const clip = {
-      id: metadata?.id || nanoid(12),
-      title: metadata?.title || fileInfo.name || 'Replay Clip',
-      createdAt: metadata?.createdAt || now,
-      uploadedAt: now,
-      status: 'uploaded',
-      scene: metadata?.scene || null,
-      game: metadata?.game || null,
-      stream: metadata?.stream || null,
-      metadata: metadata?.extra || metadata || {},
-      file: fileInfo,
-      thumbnail: metadata?.thumbnail || fileInfo.thumbnailLink || null,
-    };
-
-    const clips = Array.isArray(db.clips) ? [clip, ...db.clips] : [clip];
-    const nextDb = { ...db, clips };
-    await writeStoreDatabase(drive, config.storeDbFileId, nextDb);
-    res.json(clip);
-  } catch (error) {
-    next(error);
-  } finally {
-    if (req.file?.path) {
-      await fs.remove(req.file.path).catch(() => {});
-    }
-  }
-});
 
 app.post('/api/catalogue/:mode', async (req, res, next) => {
   try {

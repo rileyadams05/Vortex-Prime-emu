@@ -1,25 +1,17 @@
 use std::path::{Path, PathBuf};
-use std::pin::Pin;
-use std::task::{Context, Poll};
 use std::time::Duration;
 
 use chrono::Utc;
-use obws::{
-    client::Client,
-    error::Error as ObsError,
-    events::{Event, OutputState},
-};
+use obws::{client::Client, error::Error as ObsError, events::Event};
 use reqwest::Client as HttpClient;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::fs;
-use tokio::io::{self, AsyncRead, ReadBuf};
 use tokio::sync::{mpsc, oneshot};
 use tokio::time::{sleep, Instant};
 use tokio_stream::StreamExt;
 use tokio_util::io::ReaderStream;
 use tokio_util::sync::CancellationToken;
-use uuid::Uuid;
 
 use crate::storage::{ObsConnectionConfig, StorageManager};
 
@@ -27,7 +19,6 @@ const EVENT_OBS_CONNECTION: &str = "streamz:obs-connection";
 const EVENT_OBS_REPLAY: &str = "streamz:obs-replay";
 const EVENT_OBS_STREAM: &str = "streamz:obs-stream";
 const EVENT_OBS_SCENE: &str = "streamz:obs-scene";
-const EVENT_CLIP_PROGRESS: &str = "streamz:clip-progress";
 const EVENT_CLIP_CREATED: &str = "streamz:clip-created";
 const EVENT_CLIP_FAILED: &str = "streamz:clip-failed";
 
@@ -94,21 +85,6 @@ impl ObsBridge {
             .map_err(|_| "OBS bridge is unavailable".to_string())?;
         rx.await.map_err(|_| "OBS bridge dropped".to_string())?
     }
-
-    pub async fn request_clip(&self, label: Option<String>) -> Result<String, String> {
-        let request_id = Uuid::new_v4().to_string();
-        let (respond_to, rx) = oneshot::channel();
-        self.tx
-            .send(ObsCommand::RequestClip {
-                request_id: request_id.clone(),
-                label,
-                respond_to,
-            })
-            .await
-            .map_err(|_| "OBS bridge is unavailable".to_string())?;
-        rx.await.map_err(|_| "OBS bridge dropped".to_string())??;
-        Ok(request_id)
-    }
 }
 
 impl Drop for ObsBridge {
@@ -128,33 +104,14 @@ enum ObsCommand {
     Disconnect {
         respond_to: oneshot::Sender<Result<(), String>>,
     },
-    RequestClip {
-        request_id: String,
-        label: Option<String>,
-        respond_to: oneshot::Sender<Result<(), String>>,
-    },
-}
-
-struct ClipJob {
-    request_id: String,
-    label: Option<String>,
-    respond_to: oneshot::Sender<Result<(), String>>,
 }
 
 struct ObsWorkerHandle {
-    clip_tx: mpsc::Sender<ClipJob>,
     cancel: CancellationToken,
     join: Option<tauri::async_runtime::JoinHandle<()>>,
 }
 
 impl ObsWorkerHandle {
-    async fn send_clip_request(&self, job: ClipJob) -> Result<(), String> {
-        self.clip_tx
-            .send(job)
-            .await
-            .map_err(|_| "OBS connection is not ready".to_string())
-    }
-
     async fn shutdown(&mut self) {
         self.cancel.cancel();
         if let Some(join) = self.join.take() {
@@ -166,29 +123,12 @@ impl ObsWorkerHandle {
 #[derive(Debug)]
 enum WorkerEvent {
     Connected,
-    Disconnected {
-        reason: String,
-    },
-    StreamState {
-        active: bool,
-        state: String,
-    },
-    ReplayState {
-        active: bool,
-        state: String,
-    },
-    SceneChanged {
-        name: String,
-    },
-    ClipProgress(ClipProgressPayload),
-    ClipUploaded {
-        request_id: String,
-        clip: BackendClip,
-    },
-    ClipFailed {
-        request_id: String,
-        message: String,
-    },
+    Disconnected { reason: String },
+    StreamState { active: bool, state: String },
+    ReplayState { active: bool, state: String },
+    SceneChanged { name: String },
+    ClipUploaded(BackendClip),
+    ClipFailed(String),
 }
 
 #[derive(Debug, Serialize)]
@@ -207,14 +147,6 @@ struct StateEventPayload {
 #[derive(Debug, Serialize)]
 struct SceneEventPayload {
     name: String,
-}
-
-#[derive(Debug, Serialize, Clone)]
-struct ClipProgressPayload {
-    request_id: String,
-    phase: String,
-    message: Option<String>,
-    progress: Option<f32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -261,13 +193,11 @@ struct BackendFile {
 
 #[derive(Debug, Serialize)]
 struct ClipCreatedPayload {
-    request_id: String,
     clip: BackendClip,
 }
 
 #[derive(Debug, Serialize)]
 struct ClipFailedPayload {
-    request_id: String,
     error: String,
 }
 
@@ -377,16 +307,6 @@ async fn run_supervisor(
                         emit_connection(&app_handle, &config, "disconnected", None);
                         let _ = respond_to.send(Ok(()));
                     }
-                    ObsCommand::RequestClip { request_id, label, respond_to } => {
-                        if let Some(worker_handle) = worker.as_ref() {
-                            let job = ClipJob { request_id, label, respond_to };
-                            if let Err(err) = worker_handle.send_clip_request(job).await {
-                                let _ = respond_to.send(Err(err));
-                            }
-                        } else {
-                            let _ = respond_to.send(Err("OBS is not connected".to_string()));
-                        }
-                    }
                 }
             }
             Some(event) = event_rx.recv() => {
@@ -424,44 +344,18 @@ async fn run_supervisor(
                     WorkerEvent::SceneChanged { name } => {
                         emit_event(&app_handle, EVENT_OBS_SCENE, &SceneEventPayload { name });
                     }
-                    WorkerEvent::ClipProgress(payload) => {
-                        emit_event(&app_handle, EVENT_CLIP_PROGRESS, &payload);
-                    }
-                    WorkerEvent::ClipUploaded { request_id, clip } => {
-                        emit_event(
-                            &app_handle,
-                            EVENT_CLIP_PROGRESS,
-                            &ClipProgressPayload {
-                                request_id: request_id.clone(),
-                                phase: "complete".into(),
-                                message: Some("Upload complete".into()),
-                                progress: Some(1.0),
-                            },
-                        );
+                    WorkerEvent::ClipUploaded(clip) => {
                         emit_event(
                             &app_handle,
                             EVENT_CLIP_CREATED,
-                            &ClipCreatedPayload { request_id, clip },
+                            &ClipCreatedPayload { clip },
                         );
                     }
-                    WorkerEvent::ClipFailed { request_id, message } => {
+                    WorkerEvent::ClipFailed(error) => {
                         emit_event(
                             &app_handle,
                             EVENT_CLIP_FAILED,
-                            &ClipFailedPayload {
-                                request_id: request_id.clone(),
-                                error: message.clone(),
-                            },
-                        );
-                        emit_event(
-                            &app_handle,
-                            EVENT_CLIP_PROGRESS,
-                            &ClipProgressPayload {
-                                request_id,
-                                phase: "failed".into(),
-                                message: Some(message),
-                                progress: None,
-                            },
+                            &ClipFailedPayload { error },
                         );
                     }
                 }
@@ -499,21 +393,13 @@ fn spawn_worker(
     event_tx: mpsc::Sender<WorkerEvent>,
     http: HttpClient,
 ) -> Result<ObsWorkerHandle, String> {
-    let (clip_tx, clip_rx) = mpsc::channel(8);
     let cancel = CancellationToken::new();
     let worker_cancel = cancel.clone();
 
-    let handle = tauri::async_runtime::spawn(run_worker(
-        config,
-        storage,
-        event_tx,
-        clip_rx,
-        worker_cancel,
-        http,
-    ));
+    let handle =
+        tauri::async_runtime::spawn(run_worker(config, storage, event_tx, worker_cancel, http));
 
     Ok(ObsWorkerHandle {
-        clip_tx,
         cancel,
         join: Some(handle),
     })
@@ -523,7 +409,6 @@ async fn run_worker(
     config: ObsConnectionConfig,
     storage: StorageManager,
     event_tx: mpsc::Sender<WorkerEvent>,
-    mut clip_rx: mpsc::Receiver<ClipJob>,
     cancel: CancellationToken,
     http: HttpClient,
 ) {
@@ -550,7 +435,7 @@ async fn run_worker(
         eprintln!("[Streamz][OBS] Failed to dispatch connect event: {err}");
     }
 
-    let mut replay_active = client.replay_buffer().status().await.unwrap_or(false);
+    let replay_active = client.replay_buffer().status().await.unwrap_or(false);
     let replay_state = StateEventPayload {
         active: replay_active,
         state: if replay_active {
@@ -595,8 +480,6 @@ async fn run_worker(
         }
     };
 
-    let mut pending_clip: Option<PendingClip> = None;
-
     loop {
         tokio::select! {
             _ = cancel.cancelled() => {
@@ -607,44 +490,9 @@ async fn run_worker(
                     .await;
                 break;
             }
-            Some(job) = clip_rx.recv() => {
-                if pending_clip.is_some() {
-                    let _ = job.respond_to.send(Err("A clip is already in progress".into()));
-                    continue;
-                }
-                if !replay_active {
-                    let _ = job
-                        .respond_to
-                        .send(Err("Replay Buffer is disabled in OBS".into()));
-                    continue;
-                }
-                match client.replay_buffer().save().await {
-                    Ok(_) => {
-                        let _ = job.respond_to.send(Ok(()));
-                        let _ = event_tx
-                            .send(WorkerEvent::ClipProgress(ClipProgressPayload {
-                                request_id: job.request_id.clone(),
-                                phase: "saving".into(),
-                                message: Some("Waiting for Replay Buffer to finish".into()),
-                                progress: None,
-                            }))
-                            .await;
-                        pending_clip = Some(PendingClip {
-                            request_id: job.request_id,
-                            label: job.label,
-                        });
-                    }
-                    Err(err) => {
-                        let _ = job
-                            .respond_to
-                            .send(Err(format!("OBS rejected replay save: {err}")));
-                    }
-                }
-            }
             event = events.next() => {
                 match event {
                     Some(Ok(Event::ReplayBufferStateChanged { active, state })) => {
-                        replay_active = active;
                         let _ = event_tx
                             .send(WorkerEvent::ReplayState {
                                 active,
@@ -668,42 +516,21 @@ async fn run_worker(
                             .await;
                     }
                     Some(Ok(Event::ReplayBufferSaved { path })) => {
-                        if let Some(pending) = pending_clip.take() {
-                            let tx = event_tx.clone();
-                            let http_client = http.clone();
-                            let storage_clone = storage.clone();
-                            let token = cancel.clone();
-                            tauri::async_runtime::spawn(async move {
-                                let result = finalize_clip_upload(
-                                    &http_client,
-                                    path,
-                                    pending.request_id.clone(),
-                                    pending.label,
-                                    tx.clone(),
-                                    token,
-                                )
-                                .await;
-                                match result {
-                                    Ok(clip) => {
-                                        let _ = tx
-                                            .send(WorkerEvent::ClipUploaded {
-                                                request_id: pending.request_id.clone(),
-                                                clip,
-                                            })
-                                            .await;
-                                    }
-                                    Err(err) => {
-                                        let _ = tx
-                                            .send(WorkerEvent::ClipFailed {
-                                                request_id: pending.request_id,
-                                                message: err,
-                                            })
-                                            .await;
-                                    }
+                        eprintln!("[Streamz][OBS] ReplayBufferSaved received for {:?}", path);
+                        let tx = event_tx.clone();
+                        let http_client = http.clone();
+                        tauri::async_runtime::spawn(async move {
+                            match finalize_clip_upload(&http_client, PathBuf::from(path)).await {
+                                Ok(clip) => {
+                                    eprintln!("[Streamz][OBS] Clip upload completed: {}", clip.id);
+                                    let _ = tx.send(WorkerEvent::ClipUploaded(clip)).await;
                                 }
-                                let _ = storage_clone.recording_folder_status();
-                            });
-                        }
+                                Err(err) => {
+                                    eprintln!("[Streamz][OBS] Clip upload failed: {err}");
+                                    let _ = tx.send(WorkerEvent::ClipFailed(err)).await;
+                                }
+                            }
+                        });
                     }
                     Some(Ok(Event::ExitStarted)) => {
                         let _ = event_tx
@@ -736,11 +563,6 @@ async fn run_worker(
     }
 }
 
-struct PendingClip {
-    request_id: String,
-    label: Option<String>,
-}
-
 fn update_recording_folder(storage: &StorageManager, path: &str) {
     if let Ok(mut existing) = storage.recording_folder_config() {
         let mut config = existing.unwrap_or_default();
@@ -752,20 +574,15 @@ fn update_recording_folder(storage: &StorageManager, path: &str) {
     }
 }
 
-async fn finalize_clip_upload(
-    http: &HttpClient,
-    path: PathBuf,
-    request_id: String,
-    label: Option<String>,
-    event_tx: mpsc::Sender<WorkerEvent>,
-    cancel: CancellationToken,
-) -> Result<BackendClip, String> {
+async fn finalize_clip_upload(http: &HttpClient, path: PathBuf) -> Result<BackendClip, String> {
     let display_name = path
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("Replay Clip");
 
-    if !wait_for_recording_completion(&path, cancel.clone()).await {
+    eprintln!("[Streamz][OBS] Starting upload for {:?}", path);
+
+    if !wait_for_recording_completion(&path, CancellationToken::new()).await {
         return Err("OBS replay file did not finish writing".into());
     }
 
@@ -778,16 +595,7 @@ async fn finalize_clip_upload(
         .await
         .map_err(|err| format!("Unable to open replay: {err}"))?;
 
-    let notifier = ClipProgressPayload {
-        request_id: request_id.clone(),
-        phase: "uploading".into(),
-        message: Some("Uploading clip to Streamz".into()),
-        progress: Some(0.0),
-    };
-    let _ = event_tx.send(WorkerEvent::ClipProgress(notifier)).await;
-
-    let reader = ProgressReader::new(file, total_bytes, request_id.clone(), event_tx.clone());
-    let stream = ReaderStream::new(reader);
+    let stream = ReaderStream::new(file);
     let body = reqwest::Body::wrap_stream(stream);
 
     let file_name = path
@@ -805,7 +613,7 @@ async fn finalize_clip_upload(
         .map_err(|err| err.to_string())?;
 
     let metadata_payload = ClipUploadMetadata {
-        title: label.unwrap_or_else(|| display_name.to_string()),
+        title: display_name.to_string(),
         createdAt: Utc::now().to_rfc3339(),
         scene: None,
         game: None,
@@ -839,6 +647,11 @@ async fn finalize_clip_upload(
         .json()
         .await
         .map_err(|err| format!("Invalid clip response: {err}"))?;
+
+    eprintln!(
+        "[Streamz][OBS] Upload succeeded for {:?} (clip {})",
+        path, clip.id
+    );
 
     if let Err(err) = fs::remove_file(&path).await {
         eprintln!("[Streamz][OBS] Unable to delete replay {:?}: {err}", path);
@@ -890,71 +703,6 @@ async fn wait_for_recording_completion(path: &Path, cancel: CancellationToken) -
     }
 
     false
-}
-
-struct ProgressReader {
-    inner: fs::File,
-    total: u64,
-    sent: u64,
-    request_id: String,
-    event_tx: mpsc::Sender<WorkerEvent>,
-    last_emit: f32,
-}
-
-impl ProgressReader {
-    fn new(
-        inner: fs::File,
-        total: u64,
-        request_id: String,
-        event_tx: mpsc::Sender<WorkerEvent>,
-    ) -> Self {
-        Self {
-            inner,
-            total,
-            sent: 0,
-            request_id,
-            event_tx,
-            last_emit: 0.0,
-        }
-    }
-
-    fn emit(&mut self) {
-        if self.total == 0 {
-            return;
-        }
-        let progress = self.sent as f32 / self.total as f32;
-        if (progress - self.last_emit).abs() >= 0.05 || progress >= 1.0 {
-            self.last_emit = progress;
-            let payload = ClipProgressPayload {
-                request_id: self.request_id.clone(),
-                phase: "uploading".into(),
-                message: Some("Uploading clip to Streamz".into()),
-                progress: Some(progress.min(1.0)),
-            };
-            let _ = self.event_tx.try_send(WorkerEvent::ClipProgress(payload));
-        }
-    }
-}
-
-impl AsyncRead for ProgressReader {
-    fn poll_read(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<io::Result<()>> {
-        let reader = Pin::new(&mut self.inner);
-        match reader.poll_read(cx, buf) {
-            Poll::Ready(Ok(())) => {
-                let read = buf.filled().len() as u64;
-                if read > 0 {
-                    self.sent += read;
-                    self.emit();
-                }
-                Poll::Ready(Ok(()))
-            }
-            other => other,
-        }
-    }
 }
 
 fn sanitize_host(host: String) -> String {

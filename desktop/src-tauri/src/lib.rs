@@ -114,7 +114,6 @@ struct ObsConnectionInput {
     host: String,
     port: u16,
     password: Option<String>,
-    auto_connect: bool,
 }
 
 #[tauri::command]
@@ -231,7 +230,7 @@ async fn update_obs_connection_config(
             Some(trimmed.to_string())
         }
     });
-    config.auto_connect = input.auto_connect;
+    config.auto_connect = true;
 
     bridge.update_config(config).await
 }
@@ -244,14 +243,6 @@ async fn obs_connect(bridge: State<'_, ObsBridge>) -> Result<(), String> {
 #[tauri::command]
 async fn obs_disconnect(bridge: State<'_, ObsBridge>) -> Result<(), String> {
     bridge.disconnect().await
-}
-
-#[tauri::command]
-async fn request_replay_clip(
-    label: Option<String>,
-    bridge: State<'_, ObsBridge>,
-) -> Result<String, String> {
-    bridge.request_clip(label).await
 }
 
 #[tauri::command]
@@ -308,8 +299,7 @@ pub fn run() {
             get_obs_connection_config,
             update_obs_connection_config,
             obs_connect,
-            obs_disconnect,
-            request_replay_clip
+            obs_disconnect
         ])
         .build(tauri::generate_context!())
         .expect("error while building Vortex Prime")
