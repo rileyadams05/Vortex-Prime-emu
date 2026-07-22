@@ -4047,6 +4047,7 @@
                                 <div class="streamz-plugin-sidebar-action-group">
                                     <button class="streamz-scheduled-update" id="updateStreamDescriptionPanel" type="button">Description and Thumbnail</button>
                                     <button class="streamz-scheduled-new" id="newScheduledStreamPanel" type="button" disabled>+ New Stream</button>
+                                    <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button" hidden>Encoder Scheduled Streams</button>
                                 </div>
                                 <div class="streamz-plugin-sidebar-heading">
                                     <span id="streamzChannelsTitle">Your Channels</span>
@@ -4083,7 +4084,6 @@
                                 <p>Manage your drafts and scheduled broadcasts.</p>
                             </div>
                             <div class="streamz-scheduled-actions">
-                                <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button">Encoder Scheduled Streams</button>
                             </div>
                         </div>
                         <div class="streamz-scheduled-toolbar" role="tablist" aria-label="Stream status filters">
@@ -5368,12 +5368,14 @@
                         const mainView = document.querySelector('.streamz-plugin-main');
                         const rightPanel = document.querySelector('.streamz-plugin-right-panel');
                         const chatTabBtn = document.querySelector('[data-right-panel-chat-tab]');
+                        const encoderButton = document.getElementById('encoderScheduledStreams');
 
                         const isScheduled = view === 'scheduled-streams';
                         const isChat = view === 'chat';
 
                         if (scheduledView) scheduledView.hidden = !isScheduled;
                         if (scheduledEncoderView) scheduledEncoderView.hidden = true;
+                        if (encoderButton) encoderButton.hidden = !isScheduled;
 
                         if (mainView) mainView.hidden = isScheduled || isChat;
 
