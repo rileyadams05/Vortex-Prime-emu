@@ -4149,7 +4149,6 @@
                                 <div class="streamz-plugin-sidebar-action-group">
                                     <button class="streamz-scheduled-update" id="updateStreamDescriptionPanel" type="button">Description and Thumbnail</button>
                                     <button class="streamz-scheduled-new" id="newScheduledStreamPanel" type="button" disabled>+ New Stream</button>
-                                    <button class="streamz-scheduled-encoder" id="encoderScheduledStreamsPanel" type="button">Encoder</button>
                                 </div>
                                 <div class="streamz-plugin-sidebar-heading">
                                     <span id="streamzChannelsTitle">Your Channels</span>
@@ -4206,6 +4205,9 @@
                             <div>
                                 <h1 id="scheduledStreamsViewTitle">Scheduled Streams</h1>
                                 <p>Manage your drafts and scheduled broadcasts.</p>
+                            </div>
+                            <div class="streamz-scheduled-actions">
+                                <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button">Encoder Scheduled Streams</button>
                             </div>
                         </div>
                         <div class="streamz-scheduled-toolbar" role="tablist" aria-label="Stream status filters">
@@ -5343,18 +5345,7 @@
                         if (rightPanel) rightPanel.hidden = false;
                         document.querySelector('.streamz-plugin-header-title').textContent = 'Encoder Scheduled Streams';
                     });
-                    document.getElementById('encoderScheduledStreamsPanel')?.addEventListener('click', () => {
-                        const scheduledView = document.getElementById('streamzScheduledView');
-                        const encoderView = document.getElementById('streamzScheduledEncoderView');
-                        const rightPanel = document.querySelector('.streamz-plugin-right-panel');
-                        if (scheduledView) scheduledView.hidden = true;
-                        if (encoderView) encoderView.hidden = false;
-                        if (rightPanel) rightPanel.hidden = false;
-                        document.querySelector('.streamz-plugin-header-title').textContent = 'Encoder Scheduled Streams';
-                        // Switch to scheduled-streams workspace so the view shows
-                        const scheduledBtn = document.querySelector('[data-workspace-item="scheduled-streams"]');
-                        scheduledBtn?.click();
-                    });
+
 
                     document.getElementById('backToScheduledStreams')?.addEventListener('click', () => {
                         const scheduledView = document.getElementById('streamzScheduledView');
