@@ -2036,6 +2036,21 @@
             margin: 1rem 0 0.8rem;
         }
 
+        .streamz-plugin-sidebar-action-group {
+            display: grid;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #27272a;
+        }
+
+        .streamz-plugin-sidebar-action-group .streamz-scheduled-update,
+        .streamz-plugin-sidebar-action-group .streamz-scheduled-new,
+        .streamz-plugin-sidebar-action-group .streamz-scheduled-encoder {
+            width: 100%;
+            text-align: left;
+        }
+
         .streamz-plugin-connect-actions {
             display: grid;
             gap: 0.5rem;
@@ -4131,6 +4146,11 @@
                     <aside class="streamz-plugin-right-panel" aria-label="Streamz tools">
                         <div class="streamz-plugin-right-content">
                             <section class="streamz-plugin-right-view" data-right-view="channels" aria-labelledby="streamzChannelsTitle">
+                                <div class="streamz-plugin-sidebar-action-group">
+                                    <button class="streamz-scheduled-update" id="updateStreamDescriptionPanel" type="button">Description and Thumbnail</button>
+                                    <button class="streamz-scheduled-new" id="newScheduledStreamPanel" type="button" disabled>+ New Stream</button>
+                                    <button class="streamz-scheduled-encoder" id="encoderScheduledStreamsPanel" type="button">Encoder</button>
+                                </div>
                                 <div class="streamz-plugin-sidebar-heading">
                                     <span id="streamzChannelsTitle">Your Channels</span>
                                     <span id="streamzChannelCount">0 connected</span>
@@ -4186,11 +4206,6 @@
                             <div>
                                 <h1 id="scheduledStreamsViewTitle">Scheduled Streams</h1>
                                 <p>Manage your drafts and scheduled broadcasts.</p>
-                            </div>
-                            <div class="streamz-scheduled-actions">
-                                <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button">Encoder Scheduled Streams</button>
-                                <button class="streamz-scheduled-update" id="updateStreamDescription" type="button">Description and Thumbnail</button>
-                                <button class="streamz-scheduled-new" id="newScheduledStream" type="button" disabled>+ New Stream</button>
                             </div>
                         </div>
                         <div class="streamz-scheduled-toolbar" role="tablist" aria-label="Stream status filters">
@@ -5204,10 +5219,14 @@
                             window.streamzDashboardState.selectedScheduledStreamIndex = allStreams.length - 1;
                         }
                         const updateButton = document.getElementById('updateStreamDescription');
+                        const updateButtonPanel = document.getElementById('updateStreamDescriptionPanel');
                         const newStreamButton = document.getElementById('newScheduledStream');
+                        const newStreamButtonPanel = document.getElementById('newScheduledStreamPanel');
                         // Description & Thumbnail button is always enabled; + New Stream unlocks after description has been saved
                         if (updateButton) updateButton.disabled = false;
+                        if (updateButtonPanel) updateButtonPanel.disabled = false;
                         if (newStreamButton) newStreamButton.disabled = !window.streamzDashboardState.descriptionSaved;
+                        if (newStreamButtonPanel) newStreamButtonPanel.disabled = !window.streamzDashboardState.descriptionSaved;
                         empty.hidden = streams.length > 0;
                         rows.hidden = streams.length === 0;
                         rows.replaceChildren();
@@ -5244,12 +5263,22 @@
                     }
 
                     document.getElementById('newScheduledStream')?.addEventListener('click', () => setScheduledStreamsModal(true));
+                    document.getElementById('newScheduledStreamPanel')?.addEventListener('click', () => setScheduledStreamsModal(true));
                     document.getElementById('updateStreamDescription')?.addEventListener('click', () => {
                         const index = window.streamzDashboardState.selectedScheduledStreamIndex;
                         const stream = index === null ? null : window.streamzDashboardState.scheduledStreams[index];
                         const descriptionInput = document.getElementById('streamDescriptionInput');
                         const thumbnailInput = document.getElementById('streamThumbnailInput');
                         // Pre-fill with existing data if a stream is selected
+                        if (descriptionInput) descriptionInput.value = stream?.description || window.streamzDashboardState.pendingDescription || '';
+                        if (thumbnailInput) thumbnailInput.value = '';
+                        openStreamzModal('streamDescriptionModal', true);
+                    });
+                    document.getElementById('updateStreamDescriptionPanel')?.addEventListener('click', () => {
+                        const index = window.streamzDashboardState.selectedScheduledStreamIndex;
+                        const stream = index === null ? null : window.streamzDashboardState.scheduledStreams[index];
+                        const descriptionInput = document.getElementById('streamDescriptionInput');
+                        const thumbnailInput = document.getElementById('streamThumbnailInput');
                         if (descriptionInput) descriptionInput.value = stream?.description || window.streamzDashboardState.pendingDescription || '';
                         if (thumbnailInput) thumbnailInput.value = '';
                         openStreamzModal('streamDescriptionModal', true);
@@ -5314,6 +5343,18 @@
                         if (rightPanel) rightPanel.hidden = false;
                         document.querySelector('.streamz-plugin-header-title').textContent = 'Encoder Scheduled Streams';
                     });
+                    document.getElementById('encoderScheduledStreamsPanel')?.addEventListener('click', () => {
+                        const scheduledView = document.getElementById('streamzScheduledView');
+                        const encoderView = document.getElementById('streamzScheduledEncoderView');
+                        const rightPanel = document.querySelector('.streamz-plugin-right-panel');
+                        if (scheduledView) scheduledView.hidden = true;
+                        if (encoderView) encoderView.hidden = false;
+                        if (rightPanel) rightPanel.hidden = false;
+                        document.querySelector('.streamz-plugin-header-title').textContent = 'Encoder Scheduled Streams';
+                        // Switch to scheduled-streams workspace so the view shows
+                        const scheduledBtn = document.querySelector('[data-workspace-item="scheduled-streams"]');
+                        scheduledBtn?.click();
+                    });
 
                     document.getElementById('backToScheduledStreams')?.addEventListener('click', () => {
                         const scheduledView = document.getElementById('streamzScheduledView');
@@ -5375,9 +5416,13 @@
                         // Mark description as saved, unlock + New Stream, and update button label
                         window.streamzDashboardState.descriptionSaved = true;
                         const newStreamButton = document.getElementById('newScheduledStream');
+                        const newStreamButtonPanel = document.getElementById('newScheduledStreamPanel');
                         if (newStreamButton) newStreamButton.disabled = false;
+                        if (newStreamButtonPanel) newStreamButtonPanel.disabled = false;
                         const updateButton = document.getElementById('updateStreamDescription');
+                        const updateButtonPanel = document.getElementById('updateStreamDescriptionPanel');
                         if (updateButton) updateButton.textContent = 'Update';
+                        if (updateButtonPanel) updateButtonPanel.textContent = 'Update';
                         const modalTitle = document.getElementById('streamDescriptionTitle');
                         if (modalTitle) modalTitle.textContent = 'Update Description and Thumbnail';
 
