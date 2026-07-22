@@ -147,7 +147,6 @@ class TwitchRuntime implements ProviderRuntime {
       { type: "channel.cheer", version: "1", condition: { broadcaster_user_id: broadcasterId } },
       { type: "channel.raid", version: "1", condition: { to_broadcaster_user_id: broadcasterId } },
       { type: "channel.channel_points_custom_reward_redemption.add", version: "1", condition: { broadcaster_user_id: broadcasterId } },
-      { type: "channel.chat.message", version: "1", condition: { broadcaster_user_id: broadcasterId, user_id: broadcasterId } },
       { type: "stream.online", version: "1", condition: { broadcaster_user_id: broadcasterId } },
       { type: "stream.offline", version: "1", condition: { broadcaster_user_id: broadcasterId } },
     ];
@@ -175,11 +174,6 @@ class TwitchRuntime implements ProviderRuntime {
     if (type === "channel.cheer") emitAlert("twitch-cheer", eventId, user, { amount: Number(event.bits || 0) || undefined });
     if (type === "channel.raid") emitAlert("twitch-raid", eventId, event.from_broadcaster_user_name || user, { amount: Number(event.viewers || 0) || undefined });
     if (type === "channel.channel_points_custom_reward_redemption.add") emitAlert("twitch-channel-point-redemption", eventId, user, { rewardTitle: event.reward?.title });
-    if (type === "channel.chat.message") {
-      window.dispatchEvent(new CustomEvent("streamz:chat-message", {
-        detail: { platform: "Twitch", author: event.chatter_user_name || user, text: event.message?.text || "", time: new Date().toLocaleTimeString() }
-      }));
-    }
     if (type === "stream.online") emitAlert("twitch-stream-online", eventId, user);
     if (type === "stream.offline") emitAlert("twitch-stream-offline", eventId, user);
   }
@@ -266,15 +260,6 @@ class YouTubeRuntime implements ProviderRuntime {
     const snippet = item.snippet || {};
     const author = item.authorDetails?.displayName || "YouTube viewer";
 
-    if (snippet.type === "textMessageEvent") {
-      const text = snippet.textMessageDetails?.messageText;
-      if (text) {
-        window.dispatchEvent(new CustomEvent("streamz:chat-message", {
-          detail: { platform: "YouTube", author, text, time: new Date(snippet.publishedAt || Date.now()).toLocaleTimeString() }
-        }));
-      }
-    }
-
     if (snippet.superChatDetails) emitAlert("youtube-super-chat", id, author);
     if (snippet.superStickerDetails) emitAlert("youtube-super-sticker", id, author);
     if (snippet.newSponsorDetails || snippet.memberMilestoneChatDetails) emitAlert("youtube-new-member", id, author, { level: snippet.newSponsorDetails?.memberLevelName });
@@ -329,16 +314,6 @@ class KickRuntime implements ProviderRuntime {
   private handleMessage(event: MessageEvent) {
     const msg = JSON.parse(String(event.data || "{}"));
     if (msg.event === "pusher:connection_established") return;
-    if (msg.event === "App\\Events\\ChatMessageEvent") {
-      const data = JSON.parse(msg.data || "{}");
-      const text = data.content;
-      const author = data.sender?.username || "Kick viewer";
-      if (text) {
-        window.dispatchEvent(new CustomEvent("streamz:chat-message", {
-          detail: { platform: "Kick", author, text, time: new Date(data.created_at || Date.now()).toLocaleTimeString() }
-        }));
-      }
-    }
     if (msg.event === "App\\Events\\StreamerIsLive") emitAlert("kick-stream-online", `kick-live:${Date.now()}`, "Kick");
   }
 

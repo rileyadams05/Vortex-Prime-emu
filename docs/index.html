@@ -1886,108 +1886,7 @@
             stroke-width: 1.7;
         }
 
-        .streamz-plugin-chat-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
 
-        .streamz-plugin-chat-header h2 {
-            margin: 0;
-            color: #f8fafc;
-            font-size: 1rem;
-        }
-
-        .streamz-plugin-chat-header span {
-            display: block;
-            margin-top: 0.25rem;
-            color: #94a3b8;
-            font-size: 0.65rem;
-        }
-
-        .streamz-plugin-chat-actions {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            gap: 0.4rem;
-        }
-
-        .streamz-plugin-chat-feed {
-            display: grid;
-            gap: 0.5rem;
-            min-height: 420px;
-            align-content: start;
-            overflow-y: auto;
-        }
-
-        .streamz-plugin-chat-composer {
-            display: flex;
-            align-items: center;
-            gap: 0.45rem;
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .streamz-plugin-chat-composer input {
-            min-width: 0;
-            flex: 1;
-            border: 1px solid #3f3f46;
-            border-radius: 7px;
-            background: #18181b;
-            color: #f8fafc;
-            padding: 0.65rem 0.7rem;
-            font: inherit;
-            font-size: 0.72rem;
-        }
-
-        .streamz-plugin-send-button {
-            width: 34px;
-            height: 34px;
-            display: grid;
-            place-items: center;
-            border: 1px solid #ffffff;
-            border-radius: 7px;
-            background: #ffffff;
-            color: #000000;
-            cursor: pointer;
-        }
-
-        .streamz-plugin-send-button:hover {
-            background: #f1f5f9;
-            border-color: #f1f5f9;
-        }
-
-        .streamz-plugin-send-button svg {
-            width: 17px;
-            height: 17px;
-            fill: none;
-            stroke: currentColor;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            stroke-width: 1.8;
-        }
-
-        .streamz-plugin-chat-message {
-            padding: 0.55rem 0.65rem;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 7px;
-            background: #18181b;
-            color: #d4d4d8;
-            font-size: 0.72rem;
-        }
-
-        .streamz-plugin-chat-message-meta {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.5rem;
-            margin-bottom: 0.2rem;
-            color: #fb923c;
-            font-size: 0.62rem;
-            font-weight: 700;
-        }
 
         .streamz-plugin-embed-content {
             display: grid;
@@ -4112,7 +4011,7 @@
                         </div>
                         <nav class="streamz-plugin-workspace-list" aria-label="Workspace navigation">
                             <button class="streamz-plugin-workspace-item is-active" type="button" data-workspace-item="dashboard" aria-current="page"><span>Dashboard</span></button>
-                            <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="chat"><span>Chat</span></button>
+                            <button class="streamz-plugin-workspace-item" type="button" data-workspace-item="channels"><span>Channels</span></button>
                         </nav>
                     </aside>
 
@@ -4170,32 +4069,10 @@
                                 </div>
                                 <div id="streamzChannelList" hidden></div>
                             </section>
-                            <section class="streamz-plugin-right-view" data-right-view="chat" hidden aria-labelledby="streamzChatTitle">
-                                <div class="streamz-plugin-chat-header">
-                                    <div>
-                                        <h2 id="streamzChatTitle">Live Chat</h2>
-                                    </div>
-                                    <div class="streamz-plugin-chat-actions">
-                                        <button class="streamz-plugin-sidebar-button" type="button" id="embedChatButton">Embed Chat</button>
-                                    </div>
-                                </div>
-                                <div class="streamz-plugin-chat-feed" id="streamzChatFeed" aria-live="polite">
-                                    <div class="streamz-plugin-empty-state"><div><strong>No chat messages yet</strong>Messages from connected channels will appear here.</div></div>
-                                </div>
-                                <form class="streamz-plugin-chat-composer" id="streamzChatComposer">
-                                    <input id="streamzChatInput" type="text" autocomplete="off" placeholder="Type a message..." aria-label="Chat message" required>
-                                    <button class="streamz-plugin-send-button" type="submit" aria-label="Send chat message">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 8-16 8 3-8zM7 12h13"/></svg>
-                                    </button>
-                                </form>
-                            </section>
                         </div>
                         <nav class="streamz-plugin-right-nav" aria-label="Dashboard panel navigation">
                             <button class="streamz-plugin-right-nav-button" type="button" data-right-panel="channels" aria-label="Channels" aria-pressed="false">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>Channels</span>
-                            </button>
-                            <button class="streamz-plugin-right-nav-button" type="button" data-right-panel="chat" data-right-panel-chat-tab aria-label="Chat" aria-pressed="false">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v10H9l-4 3zM8 10h8M8 13h5"/></svg><span>Chat</span>
                             </button>
                         </nav>
                     </aside>
@@ -4433,7 +4310,7 @@
                 <div class="store-grid" id="modsGrid">
                     <div class="store-no-results" id="modsNoResults">
                         <div class="store-no-results-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.28 7.28 0 0 0-1.69-.98L14.5 2.42A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42L9.12 5.07c-.61.24-1.18.56-1.69.98l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.02.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.68.22l2.41-.97c.51.4 1.07.72 1.69.96l.38 2.68c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.68c.61-.24 1.18-.56 1.69-.96l2.41.97c.25.12.54.02.68-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/></svg>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.28 7.28 0 0 0-1.69-.98L14.5 2.42A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42L9.12 5.07c-.61.24-1.18.56-1.69.98l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s-.02.66-.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.68.22l2.41-.97c.51.4 1.07.72 1.69.96l.38 2.68c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.68c.61-.24 1.18-.56 1.69-.96l2.41.97c.25.12.54.02.68-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/></svg>
                         </div>
                         <h3>No mods listed yet</h3>
                         <p id="modsNoResultsMsg">Mods content will appear here soon.</p>
@@ -5439,11 +5316,11 @@
                     }
 
                     let activeRightPanel = 'channels';
-                    const streamzChatChannel = 'BroadcastChannel' in window ? new BroadcastChannel('streamz-chat') : null;
+
                     window.streamzDashboardState = {
                         channels: [],
                         credentials: [],
-                        chatMessages: [],
+
                         scheduledStreams: loadScheduledStreams(),
                         selectedScheduledStreamIndex: null,
                         descriptionSaved: false,
@@ -5453,7 +5330,7 @@
                     };
 
                     function setActiveRightPanel(panel) {
-                        if (!['channels', 'chat'].includes(panel)) return;
+                        if (!['channels'].includes(panel)) return;
                         activeRightPanel = panel;
                         document.querySelectorAll('[data-right-view]').forEach((view) => {
                             view.hidden = view.dataset.rightView !== activeRightPanel;
@@ -5463,43 +5340,6 @@
                             button.classList.toggle('is-active', active);
                             button.setAttribute('aria-pressed', String(active));
                         });
-                    }
-
-                    function renderStreamzChat(messages) {
-                        const feed = document.getElementById('streamzChatFeed');
-                        if (!feed) return;
-                        feed.replaceChildren();
-                        if (!messages.length) {
-                            const empty = document.createElement('div');
-                            empty.className = 'streamz-plugin-empty-state';
-                            empty.innerHTML = '<div><strong>No chat messages yet</strong>Messages from connected channels will appear here.</div>';
-                            feed.append(empty);
-                            return;
-                        }
-                        messages.slice(-100).forEach((message) => {
-                            const row = document.createElement('article');
-                            row.className = 'streamz-plugin-chat-message';
-                            const meta = document.createElement('div');
-                            meta.className = 'streamz-plugin-chat-message-meta';
-                            const author = document.createElement('span');
-                            author.textContent = `${message.platform || 'Chat'} · ${message.author || 'Viewer'}`;
-                            const time = document.createElement('time');
-                            time.textContent = message.time || '';
-                            meta.append(author, time);
-                            const body = document.createElement('div');
-                            body.textContent = message.text || '';
-                            row.append(meta, body);
-                            feed.append(row);
-                        });
-                        feed.scrollTop = feed.scrollHeight;
-                    }
-
-                    function addStreamzChatMessage(message) {
-                        if (!message || !message.text) return;
-                        const normalizedMessage = { ...message, time: message.time || new Date().toLocaleTimeString() };
-                        window.streamzDashboardState.chatMessages.push(normalizedMessage);
-                        streamzChatChannel?.postMessage(normalizedMessage);
-                        renderStreamzChat(window.streamzDashboardState.chatMessages);
                     }
 
                     function openStreamzModal(id, open) {
@@ -5521,11 +5361,7 @@
                         });
                     }
 
-                    const STREAMZ_CHAT_OVERLAY_URL = 'https://vortex-prime-emu.com/streamz-pro-plugin/chat-overlay/';
 
-                    function streamzChatOverlayUrl() {
-                        return STREAMZ_CHAT_OVERLAY_URL;
-                    }
 
                     function setStreamzWorkspaceView(view) {
                         const scheduledView = document.getElementById('streamzScheduledView');
@@ -5621,9 +5457,8 @@
                         input.value = '';
                         input.focus();
                     });
-                    window.addEventListener('streamz:chat-message', (event) => addStreamzChatMessage(event.detail));
+
                     setActiveRightPanel(activeRightPanel);
-                    renderStreamzChat([]);
 
                     function renderStreamzChannels(channels) {
                         const list = document.getElementById('streamzChannelList');
