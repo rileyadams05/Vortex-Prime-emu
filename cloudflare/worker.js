@@ -250,6 +250,10 @@ export default {
         return await handleStreamzProAppEntitlement(request, env, allowedOrigin);
       }
 
+      if (path === 'api/streamz/pro/source-archive') {
+        return await handleStreamzProSourceArchive(request, env, allowedOrigin);
+      }
+
       if (path === 'api/streamz/pro/verify-discord') {
         return await handleStreamzProVerifyDiscord(request, env, allowedOrigin);
       }
@@ -1041,6 +1045,42 @@ async function handleStreamzProAppEntitlement(request, env, origin) {
       : ['refresh_status', 'open_checkout_page'],
     entitlement: sanitizeStreamzProEntitlement(entitlement),
   }, 200, origin);
+}
+
+async function handleStreamzProSourceArchive(request, env, origin) {
+  if (request.method !== 'GET') {
+    throw httpError(405, 'Streamz Pro source download requires GET.');
+  }
+
+  const user = await ensureAuthenticated(request, env, 'Sign in before downloading Streamz Pro source.');
+  const account = await ensureStreamzAccountForSession(env, user);
+  const entitlement = getStreamzOwnerGrantEntitlement(env, user)
+    || await getStreamzProEntitlementForAccount(env, account, user).catch(() => null);
+  if (!isActiveStreamzProEntitlement(entitlement)) {
+    throw httpError(403, 'An active Streamz Pro entitlement is required for this download.');
+  }
+
+  const encoded = String(env.STREAMZ_PRO_SOURCE_ARCHIVE_B64 || '').replace(/\s+/g, '');
+  if (!encoded) throw httpError(503, 'The Streamz Pro source archive is not configured.');
+  let bytes;
+  try {
+    const binary = atob(encoded);
+    bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  } catch {
+    throw httpError(503, 'The Streamz Pro source archive is unavailable.');
+  }
+
+  const headers = new Headers({
+    'content-type': 'application/x-7z-compressed',
+    'content-length': String(bytes.byteLength),
+    'content-disposition': 'attachment; filename="Streamz-Pro-source.7z"',
+    'cache-control': 'private, no-store',
+  });
+  if (origin) {
+    headers.set('access-control-allow-origin', origin);
+    headers.set('access-control-allow-credentials', 'true');
+  }
+  return new Response(bytes, { status: 200, headers });
 }
 
 async function handleStreamzProVerifyDiscord(request, env, origin) {
