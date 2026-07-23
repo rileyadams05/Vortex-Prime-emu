@@ -4044,10 +4044,10 @@
                     <aside class="streamz-plugin-right-panel" aria-label="Streamz tools">
                         <div class="streamz-plugin-right-content">
                             <section class="streamz-plugin-right-view" data-right-view="channels" aria-labelledby="streamzChannelsTitle">
-                                <div class="streamz-plugin-sidebar-action-group">
+                                <div class="streamz-plugin-sidebar-action-group" id="streamzScheduledActionsPanel" hidden>
                                     <button class="streamz-scheduled-update" id="updateStreamDescriptionPanel" type="button">Description and Thumbnail</button>
                                     <button class="streamz-scheduled-new" id="newScheduledStreamPanel" type="button" disabled>+ New Stream</button>
-                                    <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button" hidden>Encoder Scheduled Streams</button>
+                                    <button class="streamz-scheduled-encoder" id="encoderScheduledStreams" type="button">Encoder Scheduled Streams</button>
                                 </div>
                                 <div class="streamz-plugin-sidebar-heading">
                                     <span id="streamzChannelsTitle">Your Channels</span>
@@ -5369,6 +5369,7 @@
                         const rightPanel = document.querySelector('.streamz-plugin-right-panel');
                         const chatTabBtn = document.querySelector('[data-right-panel-chat-tab]');
                         const encoderButton = document.getElementById('encoderScheduledStreams');
+                        const scheduledActionsPanel = document.getElementById('streamzScheduledActionsPanel');
 
                         const isScheduled = view === 'scheduled-streams';
                         const isChat = view === 'chat';
@@ -5376,6 +5377,7 @@
                         if (scheduledView) scheduledView.hidden = !isScheduled;
                         if (scheduledEncoderView) scheduledEncoderView.hidden = true;
                         if (encoderButton) encoderButton.hidden = !isScheduled;
+                        if (scheduledActionsPanel) scheduledActionsPanel.hidden = !isScheduled;
 
                         if (mainView) mainView.hidden = isScheduled || isChat;
 
