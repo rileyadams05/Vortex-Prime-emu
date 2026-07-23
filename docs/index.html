@@ -1169,6 +1169,14 @@
             font-size: 0.75rem;
         }
 
+        .download-menu__hint {
+            padding: 0.45rem 0.75rem 0.55rem;
+            color: var(--color-text-secondary);
+            font-size: 0.75rem;
+            line-height: 1.4;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
         .btn-disabled {
             background: rgba(255, 255, 255, 0.04);
             color: var(--color-text-muted);
@@ -3975,21 +3983,22 @@
                                         Download Streamz <span class="download-menu__chevron" aria-hidden="true">▾</span>
                                     </summary>
                                     <div class="download-menu__options" role="menu" aria-label="Streamz downloads">
+                                        <div class="download-menu__hint">Choose the build for your computer. Streamz is intended to run on any compatible computer that can run the listed operating system and streaming software.</div>
                                         <button class="download-menu__option" type="button" role="menuitem" disabled>
-                                            Windows 10 / 11 — x64
-                                            <small>Windows installer — available with the first release</small>
+                                            Windows 10 / 11 — 64-bit
+                                            <small>One installer for Windows 10 and Windows 11</small>
                                         </button>
                                         <button class="download-menu__option" type="button" role="menuitem" disabled>
-                                            Linux — x64
-                                            <small>Linux package — available with the first release</small>
+                                            Linux — 64-bit
+                                            <small>Linux package for compatible 64-bit systems</small>
                                         </button>
                                         <button class="download-menu__option" type="button" role="menuitem" disabled>
                                             macOS — Apple Silicon (M1–M5)
-                                            <small>Apple Silicon build — available with the first release</small>
+                                            <small>For Apple Silicon Macs, including M5</small>
                                         </button>
                                         <button class="download-menu__option" type="button" role="menuitem" disabled>
                                             macOS — Intel
-                                            <small>Intel build — available with the first release</small>
+                                            <small>For compatible Intel Macs</small>
                                         </button>
                                     </div>
                                 </details>
