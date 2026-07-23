@@ -969,9 +969,9 @@
         }
 
         .project-card:hover {
-            border-color: var(--color-primary);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--color-border);
+            transform: none;
+            box-shadow: none;
         }
 
         .project-card-header {
@@ -3937,7 +3937,7 @@
                 </section>
 
                 <div class="projects-grid" aria-label="Vortex Prime projects">
-                    <a class="project-card" href="/projects/streamz/" data-page="streamz" data-no-gate="true" aria-label="Open Streamz project page">
+                    <div class="project-card" aria-label="Streamz project">
                         <div class="project-card-header">
                             <div class="project-logo" aria-hidden="true">
                                 <img src="./assets/streamz-icon-white.png" alt="">
@@ -4012,8 +4012,17 @@
                                 Upgrade to Pro
                             </span>
                             </div>
+                            <span
+                                class="btn btn-secondary"
+                                role="link"
+                                tabindex="0"
+                                onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/projects/streamz/';"
+                                onkeypress="if(event.key==='Enter'||event.key===' '){event.preventDefault(); event.stopPropagation(); window.location.href='/projects/streamz/';}"
+                            >
+                                View More
+                            </span>
                         </div>
-                    </a>
+                    </div>
                 </div>
             </div>
 
