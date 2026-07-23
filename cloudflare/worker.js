@@ -1038,10 +1038,10 @@ async function handleStreamzProAppEntitlement(request, env, origin) {
     hasPro: ownsPro,
     status,
     message: status === 'pending_discord_verification'
-      ? 'Your payment was received. Download your activation pass, then directly message the Streamz bot and run /verify-pro with the purchase code printed on the pass.'
+      ? 'Your payment was received. Firebase is waiting for the verified Stripe result. Streamz Pro will unlock automatically on the Google account used for this purchase.'
       : null,
     actions: status === 'pending_discord_verification'
-      ? ['open_discord', 'refresh_status', 'open_checkout_page']
+      ? ['refresh_status', 'open_checkout_page']
       : ['refresh_status', 'open_checkout_page'],
     entitlement: sanitizeStreamzProEntitlement(entitlement),
   }, 200, origin);

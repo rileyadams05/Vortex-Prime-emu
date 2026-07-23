@@ -397,8 +397,10 @@
         </div>
 
         <div class="checkout-notice">
-          After payment, Discord verification and Google linking are required before Streamz Pro can be activated.
-          <small>Streamz Pro is a one-time purchase and will be permanently linked to the Google account used during activation. You are responsible for maintaining access to that account. If access is permanently lost, licence recovery or transfer is not guaranteed and a new purchase may be required, except where required by applicable law.</small>
+          Streamz Pro uses Firebase Authentication. After Stripe confirms payment, ownership is permanently linked to this Google account and verified automatically whenever you sign in to Streamz.
+          <small>
+            How it works: (1) you sign in with Google through Firebase; (2) Stripe processes the purchase; (3) the verified Stripe webhook grants Pro to your unique Firebase user ID; (4) Streamz signs in with the same Google account and asks the secure Vortex Prime backend to verify that entitlement; and (5) Pro features unlock immediately. There are no licence keys, activation codes, chatbot steps, or manual activation steps. Keep access to this Google account because it is your Streamz Pro licence.
+          </small>
         </div>
 
         <label class="terms-row">
@@ -525,7 +527,7 @@
         const seconds = Math.floor((remaining % 60000) / 1000);
         el.textContent = remaining > 0
           ? `Activation code expires in ${minutes}:${String(seconds).padStart(2, '0')}.`
-          : 'Activation code expired. DM the Streamz bot and use /code-expired with your original activation-pass PDF.';
+          : 'Payment verification is taking longer than expected. Refresh this page or contact support if it remains pending.';
       };
       setTimeout(update, 0);
       activationCountdownTimer = setInterval(update, 1000);
@@ -554,37 +556,25 @@
       );
     }
 
-    function showPendingDiscordState(details = {}) {
+    function showPendingFirebaseState(details = {}) {
       form.hidden = true;
-      const code = details.purchaseCode || details.verificationCode || '';
-      const hasPass = Boolean(details.activationPass);
-      const expiresAt = details.codeExpiresAt || details.activationPass?.expiresAt || '';
-      const codeLine = code ? `\n\nPurchase code:\n${code}` : '';
       renderStateCard({
         variant: 'pending',
         title: 'Streamz Pro payment received',
-        message: `Your Streamz Pro purchase is confirmed, but Pro is not active yet.\n\nTo activate it:\n1. Download and keep your activation pass.\n2. Scan the permanent QR code on the pass or open /projects/streamz/pro/verify.\n3. Enter the one-time purchase code printed on the pass.\n4. Directly message the Streamz bot in Discord and run /verify-pro with the same purchase code.\n5. Press Link Google Account in the bot’s private message.${codeLine}\n\nIf the 20-minute code expires before you use it, directly message the Streamz bot and run /code-expired with the original activation-pass PDF attached. The Discord bot will send a private automated message. Please do not reply to that message.`,
-        extraHtml: renderActivationCountdown(expiresAt),
+        message: 'Your payment was received. Firebase is waiting for the verified Stripe result. Your Google account will unlock Streamz Pro automatically as soon as the payment is confirmed.',
         actions: [
-          ...(hasPass ? [{ label: 'Download activation pass', action: 'download-pass' }] : []),
-          ...(code ? [{ label: 'Copy purchase code', action: 'copy-code' }] : []),
-          { label: 'Open verification page', href: '/projects/streamz/pro/verify/' },
-          { label: 'Open Discord bot DM', href: details.discordVerifyUrl || 'https://discord.com/channels/@me' },
-          { label: 'Prepare activation pass', action: 'prepare-pass' },
           { label: 'Check activation status', action: 'refresh-status' },
           { label: 'Return to Vortex Prime', href: '/' },
         ],
       });
-      successScreen.dataset.verificationCode = code;
-      successScreen.activationPass = details.activationPass || null;
-      setStatus('Payment received. Purchase-code and Discord verification are required before activation.', 'info');
+      setStatus('Payment received. Firebase is confirming your Streamz Pro entitlement.', 'info');
     }
 
     function showEntitlementState(entitlement) {
       if (entitlement?.status === 'active') {
         showActiveState(entitlement);
       } else if (entitlement?.status === 'pending_discord_verification') {
-        showPendingDiscordState(entitlement);
+        showPendingFirebaseState(entitlement);
       }
     }
 
@@ -703,8 +693,7 @@
         return;
       }
       if (config?.entitlement?.status === 'pending_discord_verification') {
-        const details = await getPendingDiscordDetails(config.entitlement);
-        showPendingDiscordState(details);
+        showPendingFirebaseState(config.entitlement);
         return;
       }
 
@@ -733,32 +722,6 @@
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(data?.message || 'Unable to load upgrade session.');
       return data;
-    }
-
-    async function requestDiscordVerificationCode() {
-      if (!upgradeSessionToken) throw new Error('This checkout session cannot prepare an activation pass.');
-      const resp = await fetch('/api/streamz/pro/upgrade-session/code', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: upgradeSessionToken }),
-      });
-      const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) throw new Error(data?.message || 'Unable to prepare the activation pass.');
-      return data;
-    }
-
-    async function getPendingDiscordDetails(fallback = {}) {
-      const sessionStatus = upgradeSessionToken ? await fetchUpgradeSessionStatus().catch(() => null) : null;
-      if (sessionStatus?.status === 'pending_discord_verification' && !sessionStatus.purchaseCode && !sessionStatus.verificationCode) {
-        try {
-          return await requestDiscordVerificationCode();
-        } catch (error) {
-          setPaymentMessage(error.message || 'Payment received, but the activation pass is still being prepared. Try again in a moment.', 'error');
-          return sessionStatus;
-        }
-      }
-      return sessionStatus || fallback;
     }
 
     async function initializeStripe(config) {
@@ -943,13 +906,8 @@
           return true;
         }
         if (resp.ok && data?.status === 'pending_discord_verification') {
-          const details = await getPendingDiscordDetails(data.entitlement);
-          showPendingDiscordState(details);
-          if (details?.activationPass && !activationPassDownloaded) {
-            activationPassDownloaded = true;
-            await downloadActivationPass(details.activationPass);
-          }
-          setPaymentMessage('Payment received. Complete Discord verification to activate Streamz Pro.', 'info');
+          showPendingFirebaseState(data.entitlement);
+          setPaymentMessage('Payment received. Firebase is confirming Streamz Pro ownership.', 'info');
           setBusy(false);
           return true;
         }
@@ -975,19 +933,6 @@
       return { valid: true };
     }
 
-    async function prepareActivationPass() {
-      try {
-        if (!upgradeSessionToken) throw new Error('This checkout session cannot prepare an activation pass.');
-        setPaymentMessage('Preparing your Streamz Pro activation pass...', 'info');
-        const data = await requestDiscordVerificationCode();
-        showPendingDiscordState(data);
-        if (data.activationPass) await downloadActivationPass(data.activationPass);
-        setPaymentMessage('Activation pass prepared.', 'success');
-      } catch (error) {
-        setPaymentMessage(error.message || 'Unable to prepare the activation pass right now.', 'error');
-      }
-    }
-
     async function refreshActivationStatus() {
       try {
         setPaymentMessage('Refreshing activation status...', 'info');
@@ -998,9 +943,8 @@
           showEntitlementState(data.entitlement);
           setPaymentMessage('Streamz Pro ownership confirmed.', 'success');
         } else {
-          const details = await getPendingDiscordDetails(data.entitlement || {});
-          showPendingDiscordState(details);
-          setPaymentMessage('Discord and Google verification are still required.', 'info');
+          showPendingFirebaseState(data.entitlement || {});
+          setPaymentMessage('Firebase is still confirming the Stripe payment.', 'info');
         }
       } catch (error) {
         setPaymentMessage(error.message || 'Unable to refresh status right now.', 'error');
@@ -1011,61 +955,10 @@
       const button = event.target.closest('[data-action]');
       if (!button) return;
       const action = button.getAttribute('data-action');
-      if (action === 'copy-code') {
-        const code = successScreen.dataset.verificationCode || '';
-        if (code && navigator.clipboard) {
-          navigator.clipboard.writeText(code).then(() => setPaymentMessage('Purchase code copied.', 'success'));
-        }
-      } else if (action === 'download-pass') {
-        if (successScreen.activationPass) {
-          downloadActivationPass(successScreen.activationPass).catch((error) => {
-            setPaymentMessage(error.message || 'Unable to download activation pass.', 'error');
-          });
-        }
-      } else if (action === 'prepare-pass') {
-        prepareActivationPass();
-      } else if (action === 'refresh-status') {
+      if (action === 'refresh-status') {
         refreshActivationStatus();
       }
     });
-
-    async function downloadActivationPass(pass) {
-      if (!window.PDFLib) throw new Error('PDF tools are still loading. Try again in a moment.');
-      const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
-      const templateBytes = await fetch(pass.templateUrl, { cache: 'no-store' }).then((resp) => {
-        if (!resp.ok) throw new Error('Activation pass template is unavailable.');
-        return resp.arrayBuffer();
-      });
-      const pdfDoc = await PDFDocument.load(templateBytes);
-      const page = pdfDoc.getPage(0);
-      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const ink = rgb(0.06, 0.07, 0.1);
-      const accent = rgb(0.42, 0.22, 0.82);
-      const draw = (text, x, y, size = 22, chosenFont = regular, color = ink) => {
-        page.drawText(String(text || ''), { x, y, size, font: chosenFont, color });
-      };
-      const date = pass.purchaseDate ? new Date(pass.purchaseDate) : new Date();
-      draw(pass.customerName, 260, 532, 22);
-      draw(pass.customerEmail, 260, 481, 20);
-      draw(pass.orderNumber, 260, 430, 22);
-      draw(date.toLocaleDateString(), 260, 379, 22);
-      draw(date.toLocaleTimeString(), 260, 328, 22);
-      draw(pass.paymentMethod || 'Stripe', 260, 277, 22);
-      draw(pass.productName || 'Streamz Pro', 260, 226, 22);
-      draw(pass.paymentStatus || 'succeeded', 260, 183, 22);
-      draw(pass.purchaseCode, 1085, 455, 44, font, accent);
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Streamz-Pro-Activation-Pass-${pass.orderNumber || 'purchase'}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    }
 
     form?.addEventListener('submit', (event) => {
       event.preventDefault();
