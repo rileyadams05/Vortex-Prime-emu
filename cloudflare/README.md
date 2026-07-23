@@ -63,6 +63,10 @@ DRIVE_ICONS_FOLDER_ID
 DRIVE_PREVIEWS_FOLDER_ID
 DRIVE_READMES_FOLDER_ID
 GOOGLE_OAUTH_CLIENT_ID
+FIREBASE_PROJECT_ID
+FIREBASE_API_KEY
+FIREBASE_APP_ID
+FIREBASE_AUTH_DOMAIN
 GOOGLE_ADMIN_EMAILS
 SESSION_SECRET
 STREAMZ_OAUTH_STATE_SECRET
@@ -86,7 +90,10 @@ STREAMZ_OWNER_GOOGLE_SUB
 - `GOOGLE_PRIVATE_KEY` — The PEM private key for that service account (copy it from the JSON key file; do **not** commit the JSON to git).
 - `DRIVE_DATABASE_FILE_ID` — The file ID of `store-db.json` in Drive (copy from the file's URL).
 - `DRIVE_*_FOLDER_ID` — Folder IDs for each upload bucket (create folders once in Drive, copy the ID from the URL, and make sure the service account has at least writer access).
-- `GOOGLE_OAUTH_CLIENT_ID` — The OAuth 2.0 Web client ID used by Google Identity Services on the admin portal.
+- `GOOGLE_OAUTH_CLIENT_ID` — The OAuth 2.0 Web client ID used by Google Identity Services.
+- `FIREBASE_PROJECT_ID` — The existing Firebase project's project ID. Firebase ID tokens are rejected unless their audience and issuer match it.
+- `FIREBASE_API_KEY` / `FIREBASE_APP_ID` — Web app configuration copied from the existing Firebase project.
+- `FIREBASE_AUTH_DOMAIN` — The existing Firebase Authentication domain (normally `<project-id>.firebaseapp.com`).
 - `GOOGLE_ADMIN_EMAILS` — Comma-separated list of Google accounts (or domains prefixed with `@`) that should have admin rights for catalogue management.
 - `SESSION_SECRET` — Random string used to sign auth cookies (at least 32 characters).
 - `STREAMZ_OAUTH_STATE_SECRET` — Random string used to encrypt and validate Streamz OAuth state payloads (at least 32 characters).
@@ -191,7 +198,7 @@ The browser posts validated, signed-in contact details to:
 POST https://vortex-prime-emu.com/api/streamz/pro/payment-intent
 ```
 
-The Worker requires the existing Google session cookie, validates that the submitted email matches the Google account, requires purchase terms acceptance, and creates a one-time PaymentIntent for the server-owned Streamz Pro amount:
+The Worker requires a session created from a cryptographically verified Firebase ID token, validates that the submitted email matches the Firebase Google account, requires purchase terms acceptance, and creates a one-time PaymentIntent for the server-owned Streamz Pro amount:
 
 ```text
 9999 AUD cents
@@ -205,7 +212,7 @@ Stripe should be configured to send webhooks to:
 POST https://vortex-prime-emu.com/api/streamz/pro/webhook
 ```
 
-The Worker verifies the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET` before accepting the event. After a verified `payment_intent.succeeded` event for the exact Streamz Pro amount, currency, product metadata, Google account identifier, email, name, and date of birth, the Worker creates or updates a paid entitlement with `status: "pending_discord_verification"`. It does not activate Streamz Pro immediately.
+The Worker verifies the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET` before accepting the event. After a verified `payment_intent.succeeded` event for the exact Streamz Pro amount, currency, product metadata, Firebase UID, Google identity, email, name, and date of birth, the Worker creates or updates the Firebase UID entitlement with `status: "active"`. No licence key, activation pass, Discord step, email-only match, or client-controlled flag can grant Pro.
 
 Implemented entitlement statuses:
 
@@ -216,24 +223,13 @@ active
 revoked
 ```
 
-Only `active` returns Pro access from the entitlement endpoint. `pending_discord_verification`, `revoked`, and missing records return no Pro access.
+Only `active` returns Pro access from the entitlement endpoint. `revoked` and missing records return no Pro access. Legacy `pending_discord_verification` purchases are migrated to `active` when their original Google identity signs into Firebase, provided a verified Stripe payment is already recorded.
 
 Processed Stripe event IDs, Streamz Pro account records, payment history, entitlement ownership, Discord verification hashes, website verification token hashes, upgrade sessions, and rate-limit buckets are stored in the existing Drive-backed JSON database. Streamz Pro writes use a retry wrapper and every payment/webhook/verification operation is idempotent by Stripe event ID, PaymentIntent ID, entitlement ID, Discord claim state, and website token state.
 
 The account model uses an internal account ID as the ownership key. For Google sign-in, the account also stores Google's stable subject identifier as a linked identity. Standard verified email identities can be added to the same `streamzAccounts` shape later without moving the entitlement or trusting a frontend email address.
 
-After a verified `payment_intent.succeeded` event, the Worker:
-
-1. Records a separate Streamz Pro payment history entry.
-2. Creates or updates one entitlement for the account/product.
-3. Sets `status: "pending_discord_verification"`.
-4. Creates a Discord verification session for the paid entitlement.
-5. Lets the checkout page generate a temporary human-readable code printed on the activation-pass PDF.
-6. Stores only the SHA-256 hash of the normalized activation code.
-7. Requires the customer to directly message the Streamz bot and run `/verify-pro CODE`.
-8. Generates a separate 32-byte URL-safe website token after Discord claim.
-9. Stores only the SHA-256 hash of the website token.
-10. Activates the entitlement only after Google sign-in succeeds on the website verification page.
+After a verified `payment_intent.succeeded` event, the Worker records immutable payment history, creates or updates one entitlement for the server-verified Firebase UID, activates it immediately, and updates any app upgrade session. Refund, dispute, and cancellation webhooks revoke the same entitlement.
 
 Discord interaction route:
 

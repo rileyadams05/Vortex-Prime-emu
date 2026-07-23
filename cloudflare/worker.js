@@ -1,6 +1,12 @@
 const PRODUCTION_ORIGINS = [
   'https://vortex-prime-emu.com',
   'https://rileyadams05.github.io',
+  // Tauri v2 desktop webviews use tauri.localhost on Windows. Keep these
+  // origins explicit so the app can call the entitlement endpoint while
+  // preventing arbitrary websites from using credentialed CORS.
+  'http://tauri.localhost',
+  'https://tauri.localhost',
+  'tauri://localhost',
 ];
 
 const DEFAULT_DB = {
@@ -400,16 +406,19 @@ async function handleLogin(request, env, origin) {
   }
 
   const body = await request.json().catch(() => null);
-  const credential = body?.credential;
-  if (!credential || typeof credential !== 'string') {
-    throw httpError(400, 'Missing Google credential.');
+  const idToken = typeof body?.idToken === 'string'
+    ? body.idToken
+    : await exchangeGoogleCredentialForFirebase(body?.credential, env);
+  if (!idToken) {
+    throw httpError(400, 'Missing Firebase ID token.');
   }
 
-  const profile = await validateGoogleCredential(credential, env);
+  const profile = await validateFirebaseIdToken(idToken, env);
   const role = isAdminEmail(profile.email, env) ? 'admin' : 'uploader';
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     sub: profile.sub,
+    firebaseUid: profile.uid,
     email: profile.email,
     name: profile.name || null,
     picture: profile.picture || null,
@@ -637,9 +646,12 @@ async function handleStreamzCredentials(request, env, origin) {
 }
 
 async function getAuthenticatedStreamzConnections(request, env) {
-  const session = await readSession(request, env);
-  if (!session?.sub) throw httpError(401, 'Sign in to Streamz first.');
+  const session = await ensureAuthenticated(request, env, 'Sign in to Streamz first.');
   const account = await ensureStreamzAccountForSession(env, session);
+  const entitlement = await getStreamzProEntitlementForAccount(env, account, session);
+  if (!isActiveStreamzProEntitlement(entitlement)) {
+    throw httpError(403, 'Streamz Pro is required for this feature.');
+  }
   const connections = (Array.isArray(account.providerConnections) ? account.providerConnections : [])
     .filter((connection) => STREAMZ_OAUTH_PROVIDERS[connection.provider] && connection.accessToken)
     .map((connection) => ({ ...connection, tokens: null }));
@@ -2591,6 +2603,7 @@ function buildStreamzProPaymentIntentParams(user, account, contact, upgradeSessi
     'metadata[amount_cents]': String(STREAMZ_PRO_AMOUNT_CENTS),
     'metadata[currency]': STREAMZ_PRO_CURRENCY,
     'metadata[account_id]': account?.id || buildStreamzAccountIdFromGoogleSub(user.sub),
+    'metadata[firebase_uid]': String(user.firebaseUid || ''),
     'metadata[google_sub]': String(user.sub || ''),
     'metadata[google_email]': contact.email,
     'metadata[contact_full_name]': contact.fullName,
@@ -2664,38 +2677,16 @@ async function processStreamzProStripeEvent(env, event) {
       id: existing?.id || entitlement.id,
       createdAt: existing?.createdAt || entitlement.createdAt || now,
       googleLinkedAt: existing?.googleLinkedAt || null,
-      activatedAt: existing?.activatedAt || null,
+      activatedAt: existing?.activatedAt || entitlement.activatedAt || now,
       accountLocked: false,
       updatedAt: now,
     };
-    const verification = {
-      id: `discord:${nextEntitlement.id}`,
-      entitlementId: nextEntitlement.id,
-      paymentId: nextEntitlement.stripePaymentIntentId || nextEntitlement.stripeCheckoutSessionId || null,
-      status: 'awaiting_code',
-      purchaseCodeHash: null,
-      purchaseCodeExpiresAt: null,
-      purchaseCodeClaimedAt: null,
-      purchaseCodeRedeemedAt: null,
-      discordCodeHash: null,
-      discordCodeExpiresAt: null,
-      discordCodeUsedAt: null,
-      claimedDiscordUserId: null,
-      discordClaimedAt: null,
-      websiteTokenHash: null,
-      websiteTokenExpiresAt: null,
-      websiteTokenUsedAt: null,
-      lastCodeGeneratedAt: now,
-      createdAt: existing?.createdAt || now,
-      updatedAt: now,
-    };
     db.streamzProEntitlements = replaceStreamzProEntitlement(db.streamzProEntitlements, nextEntitlement);
-    db.streamzProDiscordVerifications = replaceStreamzDiscordVerification(db.streamzProDiscordVerifications, verification);
     db.streamzProUpgradeSessions = markStreamzUpgradeSessionForEntitlement(
       db.streamzProUpgradeSessions,
       nextEntitlement.upgradeSessionHash,
       nextEntitlement,
-      'pending_discord_verification',
+      'active',
     );
     return {
       db,
@@ -2731,13 +2722,14 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
     return {
       id: buildStreamzEntitlementIdFromAccountId(accountId, STREAMZ_PRO_PRODUCT_ID),
       accountId,
+      firebaseUid: metadata.firebase_uid,
       googleSub: metadata.google_sub,
       email: metadata.google_email || object.receipt_email || null,
       emailNormalized: normalizeEmail(metadata.google_email || object.receipt_email),
       fullName: metadata.contact_full_name || null,
       dateOfBirth: metadata.contact_date_of_birth || null,
       product: STREAMZ_PRO_PRODUCT_ID,
-      status: 'pending_discord_verification',
+      status: 'active',
       orderNumber: buildStreamzOrderNumber({ stripePaymentIntentId: object.id }),
       amountCents: STREAMZ_PRO_AMOUNT_CENTS,
       currency: STREAMZ_PRO_CURRENCY,
@@ -2748,7 +2740,7 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
       stripeCustomerId: object.customer || null,
       upgradeSessionHash: metadata.upgrade_session_hash || null,
       paymentConfirmedAt: now,
-      activatedAt: null,
+      activatedAt: now,
       revokedAt: null,
       accountLocked: false,
       createdAt: now,
@@ -2762,6 +2754,7 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
     const currency = String(object.currency || '').toLowerCase();
     if (
       metadata.product !== STREAMZ_PRO_PRODUCT_ID
+      || !metadata.firebase_uid
       || !metadata.google_sub
       || !metadata.google_email
       || object.payment_status !== 'paid'
@@ -2776,13 +2769,14 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
     return {
       id: buildStreamzEntitlementIdFromAccountId(accountId, STREAMZ_PRO_PRODUCT_ID),
       accountId,
+      firebaseUid: metadata.firebase_uid,
       googleSub: metadata.google_sub,
       email: metadata.google_email || object.customer_details?.email || object.customer_email || null,
       emailNormalized: normalizeEmail(metadata.google_email || object.customer_details?.email || object.customer_email),
       fullName: metadata.contact_full_name || null,
       dateOfBirth: isValidIsoDate(metadata.contact_date_of_birth) ? metadata.contact_date_of_birth : null,
       product: STREAMZ_PRO_PRODUCT_ID,
-      status: 'pending_discord_verification',
+      status: 'active',
       orderNumber: buildStreamzOrderNumber({ stripePaymentIntentId: object.payment_intent, stripeCheckoutSessionId: object.id }),
       amountCents: STREAMZ_PRO_AMOUNT_CENTS,
       currency: STREAMZ_PRO_CURRENCY,
@@ -2794,7 +2788,7 @@ function buildStreamzProEntitlementFromStripeEvent(event) {
       stripeCustomerId: object.customer || null,
       upgradeSessionHash: metadata.upgrade_session_hash || null,
       paymentConfirmedAt: now,
-      activatedAt: null,
+      activatedAt: now,
       revokedAt: null,
       accountLocked: false,
       createdAt: now,
@@ -2821,6 +2815,9 @@ function validateStreamzProPaymentIntentForEntitlement(paymentIntent) {
   }
   if (metadata.product !== STREAMZ_PRO_PRODUCT_ID) {
     return { ok: false, reason: 'product_mismatch' };
+  }
+  if (!metadata.firebase_uid) {
+    return { ok: false, reason: 'missing_firebase_uid' };
   }
   if (!metadata.google_sub) {
     return { ok: false, reason: 'missing_google_sub' };
@@ -3013,17 +3010,25 @@ async function decryptStreamzProviderTokens(env, token) {
 }
 
 async function ensureStreamzAccountForSession(env, session) {
-  if (!session?.sub) {
+  if (!session?.firebaseUid) {
     throw httpError(401, 'Signed-in account is missing a stable identity.');
   }
   const now = new Date().toISOString();
-  const accountId = await buildInternalStreamzAccountId('google', session.sub);
+  const accountId = await buildInternalStreamzAccountId('firebase', session.firebaseUid);
   const account = {
     id: accountId,
     primaryEmail: String(session.email || '').trim() || null,
     primaryEmailNormalized: normalizeEmail(session.email),
     googleSub: String(session.sub),
+    firebaseUid: String(session.firebaseUid),
     identities: [{
+      provider: 'firebase',
+      subject: String(session.firebaseUid),
+      email: String(session.email || '').trim() || null,
+      emailNormalized: normalizeEmail(session.email),
+      linkedAt: now,
+      emailVerified: Boolean(session.email),
+    }, {
       provider: 'google',
       subject: String(session.sub),
       email: String(session.email || '').trim() || null,
@@ -3037,7 +3042,27 @@ async function ensureStreamzAccountForSession(env, session) {
   let saved = account;
   await updateStreamzDatabase(env, async (db) => {
     db.streamzAccounts = upsertStreamzAccount(db.streamzAccounts, account);
-    saved = normalizeStreamzAccounts(db.streamzAccounts).find((entry) => entry.id === accountId) || account;
+    saved = normalizeStreamzAccounts(db.streamzAccounts).find((entry) => (
+      entry.id === accountId || entry.firebaseUid === session.firebaseUid
+    )) || account;
+    db.streamzProEntitlements = normalizeStreamzProEntitlements(db.streamzProEntitlements).map((entry) => {
+      if (
+        entry.product === STREAMZ_PRO_PRODUCT_ID
+        && entry.paymentConfirmedAt
+        && entry.googleSub === session.sub
+        && entry.status !== 'revoked'
+      ) {
+        return {
+          ...entry,
+          firebaseUid: session.firebaseUid,
+          accountId: saved.id,
+          status: 'active',
+          activatedAt: entry.activatedAt || now,
+          updatedAt: now,
+        };
+      }
+      return entry;
+    });
     return { db, value: saved };
   });
   return saved;
@@ -3050,14 +3075,22 @@ function buildStreamzAccountFromEntitlement(entitlement) {
     primaryEmail: entitlement.email || null,
     primaryEmailNormalized: entitlement.emailNormalized || normalizeEmail(entitlement.email),
     googleSub: entitlement.googleSub || null,
-    identities: entitlement.googleSub ? [{
+    firebaseUid: entitlement.firebaseUid || null,
+    identities: [{
+      provider: 'firebase',
+      subject: entitlement.firebaseUid,
+      email: entitlement.email || null,
+      emailNormalized: entitlement.emailNormalized || normalizeEmail(entitlement.email),
+      linkedAt: now,
+      emailVerified: true,
+    }, ...(entitlement.googleSub ? [{
       provider: 'google',
       subject: entitlement.googleSub,
       email: entitlement.email || null,
       emailNormalized: entitlement.emailNormalized || normalizeEmail(entitlement.email),
       linkedAt: now,
       emailVerified: true,
-    }] : [],
+    }] : [])].filter((identity) => identity.subject),
     createdAt: now,
     updatedAt: now,
   };
@@ -3068,6 +3101,7 @@ function upsertStreamzAccount(existing, incoming) {
   if (!incoming?.id) return list;
   const index = list.findIndex((entry) => (
     entry.id === incoming.id
+    || (incoming.firebaseUid && entry.firebaseUid === incoming.firebaseUid)
     || (incoming.googleSub && entry.googleSub === incoming.googleSub)
     || (incoming.googleSub && entry.identities?.some((identity) => identity.provider === 'google' && identity.subject === incoming.googleSub))
   ));
@@ -3243,13 +3277,18 @@ function findStreamzProEntitlementInDb(db, account, session = null) {
   const list = normalizeStreamzProEntitlements(db.streamzProEntitlements);
   const accountId = account?.id || account?.accountId || null;
   const googleSub = account?.googleSub || session?.sub || null;
+  const firebaseUid = account?.firebaseUid || session?.firebaseUid || null;
   return list.find((entry) => (
     entry.product === STREAMZ_PRO_PRODUCT_ID
     && entry.status !== 'revoked'
     && (
-      (accountId && entry.accountId === accountId)
-      || (googleSub && entry.googleSub === googleSub)
-      || (googleSub && entry.accountId === buildStreamzAccountIdFromGoogleSub(googleSub))
+      firebaseUid
+        ? entry.firebaseUid === firebaseUid
+        : (
+          (accountId && entry.accountId === accountId)
+          || (googleSub && entry.googleSub === googleSub)
+          || (googleSub && entry.accountId === buildStreamzAccountIdFromGoogleSub(googleSub))
+        )
     )
   )) || null;
 }
@@ -4570,17 +4609,43 @@ function sanitizeUserForResponse(user) {
 function buildAuthSummary(env, sessionUser) {
   return {
     googleClientId: String(env.GOOGLE_OAUTH_CLIENT_ID || '').trim() || null,
+    firebase: buildFirebaseWebConfig(env),
     adminEmails: getAdminEmails(env),
     user: sanitizeUserForResponse(sessionUser),
   };
 }
 
+function buildFirebaseWebConfig(env) {
+  const projectId = String(env.FIREBASE_PROJECT_ID || '').trim();
+  const apiKey = String(env.FIREBASE_API_KEY || '').trim();
+  const appId = String(env.FIREBASE_APP_ID || '').trim();
+  if (!projectId || !apiKey || !appId) return null;
+  return {
+    apiKey,
+    authDomain: String(env.FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`).trim(),
+    projectId,
+    appId,
+    messagingSenderId: String(env.FIREBASE_MESSAGING_SENDER_ID || '').trim() || undefined,
+    storageBucket: String(env.FIREBASE_STORAGE_BUCKET || '').trim() || undefined,
+  };
+}
+
 async function ensureAuthenticated(request, env, message = 'Sign in with Google to upload.') {
-  const session = await readSession(request, env);
-  if (!session) {
-    throw httpError(401, message);
+  const session = await readSession(request, env).catch(() => null);
+  if (session) return session;
+  const authorization = request.headers.get('Authorization') || '';
+  if (authorization.startsWith('Bearer ')) {
+    const profile = await validateFirebaseIdToken(authorization.slice(7).trim(), env);
+    return {
+      sub: profile.sub,
+      firebaseUid: profile.uid,
+      email: profile.email,
+      name: profile.name,
+      picture: profile.picture,
+      role: isAdminEmail(profile.email, env) ? 'admin' : 'uploader',
+    };
   }
-  return session;
+  throw httpError(401, message);
 }
 
 async function ensureAdmin(request, env) {
@@ -4740,6 +4805,76 @@ function isAdminEmail(email, env) {
     return true;
   }
   return false;
+}
+
+async function exchangeGoogleCredentialForFirebase(googleIdToken, env) {
+  if (!googleIdToken || typeof googleIdToken !== 'string') return null;
+  const apiKey = requireEnv(env, 'FIREBASE_API_KEY');
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      postBody: `id_token=${encodeURIComponent(googleIdToken)}&providerId=google.com`,
+      requestUri: STREAMZ_SITE_BASE_URL,
+      returnIdpCredential: true,
+      returnSecureToken: true,
+    }),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok || !data?.idToken) {
+    throw httpError(401, data?.error?.message || 'Firebase rejected the Google credential.');
+  }
+  return data.idToken;
+}
+
+async function validateFirebaseIdToken(idToken, env) {
+  const parts = idToken.split('.');
+  if (parts.length !== 3) throw httpError(400, 'Invalid Firebase ID token.');
+  const [headerPart, payloadPart, signaturePart] = parts;
+  let header;
+  let payload;
+  try {
+    header = JSON.parse(textDecoder.decode(base64UrlDecode(headerPart)));
+    payload = JSON.parse(textDecoder.decode(base64UrlDecode(payloadPart)));
+  } catch {
+    throw httpError(400, 'Malformed Firebase ID token.');
+  }
+
+  const projectId = requireEnv(env, 'FIREBASE_PROJECT_ID');
+  const now = Math.floor(Date.now() / 1000);
+  if (header.alg !== 'RS256' || !header.kid) throw httpError(401, 'Unsupported Firebase token signature.');
+  if (payload.aud !== projectId || payload.iss !== `https://securetoken.google.com/${projectId}`) {
+    throw httpError(401, 'Firebase token project mismatch.');
+  }
+  if (!payload.sub || typeof payload.sub !== 'string') throw httpError(401, 'Firebase token is missing a UID.');
+  if (Number(payload.exp) <= now || Number(payload.iat) > now || Number(payload.auth_time) > now) {
+    throw httpError(401, 'Firebase ID token is expired or not yet valid.');
+  }
+  if (!payload.email || payload.email_verified !== true) {
+    throw httpError(401, 'Firebase account email must be verified.');
+  }
+  const firebaseProvider = payload.firebase?.sign_in_provider;
+  if (firebaseProvider !== 'google.com') throw httpError(401, 'Streamz requires Google Sign-In.');
+
+  const publicKey = await getGooglePublicKeyFromJwks(
+    header.kid,
+    'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com',
+  );
+  const valid = await crypto.subtle.verify(
+    'RSASSA-PKCS1-v1_5',
+    publicKey,
+    base64UrlDecode(signaturePart),
+    textEncoder.encode(`${headerPart}.${payloadPart}`),
+  );
+  if (!valid) throw httpError(401, 'Failed to verify Firebase ID token.');
+
+  return {
+    uid: payload.sub,
+    sub: payload.firebase?.identities?.['google.com']?.[0] || payload.sub,
+    email: payload.email,
+    name: payload.name || null,
+    picture: payload.picture || null,
+  };
 }
 
 async function validateGoogleCredential(credential, env) {

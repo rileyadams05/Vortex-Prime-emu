@@ -37,6 +37,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script type="module" src="/assets/js/streamz-firebase-auth.js"></script>
     <style>
         :root {
             --color-primary: #10B981;
@@ -4033,7 +4034,7 @@
                                 <label class="streamz-plugin-field">
                                     Stream key
                                     <span class="streamz-plugin-field-control">
-                                        <input id="streamzStreamKey" type="password" value="streamz_live_pro" readonly>
+                                        <input id="streamzStreamKey" type="password" value="" placeholder="Sign in with Google to load your stream key" readonly>
                                         <button class="streamz-plugin-copy" id="streamzKeyCopy" type="button" onclick="copyCode(this, document.getElementById('streamzStreamKey').value)" aria-label="Copy stream key">Copy</button>
                                     </span>
                                 </label>
@@ -4124,7 +4125,7 @@
                             <label class="streamz-plugin-field">
                                 Stream key
                                 <span class="streamz-plugin-field-control">
-                                    <input id="streamzScheduledStreamKey" type="password" value="streamz_scheduled_pro" readonly>
+                                <input id="streamzScheduledStreamKey" type="password" value="" placeholder="Sign in with Google to load your stream key" readonly>
                                     <button class="streamz-plugin-copy" id="streamzScheduledKeyCopy" type="button" onclick="copyCode(this, document.getElementById('streamzScheduledStreamKey').value)" aria-label="Copy stream key">Copy</button>
                                 </span>
                             </label>
@@ -4604,7 +4605,10 @@
                                 callback: async (response) => {
                                     try {
                                         const api = await ensureStoreApi();
-                                        await api.loginWithCredential(response && response.credential);
+                                        if (!window.StreamzFirebaseAuth) {
+                                            await new Promise((resolve) => window.addEventListener('streamz-firebase-ready', resolve, { once: true }));
+                                        }
+                                        await window.StreamzFirebaseAuth.signInWithGoogleIdToken(response && response.credential);
                                         await refreshStoreSession();
                                     } catch (error) {
                                         console.error('Google sign-in failed', error);
@@ -4678,7 +4682,7 @@
                     async function signOutMainUser() {
                         try {
                             const api = await ensureStoreApi();
-                            await api.logout();
+                            await window.StreamzFirebaseAuth?.signOut();
                             if (window.google && window.google.accounts && window.google.accounts.id) {
                                 window.google.accounts.id.disableAutoSelect();
                             }

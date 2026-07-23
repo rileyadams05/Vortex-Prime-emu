@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script type="module" src="/assets/js/streamz-firebase-auth.js"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <script src="/assets/js/pdf-lib.min.js"></script>
   <style>
@@ -682,18 +683,10 @@
 
       try {
         setStatus('Signing in...', 'info');
-        const loginResp = await fetch('/api/auth/login', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credential: response.credential }),
-        });
-
-        const result = await loginResp.json().catch(() => ({}));
-        if (!loginResp.ok) {
-          throw new Error(result?.message || 'Login failed');
+        if (!window.StreamzFirebaseAuth) {
+          await new Promise((resolve) => window.addEventListener('streamz-firebase-ready', resolve, { once: true }));
         }
-
+        const result = await window.StreamzFirebaseAuth.signInWithGoogleIdToken(response.credential);
         await afterAuthenticated(result?.user?.email || '');
       } catch (error) {
         console.error(error);
