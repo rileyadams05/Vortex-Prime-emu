@@ -4655,6 +4655,19 @@
                             const config = await api.getAuthConfig();
                             const user = mapServerUser(config && config.user);
                             applyMainUser(user);
+                            if (user && new URLSearchParams(window.location.search).get('streamz_return') === '1') {
+                                try {
+                                    const firebaseAuth = await window.StreamzFirebaseAuth?.getAuth();
+                                    const firebaseUser = firebaseAuth?.currentUser;
+                                    const idToken = firebaseUser ? await firebaseUser.getIdToken(true) : '';
+                                    if (idToken) {
+                                        window.location.replace(`streamz://auth/callback?provider=pro&token=${encodeURIComponent(idToken)}`);
+                                        return user;
+                                    }
+                                } catch (error) {
+                                    console.warn('Unable to return the Streamz sign-in to the desktop app.', error);
+                                }
+                            }
                             const slot = document.getElementById('mainGoogleBtnSlot');
                             if (user) {
                                 if (mainSignInBtn) mainSignInBtn.style.display = 'none';
