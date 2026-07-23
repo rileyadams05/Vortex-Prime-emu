@@ -1098,6 +1098,77 @@
             border-radius: 8px;
         }
 
+        .project-action-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .download-menu {
+            position: relative;
+        }
+
+        .download-menu > summary {
+            list-style: none;
+        }
+
+        .download-menu > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .download-menu__chevron {
+            display: inline-block;
+            margin-left: 0.4rem;
+            transition: transform 0.2s ease;
+        }
+
+        .download-menu[open] .download-menu__chevron {
+            transform: rotate(180deg);
+        }
+
+        .download-menu__options {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + 0.45rem);
+            left: 0;
+            min-width: 245px;
+            padding: 0.4rem;
+            display: grid;
+            gap: 0.25rem;
+            background: var(--color-bg-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+        }
+
+        .download-menu__option {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.15rem;
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--color-text);
+            text-align: left;
+            font: inherit;
+            cursor: not-allowed;
+        }
+
+        .download-menu__option:not(:disabled):hover,
+        .download-menu__option:not(:disabled):focus {
+            background: rgba(255, 255, 255, 0.08);
+            outline: none;
+        }
+
+        .download-menu__option small {
+            color: var(--color-text-muted);
+            font-size: 0.75rem;
+        }
+
         .btn-disabled {
             background: rgba(255, 255, 255, 0.04);
             color: var(--color-text-muted);
@@ -3898,6 +3969,30 @@
                         </div>
 
                         <div class="project-links" aria-label="Project actions">
+                            <div class="project-action-group" onclick="event.stopPropagation();" onkeydown="event.stopPropagation();">
+                                <details class="download-menu">
+                                    <summary class="btn btn-secondary" role="button" aria-label="Choose a Streamz download">
+                                        Download Streamz <span class="download-menu__chevron" aria-hidden="true">▾</span>
+                                    </summary>
+                                    <div class="download-menu__options" role="menu" aria-label="Streamz downloads">
+                                        <button class="download-menu__option" type="button" role="menuitem" disabled>
+                                            Windows 10 / 11 — x64
+                                            <small>Windows installer — available with the first release</small>
+                                        </button>
+                                        <button class="download-menu__option" type="button" role="menuitem" disabled>
+                                            Linux — x64
+                                            <small>Linux package — available with the first release</small>
+                                        </button>
+                                        <button class="download-menu__option" type="button" role="menuitem" disabled>
+                                            macOS — Apple Silicon (M1–M4)
+                                            <small>Apple Silicon build — available with the first release</small>
+                                        </button>
+                                        <button class="download-menu__option" type="button" role="menuitem" disabled>
+                                            macOS — Intel
+                                            <small>Intel build — available with the first release</small>
+                                        </button>
+                                    </div>
+                                </details>
                             <span
                                 class="btn btn-secondary"
                                 role="link"
@@ -3907,6 +4002,7 @@
                             >
                                 Upgrade to Pro
                             </span>
+                            </div>
                         </div>
                     </a>
                 </div>
