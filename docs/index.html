@@ -5462,6 +5462,8 @@
                     });
 
                     setActiveRightPanel(activeRightPanel);
+                    const defaultWorkspace = document.querySelector('[data-workspace-item].is-active')?.dataset.workspaceItem || 'dashboard';
+                    setStreamzWorkspaceView(defaultWorkspace);
 
                     function renderStreamzChannels(channels) {
                         const list = document.getElementById('streamzChannelList');
