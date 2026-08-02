@@ -13,12 +13,12 @@
     "@uppy/companion": "6.2.2",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
-    "express": "^4.22.2",
+    "express": "^5.2.1",
     "express-session": "^1.18.1",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.4.0",
     "googleapis": "^173.0.0",
-    "multer": "^2.1.1",
-    "nanoid": "^5.1.11",
+    "multer": "^2.2.0",
+    "nanoid": "^6.0.0",
     "open": "^11.0.0"
   },
   "overrides": {
