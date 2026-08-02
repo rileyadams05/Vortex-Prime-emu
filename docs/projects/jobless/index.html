@@ -1,15 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en-AU">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jobless | Vortex Prime Projects</title>
-  <script>
-    sessionStorage.setItem('vortex-route', 'jobless');
-    location.replace('/');
-  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jobless is an open-world crime game in development by independent publisher Vortex Prime, featuring story-driven gameplay and invite-based multiplayer.">
+  <meta name="theme-color" content="#080b0f">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://vortex-prime-emu.com/projects/jobless/">
+  <link rel="icon" href="/favicon.ico">
+  <title>Jobless — Official Game Page | Vortex Prime</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07090c;--panel:#10151b;--panel2:#0c1116;--line:#293640;--text:#f3f6f8;--muted:#a7b2ba;--soft:#74838e;--accent:#8ed5ff;--good:#75d6a1;--warn:#e4bb61;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 50% -10%,#15202a 0,var(--bg) 48%);color:var(--text);line-height:1.65}a{color:var(--accent)}a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}.shell{width:min(1160px,calc(100% - 36px));margin:auto}.topbar{border-bottom:1px solid rgba(142,213,255,.15);background:rgba(7,9,12,.88)}.topbar .shell{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:12px;color:var(--text);text-decoration:none;font-weight:800;letter-spacing:.04em}.brand img{width:36px;height:36px;border:1px solid var(--line);background:#fff}.nav{display:flex;gap:20px;flex-wrap:wrap}.nav a{color:var(--muted);text-decoration:none;font-weight:650}.nav a:hover{color:var(--text)}.hero{padding:92px 0 70px}.eyebrow{margin:0 0 14px;color:var(--accent);font-size:.78rem;font-weight:850;letter-spacing:.2em;text-transform:uppercase}.hero-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:48px;align-items:end}.identity{display:flex;align-items:center;gap:18px;margin-bottom:22px}.identity img{width:76px;height:76px;border:1px solid #536570;background:#fff;box-shadow:0 15px 50px rgba(0,0,0,.35)}h1{font-size:clamp(3.4rem,10vw,7.5rem);line-height:.85;letter-spacing:-.06em;margin:0;text-transform:uppercase}.publisher{margin:16px 0 0;color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);font-weight:700}.lede{max-width:760px;margin:28px 0 0;color:#d2d9de;font-size:clamp(1.12rem,2vw,1.35rem)}.badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.badge{padding:8px 12px;border:1px solid var(--line);background:#0b1015;color:#cbd4da;font-size:.76rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}.badge.live{border-color:rgba(228,187,97,.55);color:#f1cf83}.facts{border:1px solid var(--line);background:linear-gradient(145deg,rgba(18,25,32,.96),rgba(10,14,18,.96));box-shadow:0 26px 70px rgba(0,0,0,.32)}.facts h2{margin:0;padding:20px 22px;border-bottom:1px solid var(--line);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:#b8c4cb}.fact{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;padding:14px 22px;border-bottom:1px solid rgba(41,54,64,.7)}.fact:last-child{border:0}.fact span{color:var(--soft)}.fact strong{font-weight:700;text-align:right}.section{padding:70px 0;border-top:1px solid rgba(41,54,64,.65)}.section h2{font-size:clamp(2rem,5vw,3.6rem);line-height:1.05;letter-spacing:-.04em;margin:0 0 20px}.section-intro{max-width:780px;color:var(--muted);font-size:1.08rem}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}.card{min-height:210px;padding:26px;border:1px solid var(--line);background:var(--panel)}.card .number{color:var(--accent);font-weight:850;font-size:.75rem;letter-spacing:.15em}.card h3{margin:22px 0 10px;font-size:1.24rem}.card p{margin:0;color:var(--muted)}.notice{margin-top:28px;padding:20px 22px;border-left:3px solid var(--warn);background:#12130f;color:#c9c7b9}.legal-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}.legal-card{padding:28px;border:1px solid var(--line);background:var(--panel2)}.legal-card h3{margin:0 0 10px}.legal-card p{color:var(--muted)}.button{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;padding:12px 16px;border:1px solid #4e6370;background:#17212a;color:var(--text);font-weight:800;text-decoration:none}.button:hover{background:#20303c}.contact{display:flex;justify-content:space-between;align-items:center;gap:30px;padding:34px;border:1px solid var(--line);background:linear-gradient(135deg,#111922,#0a0f14)}.contact h2{margin:0 0 8px;font-size:1.65rem}.contact p{margin:0;color:var(--muted)}.contact .button{margin:0;white-space:nowrap}.footer{padding:34px 0 50px;color:var(--soft);font-size:.9rem}.footer .shell{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}.footer a{color:#aab8c1}@media(max-width:820px){.hero{padding:62px 0 50px}.hero-grid,.cards,.legal-grid{grid-template-columns:1fr}.facts{margin-top:8px}.contact{align-items:flex-start;flex-direction:column}.topbar .shell{padding:15px 0;align-items:flex-start;flex-direction:column}.nav{gap:14px}.identity img{width:58px;height:58px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  </style>
 </head>
 <body>
-  <a href="/">Open Jobless</a>
+  <header class="topbar">
+    <div class="shell">
+      <a class="brand" href="/" aria-label="Vortex Prime home"><img src="/assets/streamz-icon-white.png" alt=""><span>VORTEX PRIME</span></a>
+      <nav class="nav" aria-label="Jobless page navigation"><a href="#about">About</a><a href="#multiplayer">Multiplayer</a><a href="#legal">Legal &amp; privacy</a><a href="mailto:vortex.prime.team@outlook.com?subject=Jobless%20Support">Support</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div>
+          <p class="eyebrow">Official application website</p>
+          <div class="identity"><img src="/assets/streamz-icon-white.png" alt="Jobless application icon"><div><h1>Jobless</h1><p class="publisher">Developed and published by Vortex Prime</p></div></div>
+          <p class="lede">Jobless is an open-world crime game currently in development by Vortex Prime, featuring story-driven gameplay, exploration, progression and invite-based multiplayer.</p>
+          <div class="badges" aria-label="Project status"><span class="badge live">In development</span><span class="badge">Independent game</span><span class="badge">PC development target</span></div>
+        </div>
+        <aside class="facts" aria-label="Application details">
+          <h2>Application information</h2>
+          <div class="fact"><span>Organization</span><strong>Vortex Prime</strong></div>
+          <div class="fact"><span>Application</span><strong>Jobless</strong></div>
+          <div class="fact"><span>Development status</span><strong>In development</strong></div>
+          <div class="fact"><span>Developer</span><strong>Independent solo developer</strong></div>
+          <div class="fact"><span>Publisher</span><strong>Vortex Prime</strong></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="shell">
+        <p class="eyebrow">The project</p>
+        <h2>A world built around choice, progression and consequence.</h2>
+        <p class="section-intro">Jobless is an original Unreal Engine game being created by Vortex Prime. Its design combines an explorable open world with story-led missions, character progression and systems that let players approach objectives in different ways. Features, content and release timing may change during development.</p>
+        <div class="cards">
+          <article class="card"><span class="number">01 / STORY</span><h3>Story-driven play</h3><p>Structured missions and player-led exploration designed to support a clear narrative journey.</p></article>
+          <article class="card"><span class="number">02 / WORLD</span><h3>Open exploration</h3><p>An evolving environment with activities, progression systems and reasons to discover what is beyond the next block.</p></article>
+          <article class="card"><span class="number">03 / PROGRESS</span><h3>Long-term progression</h3><p>Player growth and unlockable opportunities intended to make each session contribute to the wider experience.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="multiplayer">
+      <div class="shell">
+        <p class="eyebrow">Online features</p>
+        <h2>Invite-based multiplayer, with Discord kept optional.</h2>
+        <p class="section-intro">Planned multiplayer uses Epic Online Services for account sign-in, friends, invitations, lobbies and game sessions. Optional Discord connection may provide social presence and voice features. A Discord account is not required to play, and Discord availability does not control access to EOS multiplayer.</p>
+        <div class="cards">
+          <article class="card"><span class="number">EOS</span><h3>Game authority</h3><p>Epic Online Services is planned to manage player identity, invitations, lobby membership and multiplayer sessions.</p></article>
+          <article class="card"><span class="number">INVITES</span><h3>Play with friends</h3><p>Invite-based sessions are intended to make it straightforward to gather friends and enter the same game session.</p></article>
+          <article class="card"><span class="number">DISCORD</span><h3>Optional social layer</h3><p>Players may choose to connect Discord for supported social or voice features without making it a multiplayer requirement.</p></article>
+        </div>
+        <p class="notice"><strong>Platform notice:</strong> PC (Windows) is the current development target. Additional platforms are being evaluated. Vortex Prime does not claim console certification, approval or a confirmed console release.</p>
+      </div>
+    </section>
+
+    <section class="section" id="legal">
+      <div class="shell">
+        <p class="eyebrow">Transparency</p>
+        <h2>Clear information for players.</h2>
+        <p class="section-intro">These documents explain how Jobless handles online services, local game data and player responsibilities. They are public and do not require an account.</p>
+        <div class="legal-grid">
+          <article class="legal-card"><h3>Jobless Privacy Policy</h3><p>How Vortex Prime processes information for Jobless, Epic Online Services, multiplayer, optional Discord features, diagnostics and local settings.</p><a class="button" href="/privacy-policy">Read Privacy Policy</a></article>
+          <article class="legal-card"><h3>Terms of Service</h3><p>The conditions that apply to the website, Jobless development builds and online features.</p><a class="button" href="/terms/">Read Terms of Service</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell contact">
+        <div><h2>Jobless support and privacy enquiries</h2><p>Contact Vortex Prime directly. Please do not include passwords, access tokens or unnecessary sensitive information.</p></div>
+        <a class="button" href="mailto:vortex.prime.team@outlook.com?subject=Jobless%20Support%20or%20Privacy%20Enquiry">vortex.prime.team@outlook.com</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><div class="shell"><span>© 2026 Vortex Prime. Jobless is currently in development.</span><span><a href="/privacy-policy">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/projects/">All projects</a></span></div></footer>
 </body>
 </html>
