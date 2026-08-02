@@ -4023,6 +4023,58 @@
                             </span>
                         </div>
                     </div>
+
+                    <div class="project-card" aria-label="Jobless project">
+                        <div class="project-card-header">
+                            <div class="project-logo" aria-hidden="true">
+                                <img src="./assets/streamz-icon-white.png" alt="">
+                            </div>
+                            <div class="project-title">
+                                <h2>Jobless</h2>
+                                <span class="project-status project-status-warning">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 14h-2v-2h2zm0-4h-2V7h2z" />
+                                    </svg>
+                                    Active Development
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="project-description">Jobless is an Unreal Engine game currently in active development. This project page will provide gameplay details, screenshots, release information and support content as development progresses.</p>
+
+                        <div class="project-meta" aria-label="Jobless project details">
+                            <div class="project-meta-row">
+                                <span>Current version</span>
+                                <strong>Not released</strong>
+                            </div>
+                            <div class="project-meta-row">
+                                <span>Status</span>
+                                <strong>Active Development</strong>
+                            </div>
+                            <div class="project-meta-row">
+                                <span>Screenshots</span>
+                                <strong aria-hidden="true">&nbsp;</strong>
+                            </div>
+                        </div>
+
+                        <div class="project-platforms" aria-label="Platform support">
+                            <span class="project-chip">Windows</span>
+                            <span class="project-chip">Linux</span>
+                            <span class="project-chip">macOS</span>
+                        </div>
+
+                        <div class="project-links" aria-label="Project actions">
+                            <span
+                                class="btn btn-secondary"
+                                role="link"
+                                tabindex="0"
+                                onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/projects/jobless/';"
+                                onkeypress="if(event.key==='Enter'||event.key===' '){event.preventDefault(); event.stopPropagation(); window.location.href='/projects/jobless/';}"
+                            >
+                                View More
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -4297,6 +4349,43 @@
                         </form>
                     </div>
                 </section>
+            </div>
+            <!-- Jobless Page -->
+            <div class="page" id="page-jobless">
+                <section class="store-hero">
+                    <h1>Jobless</h1>
+                    <p>An Unreal Engine game currently in active development under Vortex Prime.</p>
+
+                    <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
+                        <span class="project-chip project-chip-warning">Active Development</span>
+                        <span class="project-chip">Windows</span>
+                        <span class="project-chip">Linux</span>
+                        <span class="project-chip">macOS</span>
+                    </div>
+                </section>
+
+                <div class="streamz-layout">
+                    <div class="project-card" style="margin-bottom: 2rem;">
+                        <div class="project-card-header">
+                            <div class="project-logo" aria-hidden="true">
+                                <img src="./assets/streamz-icon-white.png" alt="">
+                            </div>
+                            <div class="project-title">
+                                <h2>Jobless project home</h2>
+                                <span class="project-status project-status-warning">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 14h-2v-2h2zm0-4h-2V7h2z" />
+                                    </svg>
+                                    Active Development
+                                </span>
+                            </div>
+                        </div>
+                        <p class="project-description">This page is prepared as the official home for Jobless. Gameplay details, media, release information and support content will be added here when they are ready.</p>
+                        <div class="project-links">
+                            <a class="btn btn-secondary" href="/projects/" data-page="projects" data-no-gate="true">Back to Projects</a>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- Store Page -->
                 <div class="page" id="page-store">
@@ -5147,7 +5236,7 @@
                             'streamz-plugin': 'Dashboard | Streamz Pro Plugin',
                         };
                         document.title = pageTitles[pageId] || document.title;
-                        const navPageId = pageId === 'streamz' ? 'projects' : pageId;
+                        const navPageId = pageId === 'streamz' || pageId === 'jobless' ? 'projects' : pageId;
                         const nav = document.getElementById('nav-' + navPageId);
                         const mobileNav = document.getElementById('mobile-nav-' + navPageId);
                         if (page) page.classList.add('active');
@@ -5187,6 +5276,7 @@
                             games: '/games/',
                             projects: '/projects/',
                             streamz: '/projects/streamz/',
+                            jobless: '/projects/jobless/',
                             'streamz-plugin': '/streamz-pro-plugin/',
                             help: '/help/'
                         };
@@ -5209,6 +5299,7 @@
                             '/games': 'games',
                             '/projects': 'projects',
                             '/projects/streamz': 'streamz',
+                            '/projects/jobless': 'jobless',
                             '/streamz-pro-plugin': 'streamz-plugin',
                             '/help': 'help'
                         };
