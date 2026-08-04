@@ -12,6 +12,12 @@
   "categories": ["utilities", "entertainment"],
   "icons": [
     {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
       "src": "/favicon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
