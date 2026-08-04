@@ -190,6 +190,10 @@ export default {
     const path = url.pathname.replace(/^\/+/, '');
 
     try {
+      if (path === 'privacy-policy') {
+        return await servePublicJoblessPrivacyPolicy(request);
+      }
+
       if (path === '' || path === 'api') {
         return json({ ok: true, service: 'Vortex Prime Companion Worker' }, 200, allowedOrigin);
       }
@@ -310,6 +314,29 @@ export default {
     ctx.waitUntil(pollStreamzBugsChannel(env));
   },
 };
+
+async function servePublicJoblessPrivacyPolicy(request) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' },
+    });
+  }
+
+  const sourceUrl = new URL(request.url);
+  sourceUrl.pathname = '/privacy-policy/';
+  sourceUrl.search = '';
+  const upstream = await fetch(new Request(sourceUrl.toString(), {
+    method: request.method,
+    headers: { Accept: 'text/html,application/xhtml+xml' },
+  }));
+  const headers = new Headers(upstream.headers);
+  headers.set('Content-Type', 'text/html; charset=utf-8');
+  headers.set('Cache-Control', 'public, max-age=300');
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  return new Response(upstream.body, { status: upstream.status, headers });
+}
 
 function resolveAllowedOrigin(origin) {
   if (!origin) return PRODUCTION_ORIGINS[0];
