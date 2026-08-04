@@ -4807,6 +4807,7 @@
                             window.google.accounts.id.initialize({
                                 client_id: clientId,
                                 auto_select: true,
+                                use_fedcm_for_button: true,
                                 callback: async (response) => {
                                     try {
                                         const api = await ensureStoreApi();
