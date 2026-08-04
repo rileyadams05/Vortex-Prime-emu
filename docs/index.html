@@ -4814,7 +4814,8 @@
                                         if (!window.StreamzFirebaseAuth) {
                                             await new Promise((resolve) => window.addEventListener('streamz-firebase-ready', resolve, { once: true }));
                                         }
-                                        await window.StreamzFirebaseAuth.signInWithGoogleIdToken(response && response.credential);
+                                        const session = await window.StreamzFirebaseAuth.signInWithGoogleIdToken(response && response.credential);
+                                        applyMainUser(mapServerUser(session && session.user));
                                         await refreshStoreSession();
                                     } catch (error) {
                                         console.error('Google sign-in failed', error);

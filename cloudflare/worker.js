@@ -178,7 +178,7 @@ let sessionKeyCache = null;
 let streamzStateKeyCache = null;
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const origin = request.headers.get('Origin');
     const allowedOrigin = resolveAllowedOrigin(origin);
 
@@ -203,7 +203,7 @@ export default {
       }
 
       if (path === 'api/auth/login') {
-        return handleLogin(request, env, allowedOrigin);
+        return handleLogin(request, env, allowedOrigin, ctx);
       }
 
       if (path === 'api/auth/logout') {
@@ -404,7 +404,7 @@ async function handleAuthConfig(request, env, origin) {
   return json({ ok: true, ...summary }, 200, origin);
 }
 
-async function handleLogin(request, env, origin) {
+async function handleLogin(request, env, origin, ctx) {
   if (request.method !== 'POST') {
     throw httpError(405, 'Login requires POST.');
   }
@@ -431,11 +431,16 @@ async function handleLogin(request, env, origin) {
     iat: now,
   };
   const token = await createSessionToken(payload, env);
-  await ensureStreamzAccountForSession(env, payload).catch((error) => {
+  const provisionAccount = ensureStreamzAccountForSession(env, payload).catch((error) => {
     console.log('Streamz account provisioning deferred', {
       reason: error?.message || 'unknown_error',
     });
   });
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    ctx.waitUntil(provisionAccount);
+  } else {
+    await provisionAccount;
+  }
   const response = json({
     ok: true,
     user: sanitizeUserForResponse(payload),
