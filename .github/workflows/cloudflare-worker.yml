@@ -21,4 +21,4 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: cloudflare
-          command: deploy -c wrangler.ci.toml
+          command: deploy -c wrangler.ci.toml --keep-vars
