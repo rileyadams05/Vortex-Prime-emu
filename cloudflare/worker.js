@@ -295,7 +295,7 @@ export default {
       }
 
       if (path === 'api/modx/submit') {
-        return handleModxSubmission(request, env, allowedOrigin);
+        return await handleModxSubmission(request, env, allowedOrigin);
       }
 
       if (path.startsWith('api/catalogue/')) {
