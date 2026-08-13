@@ -2227,7 +2227,6 @@
                     
                     <div class="nav-links">
                         <a href="/" class="nav-link active" id="nav-home" data-no-gate="true" data-page="home">Home</a>
-                        <a href="/store/" class="nav-link" id="nav-store" data-no-gate="true" data-page="store">Store</a>
                         <a href="/store-mods/" class="nav-link" id="nav-store-mods" data-no-gate="true" data-page="store-mods">Mods</a>
                         <a href="/games/" class="nav-link" id="nav-games" data-no-gate="true" data-page="games">Games</a>
                         <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank" data-no-gate="true">Docs</a>
@@ -2262,29 +2261,17 @@
             <!-- Home Page -->
             <div class="page active" id="page-home">
                 <section class="hero">
-                    <div class="hero-badge">
-                        <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                        <span>Work in Progress — Active Development</span>
-                    </div>
-
                     <h1>Vortex Prime Store</h1>
                     <p class="hero-hint" style="font-size: 1.1rem; max-width: 600px; margin: 1rem auto 2rem; color: var(--color-text-secondary);">Browse, upload, and manage community packages for Vortex Prime.</p>
 
-                    <!-- Store CTA -->
-                    <div class="store-cta" style="margin: 2rem auto 4rem auto; background: var(--color-bg-elevated); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--color-border); max-width: 800px;">
-                        <h3 style="text-align: center; margin-bottom: 1rem; font-size: 1.5rem;">Open the Store</h3>
-                        <p style="text-align: center; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 2rem auto; line-height: 1.6;">Browse community packages and console tools for Vortex Prime.</p>
- 
-                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                            <a href="/store/" data-page="store" data-no-gate="true" class="btn" style="background: transparent; color: var(--color-text); border: 1px solid var(--color-border); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
-                                Store
-                            </a>
-                        </div>
-
-                        <div style="margin-top: 3rem; display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="margin: 2rem auto 4rem auto; background: var(--color-bg-elevated); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--color-border); max-width: 800px;">
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                             <!-- PlayStation Section -->
                             <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; text-align: left;">
+                                <div class="hero-badge" style="margin: 0 0 1.25rem;">
+                                    <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                                    <span>Work in Progress — Active Development</span>
+                                </div>
                                 <h4 style="font-size: 1.25rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
                                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M21.58 16.09l-1.09-7.66C20.18 6.05 18.23 4 15.82 4H8.18C5.77 4 3.82 6.05 3.51 8.43l-1.09 7.66C2.2 17.65 3.39 19 4.94 19h14.12c1.55 0 2.74-1.35 2.52-2.91zM7.5 14h-2v-2h2v2zm0-4h-2V8h2v2zm4 4h-2v-2h2v2zm0-4h-2V8h2v2zm4 4h-2v-2h2v2zm0-4h-2V8h2v2z"/></svg>
                                     PlayStation HEN
@@ -2297,10 +2284,10 @@
                                     <span style="background: rgba(255,255,255,0.08); padding: 0.35rem 0.85rem; border-radius: 100px; font-size: 0.85rem; font-weight: 600; color: #E4E4E7;">PS5</span>
                                 </div>
                                 
-                                <a href="hen/index.html" class="btn" style="background: #00439C; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0, 67, 156, 0.3);">
+                                <button type="button" class="btn" disabled aria-disabled="true" title="HEN version browsing is temporarily unavailable" style="background: #00439C; color: white; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border: 0; border-radius: 8px; font-weight: 600; opacity: 0.55; cursor: not-allowed; box-shadow: none;">
                                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                                     View all HEN versions
-                                </a>
+                                </button>
                             </div>
 
                             <!-- Xbox Section -->
