@@ -4177,12 +4177,20 @@ async function handleModxSubmission(request, env, origin) {
   const file = form.get('file');
   if (!(file instanceof File) || !file.name) throw httpError(400, 'Choose a .CT file.');
   if (!file.name.toLowerCase().endsWith('.ct')) throw httpError(400, 'Only Cheat Engine .CT files are accepted.');
-  form.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
+  if (!file.size || file.size > 8 * 1024 * 1024) throw httpError(413, 'The .CT file must be 8 MB or smaller.');
+  const steamGridDbId = Number(form.get('steamGridDbId'));
+  if (!Number.isSafeInteger(steamGridDbId) || steamGridDbId <= 0) {
+    throw httpError(400, 'Select a game from the search results.');
+  }
+  const outbound = new FormData();
+  outbound.set('steamGridDbId', String(steamGridDbId));
+  outbound.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
+  outbound.set('file', file, file.name.replace(/[\r\n"\\/]/g, '_').slice(0, 180));
 
   const response = await fetch('https://modx.vortex-prime-emu.com/community/submit', {
     method: 'POST',
     headers: { 'X-ModX-Bridge': bridgeToken },
-    body: form,
+    body: outbound,
   });
   const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'ModX submission failed.');
