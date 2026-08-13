@@ -294,6 +294,10 @@ export default {
         return handlePublicSubmitVideo(request, env, allowedOrigin);
       }
 
+      if (path === 'api/modx/submit') {
+        return handleModxSubmission(request, env, allowedOrigin);
+      }
+
       if (path.startsWith('api/catalogue/')) {
         return handleCatalogueRequest(request, env, path, allowedOrigin);
       }
@@ -4161,6 +4165,28 @@ async function handleUploadRequest(request, env, path, origin) {
   }
 
   return json({ ...fileInfo, uploadedBy: sanitizeUserForResponse(user) }, 200, origin);
+}
+
+async function handleModxSubmission(request, env, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'ModX submissions require POST.');
+  }
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to submit a ModX cheat table.');
+  const bridgeToken = requireEnv(env, 'MODX_BRIDGE_TOKEN');
+  const form = await request.formData();
+  const file = form.get('file');
+  if (!(file instanceof File) || !file.name) throw httpError(400, 'Choose a .CT file.');
+  if (!file.name.toLowerCase().endsWith('.ct')) throw httpError(400, 'Only Cheat Engine .CT files are accepted.');
+  form.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
+
+  const response = await fetch('https://modx.vortex-prime-emu.com/community/submit', {
+    method: 'POST',
+    headers: { 'X-ModX-Bridge': bridgeToken },
+    body: form,
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'ModX submission failed.');
+  return json({ ok: true, ...payload }, 201, origin);
 }
 
 function buildFolderSummary(env) {
