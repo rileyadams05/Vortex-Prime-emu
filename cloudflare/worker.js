@@ -4173,7 +4173,7 @@ async function handleModxSubmission(request, env, origin) {
   const file = form.get('file');
   if (!(file instanceof File) || !file.name) throw httpError(400, 'Choose a .CT file.');
   if (!file.name.toLowerCase().endsWith('.ct')) throw httpError(400, 'Only Cheat Engine .CT files are accepted.');
-  if (!file.size || file.size > 8 * 1024 * 1024) throw httpError(413, 'The .CT file must be 8 MB or smaller.');
+  if (!file.size) throw httpError(400, 'The selected .CT file is empty.');
   const steamGridDbId = Number(form.get('steamGridDbId'));
   if (!Number.isSafeInteger(steamGridDbId) || steamGridDbId <= 0) {
     throw httpError(400, 'Select a game from the search results.');
