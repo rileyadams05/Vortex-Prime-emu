@@ -125,7 +125,7 @@
           const data = await res.json().catch(() => ({}));
 
           if (res.ok && data && data.authenticated) {
-            updateStatus('Signed in! Redirecting to the Store Creator Portal…', 'success');
+            updateStatus('Signed in! Redirecting to the Mods Creator Portal…', 'success');
             setTimeout(() => (window.location.href = '/admin/?authed=1'), 600);
           } else {
             updateStatus('Unable to verify Google sign-in. Please try again.', 'error');

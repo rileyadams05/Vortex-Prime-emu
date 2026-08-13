@@ -11,7 +11,6 @@ const DRIVE_MIME_FOLDER = 'application/vnd.google-apps.folder';
 const PUBLIC_DOWNLOAD_BASE = 'https://drive.google.com/uc';
 
 const DEFAULT_DB = {
-  storeItems: [],
   storeMods: [],
   reports: [],
   adminSettings: {},
@@ -19,7 +18,7 @@ const DEFAULT_DB = {
 };
 
 const FOLDER_STRUCTURE = [
-  { key: 'root', name: 'Vortex Prime Store' },
+  { key: 'root', name: 'Vortex Prime' },
   { key: 'packages', name: 'Packages', parent: 'root' },
   { key: 'mods', name: 'Mods', parent: 'root' },
   { key: 'icons', name: 'Icons', parent: 'root' },

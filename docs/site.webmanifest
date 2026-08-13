@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Vortex Prime",
   "short_name": "Vortex Prime",
-  "description": "Vortex Prime Store and console workspace.",
+  "description": "Vortex Prime console tools, mods, games, and projects.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

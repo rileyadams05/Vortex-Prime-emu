@@ -121,7 +121,6 @@ The deployed version is visible in the page source as `<meta name="version">`. T
 
 If the app is broken or not updating correctly:
 
-- **Reddit:** [r/Vortex_Prime_HB_store](https://www.reddit.com/r/Vortex_Prime_HB_store/)
 - **Discord:** [discord.gg/TwMsbb97Mm](https://discord.gg/TwMsbb97Mm)
 - **Email:** vortex.prime.team@outlook.com
 - **GitHub Issues:** [github.com/rileyadams05/Vortex-Prime-emu/issues](https://github.com/rileyadams05/Vortex-Prime-emu/issues)

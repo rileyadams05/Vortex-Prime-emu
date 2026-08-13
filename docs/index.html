@@ -18,10 +18,10 @@
   <meta property="og:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
-  <meta name="description" content="Vortex Prime Store — The official community marketplace for homebrew packages and custom dashboards.">
+  <meta name="description" content="Vortex Prime — Console tools, mods, games, and projects.">
     <meta name="theme-color" content="#107C10">
     <meta name="vortex-companion-base-url" content="https://vortex-prime-emu.com">
-    <meta property="og:title" content="Vortex Prime Store — Homebrew Marketplace">
+    <meta property="og:title" content="Vortex Prime">
     <meta property="og:description" content="Discover, upload, and manage homebrew packages for Vortex Prime.">
     <meta property="og:type" content="website">
 
@@ -32,7 +32,7 @@
     <!-- Version timestamp -->
     <meta name="version" content="2026-06-14">
     
-    <title>Vortex Prime Store — Homebrew Marketplace</title>
+    <title>Vortex Prime</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -765,8 +765,7 @@
             padding-top: 72px;
         }
 
-        #page-store,
-        #page-store-mods,
+        #page-mods,
         #page-games,
         #page-projects,
         #page-streamz,
@@ -2241,7 +2240,7 @@
 
 
 
-        /* Store Page */
+        /* Mods Page */
         .store-hero {
             max-width: 1400px;
             margin: 0 auto;
@@ -3672,7 +3671,7 @@
             }
             /* Help page heading clearance on mobile (smaller nav height) */
             #page-help { padding-top: calc(64px + 2.5rem); }
-            #page-store, #page-store-mods, #page-games, #page-projects, #page-streamz, #page-streamz-plugin { padding-top: calc(64px + 2.5rem); }
+            #page-mods, #page-games, #page-projects, #page-streamz, #page-streamz-plugin { padding-top: calc(64px + 2.5rem); }
             .projects-grid { grid-template-columns: 1fr; padding: 0 1rem 3rem; }
             .project-meta-row { flex-direction: column; gap: 0.25rem; }
             .project-meta-row strong { text-align: left; }
@@ -3714,7 +3713,7 @@
                     <div class="nav-links">
                         <a href="/" class="nav-link active" id="nav-home" data-no-gate="true" data-page="home">Home</a>
                         <a href="/streamz-pro-plugin/" class="nav-link" id="nav-streamz-plugin" data-no-gate="true" data-page="streamz-plugin">Streamz Pro Plugin</a>
-                        <a href="/store-mods/" class="nav-link" id="nav-store-mods" data-no-gate="true" data-page="store-mods">Mods</a>
+                        <a href="/mods/" class="nav-link" id="nav-mods" data-no-gate="true" data-page="mods">Mods</a>
                         <a href="/games/" class="nav-link" id="nav-games" data-no-gate="true" data-page="games">Games</a>
                         <a href="/projects/" class="nav-link" id="nav-projects" data-no-gate="true" data-page="projects">Projects</a>
                         <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="nav-link" target="_blank" data-no-gate="true">Docs</a>
@@ -3768,7 +3767,7 @@
                 <!-- Primary nav — plain text, no emojis -->
                 <a href="/" class="mobile-nav-link active" id="mobile-nav-home" data-no-gate="true" data-page="home">Home</a>
                 <a href="/streamz-pro-plugin/" class="mobile-nav-link" id="mobile-nav-streamz-plugin" data-no-gate="true" data-page="streamz-plugin">Streamz Pro Plugin</a>
-                <a href="/store-mods/" class="mobile-nav-link" id="mobile-nav-store-mods" data-no-gate="true" data-page="store-mods">Mods</a>
+                <a href="/mods/" class="mobile-nav-link" id="mobile-nav-mods" data-no-gate="true" data-page="mods">Mods</a>
                 <a href="/games/" class="mobile-nav-link" id="mobile-nav-games" data-no-gate="true" data-page="games">Games</a>
                 <a href="/projects/" class="mobile-nav-link" id="mobile-nav-projects" data-no-gate="true" data-page="projects">Projects</a>
                 <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" class="mobile-nav-link" target="_blank" rel="noopener">Docs</a>
@@ -3777,10 +3776,6 @@
                 <div class="mobile-nav-divider" style="margin-top:0.75rem;"></div>
 
                 <!-- Community / support — real image icons -->
-                <a href="https://www.reddit.com/r/Vortex_Prime_HB_store/" class="mobile-nav-link mobile-nav-link--icon" target="_blank" rel="noopener">
-                    <img src="./assets/Reddit_Icon_FullColor_Bleed.png" alt="" class="mobile-nav-icon" aria-hidden="true">
-                    Reddit Community
-                </a>
                 <a href="https://discord.gg/TwMsbb97Mm" class="mobile-nav-link mobile-nav-link--icon" target="_blank" rel="noopener">
                     <img src="./assets/Discord-Symbol-White.png" alt="" class="mobile-nav-icon" aria-hidden="true">
                     Discord Community
@@ -3796,8 +3791,8 @@
             <!-- Home Page -->
             <div class="page active" id="page-home">
                 <section class="hero">
-                    <h1>Vortex Prime Store</h1>
-                    <p class="hero-hint" style="font-size: 1.1rem; max-width: 600px; margin: 1rem auto 2rem; color: var(--color-text-secondary);">Browse, upload, and manage community packages for Vortex Prime.</p>
+                    <h1>Vortex Prime</h1>
+                    <p class="hero-hint" style="font-size: 1.1rem; max-width: 600px; margin: 1rem auto 2rem; color: var(--color-text-secondary);">Console tools, mods, games, and projects from Vortex Prime.</p>
 
                     <div style="margin: 2rem auto 4rem auto; background: var(--color-bg-elevated); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--color-border); max-width: 800px;">
                         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -3878,7 +3873,7 @@
                                 <svg viewBox="0 0 16 16" fill="#ffffff"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                             </div>
                             <h3>Open Platform</h3>
-                            <p>Vortex Prime is completely open. Anyone can build, share, and manage store packages without gatekeeping.</p>
+                            <p>Vortex Prime is completely open. Anyone can build, share, and manage community mods without gatekeeping.</p>
                         </div>
                     </div>
                 </section>
@@ -4376,89 +4371,11 @@
                     </div>
                 </div>
             </div>
-            <!-- Store Page -->
-                <div class="page" id="page-store">
-                    <section class="store-hero">
-                        <h1>Store</h1>
-                        <p>Discover community-built store packages. Filter by code, creator, or tag and copy the store code to bring new content into Vortex Prime.</p>
-
-                        <div style="display: flex; justify-content: center; margin: 1.5rem 0 2rem;">
-                            <a class="btn" href="/admin/" data-no-gate="true" style="background: #10B981; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
-                                Upload
-                            </a>
-                        </div>
-
-                        <div class="store-search-wrap">
-                            <div class="store-search-field">
-                                <svg class="store-search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                                <input
-                                    class="store-search-input"
-                                    id="storeSearchInput"
-                                    type="text"
-                                    placeholder="Search by package name or creator name"
-                                    oninput="handleStoreSearch(this.value)"
-                                    autocomplete="off"
-                                    spellcheck="false"
-                                >
-
-                            </div>
-                            <div class="store-controls">
-                                <div class="filter-group">
-                                    <div class="store-filter-buttons" id="platformDropdown" aria-label="Console filters">
-                                        <button type="button" class="store-filter-option active" data-platform="All" onclick="setStorePlatform('All')">All Platforms</button>
-                                        <button type="button" class="store-filter-option" data-platform="PS5" onclick="setStorePlatform('PS5')">PS5</button>
-                                        <button type="button" class="store-filter-option" data-platform="PS4" onclick="setStorePlatform('PS4')">PS4</button>
-                                        <button type="button" class="store-filter-option" data-platform="PS3" onclick="setStorePlatform('PS3')">PS3</button>
-                                        <button type="button" class="store-filter-option" data-platform="PS2" onclick="setStorePlatform('PS2')">PS2</button>
-                                        <button type="button" class="store-filter-option" data-platform="PS Vita" onclick="setStorePlatform('PS Vita')">PS Vita</button>
-                                        <button type="button" class="store-filter-option" data-platform="PSP" onclick="setStorePlatform('PSP')">PSP</button>
-                                        <button type="button" class="store-filter-option" data-platform="Original Xbox" onclick="setStorePlatform('Original Xbox')">Original Xbox</button>
-                                        <button type="button" class="store-filter-option" data-platform="Xbox 360" onclick="setStorePlatform('Xbox 360')">Xbox 360</button>
-                                    </div>
-                                </div>
-                                <div class="filter-group">
-                                    <div class="store-filter-buttons" id="categoryDropdown" aria-label="Category filters">
-                                        <button type="button" class="store-filter-option active" data-category="All" onclick="setStoreCategory('All')">All Categories</button>
-                                        <button type="button" class="store-filter-option" data-category="PC Tools" onclick="setStoreCategory('PC Tools')">PC Tools</button>
-                                        <button type="button" class="store-filter-option" data-category="Console Apps" onclick="setStoreCategory('Console Apps')">Console Apps</button>
-                                        <button type="button" class="store-filter-option" data-category="Homebrew Apps" onclick="setStoreCategory('Homebrew Apps')">Homebrew Apps</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="store-search-hint">Search by package name or creator name.</div>
-                        </div>
-                    </section>
-
-
-
-                    <div class="store-grid" id="storeGrid">
-                        <!-- No results state -->
-                        <div class="store-no-results" id="storeNoResults">
-                            <div class="store-no-results-icon">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.54 5.23l-7-3a1 1 0 0 0-.76 0l-7 3A1 1 0 0 0 5 6v6.78a5 5 0 0 0 2.64 4.39l4 2.06a1 1 0 0 0 .92 0l4-2.06A5 5 0 0 0 19 12.78V6a1 1 0 0 0-.46-.77zM12 4.12L17.06 6 12 7.88 6.94 6zm3 14.37l-3 1.54-3-1.54A3 3 0 0 1 7 12.78V7.62l4.54 1.82a1 1 0 0 0 .72 0L17 7.62v5.16a3 3 0 0 1-2 2.71z"/></svg>
-                            </div>
-                            <h3>No store packages yet</h3>
-                            <p id="storeNoResultsMsg">Store content will appear here soon.</p>
-                            <div class="store-no-results-sub" id="storeNoResultsSub">Add packages through the Store Admin editor to populate this feed.</div>
-                        </div>
-                    </div>
-
-                    <div id="storePagination" class="store-pagination"></div>
-
-                    <!-- Infinite Grid Footer Hint -->
-                    <div class="section-header" style="padding: 4rem 2rem; border-top: 1px solid var(--color-border); margin-top: 2rem;">
-                        <h2>Community Driven</h2>
-                        <p>Vortex Prime Store is powered by the community. Upload your own packages to share them instantly with everyone.</p>
-                    </div>
-</div>
-                </div>
-
             <!-- Mods Page -->
-            <div class="page" id="page-store-mods">
+            <div class="page" id="page-mods">
                 <section class="store-hero">
                     <h1>Mods</h1>
-                    <p>Browse mod-focused Vortex Prime content separately from the main app store.</p>
+                    <p>Browse community mods for Vortex Prime-supported platforms.</p>
 
                     <div style="display: flex; justify-content: center; margin: 1.5rem 0 2rem;">
                         <a class="btn" href="/admin/?type=mods" data-no-gate="true" style="background: #10B981; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
@@ -4521,15 +4438,6 @@
                 </section>
 
                 <div class="help-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto 3rem auto; padding: 0 1rem;">
-                    <!-- Reddit Card -->
-                    <a href="https://www.reddit.com/r/Vortex_Prime_HB_store/" target="_blank" rel="noopener" class="help-card" style="display: flex; flex-direction: column; gap: 1rem; background: var(--color-surface, rgba(14, 28, 46, 0.45)); border: 1px solid var(--color-border, rgba(85, 150, 255, 0.2)); border-radius: 12px; padding: 2rem; text-decoration: none; color: inherit; transition: transform 0.2s, border-color 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-                        <div class="help-icon" style="display: flex; align-items: center; justify-content: center; height: 48px;">
-                            <img src="./assets/Reddit_Icon_FullColor_Bleed.png" alt="Reddit" style="height: 48px; object-fit: contain;">
-                        </div>
-                        <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; text-align: center;">Reddit Community</h3>
-                        <p style="margin: 0; font-size: 0.95rem; color: var(--color-text-muted, #8ea1c7); line-height: 1.5; text-align: center;">Join the Vortex Prime Reddit community to share feedback, request features, and talk with other homebrew users.</p>
-                    </a>
-
                     <!-- Discord Card -->
                     <a href="https://discord.gg/TwMsbb97Mm" target="_blank" rel="noopener" class="help-card" style="display: flex; flex-direction: column; gap: 1rem; background: var(--color-surface, rgba(14, 28, 46, 0.45)); border: 1px solid var(--color-border, rgba(85, 150, 255, 0.2)); border-radius: 12px; padding: 2rem; text-decoration: none; color: inherit; transition: transform 0.2s, border-color 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
                         <div class="help-icon" style="display: flex; align-items: center; justify-content: center; height: 48px;">
@@ -4647,7 +4555,7 @@
                     <div id="itemDetailContent"></div>
                 </section>
             </div>
-            <script type="module" src="./assets/js/store-catalogue.js"></script>
+            <script type="module" src="./assets/js/mods-catalogue.js"></script>
 <script>
                 (function () {
                     const CARDS_PER_PAGE = 10;
@@ -4671,7 +4579,7 @@
                         }
                     }
 
-                    let storeBackendApi = null;
+                    let modsBackendApi = null;
                     let authUnsubscribe = null;
                     let currentUser = null;
 
@@ -4679,13 +4587,13 @@
                         return `${PROFILE_STORAGE_PREFIX}${uid}`;
                     }
 
-                    async function ensureStoreApi() {
-                        if (storeBackendApi) return storeBackendApi;
-                        if (window.VortexStoreBackend) {
-                            storeBackendApi = window.VortexStoreBackend;
-                            return storeBackendApi;
+                    async function ensureModsApi() {
+                        if (modsBackendApi) return modsBackendApi;
+                        if (window.VortexModsBackend) {
+                            modsBackendApi = window.VortexModsBackend;
+                            return modsBackendApi;
                         }
-                        return Promise.reject(new Error('Store backend adapter did not initialise.'));
+                        return Promise.reject(new Error('Mods backend adapter did not initialise.'));
                     }
 
                     function loadProfileOverrides(user) {
@@ -4797,13 +4705,13 @@
                                 use_fedcm_for_button: true,
                                 callback: async (response) => {
                                     try {
-                                        const api = await ensureStoreApi();
+                                        const api = await ensureModsApi();
                                         if (!window.StreamzFirebaseAuth) {
                                             await new Promise((resolve) => window.addEventListener('streamz-firebase-ready', resolve, { once: true }));
                                         }
                                         const session = await window.StreamzFirebaseAuth.signInWithGoogleIdToken(response && response.credential);
                                         applyMainUser(mapServerUser(session && session.user));
-                                        await refreshStoreSession();
+                                        await refreshModsSession();
                                     } catch (error) {
                                         console.error('Google sign-in failed', error);
                                         alert((error && error.message) || 'Google sign-in failed.');
@@ -4843,9 +4751,9 @@
                         }, 150);
                     }
 
-                    async function refreshStoreSession() {
+                    async function refreshModsSession() {
                         try {
-                            const api = await ensureStoreApi();
+                            const api = await ensureModsApi();
                             const config = await api.getAuthConfig();
                             const user = mapServerUser(config && config.user);
                             applyMainUser(user);
@@ -4872,7 +4780,7 @@
                             if (profileModal && profileModal.classList.contains('active')) renderProfileUploads();
                             return user;
                         } catch (error) {
-                            console.warn('Failed to refresh store session', error);
+                            console.warn('Failed to refresh mods session', error);
                             applyMainUser(null);
                             return null;
                         }
@@ -4888,7 +4796,7 @@
 
                     async function signOutMainUser() {
                         try {
-                            const api = await ensureStoreApi();
+                            const api = await ensureModsApi();
                             await window.StreamzFirebaseAuth?.signOut();
                             if (window.google && window.google.accounts && window.google.accounts.id) {
                                 window.google.accounts.id.disableAutoSelect();
@@ -4898,7 +4806,7 @@
                         }
                         applyMainUser(null);
                         closeProfilePanel();
-                        await refreshStoreSession();
+                        await refreshModsSession();
                     }
 
                     function profileAvatarFor(user) {
@@ -4996,29 +4904,28 @@
                     }
 
                     function getUserUploads() {
-                        const storeUploads = storeItems.map((item) => ({ ...item, _source: 'store' }));
-                        const modUploads = modItems.map((item) => ({ ...item, _source: 'mods' }));
-                        return [...storeUploads, ...modUploads].filter((item) => packageBelongsToUser(item, currentUser));
+                        return modItems
+                            .map((item) => ({ ...item, _source: 'mods' }))
+                            .filter((item) => packageBelongsToUser(item, currentUser));
                     }
 
                     function openCreatorForUpload(item, action) {
-                        const source = item && item._source === 'mods' ? 'mods' : 'store';
                         localStorage.setItem('vpCreatorProfileAction', JSON.stringify({
                             action,
-                            source,
+                            source: 'mods',
                             id: item.id || '',
                             code: item.code || '',
                             name: item.name || '',
                             at: Date.now()
                         }));
-                        window.location.href = source === 'mods' ? '/admin/?type=mods' : '/admin/';
+                        window.location.href = '/admin/?type=mods';
                     }
 
                     function deleteUserUpload(item) {
                         if (!item) return;
                         const name = item.name || 'this upload';
                         if (!confirm(`Delete "${name}" from your uploads?`)) return;
-                        alert('To delete an upload, the creator portal will open so you can remove it and publish the updated store.');
+                        alert('The Mods creator portal will open so you can remove this upload.');
                         openCreatorForUpload(item, 'delete');
                     }
 
@@ -5133,13 +5040,12 @@
                     }
                     if (profileRefreshUploadsBtn) {
                         profileRefreshUploadsBtn.addEventListener('click', async () => {
-                            await loadStoreCatalog();
                             await loadModsCatalog();
                             renderProfileUploads();
                         });
                     }
 
-                    async function initStoreAuth() {
+                    async function initModsAuth() {
                         applyMainUser(null);
                         if (mainSignInBtn) {
                             mainSignInBtn.removeAttribute('disabled');
@@ -5148,7 +5054,7 @@
                         if (profileUploadsList) {
                             profileUploadsList.innerHTML = '<div class="profile-empty">Sign in to view your uploads.</div>';
                         }
-                        await refreshStoreSession();
+                        await refreshModsSession();
                     }
 
                     if ('serviceWorker' in navigator) {
@@ -5160,13 +5066,6 @@
                     }
 
 
-                    const storeGrid = document.getElementById('storeGrid');
-                    const noResults = document.getElementById('storeNoResults');
-                    const noResultsMsg = document.getElementById('storeNoResultsMsg');
-                    const pagination = document.getElementById('storePagination');
-                    const searchInput = document.getElementById('storeSearchInput');
-                    const clearButton = document.getElementById('storeSearchClear');
-                    const noResultsSub = document.getElementById('storeNoResultsSub');
                     const installModal = document.getElementById('installModal');
                     const modsGrid = document.getElementById('modsGrid');
                     const modsNoResults = document.getElementById('modsNoResults');
@@ -5175,46 +5074,16 @@
                     const modsPagination = document.getElementById('modsPagination');
                     const modsSearchInput = document.getElementById('modsSearchInput');
 
-                    let storeItems = [];
-                    let filteredItems = [];
-                    let currentQuery = '';
-                    let currentPlatform = 'All';
-                    let currentCategory = 'All';
-                    let currentPage = 1;
                     let modItems = [];
                     let filteredMods = [];
                     let modsQuery = '';
                     let modsPlatform = 'All';
                     let modsPage = 1;
 
-                    function initializeStoreFilters() {
-                        setStorePlatform(currentPlatform);
-                        setStoreCategory(currentCategory);
-                    }
-                    initializeStoreFilters();
-
                     function initializeModsFilters() {
                         setModsPlatform(modsPlatform);
                     }
                     initializeModsFilters();
-
-                    function updateCategoryVisibility(platform) {
-                        const categoryOptions = document.querySelectorAll('#categoryDropdown .store-filter-option');
-                        categoryOptions.forEach(opt => {
-                            const cat = opt.getAttribute('data-category');
-                            if (platform === 'PS4') {
-                                // Hide PC Tools for PS4
-                                opt.classList.toggle('hidden', cat === 'PC Tools');
-                            } else {
-                                opt.classList.remove('hidden');
-                            }
-                        });
-
-                        // If current category is hidden, reset to All
-                        if (platform === 'PS4' && currentCategory === 'PC Tools') {
-                            setStoreCategory('All');
-                        }
-                    }
 
                     function showPage(pageId) {
                         document.querySelectorAll('.page').forEach((page) => page.classList.remove('active'));
@@ -5223,7 +5092,7 @@
 
                         const page = document.getElementById('page-' + pageId);
                         const pageTitles = {
-                            home: 'Home | Vortex Prime Store',
+                            home: 'Home | Vortex Prime',
                             'streamz-plugin': 'Dashboard | Streamz Pro Plugin',
                         };
                         document.title = pageTitles[pageId] || document.title;
@@ -5237,15 +5106,7 @@
                         // Close mobile drawer on navigation
                         if (typeof window._closeMobileMenu === 'function') window._closeMobileMenu();
                         
-                        // Ensure defaults are applied when entering store
-                        if (pageId === 'store') {
-                            currentPlatform = 'All';
-                            currentCategory = 'All';
-                            initializeStoreFilters();
-                            applyFilters();
-                        }
-
-                        if (pageId === 'store-mods') {
+                        if (pageId === 'mods') {
                             modsPlatform = 'All';
                             initializeModsFilters();
                             applyModsFilters();
@@ -5262,8 +5123,7 @@
                     function getRoutePath(pageId) {
                         const routes = {
                             home: '/',
-                            store: '/store/',
-                            'store-mods': '/store-mods/',
+                            'mods': '/mods/',
                             games: '/games/',
                             projects: '/projects/',
                             streamz: '/projects/streamz/',
@@ -5285,8 +5145,7 @@
                         const routes = {
                             '': 'home',
                             '/index.html': 'home',
-                            '/store': 'store',
-                            '/store-mods': 'store-mods',
+                            '/mods': 'mods',
                             '/games': 'games',
                             '/projects': 'projects',
                             '/projects/streamz': 'streamz',
@@ -6363,7 +6222,7 @@
                                 if (statusEl) statusEl.innerHTML = '<span class="status-info">Adding your tutorial…</span>';
 
                                 try {
-                                    const api = await ensureStoreApi();
+                                    const api = await ensureModsApi();
                                     await api.submitPublicVideo(itemKey(item), url, title, submittedBy);
                                     
                                     // SUCCESS! Add instantly to the local items array and rerender details modal in real time!
@@ -6550,27 +6409,6 @@
                         return card;
                     }
 
-                    function createEmptyCard(positionNumber) {
-                        const card = document.createElement('div');
-                        card.className = 'theme-card empty-slot';
-                        card.style.border = '1px dashed rgba(255,255,255,0.1)';
-                        card.style.background = 'transparent';
-                        card.style.opacity = '0.35';
-                        card.style.boxShadow = 'none';
-                        card.style.cursor = 'default';
-                        card.innerHTML = `
-                            <div class="theme-preview" style="background: rgba(255,255,255,0.01); display: flex; align-items: center; justify-content: center; position: relative; height: 220px;">
-                                <div style="position: absolute; top: 0.75rem; left: 0.75rem; background: rgba(0,0,0,0.3); color: rgba(255,255,255,0.7); padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.05);">#${positionNumber}</div>
-                                <svg viewBox="0 0 24 24" width="48" height="48" style="opacity: 0.15; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-dasharray: 4 4;"><rect width="18" height="18" x="3" y="3" rx="4"/></svg>
-                            </div>
-                            <div class="theme-info" style="text-align: center; display: flex; flex-direction: column; justify-content: center; height: 100%; min-height: 150px;">
-                                <h3 style="color: var(--color-text-muted); margin-bottom: 0.5rem; font-weight: 500;">Empty Slot</h3>
-                                <p style="font-size: 0.85rem; color: rgba(113, 113, 122, 0.7);">Upload a package to fill this space.</p>
-                            </div>
-                        `;
-                        return card;
-                    }
-
                     function createModsEmptyCard(positionNumber) {
                         const card = document.createElement('div');
                         card.className = 'theme-card empty-slot';
@@ -6592,23 +6430,6 @@
                         return card;
                     }
 
-                    function renderStore(items, page) {
-                        if (!storeGrid) return;
-                        storeGrid.innerHTML = '';
-                        const start = (page - 1) * CARDS_PER_PAGE;
-                        const slice = items.slice(start, start + CARDS_PER_PAGE);
-                        
-                        // Render actual packages
-                        slice.forEach((theme, index) => {
-                            storeGrid.appendChild(createCard(theme, start + index + 1));
-                        });
-
-                        // Render empty slots to always show 10
-                        for (let i = slice.length; i < CARDS_PER_PAGE; i++) {
-                            storeGrid.appendChild(createEmptyCard(start + i + 1));
-                        }
-                    }
-
                     function renderMods(items, page) {
                         if (!modsGrid) return;
                         modsGrid.innerHTML = '';
@@ -6622,59 +6443,6 @@
                         for (let i = slice.length; i < CARDS_PER_PAGE; i++) {
                             modsGrid.appendChild(createModsEmptyCard(start + i + 1));
                         }
-                    }
-
-                    function renderPagination(totalItems, page) {
-                        if (!pagination) return;
-                        pagination.innerHTML = '';
-                        
-                        // Always guarantee at least one empty page is created when current fills up
-                        let totalPages = Math.floor(totalItems / CARDS_PER_PAGE) + 1;
-                        if (totalPages <= 1) return;
-
-                        // Previous Button
-                        const prevBtn = document.createElement('button');
-                        prevBtn.className = 'store-page-btn';
-                        prevBtn.textContent = 'Previous';
-                        prevBtn.disabled = page === 1;
-                        if (page === 1) prevBtn.style.opacity = '0.5';
-                        prevBtn.addEventListener('click', () => {
-                            if (currentPage > 1) {
-                                currentPage--;
-                                renderStore(filteredItems, currentPage);
-                                renderPagination(filteredItems.length, currentPage);
-                            }
-                        });
-                        pagination.appendChild(prevBtn);
-
-                        // Page Numbers
-                        for (let i = 1; i <= totalPages; i++) {
-                            const button = document.createElement('button');
-                            button.className = 'store-page-btn' + (i === page ? ' active' : '');
-                            button.textContent = `Page ${i}`;
-                            button.style.minWidth = '4rem';
-                            button.addEventListener('click', () => {
-                                currentPage = i;
-                                renderStore(filteredItems, currentPage);
-                                renderPagination(filteredItems.length, currentPage);
-                            });
-                            pagination.appendChild(button);
-                        }
-
-                        // Next Button
-                        const nextBtn = document.createElement('button');
-                        nextBtn.className = 'store-page-btn';
-                        nextBtn.textContent = 'Next';
-                        nextBtn.disabled = page === totalPages;
-                        if (page === totalPages) nextBtn.style.opacity = '0.5';
-                        nextBtn.addEventListener('click', () => {
-                            if (currentPage < totalPages) {
-                                currentPage++;
-                                renderStore(filteredItems, currentPage);
-                                renderPagination(filteredItems.length, currentPage);
-                            }
-                        });
-                        pagination.appendChild(nextBtn);
                     }
 
                     function renderModsPagination(totalItems, page) {
@@ -6726,40 +6494,6 @@
                         modsPagination.appendChild(nextBtn);
                     }
 
-                    function updateNoResults(query, hasResults) {
-                        if (!noResults) return;
-                        
-                        // If no query and 0 items, we usually show the grid (empty slots)
-                        // EXCEPT for PS4 where the user explicitly wants a message and no placeholders
-                        if (!query && !hasResults) {
-                            if (currentPlatform === 'PS4') {
-                                noResults.style.display = 'block';
-                                storeGrid.style.display = 'none';
-                                noResultsMsg.textContent = 'No PS4 store items are available yet.';
-                                if (noResultsSub) noResultsSub.textContent = 'Check back later or switch platforms to see other packages.';
-                                return;
-                            } else {
-                                noResults.style.display = 'none';
-                                storeGrid.style.display = 'grid';
-                                return;
-                            }
-                        }
-
-                        noResults.style.display = hasResults ? 'none' : 'block';
-                        storeGrid.style.display = hasResults ? 'grid' : 'none';
-                        
-                        if (hasResults) return;
-
-                        const isNumeric = query !== '' && /^\d+$/.test(query);
-                        if (isNumeric) {
-                            noResultsMsg.textContent = `No store package found with code "${query}".`;
-                            if (noResultsSub) noResultsSub.textContent = 'Try another code or clear the search to see every package released so far.';
-                        } else {
-                            noResultsMsg.textContent = `No store packages matched "${query}".`;
-                            if (noResultsSub) noResultsSub.textContent = 'Refine your keywords or remove filters to browse the full catalogue.';
-                        }
-                    }
-
                     function updateModsNoResults(query, hasResults) {
                         if (!modsNoResults || !modsGrid) return;
 
@@ -6783,31 +6517,6 @@
                         }
                     }
 
-                    function setStorePlatform(platform) {
-                        currentPlatform = platform;
-                        
-                        // Update UI
-                        document.querySelectorAll('#platformDropdown .store-filter-option').forEach(opt => {
-                            opt.classList.toggle('active', opt.getAttribute('data-platform') === platform);
-                        });
-                        
-                        // Handle Category Visibility
-                        updateCategoryVisibility(platform);
-
-                        currentPage = 1;
-                        applyFilters();
-                    }
-
-                    function setStoreCategory(category) {
-                        currentCategory = category;
-                        
-                        document.querySelectorAll('#categoryDropdown .store-filter-option').forEach(opt => {
-                            opt.classList.toggle('active', opt.getAttribute('data-category') === category);
-                        });
-                        currentPage = 1;
-                        applyFilters();
-                    }
-
                     function setModsPlatform(platform) {
                         modsPlatform = platform;
 
@@ -6819,35 +6528,10 @@
                         applyModsFilters();
                     }
 
-                    function handleStoreSearch(query) {
-                        currentQuery = query.toLowerCase().trim();
-                        if (clearButton) {
-                            clearButton.style.display = currentQuery ? 'inline-flex' : 'none';
-                        }
-                        currentPage = 1;
-                        applyFilters();
-                    }
-
                     function handleModsSearch(query) {
                         modsQuery = query.toLowerCase().trim();
                         modsPage = 1;
                         applyModsFilters();
-                    }
-
-                    function clearStoreSearch() {
-                        if (searchInput) {
-                            searchInput.value = '';
-                            // Avoid stealing focus on console if it might re-open keyboard unnecessarily
-                            // But usually users want to type again, so we focus but check if on console
-                            const isConsole = /PlayStation|Xbox|Nintendo/i.test(navigator.userAgent);
-                            if (!isConsole) {
-                                searchInput.focus();
-                            }
-                        }
-                        currentQuery = '';
-                        if (clearButton) clearButton.style.display = 'none';
-                        currentPage = 1;
-                        applyFilters();
                     }
 
                     function clearModsSearch() {
@@ -6861,28 +6545,6 @@
                         modsQuery = '';
                         modsPage = 1;
                         applyModsFilters();
-                    }
-
-                    function applyFilters() {
-                        const needle = currentQuery.toLowerCase();
-                        filteredItems = storeItems.filter((item) => {
-                            const platformMatch = currentPlatform === 'All' || item.platform === currentPlatform;
-                            const itemCategory = (item.category || 'Homebrew Apps');
-                            const categoryMatch = currentCategory === 'All' || itemCategory === currentCategory;
-                            
-                            const queryMatch = !needle || 
-                                (item.name || '').toLowerCase().includes(needle) ||
-                                (item.code || '').toLowerCase().includes(needle) ||
-                                (item.creator || '').toLowerCase().includes(needle) ||
-                                (Array.isArray(item.tags) && item.tags.some(t => String(t).toLowerCase().includes(needle)));
-                                
-                            return platformMatch && categoryMatch && queryMatch;
-                        });
-
-                        currentPage = 1;
-                        renderStore(filteredItems, currentPage);
-                        renderPagination(filteredItems.length, currentPage);
-                        updateNoResults(currentQuery, filteredItems.length > 0);
                     }
 
                     function applyModsFilters() {
@@ -6906,31 +6568,10 @@
                         updateModsNoResults(modsQuery, filteredMods.length > 0);
                     }
 
-                    async function loadStoreCatalog() {
-                        try {
-                            const api = await ensureStoreApi();
-                            const items = await api.loadStoreItems();
-                            const status = api.getStatus ? api.getStatus() : null;
-                            if (status?.configured) {
-                                showBackendStatus(null);
-                            } else if (status?.message) {
-                                showBackendStatus(status.message);
-                            }
-                            storeItems = Array.isArray(items) ? items.filter(item => item && item.published !== false) : [];
-                        } catch (error) {
-                            console.error('Failed to load store catalogue', error);
-                            showBackendStatus(error?.message || 'Production Companion API is not configured yet. Deploy the backend and set the API URL.');
-                            storeItems = [];
-                        }
-
-                        applyFilters();
-                        if (profileModal && profileModal.classList.contains('active')) renderProfileUploads();
-                    }
-
                     async function loadModsCatalog() {
                         try {
-                            const api = await ensureStoreApi();
-                            const items = await api.loadStoreMods();
+                            const api = await ensureModsApi();
+                            const items = await api.loadMods();
                             const status = api.getStatus ? api.getStatus() : null;
                             if (status?.configured) {
                                 showBackendStatus(null);
@@ -6949,13 +6590,11 @@
                     }
 
                     if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', loadStoreCatalog);
                         document.addEventListener('DOMContentLoaded', loadModsCatalog);
-                        document.addEventListener('DOMContentLoaded', initStoreAuth);
+                        document.addEventListener('DOMContentLoaded', initModsAuth);
                     } else {
-                        loadStoreCatalog();
                         loadModsCatalog();
-                        initStoreAuth();
+                        initModsAuth();
                     }
 
                     document.addEventListener('keydown', (event) => {
@@ -6967,10 +6606,6 @@
                     });
 
                      window.showPage = showPage;
-                    window.handleStoreSearch = handleStoreSearch;
-                    window.setStorePlatform = setStorePlatform;
-                    window.setStoreCategory = setStoreCategory;
-                    window.clearStoreSearch = clearStoreSearch;
                     window.handleModsSearch = handleModsSearch;
                     window.setModsPlatform = setModsPlatform;
                     window.clearModsSearch = clearModsSearch;

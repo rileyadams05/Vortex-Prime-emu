@@ -17,7 +17,7 @@ function makeNotConfiguredError(action = "perform this operation") {
 }
 
 function normalizeMode(mode) {
-  return mode === "mods" ? "mods" : "store";
+  return "mods";
 }
 
 function isBlob(file) {
@@ -337,24 +337,12 @@ async function loadCatalogue(mode) {
   }));
 }
 
-async function loadStoreItems() {
-  return loadCatalogue("store");
-}
-
 async function loadStoreMods() {
   return loadCatalogue("mods");
 }
 
 function getBackendStatus() {
   return { ...backendStatus };
-}
-
-function uploadPackage(file, metadata = {}, { onProgress } = {}) {
-  return uploadBinary("package", file, {
-    replaceFileId: metadata?.replaceFileId,
-    makePublic: metadata?.makePublic !== false,
-    onProgress,
-  });
 }
 
 function uploadMod(file, metadata = {}, { onProgress } = {}) {
@@ -385,13 +373,11 @@ function uploadReadme(file, metadata = {}, { onProgress } = {}) {
 export {
   refreshBackendStatus,
   ensureBackendConfigured,
-  uploadPackage,
   uploadMod,
   uploadImage,
   uploadReadme,
   saveStoreItem,
   deleteStoreItem,
-  loadStoreItems,
   loadStoreMods,
   getBackendStatus,
 };
@@ -399,13 +385,11 @@ export {
 export default {
   refreshBackendStatus,
   ensureBackendConfigured,
-  uploadPackage,
   uploadMod,
   uploadImage,
   uploadReadme,
   saveStoreItem,
   deleteStoreItem,
-  loadStoreItems,
   loadStoreMods,
   getBackendStatus,
 };

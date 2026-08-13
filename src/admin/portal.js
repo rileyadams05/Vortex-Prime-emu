@@ -2,7 +2,6 @@ import { buildApiUrl, fetchJson } from "../backend/config.js";
 import {
   refreshBackendStatus,
   ensureBackendConfigured,
-  loadStoreItems as adapterLoadStoreItems,
   loadStoreMods as adapterLoadStoreMods,
   saveStoreItem as adapterSaveStoreItem,
   deleteStoreItem as adapterDeleteStoreItem,
@@ -169,7 +168,7 @@ const AdminBackend = {
     if (!authState.isAdmin) {
       throw new Error("Admin access required to manage catalogue entries.");
     }
-    return mode === "mods" ? adapterLoadStoreMods() : adapterLoadStoreItems();
+    return adapterLoadStoreMods();
   },
   async saveItem(mode, item, currentUser) {
     await initialise();

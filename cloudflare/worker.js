@@ -10,7 +10,6 @@ const PRODUCTION_ORIGINS = [
 ];
 
 const DEFAULT_DB = {
-  storeItems: [],
   storeMods: [],
   reports: [],
   streamzAccounts: [],
@@ -32,12 +31,6 @@ const DEFAULT_DB = {
 };
 
 const UPLOAD_TARGETS = {
-  package: {
-    folderEnv: 'DRIVE_PACKAGES_FOLDER_ID',
-    allowedExtensions: ['.pkg'],
-    invalidMessage: 'PKG file required.',
-    makePublic: true,
-  },
   mod: {
     folderEnv: 'DRIVE_MODS_FOLDER_ID',
     allowedExtensions: ['.zip', '.7z', '.rar'],
@@ -426,7 +419,7 @@ async function handleStatus(request, env, origin) {
 
 async function handlePublicCatalogue(env, origin) {
   const db = await loadDatabase(env);
-  return json(db, 200, origin);
+  return json({ storeMods: Array.isArray(db.storeMods) ? db.storeMods : [] }, 200, origin);
 }
 
 async function handleAuthConfig(request, env, origin) {
@@ -4057,7 +4050,10 @@ async function handleRiscEvents(request, env, origin) {
 
 async function handleCatalogueRequest(request, env, path, origin) {
   const segments = path.split('/');
-  const mode = normaliseMode(segments[2]);
+  if (segments[2] !== 'mods') {
+    return json({ ok: false, message: 'Catalogue route not found.' }, 404, origin);
+  }
+  const mode = 'mods';
 
   if (request.method === 'GET') {
     const list = await readCatalogue(env, mode);
@@ -4308,14 +4304,14 @@ async function updateStreamzDatabase(env, updater, attempts = 3) {
 
 async function readCatalogue(env, mode) {
   const db = await loadDatabase(env);
-  const listName = mode === 'mods' ? 'storeMods' : 'storeItems';
+  const listName = 'storeMods';
   const list = Array.isArray(db[listName]) ? db[listName] : [];
   return list.map((entry) => sanitizeItem(entry));
 }
 
 async function saveCatalogueItem(env, mode, incoming, actor) {
   const db = await loadDatabase(env);
-  const listName = mode === 'mods' ? 'storeMods' : 'storeItems';
+  const listName = 'storeMods';
   const list = Array.isArray(db[listName]) ? [...db[listName]] : [];
 
   let item = assignItemId(incoming);
@@ -4338,7 +4334,7 @@ async function saveCatalogueItem(env, mode, incoming, actor) {
 
 async function deleteCatalogueItem(env, mode, itemId) {
   const db = await loadDatabase(env);
-  const listName = mode === 'mods' ? 'storeMods' : 'storeItems';
+  const listName = 'storeMods';
   const list = Array.isArray(db[listName]) ? [...db[listName]] : [];
   const index = list.findIndex((entry) => entry.id === itemId);
   if (index === -1) {
@@ -4477,13 +4473,12 @@ function sanitizeItem(raw) {
   // Original Creator / Author of the package (e.g. "Cyb1k") — never overwritten
   // by the uploader's account name.
   item.creator = item.creator || item.author || '';
-  // "Uploaded By" is the editable display label for who uploaded it to the
-  // Vortex Prime Store (e.g. "Riley Adams"). Falls back to legacy uploader/owner.
+  // "Uploaded By" is the editable display label for who uploaded the mod.
   item.uploadedBy = (item.uploadedBy || item.uploader || item.owner || '').toString().trim();
   item.tags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
   item.platform = item.platform || 'PS4';
   item.updated = item.updated || new Date().toISOString();
-  item.type = item.type === 'mods' ? 'mods' : 'store';
+  item.type = 'mods';
   if (!item.driveFiles || typeof item.driveFiles !== 'object') {
     item.driveFiles = {};
   }
@@ -4523,10 +4518,6 @@ function annotateItemWithActor(item, actor, existing) {
   // for permission checks — kept separate from the editable "Uploaded By" label.
   next.uploaderAccount = existing?.uploaderAccount || item.uploaderAccount || sanitized;
   return next;
-}
-
-function normaliseMode(value) {
-  return value === 'mods' ? 'mods' : 'store';
 }
 
 function hasAllowedExtension(fileName, allowed) {
@@ -5359,11 +5350,7 @@ async function handlePublicSubmitVideo(request, env, origin) {
 
   const db = await loadDatabase(env);
   
-  let foundItem = db.storeItems?.find(item => item.id === itemId || item.name === itemId || item.code === itemId);
-  
-  if (!foundItem) {
-    foundItem = db.storeMods?.find(item => item.id === itemId || item.name === itemId || item.code === itemId);
-  }
+  const foundItem = db.storeMods?.find(item => item.id === itemId || item.name === itemId || item.code === itemId);
 
   if (!foundItem) {
     throw httpError(404, 'Catalogue item not found.');

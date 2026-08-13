@@ -173,7 +173,7 @@ Once the workflows finish:
 
 Google Drive provides persistent storage. Uploaded files remain available across Worker restarts. Catalogue JSON is stored in Drive, so Worker deployments do not wipe content.
 
-The permanent storage location is **My Drive → Vortex Prime Store**, which already contains the folders `Database`, `Icons`, `Mods`, `Packages`, `Previews`, and `Readmes`. Do not rename or recreate these folders — reference their existing IDs in the Worker secrets.
+The permanent storage location is the Vortex Prime Google Drive workspace. Keep the existing `Database`, `Icons`, `Mods`, `Previews`, and `Readmes` folder IDs configured in the Worker secrets.
 
 Files are uploaded using your personal Google account OAuth token, so they count against your personal storage quota (5 TB) and are owned by you, not a service account.
 

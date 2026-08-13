@@ -16,7 +16,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
   <meta name="robots" content="noindex">
-  <title>Vortex Prime Store Creator Portal</title>
+  <title>Vortex Prime Mods Creator Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -166,7 +166,7 @@
 <body>
 <header>
   <div>
-    <h1>Store Creator Portal</h1>
+      <h1>Mods Creator Portal</h1>
     <p>Professional management for Vortex Prime packages</p>
   </div>
   <div class="header-right">
@@ -218,29 +218,21 @@
 (function () {
   let packages = [];
   let dirty = false;
-  const params = new URLSearchParams(window.location.search);
-  const uploadMode = params.get('type') === 'mods' ? 'mods' : 'store';
+  const uploadMode = 'mods';
   let uploadManager = null;
-  const uploadConfig = uploadMode === 'mods'
-    ? {
-        type: 'mod',
-        fileType: 'archive',
-        allowedExtensions: ['.zip', '.7z', '.rar'],
-        fileLabel: 'Mod Archive',
-        dropText: 'Click or drop mod archive file',
-        helpText: 'Upload a compressed archive containing the mod files, folder structure, readme, and install instructions. Supported formats: ZIP, 7Z, and RAR.',
-        accept: '.zip,.7z,.rar',
-        invalidMessage: 'Mods must be uploaded as a compressed archive: ZIP, 7Z, or RAR.',
-        jsonRoot: 'mods',
-        jsonFile: 'mods.json',
-        jsonPath: 'docs/store-mods/mods.json'
-      }
-    : {
-        type: 'store',
-        jsonRoot: 'dashboards',
-        jsonFile: 'themes.json',
-        jsonPath: 'docs/store/themes.json'
-      };
+  const uploadConfig = {
+    type: 'mod',
+    fileType: 'archive',
+    allowedExtensions: ['.zip', '.7z', '.rar'],
+    fileLabel: 'Mod Archive',
+    dropText: 'Click or drop mod archive file',
+    helpText: 'Upload a compressed archive containing the mod files, folder structure, readme, and install instructions. Supported formats: ZIP, 7Z, and RAR.',
+    accept: '.zip,.7z,.rar',
+    invalidMessage: 'Mods must be uploaded as a compressed archive: ZIP, 7Z, or RAR.',
+    jsonRoot: 'mods',
+    jsonFile: 'mods.json',
+    jsonPath: 'docs/mods/mods.json'
+  };
 
   function getUploadRules(category, platform = '') {
     if (uploadMode === 'mods') {
@@ -333,15 +325,15 @@
   const logoutBtn = document.getElementById('logoutBtn');
   const authStatus = document.getElementById('authStatus');
 
-  document.title = uploadMode === 'mods' ? 'Vortex Prime Mods Creator Portal' : 'Vortex Prime Store Creator Portal';
+  document.title = 'Vortex Prime Mods Creator Portal';
   const headerTitle = document.querySelector('header h1');
   const headerSubtitle = document.querySelector('header p');
   const toolbarTitle = document.querySelector('.toolbar h2');
   const submitAllBtn = document.getElementById('submitAllBtn');
-  if (headerTitle) headerTitle.textContent = uploadMode === 'mods' ? 'Mods Creator Portal' : 'Store Creator Portal';
+  if (headerTitle) headerTitle.textContent = 'Mods Creator Portal';
   if (headerSubtitle) headerSubtitle.textContent = uploadMode === 'mods' ? 'Professional management for Vortex Prime mods' : 'Professional management for Vortex Prime packages';
   if (toolbarTitle) toolbarTitle.textContent = uploadMode === 'mods' ? 'Mods' : 'Packages';
-  if (submitAllBtn) submitAllBtn.textContent = uploadMode === 'mods' ? 'Upload All Mods' : 'Upload All to Store';
+  if (submitAllBtn) submitAllBtn.textContent = 'Upload All Mods';
 
   let packagesLoadedOnce = false;
 
@@ -635,7 +627,7 @@
   function markDirty() {
     dirty = true;
     const hint = document.getElementById('saveHint');
-    hint.innerHTML = `<span class="dirty-dot"></span>Unsaved changes - click ${uploadMode === 'mods' ? 'Upload Mods' : 'Upload to Store'} when ready.`;
+    hint.innerHTML = '<span class="dirty-dot"></span>Unsaved changes - click Upload Mods when ready.';
   }
 
   // ── Collect current field values into packages array ──────────
@@ -915,7 +907,7 @@
           <div class="field">
             <label>Uploaded By</label>
             <input type="text" data-field="uploadedBy" value="${esc(pkg.uploadedBy || pkg.uploader || '')}" placeholder="e.g. Riley Adams (who uploaded it here)" oninput="onFieldInput(${i},'uploadedBy',this.value)">
-            <span class="upload-hint-box">Who uploaded this to Vortex Prime Store. Leave blank to use your signed-in name.</span>
+            <span class="upload-hint-box">Who uploaded this mod. Leave blank to use your signed-in name.</span>
           </div>
           
           <div class="field">
@@ -1662,7 +1654,4 @@
 </script>
 </body>
 </html>
-
-
-
 

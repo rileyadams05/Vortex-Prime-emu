@@ -21,7 +21,7 @@ const alias = {
 const entryPoints = [
   { in: join(root, 'src', 'firebase.js'), out: 'firebase.js' },
   { in: join(root, 'src', 'admin', 'index.js'), out: 'admin-portal.js' },
-  { in: join(root, 'src', 'store', 'catalogue.js'), out: 'store-catalogue.js' }
+  { in: join(root, 'src', 'mods', 'catalogue.js'), out: 'mods-catalogue.js' }
 ];
 
 await mkdir(outDir, { recursive: true });

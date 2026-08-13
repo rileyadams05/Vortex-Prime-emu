@@ -260,12 +260,13 @@ async function loadCatalogue() {
 }
 
 function getListName(mode) {
-  return mode === 'mods' ? 'storeMods' : 'storeItems';
+  return 'storeMods';
 }
 
 app.get('/api/catalogue/:mode', async (req, res, next) => {
   try {
-    const mode = req.params.mode === 'mods' ? 'mods' : 'store';
+    if (req.params.mode !== 'mods') return res.status(404).json({ error: 'Catalogue route not found.' });
+    const mode = 'mods';
     const { db } = await loadCatalogue();
     res.json(db[getListName(mode)] || []);
   } catch (error) {
@@ -286,7 +287,8 @@ app.get('/api/public/catalogue', async (req, res, next) => {
 
 app.post('/api/catalogue/:mode', async (req, res, next) => {
   try {
-    const mode = req.params.mode === 'mods' ? 'mods' : 'store';
+    if (req.params.mode !== 'mods') return res.status(404).json({ error: 'Catalogue route not found.' });
+    const mode = 'mods';
     const incoming = req.body?.item || req.body;
     if (!incoming || typeof incoming !== 'object') {
       res.status(400).json({ error: 'Missing item payload.' });
@@ -317,7 +319,8 @@ app.post('/api/catalogue/:mode', async (req, res, next) => {
 
 app.delete('/api/catalogue/:mode/:id', async (req, res, next) => {
   try {
-    const mode = req.params.mode === 'mods' ? 'mods' : 'store';
+    if (req.params.mode !== 'mods') return res.status(404).json({ error: 'Catalogue route not found.' });
+    const mode = 'mods';
     const itemId = req.params.id;
     if (!itemId) {
       res.status(400).json({ error: 'Missing item id.' });

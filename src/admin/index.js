@@ -1,25 +1,21 @@
 import AdminBackend from "./portal.js";
 import {
-  uploadPackage,
   uploadMod,
   uploadImage,
   uploadReadme,
   saveStoreItem,
   deleteStoreItem,
-  loadStoreItems,
   loadStoreMods,
   getBackendStatus,
 } from "./upload-adapter.js";
 import { createUploadFieldManager } from "./upload-manager.js";
 
 const VortexUploadAdapter = {
-  uploadPackage,
   uploadMod,
   uploadImage,
   uploadReadme,
   saveStoreItem,
   deleteStoreItem,
-  loadStoreItems,
   loadStoreMods,
   getBackendStatus,
 };
@@ -33,13 +29,11 @@ if (typeof window !== "undefined") {
 
 export { createUploadFieldManager };
 export {
-  uploadPackage,
   uploadMod,
   uploadImage,
   uploadReadme,
   saveStoreItem,
   deleteStoreItem,
-  loadStoreItems,
   loadStoreMods,
   getBackendStatus,
 };
