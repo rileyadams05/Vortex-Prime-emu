@@ -9,7 +9,7 @@ The production website is published from `docs/` through GitHub Pages.
 Main areas include:
 
 - PlayStation 3 HEN and PlayStation 4 GoldHEN hosts
-- Community mods
+- ModX Cheat Tables
 - Xbox exploit resources
 - Games and Vortex Prime projects
 - Streamz Pro tools and account pages
