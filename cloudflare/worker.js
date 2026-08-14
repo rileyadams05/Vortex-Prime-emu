@@ -291,6 +291,10 @@ export default {
         return await handleModxSubmission(request, env, allowedOrigin);
       }
 
+      if (/^api\/modx\/tables\/[^/]+\/report$/.test(path)) {
+        return await handleModxTableReport(request, env, path, allowedOrigin);
+      }
+
       if (path.startsWith('api/catalogue/')) {
         return handleCatalogueRequest(request, env, path, allowedOrigin);
       }
@@ -4163,6 +4167,52 @@ async function handleUploadRequest(request, env, path, origin) {
   return json({ ...fileInfo, uploadedBy: sanitizeUserForResponse(user) }, 200, origin);
 }
 
+const MODX_PLATFORM_DEFINITIONS = Object.freeze([
+  { id: 'windows', displayName: 'Windows' },
+  { id: 'linux', displayName: 'Linux' },
+  { id: 'steamos', displayName: 'SteamOS' },
+  { id: 'macos', displayName: 'macOS' },
+]);
+
+function parseModxPlatformMetadata(form) {
+  let supportedPlatforms;
+  let executables;
+  try {
+    supportedPlatforms = JSON.parse(String(form.get('supportedPlatforms') || ''));
+    executables = JSON.parse(String(form.get('executables') || ''));
+  } catch {
+    throw httpError(400, 'Platform compatibility metadata is invalid.');
+  }
+  const allowed = new Set(MODX_PLATFORM_DEFINITIONS.map((platform) => platform.id));
+  if (!Array.isArray(supportedPlatforms) || !supportedPlatforms.length || supportedPlatforms.length > allowed.size) {
+    throw httpError(400, 'Choose at least one supported platform.');
+  }
+  const platforms = [...new Set(supportedPlatforms)];
+  if (platforms.length !== supportedPlatforms.length || platforms.some((platform) => typeof platform !== 'string' || !allowed.has(platform))) {
+    throw httpError(400, 'A selected platform is invalid.');
+  }
+  if (!executables || typeof executables !== 'object' || Array.isArray(executables)) {
+    throw httpError(400, 'Game executable metadata is invalid.');
+  }
+  if (Object.keys(executables).some((platform) => !allowed.has(platform) || !platforms.includes(platform))) {
+    throw httpError(400, 'Executable metadata contains an unselected platform.');
+  }
+  const sanitizedExecutables = {};
+  for (const platform of platforms) {
+    const value = executables[platform];
+    if (typeof value !== 'string') throw httpError(400, `Provide the ${platform} game-file identifier.`);
+    const filename = value.trim();
+    if (!filename || filename.length > 260 || filename === '.' || filename === '..' || /[\\/\u0000-\u001f]/.test(filename)) {
+      throw httpError(400, `The ${platform} game-file identifier is invalid.`);
+    }
+    if (platform === 'windows' && !filename.toLowerCase().endsWith('.exe')) {
+      throw httpError(400, 'Select a Windows .exe game file.');
+    }
+    sanitizedExecutables[platform] = filename;
+  }
+  return { supportedPlatforms: platforms, executables: sanitizedExecutables };
+}
+
 async function handleModxSubmission(request, env, origin) {
   if (request.method !== 'POST') {
     throw httpError(405, 'ModX submissions require POST.');
@@ -4174,13 +4224,21 @@ async function handleModxSubmission(request, env, origin) {
   if (!(file instanceof File) || !file.name) throw httpError(400, 'Choose a .CT file.');
   if (!file.name.toLowerCase().endsWith('.ct')) throw httpError(400, 'Only Cheat Engine .CT files are accepted.');
   if (!file.size) throw httpError(400, 'The selected .CT file is empty.');
+  if (String(form.get('offlineOnlyConfirmed')).toLowerCase() !== 'true') {
+    throw httpError(400, 'Confirm that this table is for offline or single-player use only.');
+  }
   const steamGridDbId = Number(form.get('steamGridDbId'));
   if (!Number.isSafeInteger(steamGridDbId) || steamGridDbId <= 0) {
     throw httpError(400, 'Select a game from the search results.');
   }
+  const platformMetadata = parseModxPlatformMetadata(form);
   const outbound = new FormData();
   outbound.set('steamGridDbId', String(steamGridDbId));
+  outbound.set('supportedPlatforms', JSON.stringify(platformMetadata.supportedPlatforms));
+  outbound.set('executables', JSON.stringify(platformMetadata.executables));
   outbound.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
+  outbound.set('offlineOnlyConfirmed', 'true');
+  outbound.set('uploaderAbuseKey', await buildModxAbuseKey(user, env));
   outbound.set('file', file, file.name.replace(/[\r\n"\\/]/g, '_').slice(0, 180));
 
   const response = await fetch('https://modx.vortex-prime-emu.com/community/submit', {
@@ -4191,6 +4249,43 @@ async function handleModxSubmission(request, env, origin) {
   const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'ModX submission failed.');
   return json({ ok: true, ...payload }, 201, origin);
+}
+
+async function handleModxTableReport(request, env, path, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'ModX table reports require POST.');
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to report a ModX table.');
+  const tableId = decodeURIComponent(path.split('/')[3] || '').trim();
+  if (!/^[a-f0-9-]{20,80}$/i.test(tableId)) throw httpError(400, 'Select a valid table.');
+  const body = await readJson(request);
+  const allowedReasons = new Set([
+    'online_or_multiplayer_cheating',
+    'malware_or_unsafe_code',
+    'stolen_or_misleading',
+    'other',
+  ]);
+  if (!allowedReasons.has(body.reason)) throw httpError(400, 'Select a valid report reason.');
+  const bridgeToken = requireEnv(env, 'MODX_BRIDGE_TOKEN');
+  const response = await fetch(`https://modx.vortex-prime-emu.com/community/tables/${encodeURIComponent(tableId)}/report`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-ModX-Bridge': bridgeToken,
+    },
+    body: JSON.stringify({
+      reason: body.reason,
+      details: sanitizeSingleLine(body.details, 1000),
+      reporterAbuseKey: await buildModxAbuseKey(user, env),
+    }),
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'ModX report failed.');
+  return json({ ok: true, ...payload }, 201, origin);
+}
+
+async function buildModxAbuseKey(user, env) {
+  const stableUserId = String(user?.sub || user?.firebaseUid || '').trim();
+  if (!stableUserId) throw httpError(401, 'Your account identity could not be verified.');
+  return hmacSha256Hex(requireEnv(env, 'SESSION_SECRET'), `modx-abuse:${stableUserId}`);
 }
 
 function buildFolderSummary(env) {
