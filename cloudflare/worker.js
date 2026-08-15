@@ -4209,6 +4209,21 @@ function parseModxExecutableMetadata(form) {
   return { name, size, sha256 };
 }
 
+function parseModxUpdatePolicy(form, serviceScope) {
+  const futureValue = String(form.get('futureServiceSupport') || '').trim().toLowerCase();
+  if (futureValue !== 'true' && futureValue !== 'false') {
+    throw httpError(400, 'Choose whether support for more services is planned.');
+  }
+  const maintenancePolicy = String(form.get('maintenancePolicy') || '').trim().toLowerCase();
+  if (maintenancePolicy !== 'uploader' && maintenancePolicy !== 'community') {
+    throw httpError(400, 'Choose how future table updates should be handled.');
+  }
+  return {
+    futureServiceSupport: serviceScope === 'single' && futureValue === 'true',
+    maintenancePolicy,
+  };
+}
+
 async function handleModxSubmission(request, env, origin) {
   if (request.method !== 'POST') {
     throw httpError(405, 'ModX submissions require POST.');
@@ -4223,17 +4238,17 @@ async function handleModxSubmission(request, env, origin) {
   if (String(form.get('offlineOnlyConfirmed')).toLowerCase() !== 'true') {
     throw httpError(400, 'Confirm that this table is for offline or single-player use only.');
   }
-  const gameTitle = sanitizeSingleLine(form.get('gameTitle'), 160).replace(/\s+/g, ' ').trim();
-  if (!gameTitle) throw httpError(400, 'Enter the full game title.');
   const executable = parseModxExecutableMetadata(form);
   const serviceMetadata = parseModxServiceMetadata(form);
+  const updatePolicy = parseModxUpdatePolicy(form, serviceMetadata.scope);
   const outbound = new FormData();
-  outbound.set('gameTitle', gameTitle);
   outbound.set('gameExecutableName', executable.name);
   outbound.set('gameExecutableSize', String(executable.size));
   outbound.set('gameExecutableSha256', executable.sha256);
   outbound.set('serviceScope', serviceMetadata.scope);
   outbound.set('services', JSON.stringify(serviceMetadata.services));
+  outbound.set('futureServiceSupport', String(updatePolicy.futureServiceSupport));
+  outbound.set('maintenancePolicy', updatePolicy.maintenancePolicy);
   outbound.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
   outbound.set('offlineOnlyConfirmed', 'true');
   outbound.set('uploaderAbuseKey', await buildModxAbuseKey(user, env));
