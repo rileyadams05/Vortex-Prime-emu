@@ -4167,50 +4167,46 @@ async function handleUploadRequest(request, env, path, origin) {
   return json({ ...fileInfo, uploadedBy: sanitizeUserForResponse(user) }, 200, origin);
 }
 
-const MODX_PLATFORM_DEFINITIONS = Object.freeze([
-  { id: 'windows', displayName: 'Windows' },
-  { id: 'linux', displayName: 'Linux' },
-  { id: 'steamos', displayName: 'SteamOS' },
-  { id: 'macos', displayName: 'macOS' },
-]);
-
-function parseModxPlatformMetadata(form) {
-  let supportedPlatforms;
-  let executables;
+function parseModxServiceMetadata(form) {
+  const scope = String(form.get('serviceScope') || '').trim().toLowerCase();
+  if (scope !== 'single' && scope !== 'multiple') {
+    throw httpError(400, 'Choose whether the table supports one service or multiple services.');
+  }
+  let services;
   try {
-    supportedPlatforms = JSON.parse(String(form.get('supportedPlatforms') || ''));
-    executables = JSON.parse(String(form.get('executables') || ''));
+    services = JSON.parse(String(form.get('services') || ''));
   } catch {
-    throw httpError(400, 'Platform compatibility metadata is invalid.');
+    throw httpError(400, 'Service compatibility information is invalid.');
   }
-  const allowed = new Set(MODX_PLATFORM_DEFINITIONS.map((platform) => platform.id));
-  if (!Array.isArray(supportedPlatforms) || !supportedPlatforms.length || supportedPlatforms.length > allowed.size) {
-    throw httpError(400, 'Choose at least one supported platform.');
+  if (!Array.isArray(services) || services.length < 1 || services.length > 12) {
+    throw httpError(400, 'Enter the supported game service or services.');
   }
-  const platforms = [...new Set(supportedPlatforms)];
-  if (platforms.length !== supportedPlatforms.length || platforms.some((platform) => typeof platform !== 'string' || !allowed.has(platform))) {
-    throw httpError(400, 'A selected platform is invalid.');
+  const unique = new Map();
+  for (const value of services) {
+    const name = sanitizeSingleLine(value, 80).replace(/\s+/g, ' ').trim();
+    if (!name) throw httpError(400, 'Each supported service must have a name.');
+    unique.set(name.toLowerCase(), name);
   }
-  if (!executables || typeof executables !== 'object' || Array.isArray(executables)) {
-    throw httpError(400, 'Game executable metadata is invalid.');
+  const names = [...unique.values()];
+  if (scope === 'single' && names.length !== 1) {
+    throw httpError(400, 'Enter exactly one supported service.');
   }
-  if (Object.keys(executables).some((platform) => !allowed.has(platform) || !platforms.includes(platform))) {
-    throw httpError(400, 'Executable metadata contains an unselected platform.');
+  if (scope === 'multiple' && names.length < 2) {
+    throw httpError(400, 'Enter at least two supported services.');
   }
-  const sanitizedExecutables = {};
-  for (const platform of platforms) {
-    const value = executables[platform];
-    if (typeof value !== 'string') throw httpError(400, `Provide the ${platform} game-file identifier.`);
-    const filename = value.trim();
-    if (!filename || filename.length > 260 || filename === '.' || filename === '..' || /[\\/\u0000-\u001f]/.test(filename)) {
-      throw httpError(400, `The ${platform} game-file identifier is invalid.`);
-    }
-    if (platform === 'windows' && !filename.toLowerCase().endsWith('.exe')) {
-      throw httpError(400, 'Select a Windows .exe game file.');
-    }
-    sanitizedExecutables[platform] = filename;
+  return { scope, services: names };
+}
+
+function parseModxExecutableMetadata(form) {
+  const name = String(form.get('gameExecutableName') || '').trim();
+  const size = Number(form.get('gameExecutableSize'));
+  const sha256 = String(form.get('gameExecutableSha256') || '').trim().toLowerCase();
+  if (!name || name.length > 260 || name === '.' || name === '..' || /[\\/\u0000-\u001f]/.test(name) || !name.toLowerCase().endsWith('.exe')) {
+    throw httpError(400, 'Choose a valid Windows game .exe file.');
   }
-  return { supportedPlatforms: platforms, executables: sanitizedExecutables };
+  if (!Number.isSafeInteger(size) || size <= 0) throw httpError(400, 'The game executable size is invalid.');
+  if (!/^[a-f0-9]{64}$/.test(sha256)) throw httpError(400, 'The game executable fingerprint is invalid.');
+  return { name, size, sha256 };
 }
 
 async function handleModxSubmission(request, env, origin) {
@@ -4227,15 +4223,17 @@ async function handleModxSubmission(request, env, origin) {
   if (String(form.get('offlineOnlyConfirmed')).toLowerCase() !== 'true') {
     throw httpError(400, 'Confirm that this table is for offline or single-player use only.');
   }
-  const steamGridDbId = Number(form.get('steamGridDbId'));
-  if (!Number.isSafeInteger(steamGridDbId) || steamGridDbId <= 0) {
-    throw httpError(400, 'Select a game from the search results.');
-  }
-  const platformMetadata = parseModxPlatformMetadata(form);
+  const gameTitle = sanitizeSingleLine(form.get('gameTitle'), 160).replace(/\s+/g, ' ').trim();
+  if (!gameTitle) throw httpError(400, 'Enter the full game title.');
+  const executable = parseModxExecutableMetadata(form);
+  const serviceMetadata = parseModxServiceMetadata(form);
   const outbound = new FormData();
-  outbound.set('steamGridDbId', String(steamGridDbId));
-  outbound.set('supportedPlatforms', JSON.stringify(platformMetadata.supportedPlatforms));
-  outbound.set('executables', JSON.stringify(platformMetadata.executables));
+  outbound.set('gameTitle', gameTitle);
+  outbound.set('gameExecutableName', executable.name);
+  outbound.set('gameExecutableSize', String(executable.size));
+  outbound.set('gameExecutableSha256', executable.sha256);
+  outbound.set('serviceScope', serviceMetadata.scope);
+  outbound.set('services', JSON.stringify(serviceMetadata.services));
   outbound.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
   outbound.set('offlineOnlyConfirmed', 'true');
   outbound.set('uploaderAbuseKey', await buildModxAbuseKey(user, env));
