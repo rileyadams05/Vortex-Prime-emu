@@ -4224,6 +4224,42 @@ function parseModxUpdatePolicy(form, serviceScope) {
   };
 }
 
+const MODX_README_FIELDS = ['Game Name', 'Author', 'Version', 'Game.exe', 'Platform service/Cross-platform', 'Credits'];
+
+function missingModxReadmeFields(text) {
+  const lines = String(text || '').replace(/^\uFEFF/, '').replace(/\r/g, '').split('\n');
+  const headings = MODX_README_FIELDS.map((label) => ({
+    label,
+    index: lines.findIndex((line) => {
+      const value = line.trim().toLowerCase();
+      const target = label.toLowerCase();
+      return value === target || value.startsWith(`${target}:`);
+    }),
+  }));
+  return headings.filter((heading, position) => {
+    if (heading.index < 0) return true;
+    const sameLine = lines[heading.index].trim().slice(heading.label.length).replace(/^:\s*/, '').trim();
+    if (sameLine) return false;
+    const later = headings.slice(position + 1).map((item) => item.index).filter((index) => index > heading.index);
+    const end = later.length ? Math.min(...later) : lines.length;
+    return !lines.slice(heading.index + 1, end).map((line) => line.trim()).filter((line) => line && !line.startsWith('>')).join(' ');
+  }).map((heading) => heading.label);
+}
+
+async function validateModxCommunityReadme(form, maintenancePolicy) {
+  if (maintenancePolicy !== 'community') return null;
+  const readme = form.get('readme');
+  if (!(readme instanceof File) || readme.name.toLowerCase() !== 'readme.md') {
+    throw httpError(400, 'Upload the completed README.md before publishing a community-maintained table.');
+  }
+  if (!readme.size || readme.size > 512 * 1024) {
+    throw httpError(400, 'README.md must contain your completed details and be smaller than 512 KB.');
+  }
+  const missing = missingModxReadmeFields(await readme.text());
+  if (missing.length) throw httpError(400, `Complete these README sections: ${missing.join(', ')}.`);
+  return readme;
+}
+
 async function handleModxSubmission(request, env, origin) {
   if (request.method !== 'POST') {
     throw httpError(405, 'ModX submissions require POST.');
@@ -4241,6 +4277,7 @@ async function handleModxSubmission(request, env, origin) {
   const executable = parseModxExecutableMetadata(form);
   const serviceMetadata = parseModxServiceMetadata(form);
   const updatePolicy = parseModxUpdatePolicy(form, serviceMetadata.scope);
+  const readme = await validateModxCommunityReadme(form, updatePolicy.maintenancePolicy);
   const outbound = new FormData();
   outbound.set('gameExecutableName', executable.name);
   outbound.set('gameExecutableSize', String(executable.size));
@@ -4252,6 +4289,7 @@ async function handleModxSubmission(request, env, origin) {
   outbound.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
   outbound.set('offlineOnlyConfirmed', 'true');
   outbound.set('uploaderAbuseKey', await buildModxAbuseKey(user, env));
+  if (readme) outbound.set('readme', readme, 'README.md');
   outbound.set('file', file, file.name.replace(/[\r\n"\\/]/g, '_').slice(0, 180));
 
   const response = await fetch('https://modx.vortex-prime-emu.com/community/submit', {
