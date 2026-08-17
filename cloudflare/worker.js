@@ -291,6 +291,10 @@ export default {
         return await handleModxSubmission(request, env, allowedOrigin);
       }
 
+      if (path === 'api/modx/tables') {
+        return await handlePublicModxTables(request, allowedOrigin);
+      }
+
       if (/^api\/modx\/tables\/[^/]+\/report$/.test(path)) {
         return await handleModxTableReport(request, env, path, allowedOrigin);
       }
@@ -4300,6 +4304,22 @@ async function handleModxSubmission(request, env, origin) {
   const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'ModX submission failed.');
   return json({ ok: true, ...payload }, 201, origin);
+}
+
+async function handlePublicModxTables(request, origin) {
+  if (request.method !== 'GET') throw httpError(405, 'ModX table browsing requires GET.');
+  const requestUrl = new URL(request.url);
+  const executable = String(requestUrl.searchParams.get('executable') || '').trim();
+  if (!executable || executable.length > 260 || executable === '.' || executable === '..' || /[\\/\u0000-\u001f]/.test(executable) || !executable.toLowerCase().endsWith('.exe')) {
+    throw httpError(400, 'Enter a valid game executable name, such as Game.exe.');
+  }
+  const upstreamUrl = new URL('https://modx.vortex-prime-emu.com/tables');
+  upstreamUrl.searchParams.set('executable', executable);
+  upstreamUrl.searchParams.set('platform', 'windows');
+  const response = await fetch(upstreamUrl, { headers: { Accept: 'application/json' } });
+  const payload = await response.json().catch(() => ({ error: 'The ModX catalogue returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The ModX catalogue could not be loaded.');
+  return json({ ok: true, tables: Array.isArray(payload.tables) ? payload.tables : [] }, 200, origin);
 }
 
 async function handleModxTableReport(request, env, path, origin) {
