@@ -4209,7 +4209,7 @@ function parseModxExecutableMetadata(form) {
     throw httpError(400, 'Choose a valid Windows game .exe file.');
   }
   if (!Number.isSafeInteger(size) || size <= 0) throw httpError(400, 'The game executable size is invalid.');
-  if (!/^[a-f0-9]{64}$/.test(sha256)) throw httpError(400, 'The game executable fingerprint is invalid.');
+  if (!/^[a-f0-9]{64}$/.test(sha256)) throw httpError(400, 'The game executable verification data is invalid.');
   return { name, size, sha256 };
 }
 
@@ -4273,7 +4273,7 @@ async function handleModxSubmission(request, env, origin) {
   const form = await request.formData();
   const file = form.get('file');
   if (!(file instanceof File) || !file.name) throw httpError(400, 'Choose a .CT file.');
-  if (!file.name.toLowerCase().endsWith('.ct')) throw httpError(400, 'Only Cheat Engine .CT files are accepted.');
+  if (!file.name.toLowerCase().endsWith('.ct')) throw httpError(400, 'Only .CT cheat tables are accepted.');
   if (!file.size) throw httpError(400, 'The selected .CT file is empty.');
   if (String(form.get('offlineOnlyConfirmed')).toLowerCase() !== 'true') {
     throw httpError(400, 'Confirm that this table is for offline or single-player use only.');
