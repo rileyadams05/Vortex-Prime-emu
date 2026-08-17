@@ -4186,9 +4186,15 @@ function parseModxServiceMetadata(form) {
     throw httpError(400, 'Enter the supported game service or services.');
   }
   const unique = new Map();
+  const platforms = new Set();
   for (const value of services) {
     const name = sanitizeSingleLine(value, 80).replace(/\s+/g, ' ').trim();
+    const platformMatch = /^(win|linux)\s*\/\s*(.+)$/i.exec(name);
     if (!name) throw httpError(400, 'Each supported service must have a name.');
+    if (!platformMatch || !platformMatch[2].trim()) {
+      throw httpError(400, 'Use WIN/Service or Linux/Service for every supported service.');
+    }
+    platforms.add(platformMatch[1].toLowerCase() === 'win' ? 'windows' : 'linux');
     unique.set(name.toLowerCase(), name);
   }
   const names = [...unique.values()];
@@ -4198,7 +4204,7 @@ function parseModxServiceMetadata(form) {
   if (scope === 'multiple' && names.length < 2) {
     throw httpError(400, 'Enter at least two supported services.');
   }
-  return { scope, services: names };
+  return { scope, services: names, platforms: [...platforms] };
 }
 
 function parseModxExecutableMetadata(form) {
@@ -4288,6 +4294,10 @@ async function handleModxSubmission(request, env, origin) {
   outbound.set('gameExecutableSha256', executable.sha256);
   outbound.set('serviceScope', serviceMetadata.scope);
   outbound.set('services', JSON.stringify(serviceMetadata.services));
+  outbound.set('supportedPlatforms', JSON.stringify(serviceMetadata.platforms));
+  outbound.set('executables', JSON.stringify(Object.fromEntries(
+    serviceMetadata.platforms.map((platform) => [platform, executable.name]),
+  )));
   outbound.set('futureServiceSupport', String(updatePolicy.futureServiceSupport));
   outbound.set('maintenancePolicy', updatePolicy.maintenancePolicy);
   outbound.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
