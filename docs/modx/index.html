@@ -38,14 +38,6 @@
     </section>
     <div class="layout" id="publisherLayout" hidden>
       <form class="card" id="form" novalidate>
-        <div class="field">
-          <label id="servicesLabel">Service name</label>
-          <div class="service-list" id="serviceList" aria-labelledby="servicesLabel"></div>
-          <button class="add-service" id="addService" type="button" hidden>+ Add another service</button>
-          <p class="field-note">Start each entry with the operating system, followed by a slash and the service name. Windows uses <strong>WIN</strong>; Linux uses <strong>Linux</strong>.</p>
-          <div class="format-examples" aria-label="Service name examples"><span class="format-example">WIN/Steam</span><span class="format-example">WIN/Ubisoft Connect</span><span class="format-example">Linux/Steam</span></div>
-        </div>
-
         <div class="service-options">
           <fieldset class="choice-field">
             <legend>Where is this table supported?</legend>
@@ -62,6 +54,14 @@
               <label class="choice"><input type="radio" name="futureServiceSupport" value="yes"><span class="choice-copy"><strong>Yes</strong><small>Additional compatible service releases are planned.</small></span></label>
             </div>
           </fieldset>
+        </div>
+
+        <div class="field">
+          <label id="servicesLabel">Service name</label>
+          <div class="service-list" id="serviceList" aria-labelledby="servicesLabel"></div>
+          <button class="add-service" id="addService" type="button" hidden>+ Add another service</button>
+          <p class="field-note">Start each entry with the operating system, followed by a slash and the service name. Windows uses <strong>WIN</strong>; Linux uses <strong>Linux</strong>.</p>
+          <div class="format-examples" aria-label="Service name examples"><span class="format-example">WIN/Steam</span><span class="format-example">WIN/Ubisoft Connect</span><span class="format-example">Linux/Steam</span></div>
         </div>
 
         <fieldset class="choice-field">
