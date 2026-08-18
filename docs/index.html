@@ -487,16 +487,79 @@
             position: fixed;
             z-index: 1600;
             display: none;
-            width: 190px;
-            min-height: 48px;
+            width: 260px;
+            padding: 6px;
             border: 1px solid var(--color-border);
-            border-radius: 10px;
-            background: var(--color-bg-card);
+            border-radius: 12px;
+            background: #18191d;
             box-shadow: var(--shadow-xl);
         }
 
         .account-context-menu.open {
             display: block;
+        }
+
+        .account-menu-action,
+        .account-menu-link {
+            width: 100%;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #f4f4f5;
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1.25;
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 160ms ease, color 160ms ease;
+        }
+
+        .account-menu-action:hover,
+        .account-menu-action:focus-visible,
+        .account-menu-link:hover,
+        .account-menu-link:focus-visible {
+            outline: none;
+            background: rgba(255,255,255,0.075);
+            color: #fff;
+        }
+
+        .account-menu-chevron {
+            width: 7px;
+            height: 7px;
+            flex: 0 0 auto;
+            border-right: 1.5px solid currentColor;
+            border-bottom: 1.5px solid currentColor;
+            transform: rotate(45deg) translateY(-2px);
+            transition: transform 160ms ease;
+        }
+
+        .account-menu-action[aria-expanded="true"] .account-menu-chevron {
+            transform: rotate(225deg) translate(-1px, -1px);
+        }
+
+        .account-menu-divider {
+            height: 1px;
+            margin: 5px 8px;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .account-context-submenu {
+            margin: 2px 0 0 8px;
+            padding-left: 8px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .account-context-submenu[hidden],
+        .account-avatar-quick-input {
+            display: none;
         }
 
         .profile-modal {
@@ -4715,7 +4778,19 @@
                     </form>
                 </section>
             </div>
-            <div class="account-context-menu" id="accountContextMenu" role="menu" aria-label="Account menu"></div>
+            <div class="account-context-menu" id="accountContextMenu" role="menu" aria-label="Account menu">
+                <button class="account-menu-action" id="accountChangePicture" type="button" role="menuitem">Change my profile picture</button>
+                <div class="account-menu-divider" aria-hidden="true"></div>
+                <button class="account-menu-action" id="accountModxToggle" type="button" role="menuitem" aria-expanded="false" aria-controls="accountModxSubmenu">
+                    <span>ModX</span>
+                    <span class="account-menu-chevron" aria-hidden="true"></span>
+                </button>
+                <div class="account-context-submenu" id="accountModxSubmenu" role="group" aria-label="ModX account options" hidden>
+                    <a class="account-menu-link" href="/modx/my-uploads.html" role="menuitem">My uploads</a>
+                    <a class="account-menu-link" href="/modx/community.html" role="menuitem">Community Cheat Tables</a>
+                </div>
+            </div>
+            <input class="account-avatar-quick-input" id="accountAvatarQuickInput" type="file" accept="image/png,image/jpeg,image/webp">
             <div class="item-detail-modal" id="itemDetailModal" aria-hidden="true">
                 <div class="item-detail-backdrop" id="itemDetailBackdrop"></div>
                 <section class="item-detail-panel" role="dialog" aria-modal="true" aria-labelledby="itemDetailTitle">
@@ -4806,8 +4881,8 @@
                         if (streamzAccountName) streamzAccountName.textContent = user ? (profile.displayName || 'Google account') : 'Google account';
                         if (streamzAccountEmail) streamzAccountEmail.textContent = user ? (user.email || 'Google account') : 'Sign in to load account';
                         if (streamzAccountAvatar) {
-                            if (user && user.photoURL) {
-                                streamzAccountAvatar.src = user.photoURL;
+                            if (user && profile.photoURL) {
+                                streamzAccountAvatar.src = profile.photoURL;
                                 streamzAccountAvatar.hidden = false;
                             } else {
                                 streamzAccountAvatar.removeAttribute('src');
@@ -5138,6 +5213,10 @@
                     const accountSetupCancel = document.getElementById('accountSetupCancel');
                     const accountSetupSubmit = document.getElementById('accountSetupSubmit');
                     const accountContextMenu = document.getElementById('accountContextMenu');
+                    const accountChangePicture = document.getElementById('accountChangePicture');
+                    const accountAvatarQuickInput = document.getElementById('accountAvatarQuickInput');
+                    const accountModxToggle = document.getElementById('accountModxToggle');
+                    const accountModxSubmenu = document.getElementById('accountModxSubmenu');
                     const profileModal = document.getElementById('profileModal');
                     const profileBackdrop = document.getElementById('profileBackdrop');
                     const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -5156,18 +5235,58 @@
 
                     function closeAccountContextMenu() {
                         accountContextMenu?.classList.remove('open');
+                        if (accountModxSubmenu) accountModxSubmenu.hidden = true;
+                        accountModxToggle?.setAttribute('aria-expanded', 'false');
+                    }
+
+                    function positionAccountContextMenu(clientX, clientY) {
+                        if (!accountContextMenu) return;
+                        const width = accountContextMenu.offsetWidth || 260;
+                        const height = accountContextMenu.offsetHeight || 100;
+                        accountContextMenu.style.left = `${Math.max(8, Math.min(clientX, window.innerWidth - width - 8))}px`;
+                        accountContextMenu.style.top = `${Math.max(8, Math.min(clientY, window.innerHeight - height - 8))}px`;
                     }
 
                     function openAccountContextMenu(event) {
                         if (!currentUser || !accountContextMenu) return;
                         event.preventDefault();
-                        const menuWidth = 190;
-                        const menuHeight = 48;
-                        const left = Math.max(8, Math.min(event.clientX, window.innerWidth - menuWidth - 8));
-                        const top = Math.max(8, Math.min(event.clientY, window.innerHeight - menuHeight - 8));
-                        accountContextMenu.style.left = `${left}px`;
-                        accountContextMenu.style.top = `${top}px`;
+                        if (accountModxSubmenu) accountModxSubmenu.hidden = true;
+                        accountModxToggle?.setAttribute('aria-expanded', 'false');
                         accountContextMenu.classList.add('open');
+                        positionAccountContextMenu(event.clientX, event.clientY);
+                    }
+
+                    async function prepareAvatarImage(file) {
+                        if (!file || !/^image\/(png|jpeg|webp)$/i.test(file.type)) throw new Error('Choose a PNG, JPEG, or WebP image.');
+                        const sourceUrl = URL.createObjectURL(file);
+                        try {
+                            const image = new Image();
+                            image.decoding = 'async';
+                            image.src = sourceUrl;
+                            await image.decode();
+                            const side = Math.min(image.naturalWidth, image.naturalHeight);
+                            if (!side) throw new Error('That image could not be read.');
+                            const canvas = document.createElement('canvas');
+                            canvas.width = 512;
+                            canvas.height = 512;
+                            const context = canvas.getContext('2d');
+                            context.imageSmoothingEnabled = true;
+                            context.imageSmoothingQuality = 'high';
+                            context.drawImage(
+                                image,
+                                Math.floor((image.naturalWidth - side) / 2),
+                                Math.floor((image.naturalHeight - side) / 2),
+                                side,
+                                side,
+                                0,
+                                0,
+                                512,
+                                512
+                            );
+                            return canvas.toDataURL('image/webp', 0.9);
+                        } finally {
+                            URL.revokeObjectURL(sourceUrl);
+                        }
                     }
 
                     function openProfilePanel() {
@@ -5352,6 +5471,36 @@
                         });
                         mainUserBadge.addEventListener('contextmenu', openAccountContextMenu);
                     }
+
+                    accountChangePicture?.addEventListener('click', () => {
+                        closeAccountContextMenu();
+                        accountAvatarQuickInput?.click();
+                    });
+
+                    accountAvatarQuickInput?.addEventListener('change', async () => {
+                        const file = accountAvatarQuickInput.files?.[0];
+                        accountAvatarQuickInput.value = '';
+                        if (!file || !currentUser) return;
+                        try {
+                            const photoURL = await prepareAvatarImage(file);
+                            const profile = resolveDisplayProfile(currentUser);
+                            persistProfileOverrides(currentUser, { displayName: profile.displayName, photoURL });
+                            applyMainUser(currentUser);
+                            showBackendStatus('Profile picture updated.', 'success');
+                        } catch (error) {
+                            showBackendStatus(error.message || 'The profile picture could not be updated.');
+                        }
+                    });
+
+                    accountModxToggle?.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        if (!accountModxSubmenu) return;
+                        const expanded = accountModxSubmenu.hidden;
+                        accountModxSubmenu.hidden = !expanded;
+                        accountModxToggle.setAttribute('aria-expanded', String(expanded));
+                        const rect = accountContextMenu.getBoundingClientRect();
+                        positionAccountContextMenu(rect.left, rect.top);
+                    });
 
                     if (accountSetupForm) accountSetupForm.addEventListener('submit', completeAccountSetup);
                     accountSetupName?.addEventListener('input', updateAccountSetupSubmit);

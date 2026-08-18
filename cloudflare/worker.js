@@ -305,6 +305,10 @@ export default {
         return await handlePublicModxTables(request, allowedOrigin);
       }
 
+      if (path === 'api/modx/my-tables') {
+        return await handleMyModxTables(request, env, allowedOrigin);
+      }
+
       if (/^api\/modx\/tables\/[^/]+\/report$/.test(path)) {
         return await handleModxTableReport(request, env, path, allowedOrigin);
       }
@@ -4490,6 +4494,21 @@ async function handlePublicModxTables(request, origin) {
   const response = await fetch(upstreamUrl, { headers: { Accept: 'application/json' } });
   const payload = await response.json().catch(() => ({ error: 'The ModX catalogue returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The ModX catalogue could not be loaded.');
+  return json({ ok: true, tables: Array.isArray(payload.tables) ? payload.tables : [] }, 200, origin);
+}
+
+async function handleMyModxTables(request, env, origin) {
+  if (request.method !== 'GET') throw httpError(405, 'ModX upload management requires GET.');
+  const user = await ensureAuthenticated(request, env, 'Sign in to manage your ModX uploads.');
+  const response = await fetch('https://modx.vortex-prime-emu.com/community/my-tables', {
+    headers: {
+      Accept: 'application/json',
+      'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN'),
+      'X-ModX-Uploader-Key': await buildModxAbuseKey(user, env),
+    },
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'Your ModX uploads could not be loaded.');
   return json({ ok: true, tables: Array.isArray(payload.tables) ? payload.tables : [] }, 200, origin);
 }
 
