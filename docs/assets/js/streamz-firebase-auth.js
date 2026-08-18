@@ -27,8 +27,8 @@ async function getConfiguredAuth() {
       onAuthStateChanged(auth, async (user) => {
         if (!user) return;
         try {
-          await createServerSession(await user.getIdToken());
-          window.dispatchEvent(new CustomEvent('streamz-auth-restored', { detail: { user } }));
+          const session = await createServerSession(await user.getIdToken());
+          window.dispatchEvent(new CustomEvent('streamz-auth-restored', { detail: { user, session } }));
         } catch (error) {
           console.error('Unable to restore the secure Streamz session.', error);
         }
@@ -60,6 +60,30 @@ async function createServerSession(idToken) {
   return data;
 }
 
+async function checkUsername(setupToken, username) {
+  const response = await fetch('/api/auth/username/check', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ setupToken, username }),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data?.message || 'Unable to check that username.');
+  return data;
+}
+
+async function completeProfile(profile) {
+  const response = await fetch('/api/auth/complete-profile', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(profile || {}),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data?.message || 'Unable to complete your account.');
+  return data;
+}
+
 async function signOutEverywhere() {
   const auth = await getConfiguredAuth();
   await Promise.allSettled([
@@ -76,6 +100,8 @@ async function subscribe(callback) {
 window.StreamzFirebaseAuth = {
   getAuth: getConfiguredAuth,
   signInWithGoogleIdToken,
+  checkUsername,
+  completeProfile,
   signOut: signOutEverywhere,
   subscribe,
 };

@@ -12,6 +12,7 @@ const PRODUCTION_ORIGINS = [
 const DEFAULT_DB = {
   storeMods: [],
   reports: [],
+  vortexAccounts: [],
   streamzAccounts: [],
   streamzProEntitlements: [],
   streamzProPayments: [],
@@ -69,6 +70,7 @@ const GOOGLE_ISSUERS = new Set([
 
 const SESSION_COOKIE_NAME = 'vps_session';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days (persistent login)
+const ACCOUNT_SETUP_TTL_SECONDS = 15 * 60;
 const STREAMZ_STATE_TTL_SECONDS = 10 * 60;
 const STREAMZ_CALLBACK_BASE = 'https://vortex-prime-emu.com/projects/streamz/auth';
 const STREAMZ_DEFAULT_DEEP_LINK = 'streamz://auth/callback';
@@ -201,6 +203,14 @@ export default {
 
       if (path === 'api/auth/login') {
         return handleLogin(request, env, allowedOrigin, ctx);
+      }
+
+      if (path === 'api/auth/username/check') {
+        return handleUsernameCheck(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/auth/complete-profile') {
+        return handleCompleteProfile(request, env, allowedOrigin, ctx);
       }
 
       if (path === 'api/auth/logout') {
@@ -450,13 +460,41 @@ async function handleLogin(request, env, origin, ctx) {
   }
 
   const profile = await validateFirebaseIdToken(idToken, env);
+  const db = await loadDatabase(env);
+  const account = findVortexAccount(db, profile.uid);
   const role = isAdminEmail(profile.email, env) ? 'admin' : 'uploader';
   const now = Math.floor(Date.now() / 1000);
+
+  if (!account) {
+    const setupToken = await createSessionToken({
+      purpose: 'account_setup',
+      sub: profile.sub,
+      firebaseUid: profile.uid,
+      email: profile.email,
+      name: profile.name || null,
+      picture: profile.picture || null,
+      role,
+      exp: now + ACCOUNT_SETUP_TTL_SECONDS,
+      iat: now,
+    }, env);
+    return json({
+      ok: true,
+      requiresProfile: true,
+      setupToken,
+      profile: {
+        name: profile.name || '',
+        email: profile.email,
+        picture: profile.picture || null,
+      },
+    }, 200, origin);
+  }
+
   const payload = {
     sub: profile.sub,
     firebaseUid: profile.uid,
     email: profile.email,
-    name: profile.name || null,
+    name: account.name,
+    username: account.username,
     picture: profile.picture || null,
     role,
     exp: now + SESSION_TTL_SECONDS,
@@ -475,11 +513,146 @@ async function handleLogin(request, env, origin, ctx) {
   }
   const response = json({
     ok: true,
+    requiresProfile: false,
     user: sanitizeUserForResponse(payload),
     role,
   }, 200, origin);
   response.headers.append('Set-Cookie', buildSessionCookie(token));
   return response;
+}
+
+async function handleUsernameCheck(request, env, origin) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Username availability checks require POST.');
+  }
+  const body = await request.json().catch(() => null);
+  await verifyAccountSetupToken(body?.setupToken, env);
+  const username = normalizeUsername(body?.username);
+  const validationMessage = validateUsername(username);
+  if (validationMessage) {
+    return json({ ok: true, available: false, message: validationMessage }, 200, origin);
+  }
+  const db = await loadDatabase(env);
+  const available = !getVortexAccounts(db).some((account) => account.usernameKey === username.toLowerCase());
+  return json({
+    ok: true,
+    available,
+    message: available ? 'Username is available.' : 'That username is already taken.',
+  }, 200, origin);
+}
+
+async function handleCompleteProfile(request, env, origin, ctx) {
+  if (request.method !== 'POST') {
+    throw httpError(405, 'Account completion requires POST.');
+  }
+  const body = await request.json().catch(() => null);
+  const setup = await verifyAccountSetupToken(body?.setupToken, env);
+  const name = normalizeAccountName(body?.name);
+  const email = String(body?.email || '').trim().toLowerCase();
+  const dateOfBirth = normalizeDateOfBirth(body?.dateOfBirth);
+  const username = normalizeUsername(body?.username);
+
+  if (name.length < 2 || name.length > 80) throw httpError(400, 'Enter your full name.');
+  if (!email || email !== String(setup.email || '').trim().toLowerCase()) {
+    throw httpError(400, 'The email address must match the verified Google account.');
+  }
+  if (!dateOfBirth) throw httpError(400, 'Enter a valid date of birth.');
+  const usernameMessage = validateUsername(username);
+  if (usernameMessage) throw httpError(400, usernameMessage);
+
+  const nowIso = new Date().toISOString();
+  const account = await updateStreamzDatabase(env, async (db) => {
+    const accounts = getVortexAccounts(db);
+    const usernameKey = username.toLowerCase();
+    const conflict = accounts.find((entry) => entry.usernameKey === usernameKey && entry.firebaseUid !== setup.firebaseUid);
+    if (conflict) throw httpError(409, 'That username is already taken.');
+    const existingIndex = accounts.findIndex((entry) => entry.firebaseUid === setup.firebaseUid);
+    const existing = existingIndex >= 0 ? accounts[existingIndex] : null;
+    const nextAccount = {
+      id: existing?.id || crypto.randomUUID(),
+      firebaseUid: setup.firebaseUid,
+      email,
+      name,
+      username,
+      usernameKey,
+      dateOfBirth,
+      picture: typeof setup.picture === 'string' ? setup.picture : null,
+      createdAt: existing?.createdAt || nowIso,
+      updatedAt: nowIso,
+    };
+    if (existingIndex >= 0) accounts[existingIndex] = nextAccount;
+    else accounts.push(nextAccount);
+    return { db: { ...db, vortexAccounts: accounts }, value: nextAccount };
+  });
+
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    sub: setup.sub,
+    firebaseUid: setup.firebaseUid,
+    email: account.email,
+    name: account.name,
+    username: account.username,
+    picture: account.picture,
+    role: isAdminEmail(account.email, env) ? 'admin' : 'uploader',
+    exp: now + SESSION_TTL_SECONDS,
+    iat: now,
+  };
+  const token = await createSessionToken(payload, env);
+  const provisionAccount = ensureStreamzAccountForSession(env, payload).catch((error) => {
+    console.log('Streamz account provisioning deferred', { reason: error?.message || 'unknown_error' });
+  });
+  if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(provisionAccount);
+  else await provisionAccount;
+
+  const response = json({
+    ok: true,
+    requiresProfile: false,
+    user: sanitizeUserForResponse(payload),
+    role: payload.role,
+  }, 200, origin);
+  response.headers.append('Set-Cookie', buildSessionCookie(token));
+  return response;
+}
+
+function getVortexAccounts(db) {
+  return Array.isArray(db?.vortexAccounts) ? [...db.vortexAccounts] : [];
+}
+
+function findVortexAccount(db, firebaseUid) {
+  if (!firebaseUid) return null;
+  return getVortexAccounts(db).find((account) => account.firebaseUid === firebaseUid) || null;
+}
+
+function normalizeAccountName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ');
+}
+
+function normalizeUsername(value) {
+  return String(value || '').trim();
+}
+
+function validateUsername(username) {
+  if (username.length < 3 || username.length > 24) return 'Username must be between 3 and 24 characters.';
+  if (!/^[A-Za-z0-9_]+$/.test(username)) return 'Use only letters, numbers, and underscores.';
+  return '';
+}
+
+function normalizeDateOfBirth(value) {
+  const candidate = String(value || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return '';
+  const date = new Date(`${candidate}T00:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== candidate) return '';
+  if (date.getTime() > Date.now()) return '';
+  return candidate;
+}
+
+async function verifyAccountSetupToken(token, env) {
+  if (typeof token !== 'string' || !token) throw httpError(401, 'Your account setup session has expired. Sign in again.');
+  const payload = await verifySessionToken(token, env);
+  if (payload?.purpose !== 'account_setup' || !payload.firebaseUid || !payload.email) {
+    throw httpError(401, 'Invalid account setup session.');
+  }
+  return payload;
 }
 
 async function handleLogout(env, origin) {
@@ -4868,12 +5041,13 @@ function sanitizeStreamzTokenResponse(tokenResponse, handoffEncrypted = false) {
 
 function sanitizeUserForResponse(user) {
   if (!user || typeof user !== 'object') return null;
-  const { email, name, picture, role } = user;
+  const { email, name, username, picture, role } = user;
   const trimmedEmail = typeof email === 'string' ? email.trim() : null;
   if (!trimmedEmail) return null;
   return {
     email: trimmedEmail,
     name: typeof name === 'string' ? name.trim() : null,
+    username: typeof username === 'string' ? username.trim() : null,
     picture: typeof picture === 'string' ? picture.trim() : null,
     role: role || 'uploader',
   };

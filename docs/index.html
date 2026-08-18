@@ -358,6 +358,142 @@
             cursor: pointer;
         }
 
+        .account-setup-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1400;
+            display: none;
+            place-items: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(8px);
+        }
+
+        .account-setup-modal.active {
+            display: grid;
+        }
+
+        .account-setup-card {
+            width: min(520px, 100%);
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            padding: 1.5rem;
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            background: var(--color-bg-card);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .account-setup-card h3 {
+            margin: 0 0 0.45rem;
+            font-size: 1.35rem;
+        }
+
+        .account-setup-card > p {
+            margin: 0 0 1.25rem;
+            color: var(--color-text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .account-setup-form {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .account-setup-field {
+            display: grid;
+            gap: 0.4rem;
+            color: var(--color-text-secondary);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .account-setup-field input {
+            width: 100%;
+            padding: 0.78rem 0.85rem;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-bg-dark);
+            color: var(--color-text);
+            font: inherit;
+            font-weight: 500;
+        }
+
+        .account-setup-field input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.42);
+        }
+
+        .account-setup-field input[readonly] {
+            color: var(--color-text-secondary);
+            cursor: default;
+        }
+
+        .username-status {
+            min-height: 1.1rem;
+            margin: -0.25rem 0 0;
+            color: var(--color-text-muted);
+            font-size: 0.75rem;
+        }
+
+        .username-status.available { color: #86efac; }
+        .username-status.unavailable { color: #fca5a5; }
+
+        .account-setup-error {
+            margin: 0;
+            color: #fca5a5;
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .account-setup-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.65rem;
+            margin-top: 0.25rem;
+        }
+
+        .account-setup-actions button {
+            min-width: 92px;
+            padding: 0.68rem 0.9rem;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            color: var(--color-text);
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .account-setup-actions .primary {
+            border-color: transparent;
+            background: #f4f4f5;
+            color: #111214;
+        }
+
+        .account-setup-actions button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .account-context-menu {
+            position: fixed;
+            z-index: 1600;
+            display: none;
+            width: 190px;
+            min-height: 48px;
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            background: var(--color-bg-card);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .account-context-menu.open {
+            display: block;
+        }
+
         .profile-modal {
             position: fixed;
             inset: 0;
@@ -4548,6 +4684,37 @@
                     </div>
                 </section>
             </div>
+            <div class="account-setup-modal" id="accountSetupModal" aria-hidden="true">
+                <section class="account-setup-card" role="dialog" aria-modal="true" aria-labelledby="accountSetupTitle">
+                    <h3 id="accountSetupTitle">Complete your account</h3>
+                    <p>Google has verified your email. Confirm your details and choose an available username before logging in to Vortex Prime.</p>
+                    <form class="account-setup-form" id="accountSetupForm">
+                        <label class="account-setup-field">
+                            Name
+                            <input id="accountSetupName" name="name" type="text" autocomplete="name" maxlength="80" required>
+                        </label>
+                        <label class="account-setup-field">
+                            Date of birth
+                            <input id="accountSetupBirthDate" name="dateOfBirth" type="date" autocomplete="bday" required>
+                        </label>
+                        <label class="account-setup-field">
+                            Email
+                            <input id="accountSetupEmail" name="email" type="email" autocomplete="email" readonly required>
+                        </label>
+                        <label class="account-setup-field">
+                            Username
+                            <input id="accountSetupUsername" name="username" type="text" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]+" required>
+                        </label>
+                        <p class="username-status" id="accountSetupUsernameStatus">Use 3–24 letters, numbers, or underscores.</p>
+                        <p class="account-setup-error" id="accountSetupError" hidden></p>
+                        <div class="account-setup-actions">
+                            <button id="accountSetupCancel" type="button">Cancel</button>
+                            <button class="primary" id="accountSetupSubmit" type="submit" disabled>Log in</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+            <div class="account-context-menu" id="accountContextMenu" role="menu" aria-label="Account menu"></div>
             <div class="item-detail-modal" id="itemDetailModal" aria-hidden="true">
                 <div class="item-detail-backdrop" id="itemDetailBackdrop"></div>
                 <section class="item-detail-panel" role="dialog" aria-modal="true" aria-labelledby="itemDetailTitle">
@@ -4582,6 +4749,9 @@
                     let modsBackendApi = null;
                     let authUnsubscribe = null;
                     let currentUser = null;
+                    let pendingAccountSetup = null;
+                    let usernameCheckTimer = null;
+                    let usernameCheckSequence = 0;
 
                     function profileStorageKey(uid) {
                         return `${PROFILE_STORAGE_PREFIX}${uid}`;
@@ -4688,10 +4858,145 @@
                         return {
                             uid: serverUser.email,
                             email: serverUser.email,
-                            displayName: serverUser.name || serverUser.email,
+                            displayName: serverUser.username || serverUser.name || serverUser.email,
+                            name: serverUser.name || '',
+                            username: serverUser.username || '',
                             photoURL: serverUser.picture || '',
                             role: serverUser.role || 'uploader',
                         };
+                    }
+
+                    function setAccountSetupError(message) {
+                        if (!accountSetupError) return;
+                        accountSetupError.textContent = message || '';
+                        accountSetupError.hidden = !message;
+                    }
+
+                    function closeAccountSetup() {
+                        pendingAccountSetup = null;
+                        usernameCheckSequence += 1;
+                        if (usernameCheckTimer) clearTimeout(usernameCheckTimer);
+                        if (accountSetupModal) {
+                            accountSetupModal.classList.remove('active');
+                            accountSetupModal.setAttribute('aria-hidden', 'true');
+                        }
+                        if (accountSetupForm) accountSetupForm.reset();
+                        if (accountSetupUsernameStatus) {
+                            accountSetupUsernameStatus.textContent = 'Use 3–24 letters, numbers, or underscores.';
+                            accountSetupUsernameStatus.className = 'username-status';
+                        }
+                        if (accountSetupSubmit) accountSetupSubmit.disabled = true;
+                        setAccountSetupError('');
+                    }
+
+                    function openAccountSetup(session) {
+                        if (!session?.requiresProfile || !session.setupToken) return false;
+                        if (pendingAccountSetup && accountSetupModal?.classList.contains('active') &&
+                            accountSetupEmail?.value === (session.profile?.email || '')) {
+                            return true;
+                        }
+                        pendingAccountSetup = {
+                            setupToken: session.setupToken,
+                            usernameAvailable: false,
+                        };
+                        if (accountSetupName) accountSetupName.value = session.profile?.name || '';
+                        if (accountSetupEmail) accountSetupEmail.value = session.profile?.email || '';
+                        if (accountSetupBirthDate) accountSetupBirthDate.value = '';
+                        if (accountSetupUsername) accountSetupUsername.value = '';
+                        setAccountSetupError('');
+                        if (accountSetupModal) {
+                            accountSetupModal.classList.add('active');
+                            accountSetupModal.setAttribute('aria-hidden', 'false');
+                        }
+                        const slot = document.getElementById('mainGoogleBtnSlot');
+                        if (slot) slot.style.display = 'none';
+                        accountSetupName?.focus();
+                        updateAccountSetupSubmit();
+                        return true;
+                    }
+
+                    function accountSetupFieldsValid() {
+                        return Boolean(
+                            pendingAccountSetup?.setupToken &&
+                            accountSetupName?.value.trim().length >= 2 &&
+                            accountSetupBirthDate?.value &&
+                            accountSetupEmail?.value.trim() &&
+                            accountSetupUsername?.value.trim() &&
+                            pendingAccountSetup.usernameAvailable
+                        );
+                    }
+
+                    function updateAccountSetupSubmit() {
+                        if (accountSetupSubmit) accountSetupSubmit.disabled = !accountSetupFieldsValid();
+                    }
+
+                    function scheduleUsernameCheck() {
+                        if (!pendingAccountSetup) return;
+                        pendingAccountSetup.usernameAvailable = false;
+                        updateAccountSetupSubmit();
+                        if (usernameCheckTimer) clearTimeout(usernameCheckTimer);
+                        const username = accountSetupUsername?.value.trim() || '';
+                        if (accountSetupUsernameStatus) {
+                            accountSetupUsernameStatus.className = 'username-status';
+                            accountSetupUsernameStatus.textContent = username
+                                ? 'Checking availability…'
+                                : 'Use 3–24 letters, numbers, or underscores.';
+                        }
+                        if (!username) return;
+                        const sequence = ++usernameCheckSequence;
+                        usernameCheckTimer = setTimeout(async () => {
+                            try {
+                                const result = await window.StreamzFirebaseAuth.checkUsername(
+                                    pendingAccountSetup.setupToken,
+                                    username,
+                                );
+                                if (sequence !== usernameCheckSequence || username !== accountSetupUsername?.value.trim()) return;
+                                pendingAccountSetup.usernameAvailable = Boolean(result.available);
+                                if (accountSetupUsernameStatus) {
+                                    accountSetupUsernameStatus.textContent = result.message || (result.available ? 'Username is available.' : 'Username is unavailable.');
+                                    accountSetupUsernameStatus.className = `username-status ${result.available ? 'available' : 'unavailable'}`;
+                                }
+                            } catch (error) {
+                                if (sequence !== usernameCheckSequence) return;
+                                pendingAccountSetup.usernameAvailable = false;
+                                if (accountSetupUsernameStatus) {
+                                    accountSetupUsernameStatus.textContent = error?.message || 'Unable to check that username.';
+                                    accountSetupUsernameStatus.className = 'username-status unavailable';
+                                }
+                            }
+                            updateAccountSetupSubmit();
+                        }, 400);
+                    }
+
+                    async function completeAccountSetup(event) {
+                        event.preventDefault();
+                        if (!accountSetupFieldsValid()) return;
+                        setAccountSetupError('');
+                        accountSetupSubmit.disabled = true;
+                        accountSetupSubmit.textContent = 'Logging in…';
+                        try {
+                            const result = await window.StreamzFirebaseAuth.completeProfile({
+                                setupToken: pendingAccountSetup.setupToken,
+                                name: accountSetupName.value.trim(),
+                                dateOfBirth: accountSetupBirthDate.value,
+                                email: accountSetupEmail.value.trim(),
+                                username: accountSetupUsername.value.trim(),
+                            });
+                            const user = mapServerUser(result?.user);
+                            closeAccountSetup();
+                            applyMainUser(user);
+                            await refreshModsSession();
+                        } catch (error) {
+                            setAccountSetupError(error?.message || 'Unable to complete your account.');
+                            updateAccountSetupSubmit();
+                        } finally {
+                            accountSetupSubmit.textContent = 'Log in';
+                        }
+                    }
+
+                    function handleVerifiedGoogleSession(session) {
+                        if (openAccountSetup(session)) return;
+                        applyMainUser(mapServerUser(session?.user));
                     }
 
                     function renderGoogleButton(clientId) {
@@ -4701,7 +5006,7 @@
                             googleSignInReady = true;
                             window.google.accounts.id.initialize({
                                 client_id: clientId,
-                                auto_select: true,
+                                auto_select: false,
                                 use_fedcm_for_button: true,
                                 callback: async (response) => {
                                     try {
@@ -4710,8 +5015,8 @@
                                             await new Promise((resolve) => window.addEventListener('streamz-firebase-ready', resolve, { once: true }));
                                         }
                                         const session = await window.StreamzFirebaseAuth.signInWithGoogleIdToken(response && response.credential);
-                                        applyMainUser(mapServerUser(session && session.user));
-                                        await refreshModsSession();
+                                        handleVerifiedGoogleSession(session);
+                                        if (!session?.requiresProfile) await refreshModsSession();
                                     } catch (error) {
                                         console.error('Google sign-in failed', error);
                                         alert((error && error.message) || 'Google sign-in failed.');
@@ -4774,7 +5079,7 @@
                             if (user) {
                                 if (mainSignInBtn) mainSignInBtn.style.display = 'none';
                                 if (slot) slot.style.display = 'none';
-                            } else {
+                            } else if (!pendingAccountSetup) {
                                 waitForGoogleAndRender(config && config.googleClientId);
                             }
                             if (profileModal && profileModal.classList.contains('active')) renderProfileUploads();
@@ -4805,6 +5110,8 @@
                             console.warn('Sign-out failed', error);
                         }
                         applyMainUser(null);
+                        closeAccountSetup();
+                        closeAccountContextMenu();
                         closeProfilePanel();
                         await refreshModsSession();
                     }
@@ -4823,6 +5130,17 @@
                     const mainUserName = document.getElementById('mainUserName');
                     const mainUserAvatar = document.getElementById('mainUserAvatar');
                     const mainLogoutBtn = document.getElementById('mainLogoutBtn');
+                    const accountSetupModal = document.getElementById('accountSetupModal');
+                    const accountSetupForm = document.getElementById('accountSetupForm');
+                    const accountSetupName = document.getElementById('accountSetupName');
+                    const accountSetupBirthDate = document.getElementById('accountSetupBirthDate');
+                    const accountSetupEmail = document.getElementById('accountSetupEmail');
+                    const accountSetupUsername = document.getElementById('accountSetupUsername');
+                    const accountSetupUsernameStatus = document.getElementById('accountSetupUsernameStatus');
+                    const accountSetupError = document.getElementById('accountSetupError');
+                    const accountSetupCancel = document.getElementById('accountSetupCancel');
+                    const accountSetupSubmit = document.getElementById('accountSetupSubmit');
+                    const accountContextMenu = document.getElementById('accountContextMenu');
                     const profileModal = document.getElementById('profileModal');
                     const profileBackdrop = document.getElementById('profileBackdrop');
                     const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -4838,6 +5156,26 @@
                     const itemDetailBackdrop = document.getElementById('itemDetailBackdrop');
                     const itemDetailCloseBtn = document.getElementById('itemDetailCloseBtn');
                     const itemDetailContent = document.getElementById('itemDetailContent');
+
+                    if (accountSetupBirthDate) {
+                        accountSetupBirthDate.max = new Date().toISOString().slice(0, 10);
+                    }
+
+                    function closeAccountContextMenu() {
+                        accountContextMenu?.classList.remove('open');
+                    }
+
+                    function openAccountContextMenu(event) {
+                        if (!currentUser || !accountContextMenu) return;
+                        event.preventDefault();
+                        const menuWidth = 190;
+                        const menuHeight = 48;
+                        const left = Math.max(8, Math.min(event.clientX, window.innerWidth - menuWidth - 8));
+                        const top = Math.max(8, Math.min(event.clientY, window.innerHeight - menuHeight - 8));
+                        accountContextMenu.style.left = `${left}px`;
+                        accountContextMenu.style.top = `${top}px`;
+                        accountContextMenu.classList.add('open');
+                    }
 
                     function openProfilePanel() {
                         if (!currentUser || !profileModal) return;
@@ -5019,7 +5357,36 @@
                             if (event.target.closest('#mainLogoutBtn')) return;
                             openProfilePanel();
                         });
+                        mainUserBadge.addEventListener('contextmenu', openAccountContextMenu);
                     }
+
+                    if (accountSetupForm) accountSetupForm.addEventListener('submit', completeAccountSetup);
+                    accountSetupName?.addEventListener('input', updateAccountSetupSubmit);
+                    accountSetupBirthDate?.addEventListener('input', updateAccountSetupSubmit);
+                    accountSetupUsername?.addEventListener('input', scheduleUsernameCheck);
+                    accountSetupCancel?.addEventListener('click', async () => {
+                        try {
+                            await window.StreamzFirebaseAuth?.signOut();
+                            window.google?.accounts?.id?.disableAutoSelect();
+                        } catch (error) {
+                            console.warn('Unable to cancel account setup cleanly.', error);
+                        }
+                        closeAccountSetup();
+                        await refreshModsSession();
+                    });
+
+                    window.addEventListener('streamz-auth-restored', (event) => {
+                        handleVerifiedGoogleSession(event.detail?.session);
+                    });
+
+                    document.addEventListener('click', (event) => {
+                        if (!event.target.closest('#accountContextMenu')) closeAccountContextMenu();
+                    });
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') closeAccountContextMenu();
+                    });
+                    window.addEventListener('resize', closeAccountContextMenu);
+                    window.addEventListener('scroll', closeAccountContextMenu, true);
 
                     if (profileBackdrop) profileBackdrop.addEventListener('click', closeProfilePanel);
                     if (profileCloseBtn) profileCloseBtn.addEventListener('click', closeProfilePanel);
