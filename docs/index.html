@@ -425,6 +425,11 @@
             border-color: rgba(255, 255, 255, 0.42);
         }
 
+        .account-setup-field input:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
         .account-setup-field input[readonly] {
             color: var(--color-text-secondary);
             cursor: default;
@@ -4690,12 +4695,8 @@
                     <p>Google has verified your email. Confirm your details and choose an available username before logging in to Vortex Prime.</p>
                     <form class="account-setup-form" id="accountSetupForm">
                         <label class="account-setup-field">
-                            Name
+                            Full name
                             <input id="accountSetupName" name="name" type="text" autocomplete="name" maxlength="80" required>
-                        </label>
-                        <label class="account-setup-field">
-                            Date of birth
-                            <input id="accountSetupBirthDate" name="dateOfBirth" type="date" autocomplete="bday" required>
                         </label>
                         <label class="account-setup-field">
                             Email
@@ -4901,7 +4902,6 @@
                         };
                         if (accountSetupName) accountSetupName.value = session.profile?.name || '';
                         if (accountSetupEmail) accountSetupEmail.value = session.profile?.email || '';
-                        if (accountSetupBirthDate) accountSetupBirthDate.value = '';
                         if (accountSetupUsername) accountSetupUsername.value = '';
                         setAccountSetupError('');
                         if (accountSetupModal) {
@@ -4919,7 +4919,6 @@
                         return Boolean(
                             pendingAccountSetup?.setupToken &&
                             accountSetupName?.value.trim().length >= 2 &&
-                            accountSetupBirthDate?.value &&
                             accountSetupEmail?.value.trim() &&
                             accountSetupUsername?.value.trim() &&
                             pendingAccountSetup.usernameAvailable
@@ -4978,7 +4977,6 @@
                             const result = await window.StreamzFirebaseAuth.completeProfile({
                                 setupToken: pendingAccountSetup.setupToken,
                                 name: accountSetupName.value.trim(),
-                                dateOfBirth: accountSetupBirthDate.value,
                                 email: accountSetupEmail.value.trim(),
                                 username: accountSetupUsername.value.trim(),
                             });
@@ -5133,7 +5131,6 @@
                     const accountSetupModal = document.getElementById('accountSetupModal');
                     const accountSetupForm = document.getElementById('accountSetupForm');
                     const accountSetupName = document.getElementById('accountSetupName');
-                    const accountSetupBirthDate = document.getElementById('accountSetupBirthDate');
                     const accountSetupEmail = document.getElementById('accountSetupEmail');
                     const accountSetupUsername = document.getElementById('accountSetupUsername');
                     const accountSetupUsernameStatus = document.getElementById('accountSetupUsernameStatus');
@@ -5156,10 +5153,6 @@
                     const itemDetailBackdrop = document.getElementById('itemDetailBackdrop');
                     const itemDetailCloseBtn = document.getElementById('itemDetailCloseBtn');
                     const itemDetailContent = document.getElementById('itemDetailContent');
-
-                    if (accountSetupBirthDate) {
-                        accountSetupBirthDate.max = new Date().toISOString().slice(0, 10);
-                    }
 
                     function closeAccountContextMenu() {
                         accountContextMenu?.classList.remove('open');
@@ -5362,7 +5355,6 @@
 
                     if (accountSetupForm) accountSetupForm.addEventListener('submit', completeAccountSetup);
                     accountSetupName?.addEventListener('input', updateAccountSetupSubmit);
-                    accountSetupBirthDate?.addEventListener('input', updateAccountSetupSubmit);
                     accountSetupUsername?.addEventListener('input', scheduleUsernameCheck);
                     accountSetupCancel?.addEventListener('click', async () => {
                         try {

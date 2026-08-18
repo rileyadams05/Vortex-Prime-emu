@@ -549,14 +549,12 @@ async function handleCompleteProfile(request, env, origin, ctx) {
   const setup = await verifyAccountSetupToken(body?.setupToken, env);
   const name = normalizeAccountName(body?.name);
   const email = String(body?.email || '').trim().toLowerCase();
-  const dateOfBirth = normalizeDateOfBirth(body?.dateOfBirth);
   const username = normalizeUsername(body?.username);
 
   if (name.length < 2 || name.length > 80) throw httpError(400, 'Enter your full name.');
   if (!email || email !== String(setup.email || '').trim().toLowerCase()) {
     throw httpError(400, 'The email address must match the verified Google account.');
   }
-  if (!dateOfBirth) throw httpError(400, 'Enter a valid date of birth.');
   const usernameMessage = validateUsername(username);
   if (usernameMessage) throw httpError(400, usernameMessage);
 
@@ -575,7 +573,6 @@ async function handleCompleteProfile(request, env, origin, ctx) {
       name,
       username,
       usernameKey,
-      dateOfBirth,
       picture: typeof setup.picture === 'string' ? setup.picture : null,
       createdAt: existing?.createdAt || nowIso,
       updatedAt: nowIso,
@@ -635,15 +632,6 @@ function validateUsername(username) {
   if (username.length < 3 || username.length > 24) return 'Username must be between 3 and 24 characters.';
   if (!/^[A-Za-z0-9_]+$/.test(username)) return 'Use only letters, numbers, and underscores.';
   return '';
-}
-
-function normalizeDateOfBirth(value) {
-  const candidate = String(value || '').trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return '';
-  const date = new Date(`${candidate}T00:00:00Z`);
-  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== candidate) return '';
-  if (date.getTime() > Date.now()) return '';
-  return candidate;
 }
 
 async function verifyAccountSetupToken(token, env) {
