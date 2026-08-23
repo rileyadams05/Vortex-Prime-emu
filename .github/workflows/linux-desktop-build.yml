@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Linux dependencies
         run: |
@@ -39,7 +39,7 @@ jobs:
             patchelf
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -75,7 +75,7 @@ jobs:
           test -f "$output_dir/Vortex Prime.AppImage"
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact-name }}
           path: linux-artifacts
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Attempt Debian i386 AppImage build
         shell: bash
@@ -172,7 +172,7 @@ jobs:
           fi
 
       - name: Upload x86 artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: vortex-prime-linux-x86
           path: linux-x86-artifacts
