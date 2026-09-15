@@ -531,33 +531,6 @@
             color: #fff;
         }
 
-        .account-menu-chevron {
-            width: 7px;
-            height: 7px;
-            flex: 0 0 auto;
-            border-right: 1.5px solid currentColor;
-            border-bottom: 1.5px solid currentColor;
-            transform: rotate(45deg) translateY(-2px);
-            transition: transform 160ms ease;
-        }
-
-        .account-menu-action[aria-expanded="true"] .account-menu-chevron {
-            transform: rotate(225deg) translate(-1px, -1px);
-        }
-
-        .account-menu-divider {
-            height: 1px;
-            margin: 5px 8px;
-            background: rgba(255,255,255,0.08);
-        }
-
-        .account-context-submenu {
-            margin: 2px 0 0 8px;
-            padding-left: 8px;
-            border-left: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .account-context-submenu[hidden],
         .account-avatar-quick-input {
             display: none;
         }
@@ -4521,14 +4494,6 @@
             </div>
             <div class="account-context-menu" id="accountContextMenu" role="menu" aria-label="Account menu">
                 <button class="account-menu-action" id="accountChangePicture" type="button" role="menuitem">Change my profile picture</button>
-                <div class="account-menu-divider" aria-hidden="true"></div>
-                <button class="account-menu-action" id="accountModxToggle" type="button" role="menuitem" aria-expanded="false" aria-controls="accountModxSubmenu">
-                    <span>ModX</span>
-                    <span class="account-menu-chevron" aria-hidden="true"></span>
-                </button>
-                <div class="account-context-submenu" id="accountModxSubmenu" role="group" aria-label="ModX account options" hidden>
-                    <a class="account-menu-link" href="/modx/my-uploads.html" role="menuitem">My uploads</a>
-                </div>
             </div>
             <input class="account-avatar-quick-input" id="accountAvatarQuickInput" type="file" accept="image/png,image/jpeg,image/webp">
             <div class="item-detail-modal" id="itemDetailModal" aria-hidden="true">
@@ -4949,8 +4914,6 @@
                     const accountContextMenu = document.getElementById('accountContextMenu');
                     const accountChangePicture = document.getElementById('accountChangePicture');
                     const accountAvatarQuickInput = document.getElementById('accountAvatarQuickInput');
-                    const accountModxToggle = document.getElementById('accountModxToggle');
-                    const accountModxSubmenu = document.getElementById('accountModxSubmenu');
                     const itemDetailModal = document.getElementById('itemDetailModal');
                     const itemDetailBackdrop = document.getElementById('itemDetailBackdrop');
                     const itemDetailCloseBtn = document.getElementById('itemDetailCloseBtn');
@@ -4958,8 +4921,6 @@
 
                     function closeAccountContextMenu() {
                         accountContextMenu?.classList.remove('open');
-                        if (accountModxSubmenu) accountModxSubmenu.hidden = true;
-                        accountModxToggle?.setAttribute('aria-expanded', 'false');
                     }
 
                     function positionAccountContextMenu(clientX, clientY) {
@@ -4973,8 +4934,6 @@
                     function openAccountContextMenu(event) {
                         if (!currentUser || !accountContextMenu) return;
                         event.preventDefault();
-                        if (accountModxSubmenu) accountModxSubmenu.hidden = true;
-                        accountModxToggle?.setAttribute('aria-expanded', 'false');
                         accountContextMenu.classList.add('open');
                         positionAccountContextMenu(event.clientX, event.clientY);
                     }
@@ -5090,16 +5049,6 @@
                         } catch (error) {
                             showBackendStatus(error.message || 'The profile picture could not be updated.');
                         }
-                    });
-
-                    accountModxToggle?.addEventListener('click', (event) => {
-                        event.stopPropagation();
-                        if (!accountModxSubmenu) return;
-                        const expanded = accountModxSubmenu.hidden;
-                        accountModxSubmenu.hidden = !expanded;
-                        accountModxToggle.setAttribute('aria-expanded', String(expanded));
-                        const rect = accountContextMenu.getBoundingClientRect();
-                        positionAccountContextMenu(rect.left, rect.top);
                     });
 
                     if (accountSetupForm) accountSetupForm.addEventListener('submit', completeAccountSetup);
