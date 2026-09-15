@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "node tools/streamz-firebase-entitlement-system-test.mjs && node tools/streamz-activation-code-system-test.mjs && node tools/streamz-support-system-test.mjs"
+    "test": "node tools/streamz-firebase-entitlement-system-test.mjs && node tools/streamz-activation-code-system-test.mjs && node tools/streamz-support-system-test.mjs && node tools/modx-system-test.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.2"

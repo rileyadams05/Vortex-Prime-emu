@@ -309,6 +309,14 @@ export default {
         return await handleMyModxTables(request, env, allowedOrigin);
       }
 
+      if (/^api\/modx\/tables\/[^/]+\/source$/.test(path)) {
+        return await handleModxSourceReplacement(request, env, path, allowedOrigin);
+      }
+
+      if (/^api\/modx\/tables\/[^/]+\/maintenance-submissions$/.test(path)) {
+        return await handleModxMaintenanceSubmission(request, env, path, allowedOrigin);
+      }
+
       if (/^api\/modx\/tables\/[^/]+\/report$/.test(path)) {
         return await handleModxTableReport(request, env, path, allowedOrigin);
       }
@@ -4336,46 +4344,10 @@ async function handleUploadRequest(request, env, path, origin) {
   return json({ ...fileInfo, uploadedBy: sanitizeUserForResponse(user) }, 200, origin);
 }
 
-function parseModxServiceMetadata(form) {
-  const scope = String(form.get('serviceScope') || '').trim().toLowerCase();
-  if (scope !== 'single' && scope !== 'multiple') {
-    throw httpError(400, 'Choose whether the table supports one service or multiple services.');
-  }
-  let services;
-  try {
-    services = JSON.parse(String(form.get('services') || ''));
-  } catch {
-    throw httpError(400, 'Service compatibility information is invalid.');
-  }
-  if (!Array.isArray(services) || services.length < 1 || services.length > 12) {
-    throw httpError(400, 'Enter the supported game service or services.');
-  }
-  const unique = new Map();
-  const platforms = new Set();
-  for (const value of services) {
-    const name = sanitizeSingleLine(value, 80).replace(/\s+/g, ' ').trim();
-    const platformMatch = /^(win|linux)\s*\/\s*(.+)$/i.exec(name);
-    if (!name) throw httpError(400, 'Each supported service must have a name.');
-    if (!platformMatch || !platformMatch[2].trim()) {
-      throw httpError(400, 'Use WIN/Service or Linux/Service for every supported service.');
-    }
-    platforms.add(platformMatch[1].toLowerCase() === 'win' ? 'windows' : 'linux');
-    unique.set(name.toLowerCase(), name);
-  }
-  const names = [...unique.values()];
-  if (scope === 'single' && names.length !== 1) {
-    throw httpError(400, 'Enter exactly one supported service.');
-  }
-  if (scope === 'multiple' && names.length < 2) {
-    throw httpError(400, 'Enter at least two supported services.');
-  }
-  return { scope, services: names, platforms: [...platforms] };
-}
-
-function parseModxExecutableMetadata(form) {
-  const name = String(form.get('gameExecutableName') || '').trim();
-  const size = Number(form.get('gameExecutableSize'));
-  const sha256 = String(form.get('gameExecutableSha256') || '').trim().toLowerCase();
+function parseModxExecutableMetadata(input) {
+  const name = String(input?.name || '').trim();
+  const size = Number(input?.size);
+  const sha256 = String(input?.sha256 || '').trim().toLowerCase();
   if (!name || name.length > 260 || name === '.' || name === '..' || /[\\/\u0000-\u001f]/.test(name) || !name.toLowerCase().endsWith('.exe')) {
     throw httpError(400, 'Choose a valid Windows game .exe file.');
   }
@@ -4384,55 +4356,73 @@ function parseModxExecutableMetadata(form) {
   return { name, size, sha256 };
 }
 
-function parseModxUpdatePolicy(form, serviceScope) {
-  const futureValue = String(form.get('futureServiceSupport') || '').trim().toLowerCase();
-  if (futureValue !== 'true' && futureValue !== 'false') {
-    throw httpError(400, 'Choose whether support for more services is planned.');
-  }
-  const maintenancePolicy = String(form.get('maintenancePolicy') || '').trim().toLowerCase();
-  if (maintenancePolicy !== 'uploader' && maintenancePolicy !== 'community') {
+function parseModxMaintenanceMode(value) {
+  const maintenanceMode = String(value || '').trim().toLowerCase();
+  if (maintenanceMode !== 'author' && maintenanceMode !== 'community') {
     throw httpError(400, 'Choose how future table updates should be handled.');
   }
+  return maintenanceMode;
+}
+
+function parseGithubSourceUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw || raw.length > 2048) throw httpError(400, 'Enter a valid public GitHub repository or .CT file link.');
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw httpError(400, 'Enter a valid public GitHub repository or .CT file link.');
+  }
+  if (url.protocol !== 'https:' || url.username || url.password || url.port || url.hostname.toLowerCase() !== 'github.com') {
+    throw httpError(400, 'The table source must be an https://github.com link.');
+  }
+  if (url.search || url.hash) throw httpError(400, 'Remove query parameters and fragments from the GitHub link.');
+  const parts = url.pathname.split('/').filter(Boolean).map((part) => {
+    try { return decodeURIComponent(part); } catch { throw httpError(400, 'The GitHub link contains invalid characters.'); }
+  });
+  const [owner, repositoryPart, route, branch, ...fileParts] = parts;
+  const repository = String(repositoryPart || '').replace(/\.git$/i, '');
+  if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(owner || '') || /--/.test(owner)) {
+    throw httpError(400, 'The GitHub owner in this link is invalid.');
+  }
+  if (!repository || repository.length > 100 || !/^[A-Za-z0-9._-]+$/.test(repository) || repository === '.' || repository === '..') {
+    throw httpError(400, 'The GitHub repository in this link is invalid.');
+  }
+  if (parts.length > 2 && route !== 'blob') {
+    throw httpError(400, 'Use a GitHub repository link or a link to a .CT file in that repository.');
+  }
+  let tablePath = null;
+  let normalizedBranch = null;
+  if (route === 'blob') {
+    tablePath = fileParts.join('/');
+    normalizedBranch = String(branch || '').trim();
+    if (!normalizedBranch || !tablePath || !tablePath.toLowerCase().endsWith('.ct') || /(^|\/)\.\.?($|\/)/.test(tablePath)) {
+      throw httpError(400, 'A GitHub file link must point to a .CT file.');
+    }
+  }
+  const repositoryUrl = `https://github.com/${owner}/${repository}`;
+  const canonicalUrl = tablePath
+    ? `${repositoryUrl}/blob/${encodeURIComponent(normalizedBranch)}/${fileParts.map(encodeURIComponent).join('/')}`
+    : repositoryUrl;
   return {
-    futureServiceSupport: serviceScope === 'single' && futureValue === 'true',
-    maintenancePolicy,
+    provider: 'github',
+    url: canonicalUrl,
+    repositoryUrl,
+    owner,
+    repository,
+    branch: normalizedBranch,
+    tablePath,
   };
 }
 
-const MODX_README_FIELDS = ['Game Name', 'Author', 'Version', 'Game.exe', 'Platform service/Cross-platform', 'Credits'];
-
-function missingModxReadmeFields(text) {
-  const lines = String(text || '').replace(/^\uFEFF/, '').replace(/\r/g, '').split('\n');
-  const headings = MODX_README_FIELDS.map((label) => ({
-    label,
-    index: lines.findIndex((line) => {
-      const value = line.trim().toLowerCase();
-      const target = label.toLowerCase();
-      return value === target || value.startsWith(`${target}:`);
-    }),
-  }));
-  return headings.filter((heading, position) => {
-    if (heading.index < 0) return true;
-    const sameLine = lines[heading.index].trim().slice(heading.label.length).replace(/^:\s*/, '').trim();
-    if (sameLine) return false;
-    const later = headings.slice(position + 1).map((item) => item.index).filter((index) => index > heading.index);
-    const end = later.length ? Math.min(...later) : lines.length;
-    return !lines.slice(heading.index + 1, end).map((line) => line.trim()).filter((line) => line && !line.startsWith('>')).join(' ');
-  }).map((heading) => heading.label);
-}
-
-async function validateModxCommunityReadme(form, maintenancePolicy) {
-  if (maintenancePolicy !== 'community') return null;
-  const readme = form.get('readme');
-  if (!(readme instanceof File) || readme.name.toLowerCase() !== 'readme.md') {
-    throw httpError(400, 'Upload the completed README.md before publishing a community-maintained table.');
+async function readModxJson(request) {
+  const contentType = String(request.headers.get('content-type') || '').toLowerCase();
+  if (!contentType.startsWith('application/json')) {
+    throw httpError(415, 'ModX catalogue requests must use JSON; file uploads are not accepted.');
   }
-  if (!readme.size || readme.size > 512 * 1024) {
-    throw httpError(400, 'README.md must contain your completed details and be smaller than 512 KB.');
-  }
-  const missing = missingModxReadmeFields(await readme.text());
-  if (missing.length) throw httpError(400, `Complete these README sections: ${missing.join(', ')}.`);
-  return readme;
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw httpError(400, 'The request body is invalid.');
+  return body;
 }
 
 async function handleModxSubmission(request, env, origin) {
@@ -4441,43 +4431,79 @@ async function handleModxSubmission(request, env, origin) {
   }
   const user = await ensureAuthenticated(request, env, 'Sign in with Google to submit a ModX cheat table.');
   const bridgeToken = requireEnv(env, 'MODX_BRIDGE_TOKEN');
-  const form = await request.formData();
-  const file = form.get('file');
-  if (!(file instanceof File) || !file.name) throw httpError(400, 'Choose a .CT file.');
-  if (!file.name.toLowerCase().endsWith('.ct')) throw httpError(400, 'Only .CT cheat tables are accepted.');
-  if (!file.size) throw httpError(400, 'The selected .CT file is empty.');
-  if (String(form.get('offlineOnlyConfirmed')).toLowerCase() !== 'true') {
+  const body = await readModxJson(request);
+  if (body.offlineOnlyConfirmed !== true) {
     throw httpError(400, 'Confirm that this table is for offline or single-player use only.');
   }
-  const executable = parseModxExecutableMetadata(form);
-  const serviceMetadata = parseModxServiceMetadata(form);
-  const updatePolicy = parseModxUpdatePolicy(form, serviceMetadata.scope);
-  const readme = await validateModxCommunityReadme(form, updatePolicy.maintenancePolicy);
-  const outbound = new FormData();
-  outbound.set('gameExecutableName', executable.name);
-  outbound.set('gameExecutableSize', String(executable.size));
-  outbound.set('gameExecutableSha256', executable.sha256);
-  outbound.set('serviceScope', serviceMetadata.scope);
-  outbound.set('services', JSON.stringify(serviceMetadata.services));
-  outbound.set('supportedPlatforms', JSON.stringify(serviceMetadata.platforms));
-  outbound.set('executables', JSON.stringify(Object.fromEntries(
-    serviceMetadata.platforms.map((platform) => [platform, executable.name]),
-  )));
-  outbound.set('futureServiceSupport', String(updatePolicy.futureServiceSupport));
-  outbound.set('maintenancePolicy', updatePolicy.maintenancePolicy);
-  outbound.set('contributorName', String(user.name || user.email || 'Community').slice(0, 100));
-  outbound.set('offlineOnlyConfirmed', 'true');
-  outbound.set('uploaderAbuseKey', await buildModxAbuseKey(user, env));
-  if (readme) outbound.set('readme', readme, 'README.md');
-  outbound.set('file', file, file.name.replace(/[\r\n"\\/]/g, '_').slice(0, 180));
+  const executable = parseModxExecutableMetadata(body.gameExecutable);
+  const source = parseGithubSourceUrl(body.githubUrl);
+  const maintenanceMode = parseModxMaintenanceMode(body.maintenanceMode);
+  const contributorName = String(user.name || user.email || 'Community').slice(0, 100);
+  const outbound = {
+    schemaVersion: 2,
+    gameExecutable: executable.name,
+    gameFingerprint: executable.sha256,
+    gameExecutableSize: executable.size,
+    author: { name: contributorName },
+    source,
+    maintenanceMode,
+    originalAuthorName: contributorName,
+    offlineOnlyConfirmed: true,
+    uploaderAbuseKey: await buildModxAbuseKey(user, env),
+  };
 
   const response = await fetch('https://modx.vortex-prime-emu.com/community/submit', {
     method: 'POST',
-    headers: { 'X-ModX-Bridge': bridgeToken },
-    body: outbound,
+    headers: { 'Content-Type': 'application/json', 'X-ModX-Bridge': bridgeToken },
+    body: JSON.stringify(outbound),
   });
   const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'ModX submission failed.');
+  return json({ ok: true, ...payload }, 201, origin);
+}
+
+function parseModxTableId(path) {
+  const tableId = decodeURIComponent(path.split('/')[3] || '').trim();
+  if (!/^[a-z0-9-]{20,80}$/i.test(tableId)) throw httpError(400, 'Select a valid table.');
+  return tableId;
+}
+
+async function handleModxSourceReplacement(request, env, path, origin) {
+  if (request.method !== 'PATCH') throw httpError(405, 'Replacing a ModX source requires PATCH.');
+  const user = await ensureAuthenticated(request, env, 'Sign in to replace a ModX table source.');
+  const source = parseGithubSourceUrl((await readModxJson(request)).githubUrl);
+  const tableId = parseModxTableId(path);
+  const response = await fetch(`https://modx.vortex-prime-emu.com/community/tables/${encodeURIComponent(tableId)}/source`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN') },
+    body: JSON.stringify({ source, maintainerAbuseKey: await buildModxAbuseKey(user, env) }),
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The source could not be replaced.');
+  return json({ ok: true, ...payload }, 200, origin);
+}
+
+async function handleModxMaintenanceSubmission(request, env, path, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'Maintenance submissions require POST.');
+  const user = await ensureAuthenticated(request, env, 'Sign in to propose a maintenance update.');
+  const body = await readModxJson(request);
+  const source = parseGithubSourceUrl(body.githubUrl);
+  const notes = sanitizeSingleLine(body.notes, 1000);
+  if (!notes) throw httpError(400, 'Explain what the proposed maintenance update changes.');
+  const tableId = parseModxTableId(path);
+  const response = await fetch(`https://modx.vortex-prime-emu.com/community/tables/${encodeURIComponent(tableId)}/maintenance-submissions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN') },
+    body: JSON.stringify({
+      source,
+      notes,
+      contributorName: String(user.name || user.email || 'Community').slice(0, 100),
+      contributorAbuseKey: await buildModxAbuseKey(user, env),
+      status: 'pending_review',
+    }),
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The maintenance proposal could not be submitted.');
   return json({ ok: true, ...payload }, 201, origin);
 }
 
@@ -4494,7 +4520,7 @@ async function handlePublicModxTables(request, origin) {
   const response = await fetch(upstreamUrl, { headers: { Accept: 'application/json' } });
   const payload = await response.json().catch(() => ({ error: 'The ModX catalogue returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The ModX catalogue could not be loaded.');
-  return json({ ok: true, tables: Array.isArray(payload.tables) ? payload.tables : [] }, 200, origin);
+  return json({ ok: true, schemaVersion: 2, tables: Array.isArray(payload.tables) ? payload.tables.map(normalizeModxTableRecord) : [] }, 200, origin);
 }
 
 async function handleMyModxTables(request, env, origin) {
@@ -4508,16 +4534,56 @@ async function handleMyModxTables(request, env, origin) {
     },
   });
   const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
-  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'Your ModX uploads could not be loaded.');
-  return json({ ok: true, tables: Array.isArray(payload.tables) ? payload.tables : [] }, 200, origin);
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'Your ModX listings could not be loaded.');
+  return json({ ok: true, schemaVersion: 2, tables: Array.isArray(payload.tables) ? payload.tables.map(normalizeModxTableRecord) : [] }, 200, origin);
+}
+
+function normalizeModxTableRecord(table) {
+  const value = table && typeof table === 'object' ? table : {};
+  const legacyExecutable = value.executables && typeof value.executables === 'object'
+    ? Object.values(value.executables).find(Boolean)
+    : '';
+  const gameExecutable = sanitizeSingleLine(value.gameExecutable || legacyExecutable, 260);
+  const authorName = sanitizeSingleLine(value.author?.name || value.contributorName || value.originalAuthorName, 100) || 'Community';
+  const maintainerName = sanitizeSingleLine(value.currentMaintainer?.name || value.currentMaintainerName, 100);
+  const maintenanceMode = value.maintenanceMode === 'community' || value.maintenancePolicy === 'community' ? 'community' : 'author';
+  const sourceCandidate = value.source?.url || value.source?.repositoryUrl || value.sourceUrl || value.githubUrl || value.downloadUrl;
+  const originalCandidate = value.originalSource?.url || value.originalSource?.repositoryUrl || value.originalSourceUrl || sourceCandidate;
+  let source = null;
+  let originalSource = null;
+  try { if (sourceCandidate) source = parseGithubSourceUrl(sourceCandidate); } catch {}
+  try { if (originalCandidate) originalSource = parseGithubSourceUrl(originalCandidate); } catch {}
+  return {
+    id: String(value.id || ''),
+    gameId: value.gameId == null ? null : String(value.gameId),
+    gameTitle: sanitizeSingleLine(value.gameTitle, 160) || gameExecutable.replace(/\.exe$/i, '') || 'Community table',
+    gameExecutable,
+    gameFingerprint: /^[a-f0-9]{64}$/i.test(String(value.gameFingerprint || value.gameExecutableSha256 || ''))
+      ? String(value.gameFingerprint || value.gameExecutableSha256).toLowerCase()
+      : null,
+    author: { id: value.author?.id == null ? null : String(value.author.id), name: authorName },
+    originalAuthor: {
+      id: value.originalAuthor?.id == null ? (value.originalAuthorId == null ? null : String(value.originalAuthorId)) : String(value.originalAuthor.id),
+      name: sanitizeSingleLine(value.originalAuthor?.name || value.originalAuthorName || authorName, 100) || authorName,
+    },
+    currentMaintainer: maintainerName ? {
+      id: value.currentMaintainer?.id == null ? (value.currentMaintainerId == null ? null : String(value.currentMaintainerId)) : String(value.currentMaintainer.id),
+      name: maintainerName,
+    } : null,
+    source,
+    originalSource,
+    maintenanceMode,
+    sourceStatus: source ? (value.sourceStatus === 'unavailable' ? 'unavailable' : 'available') : 'unavailable',
+    createdAt: value.createdAt || null,
+    updatedAt: value.updatedAt || value.createdAt || null,
+  };
 }
 
 async function handleModxTableReport(request, env, path, origin) {
   if (request.method !== 'POST') throw httpError(405, 'ModX table reports require POST.');
   const user = await ensureAuthenticated(request, env, 'Sign in with Google to report a ModX table.');
-  const tableId = decodeURIComponent(path.split('/')[3] || '').trim();
-  if (!/^[a-f0-9-]{20,80}$/i.test(tableId)) throw httpError(400, 'Select a valid table.');
-  const body = await readJson(request);
+  const tableId = parseModxTableId(path);
+  const body = await readModxJson(request);
   const allowedReasons = new Set([
     'online_or_multiplayer_cheating',
     'malware_or_unsafe_code',
@@ -5748,3 +5814,10 @@ function getYoutubeId(url) {
   }
   return '';
 }
+
+export {
+  normalizeModxTableRecord,
+  parseGithubSourceUrl,
+  parseModxExecutableMetadata,
+  parseModxMaintenanceMode,
+};
