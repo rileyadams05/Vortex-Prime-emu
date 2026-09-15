@@ -66,7 +66,8 @@ assert.equal(normalized.maintenanceMode, 'community');
 assert.equal('downloadUrl' in normalized, false);
 
 const publishHtml = await readFile(join(root, 'docs', 'modx', 'index.html'), 'utf8');
-const catalogueHtml = await readFile(join(root, 'docs', 'modx', 'community.html'), 'utf8');
+const listingsHtml = await readFile(join(root, 'docs', 'modx', 'my-uploads.html'), 'utf8');
+const homepageHtml = await readFile(join(root, 'docs', 'index.html'), 'utf8');
 for (const removed of [
   'Where is this table supported?',
   'Do you plan to support more services later?',
@@ -81,17 +82,19 @@ for (const removed of [
 assert.equal(publishHtml.includes('type="file" accept=".exe'), true);
 assert.equal(publishHtml.includes('name="githubUrl"'), true);
 assert.equal(publishHtml.includes("body:JSON.stringify"), true);
-assert.equal(catalogueHtml.includes('table.downloadUrl'), false);
-assert.equal(catalogueHtml.includes('table.source?.url'), true);
-assert.equal(catalogueHtml.includes('maintenance-submissions'), true);
+await assert.rejects(readFile(join(root, 'docs', 'modx', 'community.html'), 'utf8'), { code: 'ENOENT' });
+for (const html of [publishHtml, listingsHtml, homepageHtml]) {
+  assert.equal(html.includes('community.html'), false, 'public community catalogue link remains');
+  assert.equal(html.includes('View Community Tables'), false, 'public community catalogue label remains');
+}
 assert.equal(worker.includes("request.formData()\n  const file = form.get('file')"), false);
 assert.equal(worker.includes('ModX catalogue requests must use JSON; file uploads are not accepted.'), true);
 assert.equal(worker.includes("status: 'pending_review'"), true);
 
-for (const html of [publishHtml, catalogueHtml, await readFile(join(root, 'docs', 'modx', 'my-uploads.html'), 'utf8')]) {
+for (const html of [publishHtml, listingsHtml]) {
   for (const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
     assert.doesNotThrow(() => new Function(match[1]), 'inline script should parse');
   }
 }
 
-console.log('ModX GitHub catalogue contract test passed.');
+console.log('ModX GitHub publishing contract test passed.');
