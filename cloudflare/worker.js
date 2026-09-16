@@ -305,6 +305,14 @@ export default {
         return await handleModxReleaseResolution(request, env, allowedOrigin);
       }
 
+      if (path === 'api/modx/reviews') {
+        return await handleModxReviewCreation(request, env, allowedOrigin);
+      }
+
+      if (/^api\/modx\/reviews\/[a-f0-9-]{20,80}$/.test(path)) {
+        return await handleModxReviewStatus(request, env, path, allowedOrigin);
+      }
+
       if (path === 'api/modx/my-tables') {
         return await handleModxMyTables(request, env, allowedOrigin);
       }
@@ -4429,6 +4437,7 @@ async function handleModxSubmission(request, env, origin) {
   const executable = parseModxExecutableMetadata(body.gameExecutable);
   const source = parseGithubReleaseUrl(body.githubUrl);
   const maintenanceMode = parseModxMaintenanceMode(body.maintenanceMode);
+  const reviewId = parseModxReviewId(body.reviewId);
   const contributorName = String(user.name || user.email || 'Community').slice(0, 100);
   const outbound = {
     schemaVersion: 3,
@@ -4439,6 +4448,7 @@ async function handleModxSubmission(request, env, origin) {
     source,
     releaseAssetId: body.releaseAssetId == null ? null : String(body.releaseAssetId),
     maintenanceMode,
+    reviewId,
     originalAuthorName: contributorName,
     offlineOnlyConfirmed: true,
     uploaderAbuseKey: await buildModxAbuseKey(user, env),
@@ -4452,6 +4462,53 @@ async function handleModxSubmission(request, env, origin) {
   const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'ModX submission failed.');
   return json({ ok: true, ...payload }, 201, origin);
+}
+
+async function handleModxReviewCreation(request, env, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'ModX submission verification requires POST.');
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to verify a ModX submission.');
+  const body = await readModxJson(request);
+  const executable = parseModxExecutableMetadata(body.gameExecutable);
+  const source = parseGithubReleaseUrl(body.githubUrl);
+  const maintenanceMode = parseModxMaintenanceMode(body.maintenanceMode);
+  const response = await fetch('https://modx.vortex-prime-emu.com/community/reviews', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN') },
+    body: JSON.stringify({
+      gameExecutable: executable.name,
+      gameFingerprint: executable.sha256,
+      gameExecutableSize: executable.size,
+      source,
+      releaseAssetId: body.releaseAssetId == null ? null : String(body.releaseAssetId),
+      maintenanceMode,
+      uploaderAbuseKey: await buildModxAbuseKey(user, env),
+    }),
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX verification service returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'Submission verification could not be started.');
+  return json({ ok: true, ...payload }, 202, origin);
+}
+
+async function handleModxReviewStatus(request, env, path, origin) {
+  if (request.method !== 'GET') throw httpError(405, 'ModX submission verification status requires GET.');
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to view a ModX submission review.');
+  const reviewId = parseModxReviewId(path.split('/')[3]);
+  const response = await fetch(`https://modx.vortex-prime-emu.com/community/reviews/${encodeURIComponent(reviewId)}`, {
+    headers: {
+      Accept: 'application/json',
+      'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN'),
+      'X-ModX-Uploader-Key': await buildModxAbuseKey(user, env),
+    },
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX verification service returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'Submission verification status could not be loaded.');
+  return json({ ok: true, ...payload }, 200, origin);
+}
+
+function parseModxReviewId(value) {
+  const reviewId = String(value || '').trim();
+  if (!/^[a-f0-9-]{20,80}$/i.test(reviewId)) throw httpError(400, 'Complete Mod X Submission Verification before publishing.');
+  return reviewId;
 }
 
 async function handleModxReleaseResolution(request, env, origin) {

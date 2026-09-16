@@ -114,6 +114,13 @@ assert.equal(publishHtml.includes("workflow.step2Status==='complete'"), true, 'S
 assert.equal(publishHtml.includes("workflow.step3Status==='complete'"), true, 'Step 3 completion must gate confirmation');
 assert.equal(publishHtml.includes("clearReleaseVerification();workflow.step2Status='pending'"), true, 'changing the Release URL must invalidate downstream state');
 assert.equal(publishHtml.includes('Each step unlocks only after the previous step is complete.'), true, 'publishing explanation must describe sequential unlocking');
+assert.equal(publishHtml.includes('Submission Verification'), true, 'submission verification step is missing');
+assert.equal(publishHtml.includes('id="verificationStep"'), true, 'Step 4 is missing');
+assert.equal(publishHtml.includes('id="offlineOnlyConfirmed" type="checkbox" required disabled'), true, 'Step 5 must start locked');
+assert.equal(publishHtml.includes("step4Status:'locked'"), true, 'Step 4 explicit state is missing');
+assert.equal(publishHtml.includes("api('/api/modx/reviews'"), true, 'review job creation is missing');
+assert.equal(publishHtml.includes("workflow.step4Status!=='pass'"), true, 'publish must require a PASS review');
+assert.equal(publishHtml.includes('reviewId:verifiedReview.id'), true, 'publish request must carry its review id');
 await assert.rejects(readFile(join(root, 'docs', 'modx', 'community.html'), 'utf8'), { code: 'ENOENT' });
 for (const html of [publishHtml, homepageHtml, uploadsHtml]) {
   assert.equal(html.includes('community.html'), false, 'public community catalogue link remains');
@@ -137,6 +144,9 @@ assert.equal(worker.includes('maintenance-submissions'), false, 'ModX maintenanc
 assert.equal(worker.includes("status: 'pending_review'"), false, 'ModX review workflow remains');
 assert.equal(worker.includes("path === 'api/modx/my-tables'"), true, 'creator listing route is missing');
 assert.equal(worker.includes('/refresh$'), true, 'manual release refresh route is missing');
+assert.equal(worker.includes("path === 'api/modx/reviews'"), true, 'review bridge creation route is missing');
+assert.equal(worker.includes('handleModxReviewStatus'), true, 'review bridge status route is missing');
+assert.equal(worker.includes('reviewId,'), true, 'review id is not forwarded during publication');
 
 for (const html of [publishHtml, uploadsHtml]) {
   for (const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {

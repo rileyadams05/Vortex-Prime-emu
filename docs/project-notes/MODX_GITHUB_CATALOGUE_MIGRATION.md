@@ -54,13 +54,22 @@ Do not delete or recreate production D1. Do not discard historical rows. The old
 2. The source must match `https://github.com/OWNER/REPOSITORY/releases/tag/TAG`. Repository-only URLs, blob URLs, HTTP, query strings, fragments, deceptive hosts, and non-GitHub hosts are rejected by both the browser and Workers.
 3. The persistence Worker derives an `api.github.com` request from the validated owner, repository, and tag. It verifies the public repository and published Release, reads the tag as the version, resolves the target commit, and locates `.CT` release assets.
 4. A single `.CT` asset is selected automatically. Multiple `.CT` assets require an explicit asset ID; no asset is chosen arbitrarily.
-5. Neither the executable nor the `.CT` asset is uploaded to or mirrored by ModX.
+5. After maintenance mode is selected, the website creates a version-specific asynchronous submission review. Publication remains locked until it returns `PASS` and the creator explicitly confirms offline/single-player intent.
+6. Neither the executable nor the `.CT` asset is uploaded to or mirrored by ModX. The review Worker temporarily reads the selected asset with strict limits for static analysis and stores only its digest and concise review metadata.
+
+## Pre-publication review
+
+Migration `cloudflare/migrations/0010_submission_reviews.sql` adds `game_eligibility` and `submission_reviews`. A review is tied to the game fingerprint, canonical repository, Release ID/tag, selected asset ID, and computed asset SHA-256. Changing any upstream value requires another review. New Releases are reviewed independently; approval from an older tag is never reused.
+
+The Queue-backed review Worker checks the central game eligibility decision, re-verifies the public GitHub Release, reads bounded README/release text, downloads the selected `.CT` temporarily, rejects malformed or externally declared XML, and extracts user-facing table text without executing Auto Assembler, Lua, shell commands, DLLs, or executables. Deterministic rules and a contextual JSON-only classifier produce `PASS`, `REVIEW`, or `REJECT`. Unknown/ambiguous state stays in review and cannot publish.
 
 ## Gateway-facing endpoints
 
 - `POST /community/resolve-release` — verify a public GitHub Release and return its version and `.CT` assets.
-- `POST /community/submit` — create a version 3 JSON catalogue record after re-verifying the Release.
+- `POST /community/reviews` — create the version-specific review job after re-verifying the Release.
+- `GET /community/reviews/:id` — poll the authenticated creator's concise review result.
+- `POST /community/submit` — create a version 3 JSON catalogue record only with a matching, unconsumed `PASS` review.
 - `GET /tables?executable=Game.exe&platform=windows` — return version 3 machine-readable records for the desktop app.
-- `GET /tables/:id/releases/latest` — check the same canonical repository's latest published Release and refresh stored release metadata.
+- `GET /tables/:id/releases/latest` — check the canonical repository and queue a new version-specific review before any newer Release can replace the current metadata.
 
 Legacy direct upload/download endpoints remain `410 Gone`. The public website contains no community catalogue browser or listing-management UI.
