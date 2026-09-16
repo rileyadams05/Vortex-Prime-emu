@@ -40,7 +40,7 @@ The website gateway and Cloudflare catalogue use the version 3 contract. A listi
 }
 ```
 
-`maintenanceMode` is `author` or `community`. Community maintenance means the repository owner grants trusted GitHub collaborators or teams permission to publish releases from the same canonical repository. ModX does not operate a proposal, fork, source-replacement, or approve/reject maintainer workflow.
+`maintenanceMode` is `author` or `community`. Community maintenance means the wider community may submit table updates through GitHub. Accepted contributions are reviewed and merged into the same canonical repository, and every official Release is published from that repository. ModX never changes the listing to a contributor's copy or alternate repository and does not operate its own proposal, source-replacement, or approve/reject workflow.
 
 ## Persistence migration
 
