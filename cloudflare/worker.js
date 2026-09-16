@@ -301,20 +301,12 @@ export default {
         return await handleModxSubmission(request, env, allowedOrigin);
       }
 
+      if (path === 'api/modx/resolve-release') {
+        return await handleModxReleaseResolution(request, env, allowedOrigin);
+      }
+
       if (path === 'api/modx/tables') {
         return await handlePublicModxTables(request, allowedOrigin);
-      }
-
-      if (path === 'api/modx/my-tables') {
-        return await handleMyModxTables(request, env, allowedOrigin);
-      }
-
-      if (/^api\/modx\/tables\/[^/]+\/source$/.test(path)) {
-        return await handleModxSourceReplacement(request, env, path, allowedOrigin);
-      }
-
-      if (/^api\/modx\/tables\/[^/]+\/maintenance-submissions$/.test(path)) {
-        return await handleModxMaintenanceSubmission(request, env, path, allowedOrigin);
       }
 
       if (/^api\/modx\/tables\/[^/]+\/report$/.test(path)) {
@@ -4364,23 +4356,23 @@ function parseModxMaintenanceMode(value) {
   return maintenanceMode;
 }
 
-function parseGithubSourceUrl(value) {
+function parseGithubReleaseUrl(value) {
   const raw = String(value || '').trim();
-  if (!raw || raw.length > 2048) throw httpError(400, 'Enter a valid public GitHub repository or .CT file link.');
+  if (!raw || raw.length > 2048) throw httpError(400, 'Enter the full URL to a public GitHub Release.');
   let url;
   try {
     url = new URL(raw);
   } catch {
-    throw httpError(400, 'Enter a valid public GitHub repository or .CT file link.');
+    throw httpError(400, 'Enter the full URL to a public GitHub Release.');
   }
   if (url.protocol !== 'https:' || url.username || url.password || url.port || url.hostname.toLowerCase() !== 'github.com') {
-    throw httpError(400, 'The table source must be an https://github.com link.');
+    throw httpError(400, 'The release must be an https://github.com link.');
   }
-  if (url.search || url.hash) throw httpError(400, 'Remove query parameters and fragments from the GitHub link.');
+  if (url.search || url.hash) throw httpError(400, 'Remove query parameters and fragments from the GitHub Release URL.');
   const parts = url.pathname.split('/').filter(Boolean).map((part) => {
-    try { return decodeURIComponent(part); } catch { throw httpError(400, 'The GitHub link contains invalid characters.'); }
+    try { return decodeURIComponent(part); } catch { throw httpError(400, 'The GitHub Release URL contains invalid characters.'); }
   });
-  const [owner, repositoryPart, route, branch, ...fileParts] = parts;
+  const [owner, repositoryPart, releases, tagRoute, ...tagParts] = parts;
   const repository = String(repositoryPart || '').replace(/\.git$/i, '');
   if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(owner || '') || /--/.test(owner)) {
     throw httpError(400, 'The GitHub owner in this link is invalid.');
@@ -4388,30 +4380,21 @@ function parseGithubSourceUrl(value) {
   if (!repository || repository.length > 100 || !/^[A-Za-z0-9._-]+$/.test(repository) || repository === '.' || repository === '..') {
     throw httpError(400, 'The GitHub repository in this link is invalid.');
   }
-  if (parts.length > 2 && route !== 'blob') {
-    throw httpError(400, 'Use a GitHub repository link or a link to a .CT file in that repository.');
-  }
-  let tablePath = null;
-  let normalizedBranch = null;
-  if (route === 'blob') {
-    tablePath = fileParts.join('/');
-    normalizedBranch = String(branch || '').trim();
-    if (!normalizedBranch || !tablePath || !tablePath.toLowerCase().endsWith('.ct') || /(^|\/)\.\.?($|\/)/.test(tablePath)) {
-      throw httpError(400, 'A GitHub file link must point to a .CT file.');
-    }
+  const tag = tagParts.join('/').trim();
+  if (parts.length < 5 || releases !== 'releases' || tagRoute !== 'tag' || !tag || /[\u0000-\u001f\u007f]/.test(tag)) {
+    throw httpError(400, 'Use the full GitHub Release URL in /OWNER/REPOSITORY/releases/tag/VERSION format.');
   }
   const repositoryUrl = `https://github.com/${owner}/${repository}`;
-  const canonicalUrl = tablePath
-    ? `${repositoryUrl}/blob/${encodeURIComponent(normalizedBranch)}/${fileParts.map(encodeURIComponent).join('/')}`
-    : repositoryUrl;
+  const releaseUrl = `${repositoryUrl}/releases/tag/${tag.split('/').map(encodeURIComponent).join('/')}`;
   return {
     provider: 'github',
-    url: canonicalUrl,
+    url: releaseUrl,
+    releaseUrl,
     repositoryUrl,
     owner,
     repository,
-    branch: normalizedBranch,
-    tablePath,
+    tag,
+    version: tag,
   };
 }
 
@@ -4436,16 +4419,17 @@ async function handleModxSubmission(request, env, origin) {
     throw httpError(400, 'Confirm that this table is for offline or single-player use only.');
   }
   const executable = parseModxExecutableMetadata(body.gameExecutable);
-  const source = parseGithubSourceUrl(body.githubUrl);
+  const source = parseGithubReleaseUrl(body.githubUrl);
   const maintenanceMode = parseModxMaintenanceMode(body.maintenanceMode);
   const contributorName = String(user.name || user.email || 'Community').slice(0, 100);
   const outbound = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     gameExecutable: executable.name,
     gameFingerprint: executable.sha256,
     gameExecutableSize: executable.size,
     author: { name: contributorName },
     source,
+    releaseAssetId: body.releaseAssetId == null ? null : String(body.releaseAssetId),
     maintenanceMode,
     originalAuthorName: contributorName,
     offlineOnlyConfirmed: true,
@@ -4462,53 +4446,29 @@ async function handleModxSubmission(request, env, origin) {
   return json({ ok: true, ...payload }, 201, origin);
 }
 
+async function handleModxReleaseResolution(request, env, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'GitHub Release verification requires POST.');
+  await ensureAuthenticated(request, env, 'Sign in with Google to verify a ModX GitHub Release.');
+  const body = await readModxJson(request);
+  const source = parseGithubReleaseUrl(body.githubUrl);
+  const response = await fetch('https://modx.vortex-prime-emu.com/community/resolve-release', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN') },
+    body: JSON.stringify({ source, releaseAssetId: body.releaseAssetId == null ? null : String(body.releaseAssetId) }),
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The GitHub Release could not be verified.');
+  return json({ ok: true, ...payload }, 200, origin);
+}
+
 function parseModxTableId(path) {
   const tableId = decodeURIComponent(path.split('/')[3] || '').trim();
   if (!/^[a-z0-9-]{20,80}$/i.test(tableId)) throw httpError(400, 'Select a valid table.');
   return tableId;
 }
 
-async function handleModxSourceReplacement(request, env, path, origin) {
-  if (request.method !== 'PATCH') throw httpError(405, 'Replacing a ModX source requires PATCH.');
-  const user = await ensureAuthenticated(request, env, 'Sign in to replace a ModX table source.');
-  const source = parseGithubSourceUrl((await readModxJson(request)).githubUrl);
-  const tableId = parseModxTableId(path);
-  const response = await fetch(`https://modx.vortex-prime-emu.com/community/tables/${encodeURIComponent(tableId)}/source`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', 'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN') },
-    body: JSON.stringify({ source, maintainerAbuseKey: await buildModxAbuseKey(user, env) }),
-  });
-  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
-  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The source could not be replaced.');
-  return json({ ok: true, ...payload }, 200, origin);
-}
-
-async function handleModxMaintenanceSubmission(request, env, path, origin) {
-  if (request.method !== 'POST') throw httpError(405, 'Maintenance submissions require POST.');
-  const user = await ensureAuthenticated(request, env, 'Sign in to propose a maintenance update.');
-  const body = await readModxJson(request);
-  const source = parseGithubSourceUrl(body.githubUrl);
-  const notes = sanitizeSingleLine(body.notes, 1000);
-  if (!notes) throw httpError(400, 'Explain what the proposed maintenance update changes.');
-  const tableId = parseModxTableId(path);
-  const response = await fetch(`https://modx.vortex-prime-emu.com/community/tables/${encodeURIComponent(tableId)}/maintenance-submissions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN') },
-    body: JSON.stringify({
-      source,
-      notes,
-      contributorName: String(user.name || user.email || 'Community').slice(0, 100),
-      contributorAbuseKey: await buildModxAbuseKey(user, env),
-      status: 'pending_review',
-    }),
-  });
-  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
-  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The maintenance proposal could not be submitted.');
-  return json({ ok: true, ...payload }, 201, origin);
-}
-
 async function handlePublicModxTables(request, origin) {
-  if (request.method !== 'GET') throw httpError(405, 'ModX table browsing requires GET.');
+  if (request.method !== 'GET') throw httpError(405, 'ModX catalogue queries require GET.');
   const requestUrl = new URL(request.url);
   const executable = String(requestUrl.searchParams.get('executable') || '').trim();
   if (!executable || executable.length > 260 || executable === '.' || executable === '..' || /[\\/\u0000-\u001f]/.test(executable) || !executable.toLowerCase().endsWith('.exe')) {
@@ -4520,22 +4480,8 @@ async function handlePublicModxTables(request, origin) {
   const response = await fetch(upstreamUrl, { headers: { Accept: 'application/json' } });
   const payload = await response.json().catch(() => ({ error: 'The ModX catalogue returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The ModX catalogue could not be loaded.');
-  return json({ ok: true, schemaVersion: 2, tables: Array.isArray(payload.tables) ? payload.tables.map(normalizeModxTableRecord) : [] }, 200, origin);
-}
-
-async function handleMyModxTables(request, env, origin) {
-  if (request.method !== 'GET') throw httpError(405, 'ModX upload management requires GET.');
-  const user = await ensureAuthenticated(request, env, 'Sign in to manage your ModX uploads.');
-  const response = await fetch('https://modx.vortex-prime-emu.com/community/my-tables', {
-    headers: {
-      Accept: 'application/json',
-      'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN'),
-      'X-ModX-Uploader-Key': await buildModxAbuseKey(user, env),
-    },
-  });
-  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
-  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'Your ModX listings could not be loaded.');
-  return json({ ok: true, schemaVersion: 2, tables: Array.isArray(payload.tables) ? payload.tables.map(normalizeModxTableRecord) : [] }, 200, origin);
+  return json({ ok: true, schemaVersion: 3,
+    tables: Array.isArray(payload.tables) ? payload.tables.map(normalizeModxTableRecord) : [] }, 200, origin);
 }
 
 function normalizeModxTableRecord(table) {
@@ -4545,14 +4491,18 @@ function normalizeModxTableRecord(table) {
     : '';
   const gameExecutable = sanitizeSingleLine(value.gameExecutable || legacyExecutable, 260);
   const authorName = sanitizeSingleLine(value.author?.name || value.contributorName || value.originalAuthorName, 100) || 'Community';
-  const maintainerName = sanitizeSingleLine(value.currentMaintainer?.name || value.currentMaintainerName, 100);
   const maintenanceMode = value.maintenanceMode === 'community' || value.maintenancePolicy === 'community' ? 'community' : 'author';
-  const sourceCandidate = value.source?.url || value.source?.repositoryUrl || value.sourceUrl || value.githubUrl || value.downloadUrl;
-  const originalCandidate = value.originalSource?.url || value.originalSource?.repositoryUrl || value.originalSourceUrl || sourceCandidate;
+  const sourceCandidate = value.github?.releaseUrl || value.source?.releaseUrl || value.source?.url || value.releaseUrl;
+  const originalCandidate = value.originalSource?.releaseUrl || value.originalSource?.url || value.originalSourceUrl || sourceCandidate;
   let source = null;
   let originalSource = null;
-  try { if (sourceCandidate) source = parseGithubSourceUrl(sourceCandidate); } catch {}
-  try { if (originalCandidate) originalSource = parseGithubSourceUrl(originalCandidate); } catch {}
+  try { if (sourceCandidate) source = parseGithubReleaseUrl(sourceCandidate); } catch {}
+  try { if (originalCandidate) originalSource = parseGithubReleaseUrl(originalCandidate); } catch {}
+  const release = value.release && typeof value.release === 'object' ? value.release : null;
+  const asset = release?.asset && typeof release.asset === 'object' ? {
+    id: String(release.asset.id || ''), name: sanitizeSingleLine(release.asset.name, 180),
+    downloadUrl: String(release.asset.downloadUrl || ''), digest: sanitizeSingleLine(release.asset.digest, 160) || null,
+  } : null;
   return {
     id: String(value.id || ''),
     gameId: value.gameId == null ? null : String(value.gameId),
@@ -4566,10 +4516,13 @@ function normalizeModxTableRecord(table) {
       id: value.originalAuthor?.id == null ? (value.originalAuthorId == null ? null : String(value.originalAuthorId)) : String(value.originalAuthor.id),
       name: sanitizeSingleLine(value.originalAuthor?.name || value.originalAuthorName || authorName, 100) || authorName,
     },
-    currentMaintainer: maintainerName ? {
-      id: value.currentMaintainer?.id == null ? (value.currentMaintainerId == null ? null : String(value.currentMaintainerId)) : String(value.currentMaintainer.id),
-      name: maintainerName,
-    } : null,
+    github: source ? { repositoryUrl: source.repositoryUrl, releaseUrl: source.releaseUrl,
+      owner: source.owner, repository: source.repository, tag: source.tag } : null,
+    version: sanitizeSingleLine(value.version || source?.tag, 200) || null,
+    release: source ? { tag: sanitizeSingleLine(release?.tag || source.tag, 200),
+      releaseId: release?.releaseId == null ? null : String(release.releaseId),
+      commitSha: /^[a-f0-9]{40,64}$/i.test(String(release?.commitSha || '')) ? String(release.commitSha).toLowerCase() : null,
+      publishedAt: release?.publishedAt || null, checkedAt: release?.checkedAt || null, asset } : null,
     source,
     originalSource,
     maintenanceMode,
@@ -5817,7 +5770,7 @@ function getYoutubeId(url) {
 
 export {
   normalizeModxTableRecord,
-  parseGithubSourceUrl,
+  parseGithubReleaseUrl,
   parseModxExecutableMetadata,
   parseModxMaintenanceMode,
 };
