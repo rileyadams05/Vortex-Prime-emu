@@ -105,6 +105,15 @@ assert.equal(publishHtml.includes('https://github.com/username/repository/releas
 assert.equal(publishHtml.includes('Repository-only URLs are not accepted.'), true);
 assert.equal(publishHtml.includes('name="version"'), false, 'manual version field must not exist');
 assert.equal(publishHtml.includes("body:JSON.stringify"), true);
+assert.equal(publishHtml.includes('id="sourceStep" aria-labelledby="sourceStepTitle" aria-disabled="true"'), true, 'Step 2 must start locked');
+assert.equal(publishHtml.includes('id="sourceFields" disabled'), true, 'Step 2 controls must start disabled');
+assert.equal(publishHtml.includes('id="maintenanceFields" disabled'), true, 'Step 3 controls must start disabled');
+assert.equal(publishHtml.includes('id="offlineOnlyConfirmed" type="checkbox" required disabled'), true, 'offline confirmation must start disabled');
+assert.equal(publishHtml.includes("step1Status:'pending',step2Status:'locked',step3Status:'locked'"), true, 'explicit sequential workflow state is missing');
+assert.equal(publishHtml.includes("workflow.step2Status==='complete'"), true, 'Step 2 completion must gate later steps');
+assert.equal(publishHtml.includes("workflow.step3Status==='complete'"), true, 'Step 3 completion must gate confirmation');
+assert.equal(publishHtml.includes("clearReleaseVerification();workflow.step2Status='pending'"), true, 'changing the Release URL must invalidate downstream state');
+assert.equal(publishHtml.includes('Each step unlocks only after the previous step is complete.'), true, 'publishing explanation must describe sequential unlocking');
 await assert.rejects(readFile(join(root, 'docs', 'modx', 'community.html'), 'utf8'), { code: 'ENOENT' });
 for (const html of [publishHtml, homepageHtml, uploadsHtml]) {
   assert.equal(html.includes('community.html'), false, 'public community catalogue link remains');
