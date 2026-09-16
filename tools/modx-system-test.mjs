@@ -113,12 +113,15 @@ for (const html of [publishHtml, homepageHtml, uploadsHtml]) {
 }
 assert.equal(homepageHtml.includes('/modx/my-uploads.html'), true, 'account menu ModX update link is missing');
 assert.equal(homepageHtml.includes('Update my tables'), true, 'account menu update label is missing');
+assert.equal(homepageHtml.includes('id="accountModxToggle"'), true, 'account menu Mod X submenu toggle is missing');
+assert.equal(homepageHtml.includes('id="accountModxMenu" role="menu" hidden'), true, 'account menu Mod X submenu must start collapsed');
+assert.equal(homepageHtml.includes('outline: none !important;'), true, 'account menu focus-ring override is missing');
 assert.equal(uploadsHtml.includes('/api/modx/my-tables'), true, 'creator listing endpoint is missing');
 assert.equal(uploadsHtml.includes("+'/refresh'"), true, 'manual release refresh action is missing');
 assert.equal(uploadsHtml.includes('Updates are automatic.'), true, 'automatic update explanation is missing');
 assert.equal(publishHtml.includes('href="https://github.com/rileyadams05/ModX"'), true);
 assert.equal(publishHtml.includes('View the ModX Repository →'), true);
-assert.equal(homepageHtml.includes('accountModxToggle'), false, 'empty ModX account menu remains');
+assert.equal(homepageHtml.includes('<span class="account-menu-label">ModX</span>'), false, 'static ModX account-menu label remains');
 assert.equal(worker.includes("request.formData()\n  const file = form.get('file')"), false);
 assert.equal(worker.includes('ModX catalogue requests must use JSON; file uploads are not accepted.'), true);
 assert.equal(worker.includes('maintenance-submissions'), false, 'ModX maintenance proposal routes remain');

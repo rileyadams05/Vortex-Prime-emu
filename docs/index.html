@@ -523,12 +523,18 @@
         }
 
         .account-menu-action:hover,
-        .account-menu-action:focus-visible,
-        .account-menu-link:hover,
-        .account-menu-link:focus-visible {
-            outline: none;
+        .account-menu-link:hover {
             background: rgba(255,255,255,0.075);
             color: #fff;
+        }
+
+        .account-context-menu .account-menu-action:focus,
+        .account-context-menu .account-menu-action:focus-visible,
+        .account-context-menu .account-menu-link:focus,
+        .account-context-menu .account-menu-link:focus-visible {
+            outline: none !important;
+            outline-offset: 0 !important;
+            box-shadow: none !important;
         }
 
         .account-menu-section {
@@ -537,14 +543,20 @@
             border-top: 1px solid var(--color-border);
         }
 
-        .account-menu-label {
-            display: block;
-            padding: 6px 12px 3px;
-            color: var(--color-text-secondary);
-            font-size: 0.7rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+        .account-submenu-chevron {
+            transition: transform 160ms ease;
+        }
+
+        .account-menu-action[aria-expanded="true"] .account-submenu-chevron {
+            transform: rotate(180deg);
+        }
+
+        .account-submenu[hidden] {
+            display: none;
+        }
+
+        .account-submenu {
+            padding-left: 10px;
         }
 
         .account-avatar-quick-input {
@@ -4511,8 +4523,12 @@
             <div class="account-context-menu" id="accountContextMenu" role="menu" aria-label="Account menu">
                 <button class="account-menu-action" id="accountChangePicture" type="button" role="menuitem">Change my profile picture</button>
                 <div class="account-menu-section">
-                    <span class="account-menu-label">ModX</span>
-                    <a class="account-menu-link" id="accountModxUpdate" href="/modx/my-uploads.html" role="menuitem"><span>Update my tables</span><span aria-hidden="true">→</span></a>
+                    <button class="account-menu-action" id="accountModxToggle" type="button" role="menuitem" aria-expanded="false" aria-controls="accountModxMenu">
+                        <span>Mod X</span><span class="account-submenu-chevron" aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="account-submenu" id="accountModxMenu" role="menu" hidden>
+                        <a class="account-menu-link" id="accountModxUpdate" href="/modx/my-uploads.html" role="menuitem"><span>Update my tables</span><span aria-hidden="true">→</span></a>
+                    </div>
                 </div>
             </div>
             <input class="account-avatar-quick-input" id="accountAvatarQuickInput" type="file" accept="image/png,image/jpeg,image/webp">
@@ -4933,14 +4949,22 @@
                     const accountSetupSubmit = document.getElementById('accountSetupSubmit');
                     const accountContextMenu = document.getElementById('accountContextMenu');
                     const accountChangePicture = document.getElementById('accountChangePicture');
+                    const accountModxToggle = document.getElementById('accountModxToggle');
+                    const accountModxMenu = document.getElementById('accountModxMenu');
                     const accountAvatarQuickInput = document.getElementById('accountAvatarQuickInput');
                     const itemDetailModal = document.getElementById('itemDetailModal');
                     const itemDetailBackdrop = document.getElementById('itemDetailBackdrop');
                     const itemDetailCloseBtn = document.getElementById('itemDetailCloseBtn');
                     const itemDetailContent = document.getElementById('itemDetailContent');
 
+                    function closeAccountModxMenu() {
+                        if (accountModxMenu) accountModxMenu.hidden = true;
+                        accountModxToggle?.setAttribute('aria-expanded', 'false');
+                    }
+
                     function closeAccountContextMenu() {
                         accountContextMenu?.classList.remove('open');
+                        closeAccountModxMenu();
                     }
 
                     function positionAccountContextMenu(clientX, clientY) {
@@ -4954,6 +4978,7 @@
                     function openAccountContextMenu(event) {
                         if (!currentUser || !accountContextMenu) return;
                         event.preventDefault();
+                        closeAccountModxMenu();
                         accountContextMenu.classList.add('open');
                         positionAccountContextMenu(event.clientX, event.clientY);
                     }
@@ -5054,6 +5079,14 @@
                     accountChangePicture?.addEventListener('click', () => {
                         closeAccountContextMenu();
                         accountAvatarQuickInput?.click();
+                    });
+
+                    accountModxToggle?.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        if (!accountModxMenu) return;
+                        const willOpen = accountModxMenu.hidden;
+                        accountModxMenu.hidden = !willOpen;
+                        accountModxToggle.setAttribute('aria-expanded', String(willOpen));
                     });
 
                     accountAvatarQuickInput?.addEventListener('change', async () => {
