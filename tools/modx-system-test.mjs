@@ -85,6 +85,7 @@ assert.equal(normalized.release.asset.name, 'WatchDogs.ct');
 assert.equal('downloadUrl' in normalized, false);
 
 const publishHtml = await readFile(join(root, 'docs', 'modx', 'index.html'), 'utf8');
+const uploadsHtml = await readFile(join(root, 'docs', 'modx', 'my-uploads.html'), 'utf8');
 const homepageHtml = await readFile(join(root, 'docs', 'index.html'), 'utf8');
 for (const removed of [
   'Where is this table supported?',
@@ -105,13 +106,16 @@ assert.equal(publishHtml.includes('Repository-only URLs are not accepted.'), tru
 assert.equal(publishHtml.includes('name="version"'), false, 'manual version field must not exist');
 assert.equal(publishHtml.includes("body:JSON.stringify"), true);
 await assert.rejects(readFile(join(root, 'docs', 'modx', 'community.html'), 'utf8'), { code: 'ENOENT' });
-await assert.rejects(readFile(join(root, 'docs', 'modx', 'my-uploads.html'), 'utf8'), { code: 'ENOENT' });
-for (const html of [publishHtml, homepageHtml]) {
+for (const html of [publishHtml, homepageHtml, uploadsHtml]) {
   assert.equal(html.includes('community.html'), false, 'public community catalogue link remains');
   assert.equal(html.includes('View Community Tables'), false, 'public community catalogue label remains');
-  assert.equal(html.includes('my-uploads.html'), false, 'website listing-management link remains');
   assert.equal(html.includes('Manage my listings'), false, 'website listing-management label remains');
 }
+assert.equal(homepageHtml.includes('/modx/my-uploads.html'), true, 'account menu ModX update link is missing');
+assert.equal(homepageHtml.includes('Update my tables'), true, 'account menu update label is missing');
+assert.equal(uploadsHtml.includes('/api/modx/my-tables'), true, 'creator listing endpoint is missing');
+assert.equal(uploadsHtml.includes("+'/refresh'"), true, 'manual release refresh action is missing');
+assert.equal(uploadsHtml.includes('Updates are automatic.'), true, 'automatic update explanation is missing');
 assert.equal(publishHtml.includes('href="https://github.com/rileyadams05/ModX"'), true);
 assert.equal(publishHtml.includes('View the ModX Repository →'), true);
 assert.equal(homepageHtml.includes('accountModxToggle'), false, 'empty ModX account menu remains');
@@ -119,9 +123,10 @@ assert.equal(worker.includes("request.formData()\n  const file = form.get('file'
 assert.equal(worker.includes('ModX catalogue requests must use JSON; file uploads are not accepted.'), true);
 assert.equal(worker.includes('maintenance-submissions'), false, 'ModX maintenance proposal routes remain');
 assert.equal(worker.includes("status: 'pending_review'"), false, 'ModX review workflow remains');
-assert.equal(worker.includes('/api/modx/my-tables'), false, 'website listing-management route remains');
+assert.equal(worker.includes("path === 'api/modx/my-tables'"), true, 'creator listing route is missing');
+assert.equal(worker.includes('/refresh$'), true, 'manual release refresh route is missing');
 
-for (const html of [publishHtml]) {
+for (const html of [publishHtml, uploadsHtml]) {
   for (const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
     assert.doesNotThrow(() => new Function(match[1]), 'inline script should parse');
   }

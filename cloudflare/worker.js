@@ -305,6 +305,14 @@ export default {
         return await handleModxReleaseResolution(request, env, allowedOrigin);
       }
 
+      if (path === 'api/modx/my-tables') {
+        return await handleModxMyTables(request, env, allowedOrigin);
+      }
+
+      if (/^api\/modx\/tables\/[^/]+\/refresh$/.test(path)) {
+        return await handleModxTableRefresh(request, env, path, allowedOrigin);
+      }
+
       if (path === 'api/modx/tables') {
         return await handlePublicModxTables(request, allowedOrigin);
       }
@@ -4458,6 +4466,39 @@ async function handleModxReleaseResolution(request, env, origin) {
   });
   const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
   if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The GitHub Release could not be verified.');
+  return json({ ok: true, ...payload }, 200, origin);
+}
+
+async function handleModxMyTables(request, env, origin) {
+  if (request.method !== 'GET') throw httpError(405, 'ModX table management requires GET.');
+  const user = await ensureAuthenticated(request, env, 'Sign in to manage your ModX tables.');
+  const response = await fetch('https://modx.vortex-prime-emu.com/community/my-tables', {
+    headers: {
+      Accept: 'application/json',
+      'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN'),
+      'X-ModX-Uploader-Key': await buildModxAbuseKey(user, env),
+    },
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'Your ModX tables could not be loaded.');
+  return json({ ok: true, schemaVersion: 3,
+    tables: Array.isArray(payload.tables) ? payload.tables.map(normalizeModxTableRecord) : [] }, 200, origin);
+}
+
+async function handleModxTableRefresh(request, env, path, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'ModX table refresh requires POST.');
+  const user = await ensureAuthenticated(request, env, 'Sign in to update your ModX tables.');
+  const tableId = parseModxTableId(path);
+  const response = await fetch(`https://modx.vortex-prime-emu.com/community/tables/${encodeURIComponent(tableId)}/refresh`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'X-ModX-Bridge': requireEnv(env, 'MODX_BRIDGE_TOKEN'),
+      'X-ModX-Uploader-Key': await buildModxAbuseKey(user, env),
+    },
+  });
+  const payload = await response.json().catch(() => ({ error: 'The ModX backend returned an invalid response.' }));
+  if (!response.ok) throw httpError(response.status, payload.error || payload.message || 'The GitHub Release could not be refreshed.');
   return json({ ok: true, ...payload }, 200, origin);
 }
 

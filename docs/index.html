@@ -531,6 +531,22 @@
             color: #fff;
         }
 
+        .account-menu-section {
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .account-menu-label {
+            display: block;
+            padding: 6px 12px 3px;
+            color: var(--color-text-secondary);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
         .account-avatar-quick-input {
             display: none;
         }
@@ -4494,6 +4510,10 @@
             </div>
             <div class="account-context-menu" id="accountContextMenu" role="menu" aria-label="Account menu">
                 <button class="account-menu-action" id="accountChangePicture" type="button" role="menuitem">Change my profile picture</button>
+                <div class="account-menu-section">
+                    <span class="account-menu-label">ModX</span>
+                    <a class="account-menu-link" id="accountModxUpdate" href="/modx/my-uploads.html" role="menuitem"><span>Update my tables</span><span aria-hidden="true">→</span></a>
+                </div>
             </div>
             <input class="account-avatar-quick-input" id="accountAvatarQuickInput" type="file" accept="image/png,image/jpeg,image/webp">
             <div class="item-detail-modal" id="itemDetailModal" aria-hidden="true">
