@@ -69,8 +69,8 @@ const normalized = normalizeModxTableRecord({
     checkedAt: '2026-09-16T00:01:00.000Z',
     asset: {
       id: '654',
-      name: 'WatchDogs.ct',
-      url: 'https://github.com/Riley/watch-dogs-table/releases/download/v1.3.2/WatchDogs.ct',
+      name: 'WatchDogs.modxtrainer',
+      downloadUrl: 'https://github.com/Riley/watch-dogs-table/releases/download/v1.3.2/WatchDogs.modxtrainer',
     },
   },
   maintenanceMode: 'community',
@@ -81,7 +81,8 @@ assert.equal(normalized.source.provider, 'github');
 assert.equal(normalized.sourceStatus, 'available');
 assert.equal(normalized.maintenanceMode, 'community');
 assert.equal(normalized.version, 'v1.3.2');
-assert.equal(normalized.release.asset.name, 'WatchDogs.ct');
+assert.equal(normalized.release.asset.name, 'WatchDogs.modxtrainer');
+assert.equal(normalized.release.asset.downloadUrl, 'https://github.com/Riley/watch-dogs-table/releases/download/v1.3.2/WatchDogs.modxtrainer');
 assert.equal('downloadUrl' in normalized, false);
 
 const publishHtml = await readFile(join(root, 'docs', 'modx', 'index.html'), 'utf8');
@@ -103,6 +104,10 @@ assert.equal(publishHtml.includes('name="githubUrl"'), true);
 assert.equal(publishHtml.includes('GitHub release URL'), true);
 assert.equal(publishHtml.includes('https://github.com/username/repository/releases/tag/v1.0.0'), true);
 assert.equal(publishHtml.includes('Repository-only URLs are not accepted.'), true);
+assert.equal(publishHtml.includes('finished .modxtrainer build'), true, 'finished trainer workflow is not explained');
+assert.equal(publishHtml.includes('data.trainerAssets'), true, 'release resolver does not consume finished trainer assets');
+assert.equal(publishHtml.includes('data.ctAssets'), false, 'raw CT assets remain in the publishing workflow');
+assert.equal(publishHtml.includes('Vortex Prime and Mod X store the link and metadata only.'), true, 'non-hosting responsibility is unclear');
 assert.equal(publishHtml.includes('name="version"'), false, 'manual version field must not exist');
 assert.equal(publishHtml.includes("body:JSON.stringify"), true);
 assert.equal(publishHtml.includes('id="sourceStep" aria-labelledby="sourceStepTitle" aria-disabled="true"'), true, 'Step 2 must start locked');

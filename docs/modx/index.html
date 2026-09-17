@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Publish a ModX Community Table | Vortex Prime</title>
-  <meta name="description" content="Catalogue a GitHub-hosted Cheat Engine table in ModX by identifying its game executable.">
+  <meta name="description" content="Catalogue a finished GitHub-hosted Mod X trainer by identifying its game executable.">
   <style>
     :root{color-scheme:dark;--bg:#080b11;--panel:#111720;--line:#293342;--muted:#95a2b4;--text:#f4f7fb;--accent:#70a9e3;--success:#43c9a4;--danger:#ff6b78}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -20%,#172333 0,transparent 42%),var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif}a{color:inherit;text-decoration:none}
@@ -25,7 +25,7 @@
   <main>
     <div class="eyebrow">Creator publishing</div>
     <h1 id="pageTitle">Publish to ModX Cheat Tables</h1>
-    <p class="lead" id="pageLead">Publish a community Cheat Engine table without uploading it to ModX. Attach the table to a public GitHub Release and paste that specific Release URL here.</p>
+    <p class="lead" id="pageLead">Publish the finished trainer built by Mod X without uploading it to Vortex Prime or Mod X. Attach the <strong>.modxtrainer</strong> build to a public GitHub Release and paste that Release URL here.</p>
     <section class="auth-gate" id="authGate">
       <h2>Sign in to publish</h2>
       <p id="authGateMessage">Publishing requires a Vortex Prime account.</p>
@@ -47,15 +47,15 @@
         </section>
 
         <section class="step is-locked" id="sourceStep" aria-labelledby="sourceStepTitle" aria-disabled="true">
-          <h2 class="step-title" id="sourceStepTitle"><span class="step-number" id="sourceStepNumber">2</span>Table source</h2>
+          <h2 class="step-title" id="sourceStepTitle"><span class="step-number" id="sourceStepNumber">2</span>Finished trainer release</h2>
           <p class="step-state locked" id="sourceStepState">Complete Step 1 to continue.</p>
           <fieldset id="sourceFields" disabled>
             <label for="githubUrl">GitHub release URL</label>
             <input id="githubUrl" name="githubUrl" type="url" maxlength="2048" autocomplete="url" spellcheck="false" placeholder="https://github.com/username/repository/releases/tag/v1.0.0" required>
-            <p class="field-note">Paste the full URL to the GitHub Release containing your Cheat Engine table. Repository-only URLs are not accepted.</p>
-            <p class="version-notice">Mod X reads the table version from the release tag. Whenever you update the table, publish a new GitHub Release with a new version tag, such as <strong>v1.0.0 → v1.0.1</strong>.</p>
+            <p class="field-note">Paste the full URL to the GitHub Release containing the finished <strong>.modxtrainer</strong> build. Repository-only URLs are not accepted. Vortex Prime and Mod X store the link and metadata only.</p>
+            <p class="version-notice">Mod X reads the trainer version from the release tag. Rebuild after changing the cheat list, then publish the new <strong>.modxtrainer</strong> in a new GitHub Release, such as <strong>v1.0.0 → v1.0.1</strong>. Mod X checks that repository for newer Releases automatically.</p>
             <div class="version-result" id="releaseResult" hidden><strong id="releaseVersion"></strong><span id="releaseAssetSummary"></span></div>
-            <div class="asset-field" id="releaseAssetField" hidden><label for="releaseAsset">Cheat Engine table asset</label><select id="releaseAsset"></select><p class="field-note">This Release contains multiple .CT assets. Select the table Mod X should use.</p></div>
+            <div class="asset-field" id="releaseAssetField" hidden><label for="releaseAsset">Finished Mod X trainer</label><select id="releaseAsset"></select><p class="field-note">This Release contains multiple .modxtrainer builds. Select the finished trainer Mod X should use.</p></div>
             <p class="readme-notice">Include supported game versions, storefronts/services, requirements, features, instructions and other important information in your GitHub README or Release notes.</p>
           </fieldset>
         </section>
@@ -73,9 +73,9 @@
           <h2 class="step-title" id="verificationStepTitle"><span class="step-number" id="verificationStepNumber">4</span>Submission Verification</h2>
           <p class="step-state locked" id="verificationStepState">Complete Step 3 to continue.</p>
           <div class="verification-panel">
-            <p class="verification-copy">Mod X checks the target game, GitHub Release, documentation and table contents before publishing. Static analysis only—submitted scripts are never executed.</p>
+            <p class="verification-copy">Mod X checks the target game, GitHub Release, documentation and finished trainer metadata before publishing. The finished build is inspected statically and never executed.</p>
             <ul class="verification-list" id="verificationChecks">
-              <li data-check="game">Target game identified</li><li data-check="eligibility">Game eligible for Mod X</li><li data-check="release">GitHub Release verified</li><li data-check="asset">CT asset found</li><li data-check="table">Table parsed safely</li><li data-check="policy">Offline/single-player policy passed</li>
+              <li data-check="game">Target game identified</li><li data-check="eligibility">Game eligible for Mod X</li><li data-check="release">GitHub Release verified</li><li data-check="asset">Finished trainer build found</li><li data-check="table">Finished trainer parsed safely</li><li data-check="policy">Offline/single-player policy passed</li>
             </ul>
             <div class="verification-result" id="verificationResult">Waiting for the previous steps.</div>
             <ul class="verification-reasons" id="verificationReasons" hidden></ul>
@@ -96,7 +96,7 @@
         <div class="status" id="status" role="status" aria-live="polite"></div>
       </form>
 
-      <aside class="card"><h2>How publishing works</h2><p>Each step unlocks only after the previous step is complete.</p><ol><li>Select the game’s executable. Mod X fingerprints it locally; the file is not uploaded.</li><li>Paste the full GitHub Release URL and select the intended .CT asset when required.</li><li>Choose who will maintain the canonical repository through GitHub.</li><li>Mod X checks the game, Release, documentation and table contents without executing scripts.</li><li>Only a PASS unlocks the offline/single-player confirmation. Ambiguous submissions require manual review; clearly online-cheat submissions are rejected.</li><li>Confirm offline/single-player intent, then publish. Every new Release version requires a new review.</li></ol><a class="repo" href="https://github.com/rileyadams05/ModX" target="_blank" rel="noopener noreferrer">View the ModX Repository →</a></aside>
+      <aside class="card"><h2>How publishing works</h2><p>Each step unlocks only after the previous step is complete.</p><ol><li>Select the game’s executable. Mod X fingerprints it locally; the file is not uploaded.</li><li>In Mod X DEV Mode, import the CT locally and build the finished .modxtrainer file. Editable source files remain on your computer.</li><li>Attach only that finished build to a public GitHub Release, then paste the full Release URL here.</li><li>Choose who will maintain the one canonical repository through GitHub.</li><li>Mod X verifies the game, Release, documentation and finished build without executing it.</li><li>Confirm offline/single-player intent, then publish. Mod X stores metadata only, downloads come directly from GitHub, and newer Releases are detected automatically.</li></ol><a class="repo" href="https://github.com/rileyadams05/ModX" target="_blank" rel="noopener noreferrer">View the ModX Repository →</a></aside>
     </div>
   </main>
   <script>
@@ -161,13 +161,13 @@
       const url=githubUrl.value.trim(),sequence=++releaseSequence;verifiedRelease=null;step2Message='';releaseResult.hidden=true;releaseAssetField.hidden=true;releaseAsset.replaceChildren();clearMaintenance();
       if(!validGithubReleaseUrl(url)){workflow.step2Status='error';status('Paste the full https://github.com/OWNER/REPOSITORY/releases/tag/VERSION URL.','error');return update()}
       workflow.step2Status='checking';status('Checking GitHub Release…');update();
-      try{const data=await api('/api/modx/resolve-release',{method:'POST',body:JSON.stringify({githubUrl:url})});if(sequence!==releaseSequence)return;const assets=Array.isArray(data.ctAssets)?data.ctAssets:[];const automatic=data.release?.asset||null;if(!automatic&&!assets.length)throw new Error('This GitHub Release does not contain a .CT table asset.');verifiedRelease={url,version:data.version,assetId:automatic?.id||''};el('releaseVersion').textContent='Detected version: '+data.version;el('releaseAssetSummary').textContent=automatic?'Table asset: '+automatic.name:assets.length+' .CT assets found — choose one below.';releaseResult.hidden=false;if(automatic){workflow.step2Status='complete';workflow.step3Status='pending';status('GitHub Release verified. Step 3 is now available.','ok')}else{releaseAsset.append(new Option('Select a .CT asset',''));for(const asset of assets)releaseAsset.append(new Option(asset.name,asset.id));releaseAssetField.hidden=false;workflow.step2Status='pending';step2Message='GitHub Release verified. Select the intended .CT asset to continue.';status(step2Message,'ok')}}
+      try{const data=await api('/api/modx/resolve-release',{method:'POST',body:JSON.stringify({githubUrl:url})});if(sequence!==releaseSequence)return;const assets=Array.isArray(data.trainerAssets)?data.trainerAssets:[];const automatic=data.release?.asset||null;if(!automatic&&!assets.length)throw new Error('This GitHub Release does not contain a finished .modxtrainer build.');verifiedRelease={url,version:data.version,assetId:automatic?.id||''};el('releaseVersion').textContent='Detected version: '+data.version;el('releaseAssetSummary').textContent=automatic?'Finished trainer: '+automatic.name:assets.length+' .modxtrainer builds found — choose one below.';releaseResult.hidden=false;if(automatic){workflow.step2Status='complete';workflow.step3Status='pending';status('GitHub Release verified. Step 3 is now available.','ok')}else{releaseAsset.append(new Option('Select a finished trainer',''));for(const asset of assets)releaseAsset.append(new Option(asset.name,asset.id));releaseAssetField.hidden=false;workflow.step2Status='pending';step2Message='GitHub Release verified. Select the intended .modxtrainer build to continue.';status(step2Message,'ok')}}
       catch(error){if(sequence===releaseSequence){verifiedRelease=null;workflow.step2Status='error';status(error.message||'The GitHub Release could not be verified.','error')}}
       finally{if(sequence===releaseSequence)update()}
     }
 
     function renderReviewChecks(review){
-      const labels={game:'Target game identified',eligibility:'Game eligible for Mod X',release:'GitHub Release verified',asset:'CT asset found',table:'Table parsed safely',policy:'Offline/single-player policy passed'};
+      const labels={game:'Target game identified',eligibility:'Game eligible for Mod X',release:'GitHub Release verified',asset:'Finished trainer build found',table:'Finished trainer parsed safely',policy:'Offline/single-player policy passed'};
       const nodes=[...el('verificationChecks').querySelectorAll('li')];nodes.forEach(node=>node.dataset.status='waiting');
       const stageOrder=['queued','game','release','documentation','table','safety','complete'];const stageIndex=stageOrder.indexOf(review?.stage||'queued');
       const stageChecks={game:['game','eligibility'],release:['release','asset'],documentation:['release','asset'],table:['table'],safety:['policy']};
@@ -181,7 +181,7 @@
       clearTimeout(reviewTimer);const sequence=++reviewSequence;reviewPollCount=0;verifiedReview=null;offlineOnlyConfirmed.checked=false;
       if(!executableMetadata||!releaseReady()||!maintenanceMode()){workflow.step4Status='locked';renderReviewChecks(null);return update()}
       workflow.step4Status='checking';renderReviewChecks({status:'queued',stage:'queued'});status('Starting Mod X Submission Verification…');update();
-      try{const data=await api('/api/modx/reviews',{method:'POST',body:JSON.stringify({gameExecutable:executableMetadata,githubUrl:githubUrl.value.trim(),releaseAssetId:verifiedRelease.assetId,maintenanceMode:maintenanceMode()})});if(sequence!==reviewSequence)return;verifiedReview=data.review;renderReviewChecks(verifiedReview);if(verifiedReview?.status==='completed')return finishSubmissionReview(verifiedReview,sequence);status('Submission Verification is running. The table is inspected statically and no scripts are executed.');reviewTimer=setTimeout(()=>pollSubmissionReview(sequence),1500)}
+      try{const data=await api('/api/modx/reviews',{method:'POST',body:JSON.stringify({gameExecutable:executableMetadata,githubUrl:githubUrl.value.trim(),releaseAssetId:verifiedRelease.assetId,maintenanceMode:maintenanceMode()})});if(sequence!==reviewSequence)return;verifiedReview=data.review;renderReviewChecks(verifiedReview);if(verifiedReview?.status==='completed')return finishSubmissionReview(verifiedReview,sequence);status('Submission Verification is running. The finished trainer is inspected statically and is never executed.');reviewTimer=setTimeout(()=>pollSubmissionReview(sequence),1500)}
       catch(error){if(sequence===reviewSequence){workflow.step4Status='error';renderReviewChecks({status:'completed',decision:'review',reasons:[error.message||'Verification could not be started.'],checks:[]});status(error.message||'Submission Verification could not be started.','error');update()}}
     }
 
@@ -205,12 +205,12 @@
     el('removeExecutable').addEventListener('click',clearExecutable);
     githubUrl.addEventListener('input',()=>{if(workflow.step1Status!=='complete')return;clearReleaseVerification();workflow.step2Status='pending';status('');update();if(validGithubReleaseUrl(githubUrl.value.trim()))releaseTimer=setTimeout(verifyRelease,500)});
     githubUrl.addEventListener('blur',()=>{if(workflow.step1Status!=='complete'||releaseReady()||workflow.step2Status==='checking')return;if(validGithubReleaseUrl(githubUrl.value.trim()))verifyRelease();else if(githubUrl.value.trim()){workflow.step2Status='error';status('Paste the full https://github.com/OWNER/REPOSITORY/releases/tag/VERSION URL.','error');update()}});
-    releaseAsset.addEventListener('change',()=>{if(!verifiedRelease)return;verifiedRelease.assetId=releaseAsset.value;workflow.step2Status=verifiedRelease.assetId?'complete':'pending';clearMaintenance();workflow.step3Status=verifiedRelease.assetId?'pending':'locked';step2Message=verifiedRelease.assetId?'':'GitHub Release verified. Select the intended .CT asset to continue.';status(verifiedRelease.assetId?'GitHub Release verified. Step 3 is now available.':'Select the intended .CT asset.',verifiedRelease.assetId?'ok':'');update()});
+    releaseAsset.addEventListener('change',()=>{if(!verifiedRelease)return;verifiedRelease.assetId=releaseAsset.value;workflow.step2Status=verifiedRelease.assetId?'complete':'pending';clearMaintenance();workflow.step3Status=verifiedRelease.assetId?'pending':'locked';step2Message=verifiedRelease.assetId?'':'GitHub Release verified. Select the intended .modxtrainer build to continue.';status(verifiedRelease.assetId?'GitHub Release verified. Step 3 is now available.':'Select the intended finished trainer.',verifiedRelease.assetId?'ok':'');update()});
     document.querySelectorAll('input[name="maintenanceMode"]').forEach(input=>input.addEventListener('change',()=>{if(!releaseReady())return;clearSubmissionReview();workflow.step3Status=maintenanceMode()?'complete':'pending';workflow.step4Status=maintenanceMode()?'checking':'locked';update();if(maintenanceMode())startSubmissionReview()}));
     offlineOnlyConfirmed.addEventListener('change',update);
     dropZone.addEventListener('keydown',event=>{if(fileInput.disabled)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();fileInput.click()}});
     dropZone.addEventListener('dragover',event=>{event.preventDefault();if(!fileInput.disabled)dropZone.classList.add('is-dragging')});dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('is-dragging'));dropZone.addEventListener('drop',event=>{event.preventDefault();dropZone.classList.remove('is-dragging');if(!fileInput.disabled)selectExecutable(event.dataTransfer.files[0])});
-    form.addEventListener('submit',async event=>{event.preventDefault();if(!authUser)return showSignedOut();if(workflow.step1Status!=='complete'||!executableMetadata)return status('Complete Step 1 before publishing.','error');if(!validGithubReleaseUrl(githubUrl.value.trim())||!releaseReady())return status('Complete GitHub Release verification before publishing.','error');if(workflow.step3Status!=='complete'||!maintenanceMode())return status('Choose a maintenance option before publishing.','error');if(workflow.step4Status!=='pass'||verifiedReview?.decision!=='pass')return status('Submission Verification must return PASS before publishing.','error');if(offlineOnlyConfirmed.disabled||!offlineOnlyConfirmed.checked)return status('Confirm offline or single-player use.','error');submitting=true;update();status('Publishing the verified GitHub Release to the Mod X catalogue…');try{await api('/api/modx/submit',{method:'POST',body:JSON.stringify({gameExecutable:executableMetadata,githubUrl:githubUrl.value.trim(),releaseAssetId:verifiedRelease.assetId,maintenanceMode:maintenanceMode(),reviewId:verifiedReview.id,offlineOnlyConfirmed:true})});githubUrl.value='';clearExecutable();status('Table published. Mod X recorded the reviewed GitHub Release and version; the .CT file remains hosted on GitHub.','ok')}catch(error){status(error.message||'Publishing failed.','error')}finally{submitting=false;update()}});
+    form.addEventListener('submit',async event=>{event.preventDefault();if(!authUser)return showSignedOut();if(workflow.step1Status!=='complete'||!executableMetadata)return status('Complete Step 1 before publishing.','error');if(!validGithubReleaseUrl(githubUrl.value.trim())||!releaseReady())return status('Complete GitHub Release verification before publishing.','error');if(workflow.step3Status!=='complete'||!maintenanceMode())return status('Choose a maintenance option before publishing.','error');if(workflow.step4Status!=='pass'||verifiedReview?.decision!=='pass')return status('Submission Verification must return PASS before publishing.','error');if(offlineOnlyConfirmed.disabled||!offlineOnlyConfirmed.checked)return status('Confirm offline or single-player use.','error');submitting=true;update();status('Publishing the verified GitHub Release metadata to the Mod X catalogue…');try{await api('/api/modx/submit',{method:'POST',body:JSON.stringify({gameExecutable:executableMetadata,githubUrl:githubUrl.value.trim(),releaseAssetId:verifiedRelease.assetId,maintenanceMode:maintenanceMode(),reviewId:verifiedReview.id,offlineOnlyConfirmed:true})});githubUrl.value='';clearExecutable();status('Trainer published. Mod X stored the reviewed GitHub Release metadata; the finished trainer remains hosted and downloaded directly from GitHub.','ok')}catch(error){status(error.message||'Publishing failed.','error')}finally{submitting=false;update()}});
     renderReviewChecks(null);loadAuth().catch(error=>showSignedOut(error.message||'Vortex Prime could not verify your current session.'));update();
   </script>
 </body>
