@@ -51,21 +51,21 @@
     .title-block h1 { margin: 0; font-size: clamp(1.75rem, 2.4vw + 1rem, 2.5rem); letter-spacing: 0.04em; }
     .title-block p { margin: 0.35rem 0 0; color: var(--muted); font-size: clamp(0.95rem, 0.4vw + 0.9rem, 1.1rem); line-height: 1.6; }
     .actions { display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-    .cta { display: flex; flex-direction: column; gap: 0.65rem; padding: 1.4rem 1.5rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); text-decoration: none; color: inherit; position: relative; overflow: hidden; transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+    .cta { display: flex; height: 100%; flex-direction: column; gap: 0.65rem; padding: 1.4rem 1.5rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); text-decoration: none; color: inherit; position: relative; overflow: hidden; transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
     .cta span { display: block; }
     .cta::after { content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s ease; z-index: 0; }
     .cta:hover, .cta:focus-visible { transform: translateY(-4px); border-color: rgba(255, 255, 255, 0.22); box-shadow: 0 24px 45px rgba(12, 18, 40, 0.45); outline: none; }
     .cta:hover::after, .cta:focus-visible::after { opacity: 1; }
     .cta.ps3::after { background: linear-gradient(135deg, rgba(0, 112, 243, 0.3), rgba(4, 12, 38, 0.12)); }
     .cta.ps4::after { background: linear-gradient(135deg, rgba(23, 105, 170, 0.3), rgba(4, 18, 38, 0.12)); }
-    .cta .content { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.65rem; }
+    .cta .content { position: relative; z-index: 1; display: flex; height: 100%; flex-direction: column; gap: 0.65rem; }
     .cta .brand { display: flex; flex-direction: column; gap: 0.6rem; }
     .cta .brand img { display: block; max-width: 160px; width: 100%; height: auto; filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.35)); }
     .cta .byline { font-size: 0.9rem; color: rgba(255, 255, 255, 0.55); }
     .cta .description { font-size: 0.9rem; line-height: 1.5; color: rgba(255, 255, 255, 0.68); }
     .cta .tag-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
     .cta .tag { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.35rem 0.6rem; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.7); }
-    .cta .button-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.2rem; }
+    .cta .button-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: auto; }
     .cta .button-row a { flex: 1 1 150px; display: inline-flex; align-items: center; justify-content: center; padding: 0.85rem 1rem; border-radius: 12px; background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.9); text-decoration: none; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.05em; transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease; }
     .cta .button-row a:hover, .cta .button-row a:focus-visible { transform: translateY(-3px); background: rgba(23, 105, 170, 0.3); box-shadow: 0 16px 32px rgba(5, 12, 38, 0.35); outline: none; }
     .cta .disclaimer { font-size: 0.75rem; line-height: 1.5; color: rgba(255, 255, 255, 0.6); }
@@ -75,8 +75,8 @@
 <body>
   <main class="wrapper">
     <div class="title-block">
-      <h1>PlayStation Homebrew</h1>
-      <p>Browse community-maintained PlayStation homebrew resources. Links open the original repositories maintained by their respective developers.</p>
+      <h1>PlayStation Homebrew &amp; Research</h1>
+      <p>Browse public homebrew, compatibility, and console research projects. Links open the original repositories maintained by their respective developers.</p>
     </div>
     <div class="actions">
       <div class="cta ps3" data-target="ps3-homebrew">
