@@ -827,7 +827,6 @@
     const platform = normalizePlatformForInstall(pkg.platform);
     const fileType = String(pkg.fileType || '').toLowerCase();
     if (platform === 'ps4' && fileType === 'pkg') return 'ps4-direct-package';
-    if (platform === 'ps5' && fileType === 'pkg') return 'ps5-direct-package';
     if (platform === 'ps3' && fileType === 'pkg') return 'ps3-webman-mod';
     return 'none';
   }
@@ -913,7 +912,6 @@
           <div class="field">
             <label>Platform *</label>
             <select data-field="platform" onchange="onFieldInput(${i},'platform',this.value)" style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: .9rem; padding: .6rem .85rem; outline: none; width: 100%;">
-              <option value="PS5" ${pkg.platform==='PS5'?'selected':''}>PlayStation 5</option>
               <option value="PS4" ${pkg.platform==='PS4'?'selected':''}>PlayStation 4</option>
               <option value="PS3" ${pkg.platform==='PS3'?'selected':''}>PlayStation 3</option>
               <option value="PS2" ${pkg.platform==='PS2'?'selected':''}>PlayStation 2</option>
