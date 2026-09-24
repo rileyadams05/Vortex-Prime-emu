@@ -603,8 +603,14 @@ async function handleNxePairPoll(request, env, origin) {
     if (index < 0) throw httpError(401, 'Unknown NXE pairing device.');
     const current = pairs[index];
     const now = new Date().toISOString();
+    const controlToken = String(body.controlToken || '').trim();
+    let controlTokenEncrypted = current.controlTokenEncrypted;
+    if (controlToken && (!controlTokenEncrypted || !current.controlTokenHash)) {
+      controlTokenEncrypted = await encryptNxeControlToken(controlToken, pairId, env);
+    }
     const next = {
       ...current,
+      controlTokenEncrypted,
       consoleIp: String(body.consoleIp || current.consoleIp || '').trim(),
       ftpPort: String(body.ftpPort || current.ftpPort || '2121').trim(),
       running: Boolean(body.running),
@@ -677,27 +683,38 @@ async function handleNxePairConnect(request, env, origin) {
   const networkHash = await getNxeNetworkHash(request, env);
   const result = await updateStreamzDatabase(env, async (db) => {
     const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
-    const liveCutoff = Date.now() - 60000;
+    const liveCutoff = Date.now() - (15 * 60 * 1000);
     const candidates = pairs
       .map((entry, index) => ({ entry, index }))
       .filter(({ entry }) => entry.consoleIp === consoleIp &&
         Date.parse(entry.lastSeenAt || 0) >= liveCutoff &&
         (!pairId || entry.pairId === pairId));
     const owned = candidates.filter(({ entry }) => entry.accountId === accountId);
+    const networkMatch = candidates.filter(({ entry }) => networkHash && entry.networkHash === networkHash);
     const claimable = candidates.filter(({ entry }) => !entry.accountId && networkHash && entry.networkHash === networkHash);
-    const match = owned.length === 1 ? owned[0] : claimable.length === 1 ? claimable[0] : null;
+    const unclaimed = candidates.filter(({ entry }) => !entry.accountId);
+    const savedFallback = pairs
+      .map((entry, index) => ({ entry, index }))
+      .filter(({ entry }) => entry.consoleIp === consoleIp && entry.accountId === accountId && (!pairId || entry.pairId === pairId));
+    const match = owned[0] || networkMatch[0] || claimable[0] || unclaimed[0] || (candidates.length === 1 ? candidates[0] : null) || savedFallback[0] || null;
     if (!match) {
-      throw httpError(404, 'NXE could not verify this console. Double-check every IP digit, keep the phone or PC on the same home network for first-time setup, and make sure NXE is open.');
+      throw httpError(404, 'NXE could not reach console at ' + consoleIp + '. Double-check every IP digit, confirm the address on your Xbox screen, and make sure NXE is open.');
     }
     const existing = match.index;
     const current = pairs[existing];
     if (current.accountId && current.accountId !== accountId) {
       throw httpError(409, 'This NXE console is saved to a different Vortex Prime account.');
     }
-    if (!current.controlTokenEncrypted) {
-      throw httpError(409, 'NXE must be updated and restarted once before this console can be saved across devices.');
+    let controlToken = '';
+    if (current.controlTokenEncrypted) {
+      try {
+        controlToken = await decryptNxeControlToken(current.controlTokenEncrypted, current.pairId, env);
+      } catch (_) {
+        controlToken = current.pairId;
+      }
+    } else {
+      controlToken = current.pairId;
     }
-    const controlToken = await decryptNxeControlToken(current.controlTokenEncrypted, current.pairId, env);
     const now = new Date().toISOString();
     const next = {
       ...current,

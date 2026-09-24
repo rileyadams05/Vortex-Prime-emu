@@ -129,7 +129,9 @@
     }
 
     function normalizeIpv4Input(value) {
-        const entered = String(value || '').trim();
+        let entered = String(value || '').trim();
+        entered = entered.replace(/^(?:https?|ftp):\/\//i, '');
+        entered = entered.replace(/[:\/].*$/, '').trim();
         if (isValidIpv4Address(entered)) return entered;
         const missingZeroOctet = entered.match(/^192\.168\.(\d{1,3})$/);
         if (missingZeroOctet && Number(missingZeroOctet[1]) <= 255) {
