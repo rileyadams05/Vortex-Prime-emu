@@ -12,7 +12,7 @@ assert.match(site, /saved securely under your signed-in Google account/, 'manual
 assert.doesNotMatch(site, /nxeFtpQrView|nxeFtpShowQrBtn|Scan the QR code/, 'QR connection UI is removed');
 assert.match(auth, /waitForInitialSession/, 'Firebase restoration completes before showing signed-out UI');
 assert.match(worker, /controlTokenEncrypted: await encryptNxeControlToken/, 'claimed NXE token is encrypted before persistence');
-assert.match(worker, /decryptNxeControlToken\(current\.controlTokenEncrypted, pairId, env\)/, 'account restore decrypts the saved token');
+assert.match(worker, /decryptNxeControlToken\(current\.controlTokenEncrypted, current\.pairId, env\)/, 'account restore decrypts with the matched console identity');
 assert.match(worker, /current\.accountId && current\.accountId !== accountId/, 'saved credentials cannot cross Google accounts');
 assert.match(controller, /body: JSON\.stringify\(\{ consoleIp: ip, ftpPort: '2121' \}\)/, 'manual connect asks the cloud bridge to verify the live console IP');
 assert.match(worker, /entry\.networkHash === networkHash/, 'first-time pairing requires the website and console to share a network');

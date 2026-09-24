@@ -643,7 +643,7 @@ async function handleNxePairConnect(request, env, origin) {
     if (!current.controlTokenEncrypted) {
       throw httpError(409, 'NXE must be updated and restarted once before this console can be saved across devices.');
     }
-    const controlToken = await decryptNxeControlToken(current.controlTokenEncrypted, pairId, env);
+    const controlToken = await decryptNxeControlToken(current.controlTokenEncrypted, current.pairId, env);
     const now = new Date().toISOString();
     const next = {
       ...current,
