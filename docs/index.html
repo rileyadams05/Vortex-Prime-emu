@@ -4599,6 +4599,7 @@
                     const CARDS_PER_PAGE = 10;
                     const PROFILE_STORAGE_PREFIX = 'vpPublicProfile.';
                     const readmeCache = new Map();
+                    const isLocalPreview = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
 
                     const backendStatusBanner = document.getElementById('backendStatusBanner');
 
@@ -5718,6 +5719,7 @@
                     }
 
                     async function loadStreamzDashboardData() {
+                        if (isLocalPreview) return;
                         try {
                             const authResponse = await fetch('https://vortex-prime-emu.com/api/auth/config', { credentials: 'include' });
                             const auth = await authResponse.json().catch(() => ({}));
@@ -6940,6 +6942,11 @@
                     }
 
                     async function loadModsCatalog() {
+                        if (isLocalPreview) {
+                            modItems = [];
+                            applyModsFilters();
+                            return;
+                        }
                         try {
                             const api = await ensureModsApi();
                             const items = await api.loadMods();
