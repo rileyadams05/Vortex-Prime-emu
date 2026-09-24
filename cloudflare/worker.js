@@ -371,6 +371,17 @@ export default {
   },
 };
 
+export class NxePairSession {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+  }
+
+  async fetch() {
+    return json({ ok: false, message: 'NXE pairing sessions are managed by the Vortex Prime account database.' }, 410);
+  }
+}
+
 async function servePublicJoblessPrivacyPolicy(request) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method not allowed', {
