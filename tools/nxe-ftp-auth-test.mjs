@@ -10,6 +10,14 @@ const worker = await readFile(new URL('../cloudflare/worker.js', import.meta.url
 assert.match(site, /id="nxeFtpManualView"/, 'manual IP view is present');
 assert.match(site, /saved securely under your signed-in Google account/, 'manual UI explains account-backed saving');
 assert.doesNotMatch(site, /nxeFtpQrView|nxeFtpShowQrBtn|Scan the QR code/, 'QR connection UI is removed');
+assert.doesNotMatch(site, /nxeFtpFilesTab|nxeFtpUploadInput|nxeFtpDropZone|nxeFtpBreadcrumb|nxeFtpTransfers/, 'file manager elements are removed from site HTML');
+assert.doesNotMatch(controller, /processUploadQueue|renderFileList|renderBreadcrumb|createFolder/, 'file manager logic is removed from controller JS');
+assert.match(site, /id="nxeFtpPortInput"/, 'FTP port input is present');
+assert.match(site, /id="nxeFtpUsernameInput"/, 'Username input is present');
+assert.match(site, /id="nxeFtpPasswordInput"/, 'Password input is present');
+assert.match(site, /id="nxeFtpAuthMode"/, 'Authentication display is present');
+assert.match(site, /How to access your Xbox storage/, 'FTP client usage guidance is present');
+
 assert.match(auth, /waitForInitialSession/, 'Firebase restoration completes before showing signed-out UI');
 assert.match(worker, /controlTokenEncrypted: await encryptNxeControlToken/, 'claimed NXE token is encrypted before persistence');
 assert.match(worker, /decryptNxeControlToken\(current\.controlTokenEncrypted, current\.pairId, env\)/, 'account restore decrypts with the matched console identity');
@@ -18,7 +26,7 @@ assert.match(worker, /acceptWebSocket\(server, \[role\]\)/, 'relay uses hibernat
 assert.match(controller, /\/api\/nxe\/relay\/browser\?pairId=/, 'browser file controls use the authenticated cloud relay');
 assert.doesNotMatch(controller, /localFetch\(apiBase \+ '\/api\/v1\/device\/status'/, 'status no longer depends on direct private-network browser access');
 assert.match(worker, /current\.accountId && current\.accountId !== accountId/, 'saved credentials cannot cross Google accounts');
-assert.match(controller, /body: JSON\.stringify\(\{ consoleIp: ip, ftpPort: '2121' \}\)/, 'manual connect asks the cloud bridge to verify the live console IP');
+assert.match(controller, /body: JSON\.stringify\(\{ consoleIp: ip, ftpPort: port \}\)/, 'manual connect asks the cloud bridge to verify the live console IP');
 assert.match(worker, /entry\.networkHash === networkHash/, 'first-time pairing requires the website and console to share a network');
 assert.match(worker, /Date\.parse\(entry\.lastSeenAt \|\| 0\) >= liveCutoff/, 'manual connect only accepts an actively reporting console');
 assert.match(controller, /Double-check every IP digit/, 'connection failures explain invalid or changed addresses');
@@ -71,7 +79,7 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
       return {
         ok: true,
         json: async () => ({
-          pair: { pairId: 'console-pair-1234', consoleIp: body.consoleIp, ftpPort: '2121', running: true },
+          pair: { pairId: 'console-pair-1234', consoleIp: body.consoleIp, ftpPort: body.ftpPort || '2121', running: true },
           controlToken: '0123456789abcdef0123456789abcdef',
         }),
       };

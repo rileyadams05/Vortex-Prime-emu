@@ -4070,7 +4070,7 @@
                 </section>
                 <div class="project-card nxe-ftp-shell" id="nxeFtpShell">
                     <div class="project-card-header">
-                        <div class="project-title"><h2>Xbox file management</h2></div>
+                        <div class="project-title"><h2>Xbox FTP remote control</h2></div>
                     </div>
                     <p id="nxeFtpLoading" class="project-description" role="status">Checking your Vortex Prime account&#8230;</p>
                     <div id="nxeFtpAuthPanel" hidden>
@@ -4078,7 +4078,10 @@
                         <div id="nxeFtpGoogleBtnSlot"></div>
                     </div>
                     <style>
-                        #nxeFtpIpInput:focus, #nxeFtpIpInput:focus-visible {
+                        #nxeFtpIpInput:focus, #nxeFtpIpInput:focus-visible,
+                        #nxeFtpPortInput:focus, #nxeFtpPortInput:focus-visible,
+                        #nxeFtpUsernameInput:focus, #nxeFtpUsernameInput:focus-visible,
+                        #nxeFtpPasswordInput:focus, #nxeFtpPasswordInput:focus-visible {
                             outline: none !important;
                             box-shadow: none !important;
                             border-color: rgba(255, 255, 255, 0.42) !important;
@@ -4087,16 +4090,33 @@
                     <div id="nxeFtpPairPanel" hidden>
                         <div id="nxeFtpManualView">
                             <h3>Connect your NXE console</h3>
-                            <p class="project-description">Enter the Console IP shown in NXE Settings &#8594; FTP. It is saved securely under your signed-in Google account and restored when you use Vortex Prime on another phone or PC.</p>
-                            <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin:1.25rem 0;">
-                                <div style="flex:1;min-width:200px;">
-                                    <label for="nxeFtpIpInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">Console IP Address</label>
+                            <p class="project-description">Enter the Console IP and FTP Port shown in NXE Settings &#8594; FTP. It is saved securely under your signed-in Google account and restored when you use Vortex Prime on another phone or PC.</p>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:.75rem;margin:1.25rem 0;">
+                                <div>
+                                    <label for="nxeFtpIpInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">Console IP Address *</label>
                                     <input id="nxeFtpIpInput" type="text" placeholder="192.168.0.70" autocomplete="off" inputmode="decimal"
                                         style="width:100%;padding:.65rem .9rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:1rem;box-sizing:border-box;">
                                 </div>
-                                <button class="btn btn-secondary" type="button" id="nxeFtpConnectBtn" style="white-space:nowrap;">Connect</button>
+                                <div>
+                                    <label for="nxeFtpPortInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">FTP Port</label>
+                                    <input id="nxeFtpPortInput" type="text" placeholder="2121" value="2121" autocomplete="off" inputmode="numeric"
+                                        style="width:100%;padding:.65rem .9rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:1rem;box-sizing:border-box;">
+                                </div>
+                                <div>
+                                    <label for="nxeFtpUsernameInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">Username (Optional)</label>
+                                    <input id="nxeFtpUsernameInput" type="text" placeholder="Optional" autocomplete="off"
+                                        style="width:100%;padding:.65rem .9rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:1rem;box-sizing:border-box;">
+                                </div>
+                                <div>
+                                    <label for="nxeFtpPasswordInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">Password (Optional)</label>
+                                    <input id="nxeFtpPasswordInput" type="password" placeholder="Optional" autocomplete="off"
+                                        style="width:100%;padding:.65rem .9rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:1rem;box-sizing:border-box;">
+                                </div>
                             </div>
-                            <p class="project-description">If connection fails, double-check every digit. Your Xbox address may have changed; use the current address shown on the NXE FTP screen.</p>
+                            <div style="margin-top:1rem;">
+                                <button class="btn btn-secondary" type="button" id="nxeFtpConnectBtn" style="white-space:nowrap;padding:.65rem 1.75rem;">Connect</button>
+                            </div>
+                            <p class="project-description" style="margin-top:1rem;">If connection fails, double-check every digit. Your Xbox address may have changed; use the current address shown on the NXE FTP screen.</p>
                         </div>
                         
                         <p id="nxeFtpPairMessage" class="project-description" role="status" style="margin-top: 1rem;"></p>
@@ -4112,66 +4132,33 @@
                         <button class="btn btn-secondary" type="button" id="nxeFtpContinueBtn" style="min-width: 160px; padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600;">Continue</button>
                     </div>
                     <div id="nxeFtpApp" hidden>
-                        <div class="nxe-ftp-toolbar" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin:1rem 0;">
-                            <button class="btn btn-secondary nxe-ftp-tab active" type="button" data-nxe-tab="server">Server</button>
-                            <button class="btn btn-secondary nxe-ftp-tab" type="button" data-nxe-tab="files">Files</button>
-                            <span id="nxeFtpPairLabel" style="margin-left:auto;color:var(--color-text-secondary);">No console selected</span>
-                        </div>
                         <section id="nxeFtpServerTab" class="nxe-ftp-tab-panel">
                             <div class="project-meta">
                                 <div class="project-meta-row"><span>Console IP</span><strong id="nxeFtpIp">&#8212;</strong></div>
-                                <div class="project-meta-row"><span>FTP port</span><strong id="nxeFtpPort">2121</strong></div>
+                                <div class="project-meta-row"><span>FTP Port</span><strong id="nxeFtpPort">2121</strong></div>
                                 <div class="project-meta-row"><span>Connection</span><strong id="nxeFtpConnection">Disconnected</strong></div>
-                                <div class="project-meta-row"><span>FTP server</span><strong id="nxeFtpStatus">Unknown</strong></div>
+                                <div class="project-meta-row"><span>FTP Server</span><strong id="nxeFtpStatus">Unknown</strong></div>
+                                <div class="project-meta-row"><span>Authentication</span><strong id="nxeFtpAuthMode">None</strong></div>
                             </div>
-                            <div class="project-links" style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;">
+                            <div class="project-links" style="margin-top:1.25rem;display:flex;gap:.75rem;flex-wrap:wrap;">
                                 <button class="btn btn-secondary" type="button" data-nxe-command="start" id="nxeFtpBtnStart">Turn On</button>
                                 <button class="btn btn-secondary" type="button" data-nxe-command="stop" id="nxeFtpBtnStop">Turn Off</button>
                                 <button class="btn btn-secondary" type="button" data-nxe-command="restart" id="nxeFtpBtnRestart">Restart</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpReconnect">Reconnect</button>
-                                <button class="btn btn-secondary" type="button" id="nxeFtpChangeIp">Change IP</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpChangeConnection">Change Connection Details</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpForget">Forget console</button>
                             </div>
-                            <p id="nxeFtpMessage" class="project-description" role="status"></p>
-                        </section>
-                        <section id="nxeFtpFilesTab" class="nxe-ftp-tab-panel" hidden>
-                            <!-- Toolbar -->
-                            <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
-                                <button class="btn btn-secondary" type="button" id="nxeFtpBack">&#8592; Back</button>
-                                <button class="btn btn-secondary" type="button" id="nxeFtpRefresh">Refresh</button>
-                                <button class="btn btn-secondary" type="button" id="nxeFtpCreateFolder">New folder</button>
-                                <label class="btn btn-secondary" for="nxeFtpUploadInput" style="cursor:pointer;margin:0;">Upload files</label>
-                                <input id="nxeFtpUploadInput" type="file" multiple hidden>
-
-                                <!-- Search / Filter -->
-                                <div style="margin-left:auto;min-width:180px;">
-                                    <input id="nxeFtpSearchInput" type="text" placeholder="Filter files..." autocomplete="off"
-                                        style="width:100%;padding:.45rem .75rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:6px;color:inherit;font-size:.88rem;box-sizing:border-box;">
-                                </div>
+                            <p id="nxeFtpMessage" class="project-description" role="status" style="margin-top:1rem;"></p>
+                            <div style="margin-top:1.5rem;padding:1.25rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;">
+                                <h4 style="margin-top:0;margin-bottom:.5rem;font-size:1rem;color:var(--color-text,#fafafa);">How to access your Xbox storage</h4>
+                                <p class="project-description" style="margin-bottom:.5rem;">You can connect to your NXE console using any standard FTP client such as <strong>FileZilla</strong>, <strong>WinSCP</strong>, <strong>Cyberduck</strong>, or mobile FTP apps (e.g. AndFTP, FTPManager).</p>
+                                <ul style="margin:0;padding-left:1.25rem;color:var(--color-text-secondary);font-size:.9rem;line-height:1.6;">
+                                    <li><strong>Host / Address:</strong> Enter the Console IP shown above (e.g. <span id="nxeFtpGuideIp">192.168.0.70</span>)</li>
+                                    <li><strong>Port:</strong> Enter the FTP Port shown above (default: <span id="nxeFtpGuidePort">2121</span>)</li>
+                                    <li><strong>Logon Type:</strong> Anonymous / None (or Username &amp; Password if configured)</li>
+                                    <li><strong>Protocol:</strong> Standard FTP (Plain / Unencrypted)</li>
+                                </ul>
                             </div>
-
-                            <!-- Bulk Selection Action Bar -->
-                            <div id="nxeFtpBulkActions" style="display:none;align-items:center;gap:1rem;padding:.6rem 1rem;background:rgba(143,204,62,0.12);border:1px solid rgba(143,204,62,0.3);border-radius:6px;margin-bottom:1rem;">
-                                <span id="nxeFtpSelectedCount" style="font-weight:600;font-size:.9rem;color:#8fcc3e;">0 items selected</span>
-                                <div style="margin-left:auto;display:flex;gap:.5rem;">
-                                    <button class="btn btn-secondary" type="button" id="nxeFtpBulkMove" style="font-size:.82rem;padding:.3rem .65rem;">Move Selected</button>
-                                    <button class="btn btn-secondary" type="button" id="nxeFtpBulkDelete" style="font-size:.82rem;padding:.3rem .65rem;color:#ff8b80;border-color:#ff8b80;">Delete Selected</button>
-                                </div>
-                            </div>
-
-                            <!-- Breadcrumb -->
-                            <div id="nxeFtpBreadcrumb" style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;"></div>
-
-                            <!-- Drop Zone -->
-                            <div id="nxeFtpDropZone" style="padding:1.25rem;text-align:center;margin-bottom:1rem;border:2px dashed var(--color-border,#333);border-radius:8px;color:var(--color-text-secondary);font-size:.92rem;transition:all .2s ease-in-out;cursor:pointer;">
-                                📁 Drag & drop files here to upload to the current Xbox folder
-                            </div>
-
-                            <!-- Upload Queue Progress -->
-                            <div id="nxeFtpTransfers" aria-live="polite"></div>
-
-                            <!-- File Browser Data Table -->
-                            <div id="nxeFtpFileList" class="project-meta" style="overflow-x:auto;"></div>
                         </section>
                     </div>
                 </div>
