@@ -396,7 +396,8 @@ async function servePublicJoblessPrivacyPolicy(request) {
 
 function resolveAllowedOrigin(origin) {
   if (!origin) return PRODUCTION_ORIGINS[0];
-  if (PRODUCTION_ORIGINS.includes(origin)) {
+  if (PRODUCTION_ORIGINS.includes(origin) ||
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
     return origin;
   }
   return null;
