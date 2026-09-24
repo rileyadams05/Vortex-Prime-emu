@@ -13,6 +13,7 @@ const DEFAULT_DB = {
   storeMods: [],
   reports: [],
   vortexAccounts: [],
+  nxePairs: [],
   streamzAccounts: [],
   streamzProEntitlements: [],
   streamzProPayments: [],
@@ -215,6 +216,26 @@ export default {
 
       if (path === 'api/auth/logout') {
         return handleLogout(env, allowedOrigin);
+      }
+
+      if (path === 'api/nxe/pair/register') {
+        return await handleNxePairRegister(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/nxe/pair/poll') {
+        return await handleNxePairPoll(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/nxe/pair/list') {
+        return await handleNxePairList(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/nxe/pair/claim') {
+        return await handleNxePairClaim(request, env, allowedOrigin);
+      }
+
+      if (path === 'api/nxe/pair/command') {
+        return await handleNxePairCommand(request, env, allowedOrigin);
       }
 
       if (path.startsWith('api/streamz/auth/')) {
@@ -453,6 +474,157 @@ async function handleStatus(request, env, origin) {
   }
 
   return json(status, 200, origin);
+}
+
+async function handleNxePairRegister(request, env, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'NXE registration requires POST.');
+  const deviceToken = String(request.headers.get('X-NXE-Device') || '').trim();
+  const body = await request.json().catch(() => null);
+  const pairId = String(body?.pairId || '').trim();
+  const controlToken = String(body?.controlToken || '').trim();
+  if (!deviceToken || !pairId || !controlToken) throw httpError(400, 'Incomplete NXE pairing registration.');
+  if (!/^[A-Za-z0-9_-]{12,256}$/.test(pairId) || !/^[A-Fa-f0-9]{16,512}$/.test(deviceToken) || !/^[A-Fa-f0-9]{16,512}$/.test(controlToken)) {
+    throw httpError(400, 'Invalid NXE pairing credentials.');
+  }
+  const now = new Date().toISOString();
+  const deviceTokenHash = await sha256Base64Url(`nxe-device:${deviceToken}`);
+  const controlTokenHash = await sha256Base64Url(`nxe-control:${controlToken}`);
+  const result = await updateStreamzDatabase(env, async (db) => {
+    const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
+    const index = pairs.findIndex((entry) => entry.pairId === pairId);
+    const existing = index >= 0 ? pairs[index] : null;
+    const next = {
+      id: existing?.id || `nxe_${crypto.randomUUID()}`,
+      pairId,
+      deviceTokenHash,
+      controlTokenHash,
+      consoleIp: String(body.consoleIp || '').trim(),
+      ftpPort: String(body.ftpPort || '2121').trim() || '2121',
+      running: Boolean(body.running),
+      failure: String(body.failure || '').slice(0, 1000),
+      lastSeenAt: now,
+      createdAt: existing?.createdAt || now,
+      accountId: existing?.accountId || null,
+      command: existing?.command || null,
+    };
+    if (index >= 0) pairs[index] = next;
+    else pairs.push(next);
+    return { db: { ...db, nxePairs: pairs }, value: next };
+  });
+  return json({ ok: true, pair: sanitizeNxePair(result, false) }, 200, origin);
+}
+
+async function handleNxePairPoll(request, env, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'NXE polling requires POST.');
+  const deviceToken = String(request.headers.get('X-NXE-Device') || '').trim();
+  const body = await request.json().catch(() => null);
+  const pairId = String(body?.pairId || '').trim();
+  if (!deviceToken || !pairId) throw httpError(400, 'Incomplete NXE polling request.');
+  const deviceTokenHash = await sha256Base64Url(`nxe-device:${deviceToken}`);
+  const result = await updateStreamzDatabase(env, async (db) => {
+    const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
+    const index = pairs.findIndex((entry) => entry.pairId === pairId && entry.deviceTokenHash === deviceTokenHash);
+    if (index < 0) throw httpError(401, 'Unknown NXE pairing device.');
+    const current = pairs[index];
+    const now = new Date().toISOString();
+    const next = {
+      ...current,
+      consoleIp: String(body.consoleIp || current.consoleIp || '').trim(),
+      ftpPort: String(body.ftpPort || current.ftpPort || '2121').trim(),
+      running: Boolean(body.running),
+      failure: String(body.failure || '').slice(0, 1000),
+      lastSeenAt: now,
+    };
+    let command = next.command || null;
+    const ackId = String(body.ackCommandId || '').trim();
+    if (ackId && command?.id === ackId) {
+      next.command = null;
+      command = null;
+    }
+    pairs[index] = next;
+    return { db: { ...db, nxePairs: pairs }, value: { pair: next, command } };
+  });
+  return json({ ok: true, command: result.command || undefined, pair: sanitizeNxePair(result.pair, false) }, 200, origin);
+}
+
+async function handleNxePairList(request, env, origin) {
+  if (request.method !== 'GET') throw httpError(405, 'NXE pairing list requires GET.');
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to view paired consoles.');
+  const db = await loadDatabase(env);
+  const accountId = user.firebaseUid || user.sub || user.email;
+  const pairs = (Array.isArray(db.nxePairs) ? db.nxePairs : [])
+    .filter((entry) => entry.accountId === accountId)
+    .map((entry) => sanitizeNxePair(entry, false));
+  return json({ ok: true, pairs }, 200, origin);
+}
+
+async function handleNxePairClaim(request, env, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'NXE pairing claim requires POST.');
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google before pairing NXE.');
+  const body = await request.json().catch(() => null);
+  const pairId = String(body?.pairId || '').trim();
+  const controlToken = String(body?.controlToken || '').trim();
+  if (!pairId || !controlToken) throw httpError(400, 'Pair ID and pairing key are required.');
+  const accountId = user.firebaseUid || user.sub || user.email;
+  const controlTokenHash = await sha256Base64Url(`nxe-control:${controlToken}`);
+  const result = await updateStreamzDatabase(env, async (db) => {
+    const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
+    const index = pairs.findIndex((entry) => entry.pairId === pairId && entry.controlTokenHash === controlTokenHash);
+    if (index < 0) throw httpError(404, 'NXE pairing not found or pairing key is invalid.');
+    const next = { ...pairs[index], accountId, claimedAt: new Date().toISOString() };
+    pairs[index] = next;
+    return { db: { ...db, nxePairs: pairs }, value: next };
+  });
+  return json({ ok: true, pair: sanitizeNxePair(result, false) }, 200, origin);
+}
+
+async function handleNxePairCommand(request, env, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'NXE commands require POST.');
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google before controlling NXE.');
+  const body = await request.json().catch(() => null);
+  const pairId = String(body?.pairId || '').trim();
+  const type = String(body?.type || '').trim().toLowerCase();
+  const allowed = new Set(['configure', 'start', 'stop', 'restart']);
+  if (!pairId || !allowed.has(type)) throw httpError(400, 'Invalid NXE command.');
+  const accountId = user.firebaseUid || user.sub || user.email;
+  const result = await updateStreamzDatabase(env, async (db) => {
+    const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
+    const index = pairs.findIndex((entry) => entry.pairId === pairId && entry.accountId === accountId);
+    if (index < 0) throw httpError(404, 'NXE console is not paired to this account.');
+    const id = `cmd_${crypto.randomUUID()}`;
+    const command = {
+      id,
+      type,
+      username: type === 'configure' ? String(body.username || '').slice(0, 128) : undefined,
+      password: type === 'configure' ? String(body.password || '').slice(0, 512) : undefined,
+      createdAt: new Date().toISOString(),
+    };
+    const next = { ...pairs[index], command };
+    pairs[index] = next;
+    return { db: { ...db, nxePairs: pairs }, value: { id, type } };
+  });
+  return json({ ok: true, command: result }, 202, origin);
+}
+
+function sanitizeNxePair(pair, includeSecrets = false) {
+  if (!pair) return null;
+  const result = {
+    id: pair.id,
+    pairId: pair.pairId,
+    consoleIp: pair.consoleIp || '',
+    ftpPort: pair.ftpPort || '2121',
+    running: Boolean(pair.running),
+    failure: pair.failure || '',
+    lastSeenAt: pair.lastSeenAt || null,
+    createdAt: pair.createdAt || null,
+    claimedAt: pair.claimedAt || null,
+    connected: Boolean(pair.lastSeenAt && Date.now() - Date.parse(pair.lastSeenAt) < 20000),
+  };
+  if (includeSecrets) {
+    result.controlTokenHash = pair.controlTokenHash;
+    result.deviceTokenHash = pair.deviceTokenHash;
+  }
+  return result;
 }
 
 async function handlePublicCatalogue(env, origin) {
