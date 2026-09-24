@@ -14,6 +14,8 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js';
 
 let authPromise;
+let resolveInitialSession;
+const initialSession = new Promise((resolve) => { resolveInitialSession = resolve; });
 
 async function getConfiguredAuth() {
   if (!authPromise) {
@@ -25,12 +27,15 @@ async function getConfiguredAuth() {
       const auth = getAuth(app);
       await setPersistence(auth, browserLocalPersistence);
       onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
         try {
-          const session = await createServerSession(await user.getIdToken());
-          window.dispatchEvent(new CustomEvent('streamz-auth-restored', { detail: { user, session } }));
+          if (user) {
+            const session = await createServerSession(await user.getIdToken());
+            window.dispatchEvent(new CustomEvent('streamz-auth-restored', { detail: { user, session } }));
+          }
         } catch (error) {
           console.error('Unable to restore the secure Streamz session.', error);
+        } finally {
+          resolveInitialSession();
         }
       });
       return auth;
@@ -97,6 +102,11 @@ async function subscribe(callback) {
   return onAuthStateChanged(auth, callback);
 }
 
+async function waitForInitialSession() {
+  await getConfiguredAuth();
+  await initialSession;
+}
+
 window.StreamzFirebaseAuth = {
   getAuth: getConfiguredAuth,
   signInWithGoogleIdToken,
@@ -104,5 +114,6 @@ window.StreamzFirebaseAuth = {
   completeProfile,
   signOut: signOutEverywhere,
   subscribe,
+  waitForInitialSession,
 };
 window.dispatchEvent(new Event('streamz-firebase-ready'));

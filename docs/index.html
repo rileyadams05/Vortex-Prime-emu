@@ -962,7 +962,8 @@
             min-height: 100%;
         }
 
-        .project-card[hidden] {
+        .project-card[hidden],
+        #page-nxe-ftp [hidden] {
             display: none !important;
         }
 
@@ -4069,25 +4070,17 @@
                 </section>
                 <div class="project-card nxe-ftp-shell" id="nxeFtpShell">
                     <div class="project-card-header">
-                        <div class="project-title"><h2>Xbox file management</h2><span id="nxeFtpConnectionState" class="project-status project-status-warning" hidden></span></div>
+                        <div class="project-title"><h2>Xbox file management</h2></div>
                     </div>
-                    <div id="nxeFtpAuthPanel">
+                    <p id="nxeFtpLoading" class="project-description" role="status">Checking your Vortex Prime account…</p>
+                    <div id="nxeFtpAuthPanel" hidden>
                         <p class="project-description">Sign in with your existing Vortex Prime Google account to pair and manage an NXE console.</p>
-                        <button id="nxeFtpGoogleSignIn" class="gsi-material-button" type="button">
-                            <div class="gsi-material-button-state"></div>
-                            <div class="gsi-material-button-content-wrapper">
-                                <div class="gsi-material-button-icon">
-                                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="display: block;">
-                                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                                        <path fill="none" d="M0 0h48v48H0z"></path>
-                                    </svg>
-                                </div>
-                                <span class="gsi-material-button-contents">Sign in with Google</span>
-                            </div>
-                        </button>
+                        <div id="nxeFtpGoogleBtnSlot"></div>
+                    </div>
+                    <div id="nxeFtpPairPanel" hidden>
+                        <h3>Connect your NXE console</h3>
+                        <p class="project-description">Open NXE Settings → FTP and scan its QR code to pair this console with your Vortex Prime account.</p>
+                        <p id="nxeFtpPairMessage" class="project-description" role="status"></p>
                     </div>
                     <div id="nxeFtpApp" hidden>
                         <div class="nxe-ftp-toolbar" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin:1rem 0;">
@@ -4640,6 +4633,7 @@
                     let modsBackendApi = null;
                     let authUnsubscribe = null;
                     let currentUser = null;
+                    let authRequestId = 0;
                     let pendingAccountSetup = null;
                     let usernameCheckTimer = null;
                     let usernameCheckSequence = 0;
@@ -4733,6 +4727,7 @@
                                 mainUserAvatar.removeAttribute('src');
                             }
                         }
+                        window.dispatchEvent(new CustomEvent('vortex-account-changed', { detail: { user: currentUser } }));
                     }
 
                     function updateStreamzAccountMenu(isAuthenticated) {
@@ -4884,6 +4879,7 @@
 
                     function handleVerifiedGoogleSession(session) {
                         if (openAccountSetup(session)) return;
+                        authRequestId += 1;
                         applyMainUser(mapServerUser(session?.user));
                     }
 
@@ -4912,10 +4908,11 @@
                                 },
                             });
                         }
-                        if (slot) {
-                            slot.innerHTML = '';
-                            slot.style.display = 'inline-flex';
-                            window.google.accounts.id.renderButton(slot, {
+                        for (const buttonSlot of [slot, document.getElementById('nxeFtpGoogleBtnSlot')]) {
+                            if (!buttonSlot) continue;
+                            buttonSlot.replaceChildren();
+                            buttonSlot.style.display = 'inline-flex';
+                            window.google.accounts.id.renderButton(buttonSlot, {
                                 theme: 'filled_black',
                                 size: 'large',
                                 shape: 'pill',
@@ -4944,11 +4941,14 @@
                         }, 150);
                     }
 
-                    async function refreshModsSession() {
+                    async function refreshModsSession(deferUnauthenticated = false) {
+                        const requestId = ++authRequestId;
                         try {
                             const api = await ensureModsApi();
                             const config = await api.getAuthConfig();
+                            if (requestId !== authRequestId) return currentUser;
                             const user = mapServerUser(config && config.user);
+                            if (!user && deferUnauthenticated) return null;
                             applyMainUser(user);
                             if (user && new URLSearchParams(window.location.search).get('streamz_return') === '1') {
                                 try {
@@ -4972,8 +4972,9 @@
                             }
                             return user;
                         } catch (error) {
+                            if (requestId !== authRequestId) return currentUser;
                             console.warn('Failed to refresh mods session', error);
-                            applyMainUser(null);
+                            if (!deferUnauthenticated) applyMainUser(null);
                             return null;
                         }
                     }
@@ -4987,6 +4988,7 @@
                     }
 
                     async function signOutMainUser() {
+                        authRequestId += 1;
                         try {
                             const api = await ensureModsApi();
                             await window.StreamzFirebaseAuth?.signOut();
@@ -5209,10 +5211,16 @@
                     if (itemDetailCloseBtn) itemDetailCloseBtn.addEventListener('click', closeItemDetails);
 
                     async function initModsAuth() {
-                        applyMainUser(null);
                         if (mainSignInBtn) {
                             mainSignInBtn.removeAttribute('disabled');
                             mainSignInBtn.removeAttribute('title');
+                        }
+                        if (await refreshModsSession(true)) return;
+                        try {
+                            if (!window.StreamzFirebaseAuth) await import('/assets/js/streamz-firebase-auth.js');
+                            await window.StreamzFirebaseAuth.waitForInitialSession();
+                        } catch (error) {
+                            console.warn('Unable to restore the existing Google session.', error);
                         }
                         await refreshModsSession();
                     }
@@ -5807,7 +5815,9 @@
                     (function initializeNxeFtp() {
                         const authPanel = document.getElementById('nxeFtpAuthPanel');
                         const app = document.getElementById('nxeFtpApp');
-                        const state = document.getElementById('nxeFtpConnectionState');
+                        const loading = document.getElementById('nxeFtpLoading');
+                        const pairPanel = document.getElementById('nxeFtpPairPanel');
+                        const pairMessage = document.getElementById('nxeFtpPairMessage');
                         const message = document.getElementById('nxeFtpMessage');
                         const files = document.getElementById('nxeFtpFileList');
                         const breadcrumb = document.getElementById('nxeFtpBreadcrumb');
@@ -5816,29 +5826,39 @@
                         let pairKey = '';
                         let path = '/';
                         let apiBase = '';
+                        let pairRequestId = 0;
 
                         function setMessage(value, error = false) {
-                            if (!message) return;
-                            message.textContent = value || '';
-                            message.style.color = error ? '#ff8b80' : '';
+                            const target = pairPanel.hidden ? message : pairMessage;
+                            target.textContent = value || '';
+                            target.style.color = error ? '#ff8b80' : '';
                         }
 
                         function setState(value) {
-                            if (state) state.textContent = value;
                             const connection = document.getElementById('nxeFtpConnection');
                             if (connection) connection.textContent = value;
+                        }
+
+                        function renderAuth(user) {
+                            loading.hidden = true;
+                            authPanel.hidden = Boolean(user);
+                            pairPanel.hidden = !user || Boolean(pair);
+                            app.hidden = !user || !pair;
+                            if (!user) {
+                                pairRequestId += 1;
+                                pair = null;
+                                pairKey = '';
+                                apiBase = '';
+                                pairMessage.textContent = '';
+                                message.textContent = '';
+                            } else if (!pair) {
+                                claimPair();
+                            }
                         }
 
                         function parsePairHash() {
                             const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
                             return { pairId: params.get('pair') || '', key: params.get('key') || '' };
-                        }
-
-                        function updatePairingPrompt() {
-                            const signIn = document.getElementById('nxeFtpGoogleSignIn');
-                            if (!signIn || !currentUser) return;
-                            signIn.hidden = true;
-                            setMessage('You are signed in. Scan the QR code in NXE Settings → FTP to pair this console.');
                         }
 
                         async function api(pathname, options = {}) {
@@ -5862,21 +5882,21 @@
                         }
 
                         async function claimPair() {
+                            if (!currentUser) return;
+                            const user = currentUser;
+                            const requestId = ++pairRequestId;
                             const parsed = parsePairHash();
-                            if (!parsed.pairId || !parsed.key) {
-                                try {
+                            try {
+                                if (!parsed.pairId || !parsed.key) {
                                     const saved = await fetch('/api/nxe/pair/list', { credentials: 'include' });
                                     const data = await saved.json().catch(() => ({}));
+                                    if (!saved.ok) throw new Error(data.message || 'Unable to load paired consoles.');
                                     const selected = data.pairs?.[0];
                                     if (!selected) return;
                                     parsed.pairId = selected.pairId;
                                     parsed.key = localStorage.getItem(`nxe-pair-key:${selected.pairId}`) || '';
                                     if (!parsed.key) return;
-                                } catch { return; }
-                            }
-                            pairKey = parsed.key;
-                            setState('Pairing…');
-                            try {
+                                }
                                 const response = await fetch('/api/nxe/pair/claim', {
                                     method: 'POST',
                                     credentials: 'include',
@@ -5884,17 +5904,18 @@
                                     body: JSON.stringify({ pairId: parsed.pairId, controlToken: parsed.key }),
                                 });
                                 const data = await response.json().catch(() => ({}));
+                                if (user !== currentUser || requestId !== pairRequestId) return;
                                 if (!response.ok) throw new Error(data.message || 'Unable to pair this console.');
                                 pair = data.pair;
+                                pairKey = parsed.key;
                                 localStorage.setItem(`nxe-pair-key:${pair.pairId}`, pairKey);
-                                authPanel.hidden = true;
+                                pairPanel.hidden = true;
                                 app.hidden = false;
                                 renderPair();
                                 setState(pair.connected ? 'Connected' : 'Disconnected');
                                 await refreshFiles();
                             } catch (error) {
-                                setState('Connection unavailable');
-                                setMessage(error.message, true);
+                                if (user === currentUser && requestId === pairRequestId) setMessage(error.message, true);
                             }
                         }
 
@@ -6009,20 +6030,6 @@
                             xhr.send(file);
                         }
 
-                        document.getElementById('nxeFtpGoogleSignIn')?.addEventListener('click', async () => {
-                            if (currentUser) {
-                                updatePairingPrompt();
-                                return;
-                            }
-                            try {
-                                const response = await fetch('/api/auth/config', { credentials: 'include', cache: 'no-store' });
-                                const config = await response.json();
-                                if (config.googleClientId) renderGoogleButton(config.googleClientId);
-                                document.getElementById('mainGoogleSignInBtn')?.click();
-                            } catch (error) {
-                                setMessage('Google sign-in is unavailable: ' + error.message, true);
-                            }
-                        });
                         document.getElementById('nxeFtpRefresh')?.addEventListener('click', refreshFiles);
                         document.getElementById('nxeFtpBack')?.addEventListener('click', () => { if (path !== '/') { path = path.substring(0, path.lastIndexOf('/')) || '/'; refreshFiles(); } });
                         document.getElementById('nxeFtpUploadInput')?.addEventListener('change', (event) => Array.from(event.target.files || []).forEach(upload));
@@ -6030,16 +6037,28 @@
                         document.getElementById('nxeFtpDropZone')?.addEventListener('drop', (event) => { event.preventDefault(); Array.from(event.dataTransfer.files || []).forEach(upload); });
                         document.getElementById('nxeFtpCreateFolder')?.addEventListener('click', async () => { const name = window.prompt('Folder name'); if (!name) return; try { await api('/api/v1/files/folders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, name }) }); await refreshFiles(); } catch (error) { setMessage(error.message, true); } });
                         document.getElementById('nxeFtpReconnect')?.addEventListener('click', refreshStatus);
-                        document.getElementById('nxeFtpForget')?.addEventListener('click', () => { pair = null; pairKey = ''; app.hidden = true; authPanel.hidden = false; setState(''); });
+                        document.getElementById('nxeFtpForget')?.addEventListener('click', () => {
+                            if (pair) localStorage.removeItem(`nxe-pair-key:${pair.pairId}`);
+                            pairRequestId += 1;
+                            pair = null;
+                            pairKey = '';
+                            apiBase = '';
+                            app.hidden = true;
+                            pairPanel.hidden = false;
+                            pairMessage.textContent = '';
+                        });
                         document.querySelectorAll('[data-nxe-command]').forEach((button) => button.addEventListener('click', async () => { try { setState(button.dataset.nxeCommand === 'restart' ? 'Restarting' : `${button.dataset.nxeCommand}ing`); await fetch('/api/nxe/pair/command', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pairId: pair.pairId, type: button.dataset.nxeCommand }) }); setMessage('Command queued.'); } catch (error) { setMessage(error.message, true); } }));
                         document.querySelectorAll('.nxe-ftp-tab').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.nxe-ftp-tab').forEach((entry) => entry.classList.toggle('active', entry === button)); document.getElementById('nxeFtpServerTab').hidden = button.dataset.nxeTab !== 'server'; document.getElementById('nxeFtpFilesTab').hidden = button.dataset.nxeTab !== 'files'; if (button.dataset.nxeTab === 'files') refreshFiles(); }));
-                        window.addEventListener('streamz-auth-restored', () => {
-                            updatePairingPrompt();
+                        window.addEventListener('vortex-account-changed', (event) => renderAuth(event.detail.user));
+                        window.addEventListener('hashchange', () => {
+                            if (!currentUser) return;
+                            pairRequestId += 1;
+                            pair = null;
+                            app.hidden = true;
+                            pairPanel.hidden = false;
                             claimPair();
                         });
-                        window.addEventListener('hashchange', claimPair);
-                        updatePairingPrompt();
-                        if (window.StreamzFirebaseAuth) claimPair();
+                        if (currentUser) renderAuth(currentUser);
                     }());
 
                     document.querySelectorAll('[data-nxe-lightbox]').forEach((trigger) => trigger.addEventListener('click', () => {
