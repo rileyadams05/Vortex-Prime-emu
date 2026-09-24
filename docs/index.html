@@ -4077,19 +4077,49 @@
                         <p class="project-description">Sign in with your existing Vortex Prime Google account to connect and manage an NXE console.</p>
                         <div id="nxeFtpGoogleBtnSlot"></div>
                     </div>
+                    <style>
+                        #nxeFtpIpInput:focus, #nxeFtpIpInput:focus-visible {
+                            outline: none !important;
+                            box-shadow: none !important;
+                            border-color: rgba(255, 255, 255, 0.42) !important;
+                        }
+                    </style>
                     <div id="nxeFtpPairPanel" hidden>
-                        <h3>Connect your NXE console</h3>
-                        <p class="project-description">Scan the QR code shown in NXE Settings &#8594; FTP, or enter the Console IP manually below.</p>
-                        <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin:1.25rem 0;">
-                            <div style="flex:1;min-width:200px;">
-                                <label for="nxeFtpIpInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">Console IP Address</label>
-                                <input id="nxeFtpIpInput" type="text" placeholder="192.168.1.xxx" autocomplete="off" inputmode="decimal"
-                                    style="width:100%;padding:.65rem .9rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:1rem;box-sizing:border-box;">
+                        <div id="nxeFtpQrView">
+                            <h3>Connect your NXE console</h3>
+                            <p class="project-description">Scan the QR code shown in NXE Settings &#8594; FTP.</p>
+                            
+                            <div style="display:flex; align-items:center; margin: 2rem 0;">
+                                <hr style="flex:1; border:none; border-top:1px solid var(--color-border,#333);">
+                                <span style="padding:0 1rem; color:var(--color-text-secondary); font-size:0.85rem; font-weight:600;">OR</span>
+                                <hr style="flex:1; border:none; border-top:1px solid var(--color-border,#333);">
                             </div>
-                            <button class="btn btn-primary" type="button" id="nxeFtpConnectBtn" style="white-space:nowrap;">Connect</button>
+                            
+                            <button class="btn btn-secondary" type="button" id="nxeFtpShowManualBtn" style="width:100%; justify-content:center;">Enter Console IP Manually</button>
                         </div>
-                        <p style="font-size:.85rem;color:var(--color-text-secondary);margin-top:-.5rem;margin-bottom:1rem;">You can also scan the QR code shown in NXE Settings &#8594; FTP to open this page with your console pre-filled.</p>
-                        <p id="nxeFtpPairMessage" class="project-description" role="status"></p>
+                        
+                        <div id="nxeFtpManualView" style="display:none;">
+                            <h3>Connect manually</h3>
+                            <p class="project-description">Enter the Console IP shown in NXE Settings &#8594; FTP.</p>
+                            <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin:1.25rem 0;">
+                                <div style="flex:1;min-width:200px;">
+                                    <label for="nxeFtpIpInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">Console IP Address</label>
+                                    <input id="nxeFtpIpInput" type="text" placeholder="192.168.1.xxx" autocomplete="off" inputmode="decimal"
+                                        style="width:100%;padding:.65rem .9rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:1rem;box-sizing:border-box;">
+                                </div>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpConnectBtn" style="white-space:nowrap;">Connect</button>
+                            </div>
+                            
+                            <div style="display:flex; align-items:center; margin: 2rem 0;">
+                                <hr style="flex:1; border:none; border-top:1px solid var(--color-border,#333);">
+                                <span style="padding:0 1rem; color:var(--color-text-secondary); font-size:0.85rem; font-weight:600;">OR</span>
+                                <hr style="flex:1; border:none; border-top:1px solid var(--color-border,#333);">
+                            </div>
+                            
+                            <button class="btn btn-secondary" type="button" id="nxeFtpShowQrBtn" style="width:100%; justify-content:center;">Use QR Code Instead</button>
+                        </div>
+                        
+                        <p id="nxeFtpPairMessage" class="project-description" role="status" style="margin-top: 1rem;"></p>
                     </div>
                     <div id="nxeFtpApp" hidden>
                         <div class="nxe-ftp-toolbar" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin:1rem 0;">

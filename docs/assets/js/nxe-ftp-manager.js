@@ -835,6 +835,20 @@
     }
 
     // Event Wireup
+    const qrView = document.getElementById('nxeFtpQrView');
+    const manualView = document.getElementById('nxeFtpManualView');
+    const showManualBtn = document.getElementById('nxeFtpShowManualBtn');
+    const showQrBtn = document.getElementById('nxeFtpShowQrBtn');
+
+    if (showManualBtn) showManualBtn.addEventListener('click', () => {
+        if (qrView) qrView.style.display = 'none';
+        if (manualView) manualView.style.display = 'block';
+    });
+    if (showQrBtn) showQrBtn.addEventListener('click', () => {
+        if (manualView) manualView.style.display = 'none';
+        if (qrView) qrView.style.display = 'block';
+    });
+
     if (connectBtn) connectBtn.addEventListener('click', () => connectByIp(ipInput ? ipInput.value : ''));
     if (ipInput) ipInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') connectByIp(ipInput.value); });
 
