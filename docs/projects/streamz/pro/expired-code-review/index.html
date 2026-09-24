@@ -102,6 +102,7 @@
       if (window.google?.accounts?.id && config.googleClientId) {
         google.accounts.id.initialize({
           client_id: config.googleClientId,
+          auto_select: true,
           callback: async (response) => {
             await api('/api/auth/login', {
               method: 'POST',

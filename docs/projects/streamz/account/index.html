@@ -76,6 +76,7 @@
         await waitForGoogle();
         google.accounts.id.initialize({
           client_id: config.googleClientId,
+          auto_select: true,
           callback: async (response) => {
             if (!response.credential) return setStatus('Google did not return a credential.', 'warn');
             await api('/api/auth/login', {

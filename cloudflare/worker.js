@@ -5691,9 +5691,10 @@ function buildSessionCookie(value, options = {}) {
   parts.push(`Secure`);
   parts.push(`SameSite=Lax`);
   parts.push(`Max-Age=${maxAge}`);
-  if (options.expires instanceof Date) {
-    parts.push(`Expires=${options.expires.toUTCString()}`);
-  }
+  const expires = options.expires instanceof Date
+    ? options.expires
+    : (maxAge > 0 ? new Date(Date.now() + maxAge * 1000) : new Date(0));
+  parts.push(`Expires=${expires.toUTCString()}`);
   return parts.join('; ');
 }
 
