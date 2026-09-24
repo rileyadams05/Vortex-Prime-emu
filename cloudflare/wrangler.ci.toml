@@ -10,5 +10,5 @@ name = "NXE_PAIR_SESSIONS"
 class_name = "NxePairSession"
 
 [[migrations]]
-tag = "nxe-relay-v1"
+tag = "nxe-pair-v1"
 new_sqlite_classes = ["NxePairSession"]
