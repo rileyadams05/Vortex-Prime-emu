@@ -14,12 +14,15 @@ assert.match(auth, /waitForInitialSession/, 'Firebase restoration completes befo
 assert.match(worker, /controlTokenEncrypted: await encryptNxeControlToken/, 'claimed NXE token is encrypted before persistence');
 assert.match(worker, /decryptNxeControlToken\(current\.controlTokenEncrypted, pairId, env\)/, 'account restore decrypts the saved token');
 assert.match(worker, /current\.accountId && current\.accountId !== accountId/, 'saved credentials cannot cross Google accounts');
-assert.match(controller, /pairId: consolePairId/, 'manual connect binds the typed IP to the live console identity');
+assert.match(controller, /body: JSON\.stringify\(\{ consoleIp: ip, ftpPort: '2121' \}\)/, 'manual connect asks the cloud bridge to verify the live console IP');
+assert.match(worker, /entry\.networkHash === networkHash/, 'first-time pairing requires the website and console to share a network');
+assert.match(worker, /Date\.parse\(entry\.lastSeenAt \|\| 0\) >= liveCutoff/, 'manual connect only accepts an actively reporting console');
 assert.match(controller, /Double-check every IP digit/, 'connection failures explain invalid or changed addresses');
 assert.match(controller, /function normalizeIpv4Input/, 'mobile dotless IPv4 input has a safe normalization path');
+assert.match(controller, /return '192\.168\.0\.' \+ Number\(missingZeroOctet\[1\]\)/, 'a missing zero octet is corrected for the console subnet shown by NXE');
 assert.match(controller, /candidates\.length === 1/, 'ambiguous dotless addresses are not guessed');
 
-function harness({ initialUser = null, pairs = [], identifyError = false } = {}) {
+function harness({ initialUser = null, pairs = [], connectError = false } = {}) {
   const listeners = new Map();
   const nodes = new Map();
   const storage = new Map();
@@ -51,18 +54,20 @@ function harness({ initialUser = null, pairs = [], identifyError = false } = {})
   const fetch = async (url, options = {}) => {
     requests.push({ url, options });
     if (String(url).includes('/api/v1/device/identify')) {
-      if (identifyError) throw new Error('unreachable');
       return { ok: true, json: async () => ({ pairId: 'console-pair-1234' }) };
     }
     if (String(url).includes('/api/nxe/pair/list')) {
       return { ok: true, json: async () => ({ pairs }) };
     }
     if (String(url).includes('/api/nxe/pair/connect')) {
+      if (connectError) {
+        return { ok: false, json: async () => ({ message: 'Double-check every IP digit and make sure NXE is open.' }) };
+      }
       const body = JSON.parse(options.body);
       return {
         ok: true,
         json: async () => ({
-          pair: { pairId: body.pairId, consoleIp: body.consoleIp, ftpPort: '2121', running: true },
+          pair: { pairId: 'console-pair-1234', consoleIp: body.consoleIp, ftpPort: '2121', running: true },
           controlToken: '0123456789abcdef0123456789abcdef',
         }),
       };
@@ -120,11 +125,10 @@ assert.equal(restored.storage.get('nxe-pair-key:console-pair-1234'), '0123456789
 const connectRequest = restored.requests.find((entry) => String(entry.url).includes('/api/nxe/pair/connect'));
 assert.deepEqual(JSON.parse(connectRequest.options.body), {
   consoleIp: '192.168.0.70',
-  pairId: 'console-pair-1234',
   ftpPort: '2121',
 });
 
-const unreachable = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair], identifyError: true });
+const unreachable = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair], connectError: true });
 await settle();
 assert.match(unreachable.node('nxeFtpPairMessage').textContent, /Double-check every IP digit/, 'unreachable saved IP gives correction guidance');
 

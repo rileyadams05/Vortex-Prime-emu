@@ -507,6 +507,7 @@ async function handleNxePairRegister(request, env, origin) {
   const deviceTokenHash = await sha256Base64Url(`nxe-device:${deviceToken}`);
   const controlTokenHash = await sha256Base64Url(`nxe-control:${controlToken}`);
   const controlTokenEncrypted = await encryptNxeControlToken(controlToken, pairId, env);
+  const networkHash = await getNxeNetworkHash(request, env);
   const result = await updateStreamzDatabase(env, async (db) => {
     const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
     const index = pairs.findIndex((entry) => entry.pairId === pairId);
@@ -517,6 +518,7 @@ async function handleNxePairRegister(request, env, origin) {
       deviceTokenHash,
       controlTokenHash,
       controlTokenEncrypted,
+      networkHash: networkHash || existing?.networkHash || null,
       consoleIp: String(body.consoleIp || '').trim(),
       ftpPort: String(body.ftpPort || '2121').trim() || '2121',
       running: Boolean(body.running),
@@ -540,6 +542,7 @@ async function handleNxePairPoll(request, env, origin) {
   const pairId = String(body?.pairId || '').trim();
   if (!deviceToken || !pairId) throw httpError(400, 'Incomplete NXE polling request.');
   const deviceTokenHash = await sha256Base64Url(`nxe-device:${deviceToken}`);
+  const networkHash = await getNxeNetworkHash(request, env);
   const result = await updateStreamzDatabase(env, async (db) => {
     const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
     const index = pairs.findIndex((entry) => entry.pairId === pairId && entry.deviceTokenHash === deviceTokenHash);
@@ -553,6 +556,7 @@ async function handleNxePairPoll(request, env, origin) {
       running: Boolean(body.running),
       failure: String(body.failure || '').slice(0, 1000),
       lastSeenAt: now,
+      networkHash: networkHash || current.networkHash || null,
     };
     let command = next.command || null;
     const ackId = String(body.ackCommandId || '').trim();
@@ -602,10 +606,10 @@ async function handleNxePairClaim(request, env, origin) {
   return json({ ok: true, pair: sanitizeNxePair(result, false) }, 200, origin);
 }
 
-// Manual IP connect. The browser first reads the console's public identify
-// endpoint, then supplies the returned pairId here. The Worker only releases
-// the encrypted control token when the live IP + pairId match an NXE record
-// and that record is unclaimed or already belongs to this Google account.
+// Manual IP connect. NXE continuously reports its current LAN IP through the
+// outbound cloud bridge. Existing owners can restore that live record on any
+// device. A first-time claim additionally has to come from the same public
+// network as the console, without persisting the raw public address.
 async function handleNxePairConnect(request, env, origin) {
   if (request.method !== 'POST') throw httpError(405, 'NXE connect requires POST.');
   const user = await ensureAuthenticated(request, env, 'Sign in with Google to connect an NXE console.');
@@ -614,14 +618,24 @@ async function handleNxePairConnect(request, env, origin) {
   const pairId = String(body?.pairId || '').trim();
   const ftpPort   = String(body?.ftpPort || '2121').trim() || '2121';
   if (!isValidIpv4Address(consoleIp)) throw httpError(400, 'Enter a valid console IP address and double-check every digit.');
-  if (!pairId || !/^[A-Za-z0-9_-]{12,256}$/.test(pairId)) throw httpError(400, 'NXE did not return a valid console identity.');
+  if (pairId && !/^[A-Za-z0-9_-]{12,256}$/.test(pairId)) throw httpError(400, 'NXE did not return a valid console identity.');
   const accountId = user.firebaseUid || user.sub || user.email;
+  const networkHash = await getNxeNetworkHash(request, env);
   const result = await updateStreamzDatabase(env, async (db) => {
     const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
-    const existing = pairs.findIndex((entry) => entry.pairId === pairId && entry.consoleIp === consoleIp);
-    if (existing < 0) {
-      throw httpError(404, 'NXE could not verify this console. Double-check every IP digit and confirm the address has not changed.');
+    const liveCutoff = Date.now() - 60000;
+    const candidates = pairs
+      .map((entry, index) => ({ entry, index }))
+      .filter(({ entry }) => entry.consoleIp === consoleIp &&
+        Date.parse(entry.lastSeenAt || 0) >= liveCutoff &&
+        (!pairId || entry.pairId === pairId));
+    const owned = candidates.filter(({ entry }) => entry.accountId === accountId);
+    const claimable = candidates.filter(({ entry }) => !entry.accountId && networkHash && entry.networkHash === networkHash);
+    const match = owned.length === 1 ? owned[0] : claimable.length === 1 ? claimable[0] : null;
+    if (!match) {
+      throw httpError(404, 'NXE could not verify this console. Double-check every IP digit, keep the phone or PC on the same home network for first-time setup, and make sure NXE is open.');
     }
+    const existing = match.index;
     const current = pairs[existing];
     if (current.accountId && current.accountId !== accountId) {
       throw httpError(409, 'This NXE console is saved to a different Vortex Prime account.');
@@ -651,6 +665,12 @@ async function handleNxePairConnect(request, env, origin) {
 function isValidIpv4Address(value) {
   const parts = String(value || '').split('.');
   return parts.length === 4 && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
+}
+
+async function getNxeNetworkHash(request, env) {
+  const forwarded = String(request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '').split(',')[0].trim();
+  if (!forwarded) return '';
+  return sha256Base64Url(`nxe-network:${forwarded}:${String(env.SESSION_SECRET || '')}`);
 }
 
 async function handleNxePairCommand(request, env, origin) {

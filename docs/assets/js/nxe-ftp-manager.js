@@ -126,6 +126,10 @@
     function normalizeIpv4Input(value) {
         const entered = String(value || '').trim();
         if (isValidIpv4Address(entered)) return entered;
+        const missingZeroOctet = entered.match(/^192\.168\.(\d{1,3})$/);
+        if (missingZeroOctet && Number(missingZeroOctet[1]) <= 255) {
+            return '192.168.0.' + Number(missingZeroOctet[1]);
+        }
         if (!/^192168\d{2,6}$/.test(entered)) return entered;
 
         const tail = entered.slice(6);
@@ -172,99 +176,16 @@
         if (connectBtn) { connectBtn.disabled = true; connectBtn.textContent = 'Connecting...'; }
         
         try {
-            const baseUrl  = 'http://' + ip + ':' + NXE_WEB_PORT;
-            let controlKey = '';
-            let ftpRunning = false;
-            let ftpPort    = '2121';
-            let matchedPair = null;
-
-            // Step 1: Probe /api/v1/device/identify (no auth) to get Xbox pairId
-            let consolePairId = '';
-            try {
-                const idResp = await localFetch(baseUrl + '/api/v1/device/identify', {
-                    mode: 'cors', signal: AbortSignal.timeout(8000)
-                });
-                if (idResp.ok) {
-                    const idData = await idResp.json().catch(() => ({}));
-                    consolePairId = idData.pairId || '';
-                }
-            } catch(e) {
-                throw new Error('Cannot reach NXE at ' + ip + ':' + NXE_WEB_PORT + '. Double-check every IP digit, confirm the address has not changed, and make sure NXE is open on your Xbox.');
-            }
-
-            // Step 2: If we got pairId, check stored key
-            if (consolePairId) {
-                controlKey = localStorage.getItem('nxe-pair-key:' + consolePairId) || '';
-                if (controlKey) {
-                    try {
-                        const vResp = await localFetch(baseUrl + '/api/v1/device/status', {
-                            headers: { 'X-NXE-Control': controlKey }, mode: 'cors',
-                            signal: AbortSignal.timeout(8000)
-                        });
-                        if (vResp.ok) {
-                            const vd = await vResp.json().catch(() => ({}));
-                            try {
-                                const lr = await fetch('/api/nxe/pair/list', { credentials: 'include' });
-                                if (lr.ok) {
-                                    const ld = await lr.json().catch(() => ({}));
-                                    matchedPair = (ld.pairs || []).find(p => p.pairId === consolePairId);
-                                }
-                            } catch(e2) {}
-                            pair    = Object.assign({ pairId: consolePairId, ftpPort: '2121' }, matchedPair || {}, { consoleIp: ip, ftpPort: vd.ftpPort || '2121', running: Boolean(vd.ftpRunning) });
-                            pairKey = controlKey;
-                            saveConsoleSession(pair, pairKey);
-                            onConnected(); return true;
-                        }
-                    } catch(e) {}
-                }
-            }
-
-            // Step 3: Check cloud pairs for this IP
-            try {
-                const lr = await fetch('/api/nxe/pair/list', { credentials: 'include' });
-                if (lr.ok) {
-                    const ld = await lr.json().catch(() => ({}));
-                    matchedPair = (ld.pairs || []).find(p => p.consoleIp === ip || p.pairId === consolePairId);
-                    if (matchedPair) {
-                        controlKey = localStorage.getItem('nxe-pair-key:' + matchedPair.pairId) || '';
-                        if (controlKey) {
-                            try {
-                                const sr = await localFetch(baseUrl + '/api/v1/device/status', {
-                                    headers: { 'X-NXE-Control': controlKey }, mode: 'cors',
-                                    signal: AbortSignal.timeout(8000)
-                                });
-                                if (sr.ok) {
-                                    const sd = await sr.json().catch(() => ({}));
-                                    pair    = Object.assign({}, matchedPair, { consoleIp: ip, ftpPort: sd.ftpPort || '2121', running: Boolean(sd.ftpRunning) });
-                                    pairKey = controlKey;
-                                    saveConsoleSession(pair, pairKey);
-                                    onConnected(); return true;
-                                }
-                            } catch(e) {}
-                        }
-                    }
-                }
-            } catch(e) {}
-
-            // Step 4: Register/update pair with Vortex account
             const saveResp = await fetch('/api/nxe/pair/connect', {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ consoleIp: ip, pairId: consolePairId, ftpPort: ftpPort })
+                body: JSON.stringify({ consoleIp: ip, ftpPort: '2121' })
             });
             const saveData = await saveResp.json().catch(() => ({}));
             if (!saveResp.ok) throw new Error(saveData.message || 'Unable to register console with your account.');
             pair       = saveData.pair;
-            controlKey = saveData.controlToken || '';
-            if (!pair || !controlKey) throw new Error('Vortex Prime could not restore this console connection.');
-            pairKey    = controlKey;
-            const statusResp = await localFetch(baseUrl + '/api/v1/device/status', {
-                headers: { 'X-NXE-Control': controlKey }, mode: 'cors',
-                signal: AbortSignal.timeout(8000)
-            });
-            const statusData = await statusResp.json().catch(() => ({}));
-            if (!statusResp.ok) throw new Error(statusData.message || 'NXE rejected the saved console connection. Restart NXE and try again.');
-            pair.running = Boolean(statusData.ftpRunning);
+            pairKey    = saveData.controlToken || '';
+            if (!pair || !pairKey) throw new Error('Vortex Prime could not restore this console connection.');
             saveConsoleSession(pair, pairKey);
             onConnected();
             return true;
