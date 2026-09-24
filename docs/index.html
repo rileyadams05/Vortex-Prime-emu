@@ -5848,9 +5848,6 @@
                     document.querySelector('[data-streamz-refresh-channels]')?.addEventListener('click', loadStreamzDashboardData);
                     loadStreamzDashboardData();
 
-                    <!-- NXE FTP Manager Module -->
-                    <script src="/assets/js/nxe-ftp-manager.js" defer></script>
-
 
                     document.querySelectorAll('[data-nxe-lightbox]').forEach((trigger) => trigger.addEventListener('click', () => {
                         const overlay = document.createElement('div');
@@ -6939,6 +6936,7 @@
         }());
         </script>
 
+        <script src="/assets/js/nxe-ftp-manager.js"></script>
         <script type="module" src="/assets/js/security-gate.js"></script>
         </body>
         </html>
