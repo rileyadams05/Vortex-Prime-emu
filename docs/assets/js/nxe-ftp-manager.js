@@ -2,7 +2,7 @@
  * NXE FTP Server Remote Control - Vortex Prime
  * Handles Manual Connection (IP, Port, Username, Password), Account-backed Session Persistence,
  * Genuine Console & Storage Verification (Authentication: ✓ Yes / No),
- * and Server Credentials Management (Set Username & Password dialog).
+ * and Server Credentials Management (Set, Change, and View Username & Password).
  */
 
 (function initializeNxeFtp() {
@@ -20,8 +20,14 @@
     const passwordInput      = document.getElementById('nxeFtpPasswordInput');
     const connectBtn         = document.getElementById('nxeFtpConnectBtn');
 
-    // Credentials Modal Elements
+    // Credentials Buttons
+    const btnSetCredentials    = document.getElementById('nxeFtpBtnSetCredentials');
+    const btnChangeCredentials = document.getElementById('nxeFtpBtnChangeCredentials');
+    const btnViewCredentials   = document.getElementById('nxeFtpBtnViewCredentials');
+
+    // Edit/Change Credentials Modal Elements
     const credModal          = document.getElementById('nxeFtpCredModal');
+    const credModalTitle     = document.getElementById('nxeFtpCredModalTitle');
     const credUser           = document.getElementById('nxeFtpCredUser');
     const credPass           = document.getElementById('nxeFtpCredPass');
     const credConfirm        = document.getElementById('nxeFtpCredConfirm');
@@ -30,7 +36,16 @@
     const credRemoveBtn      = document.getElementById('nxeFtpCredRemove');
     const credCancelBtn      = document.getElementById('nxeFtpCredCancel');
     const credCloseBtn       = document.getElementById('nxeFtpCredClose');
-    const btnOpenCredentials = document.getElementById('nxeFtpBtnCredentials');
+
+    // View Credentials Modal Elements
+    const viewCredModal      = document.getElementById('nxeFtpViewCredModal');
+    const viewUserEl         = document.getElementById('nxeFtpViewUser');
+    const viewPassEl         = document.getElementById('nxeFtpViewPass');
+    const toggleViewPassBtn  = document.getElementById('nxeFtpToggleViewPass');
+    const copyViewPassBtn    = document.getElementById('nxeFtpCopyViewPass');
+    const viewToChangeBtn    = document.getElementById('nxeFtpBtnViewToChange');
+    const viewCredCloseBtn   = document.getElementById('nxeFtpViewCredClose');
+    const viewCredDismissBtn = document.getElementById('nxeFtpViewCredDismiss');
     
     let pair          = null;
     let pairKey       = '';
@@ -40,6 +55,9 @@
     let relaySequence = 0;
     const relayPending = new Map();
     
+    let cachedPassword = '';
+    let passwordVisible = false;
+
     const SAVED_IP_KEY       = 'nxe-saved-ip';
     const SAVED_PORT_KEY     = 'nxe-saved-port';
     const SAVED_USER_KEY     = 'nxe-saved-username';
@@ -71,6 +89,13 @@
         } else {
             el.innerHTML = '<span style="color:var(--color-text-secondary);">&#8212;</span>';
         }
+    }
+
+    // Helper: Dynamic Credential Buttons (Set vs Change & View)
+    function setCredentialButtons(hasCredentials) {
+        if (btnSetCredentials) btnSetCredentials.hidden = Boolean(hasCredentials);
+        if (btnChangeCredentials) btnChangeCredentials.hidden = !hasCredentials;
+        if (btnViewCredentials) btnViewCredentials.hidden = !hasCredentials;
     }
 
     // Helper: Server Button State Controls
@@ -433,6 +458,9 @@
                 const isStorageVerified = Boolean(status.storageVerified);
                 setAuthStatus(isStorageVerified, isStorageVerified ? '' : (status.storageMessage || 'Storage not available'));
                 
+                const hasCredentials = Boolean(status.hasCredentials || (status.username && status.username.length > 0));
+                setCredentialButtons(hasCredentials);
+
                 if (status.username) {
                     pair.username = status.username;
                     localStorage.setItem(SAVED_USER_KEY, status.username);
@@ -449,15 +477,17 @@
                 setState('Disconnected');
                 setFtpStatusDisplay(false);
                 setAuthStatus(false, 'Console unreachable');
+                setCredentialButtons(Boolean(localStorage.getItem(SAVED_USER_KEY)));
                 setMessage('NXE console not reachable at ' + savedIp + '. Double-check every IP digit. If the Xbox address changed, select Change Connection Details and enter the new address shown in NXE Settings → FTP.', true);
             }
         }
     }
 
-    // Modal: Open Set Username & Password Dialog
-    function openCredentialsDialog() {
+    // Modal: Open Set / Change Username & Password Dialog
+    function openCredentialsDialog(isChange = false) {
         if (!credModal) return;
         const currentUser = pair ? (pair.username || localStorage.getItem(SAVED_USER_KEY) || '') : '';
+        if (credModalTitle) credModalTitle.textContent = isChange ? 'Change Username & Password' : 'Set Username & Password';
         if (credUser) credUser.value = currentUser;
         if (credPass) credPass.value = '';
         if (credConfirm) credConfirm.value = '';
@@ -494,6 +524,7 @@
             });
             if (pair) pair.username = user;
             if (user) localStorage.setItem(SAVED_USER_KEY, user); else localStorage.removeItem(SAVED_USER_KEY);
+            cachedPassword = pass;
             closeCredentialsDialog();
             setMessage(user ? 'FTP username and password saved successfully.' : 'FTP credentials updated.');
             await refreshStatus(1);
@@ -516,6 +547,7 @@
                 body: JSON.stringify({ username: '', password: '' })
             });
             if (pair) pair.username = '';
+            cachedPassword = '';
             localStorage.removeItem(SAVED_USER_KEY);
             closeCredentialsDialog();
             setMessage('FTP login credentials removed. Server is set to anonymous access.');
@@ -525,6 +557,57 @@
         } finally {
             if (credRemoveBtn) { credRemoveBtn.disabled = false; credRemoveBtn.textContent = 'Remove'; }
         }
+    }
+
+    // Modal: Open View Credentials Dialog
+    async function openViewCredentialsDialog() {
+        if (!viewCredModal) return;
+        passwordVisible = false;
+        if (viewUserEl) viewUserEl.textContent = 'Loading...';
+        if (viewPassEl) viewPassEl.textContent = '••••••••';
+        if (toggleViewPassBtn) toggleViewPassBtn.textContent = 'Show';
+        viewCredModal.hidden = false;
+
+        try {
+            const data = await api('/api/v1/ftp/credentials', { method: 'GET' });
+            const user = data.username || (pair ? pair.username : '') || localStorage.getItem(SAVED_USER_KEY) || 'None';
+            cachedPassword = data.password || '';
+            if (viewUserEl) viewUserEl.textContent = user;
+            updatePasswordMask();
+        } catch (error) {
+            const user = (pair ? pair.username : '') || localStorage.getItem(SAVED_USER_KEY) || 'Unknown';
+            if (viewUserEl) viewUserEl.textContent = user;
+            if (viewPassEl) viewPassEl.textContent = cachedPassword ? '••••••••' : '(Not retrieved)';
+        }
+    }
+
+    function updatePasswordMask() {
+        if (!viewPassEl) return;
+        if (!cachedPassword) {
+            viewPassEl.textContent = '(None configured)';
+            return;
+        }
+        viewPassEl.textContent = passwordVisible ? cachedPassword : '•'.repeat(Math.max(8, cachedPassword.length));
+        if (toggleViewPassBtn) toggleViewPassBtn.textContent = passwordVisible ? 'Hide' : 'Show';
+    }
+
+    function toggleViewPassword() {
+        passwordVisible = !passwordVisible;
+        updatePasswordMask();
+    }
+
+    function copyViewPassword() {
+        if (!cachedPassword) return;
+        navigator.clipboard?.writeText(cachedPassword).then(() => {
+            if (copyViewPassBtn) {
+                copyViewPassBtn.textContent = 'Copied!';
+                setTimeout(() => { copyViewPassBtn.textContent = 'Copy'; }, 2000);
+            }
+        });
+    }
+
+    function closeViewCredentialsDialog() {
+        if (viewCredModal) viewCredModal.hidden = true;
     }
 
     // Change Connection Details (Switch back to form with prefilled values)
@@ -551,6 +634,7 @@
         localStorage.removeItem(LAST_PAIR_ID_KEY);
         pairRequestId += 1;
         pair = null; pairKey = '';
+        cachedPassword = '';
         if (app) app.hidden = true;
         if (successPanel) successPanel.hidden = true;
         if (pairPanel) pairPanel.hidden = false;
@@ -574,6 +658,7 @@
             setFtpStatusDisplay(pair.running);
             setState('Connected');
             setAuthStatus(Boolean(data.storageVerified), data.storageVerified ? '' : (data.storageMessage || 'Storage not available'));
+            setCredentialButtons(Boolean(data.hasCredentials || (data.username && data.username.length > 0)));
         } catch(error) { setMessage(error.message, true); refreshStatus(); }
     }
 
@@ -594,14 +679,26 @@
     document.getElementById('nxeFtpForget')?.addEventListener('click', forgetConsole);
     continueBtn?.addEventListener('click', enterControlPanel);
 
-    // Modal Events
-    btnOpenCredentials?.addEventListener('click', openCredentialsDialog);
+    // Modal Events: Set / Change
+    btnSetCredentials?.addEventListener('click', () => openCredentialsDialog(false));
+    btnChangeCredentials?.addEventListener('click', () => openCredentialsDialog(true));
     credCloseBtn?.addEventListener('click', closeCredentialsDialog);
     credCancelBtn?.addEventListener('click', closeCredentialsDialog);
     credSaveBtn?.addEventListener('click', saveCredentials);
     credRemoveBtn?.addEventListener('click', removeCredentials);
     [credUser, credPass, credConfirm].forEach(inp => {
         if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveCredentials(); });
+    });
+
+    // Modal Events: View
+    btnViewCredentials?.addEventListener('click', openViewCredentialsDialog);
+    toggleViewPassBtn?.addEventListener('click', toggleViewPassword);
+    copyViewPassBtn?.addEventListener('click', copyViewPassword);
+    viewCredCloseBtn?.addEventListener('click', closeViewCredentialsDialog);
+    viewCredDismissBtn?.addEventListener('click', closeViewCredentialsDialog);
+    viewToChangeBtn?.addEventListener('click', () => {
+        closeViewCredentialsDialog();
+        openCredentialsDialog(true);
     });
 
     document.querySelectorAll('[data-nxe-command]').forEach((btn) => {

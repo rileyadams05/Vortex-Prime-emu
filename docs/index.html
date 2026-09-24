@@ -4148,7 +4148,9 @@
                                 <button class="btn btn-secondary" type="button" data-nxe-command="stop" id="nxeFtpBtnStop">Turn Off</button>
                                 <button class="btn btn-secondary" type="button" data-nxe-command="restart" id="nxeFtpBtnRestart">Restart</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpReconnect">Reconnect</button>
-                                <button class="btn btn-secondary" type="button" id="nxeFtpBtnCredentials">Set Username &amp; Password</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpBtnSetCredentials">Set Username &amp; Password</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpBtnChangeCredentials" hidden>Change Username &amp; Password</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpBtnViewCredentials" hidden>View Username &amp; Password</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpChangeConnection">Change Connection Details</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpForget">Forget console</button>
                             </div>
@@ -4166,11 +4168,11 @@
                         </section>
                     </div>
 
-                    <!-- Set Username & Password Modal Dialog -->
+                    <!-- Set / Change Username & Password Modal Dialog -->
                     <div id="nxeFtpCredModal" hidden style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem;">
                         <div class="project-card" style="width:100%;max-width:440px;background:#141414;border:1px solid var(--color-border,#333);border-radius:12px;padding:1.5rem;box-shadow:0 12px 36px rgba(0,0,0,0.6);">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-                                <h3 style="margin:0;font-size:1.25rem;">Set Username &amp; Password</h3>
+                                <h3 id="nxeFtpCredModalTitle" style="margin:0;font-size:1.25rem;">Set Username &amp; Password</h3>
                                 <button type="button" id="nxeFtpCredClose" style="background:none;border:none;color:var(--color-text-secondary);font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem;">&times;</button>
                             </div>
                             <p class="project-description" style="margin-bottom:1.25rem;font-size:.88rem;">Optional: configure login credentials for your NXE FTP server. Leave blank or choose Remove to allow anonymous access.</p>
@@ -4196,6 +4198,35 @@
                                 <button class="btn btn-secondary" type="button" id="nxeFtpCredRemove" style="color:#ff8b80;border-color:rgba(255,139,128,0.4);margin-right:auto;">Remove</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpCredCancel">Cancel</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpCredSave" style="background:var(--color-primary,#10b981);color:#000;border-color:var(--color-primary,#10b981);font-weight:600;">Save</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View Username & Password Modal Dialog -->
+                    <div id="nxeFtpViewCredModal" hidden style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem;">
+                        <div class="project-card" style="width:100%;max-width:440px;background:#141414;border:1px solid var(--color-border,#333);border-radius:12px;padding:1.5rem;box-shadow:0 12px 36px rgba(0,0,0,0.6);">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                                <h3 style="margin:0;font-size:1.25rem;">FTP Credentials</h3>
+                                <button type="button" id="nxeFtpViewCredClose" style="background:none;border:none;color:var(--color-text-secondary);font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem;">&times;</button>
+                            </div>
+                            <p class="project-description" style="margin-bottom:1.25rem;font-size:.88rem;">Here are your current NXE FTP login credentials saved on this console:</p>
+                            <div class="project-meta" style="margin-bottom:1.25rem;">
+                                <div class="project-meta-row">
+                                    <span>Username</span>
+                                    <strong id="nxeFtpViewUser" style="font-size:1rem;color:var(--color-text);">&#8212;</strong>
+                                </div>
+                                <div class="project-meta-row">
+                                    <span>Password</span>
+                                    <div style="display:flex;align-items:center;gap:.5rem;">
+                                        <strong id="nxeFtpViewPass" style="font-size:1rem;font-family:monospace;letter-spacing:1px;color:var(--color-primary,#10b981);">&#8212;</strong>
+                                        <button class="btn btn-secondary" type="button" id="nxeFtpToggleViewPass" style="padding:.25rem .55rem;font-size:.78rem;">Show</button>
+                                        <button class="btn btn-secondary" type="button" id="nxeFtpCopyViewPass" style="padding:.25rem .55rem;font-size:.78rem;">Copy</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap;">
+                                <button class="btn btn-secondary" type="button" id="nxeFtpBtnViewToChange" style="margin-right:auto;">Change Credentials</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpViewCredDismiss">Close</button>
                             </div>
                         </div>
                     </div>

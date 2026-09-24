@@ -16,16 +16,26 @@ assert.match(site, /id="nxeFtpPortInput"/, 'FTP port input is present');
 assert.match(site, /id="nxeFtpUsernameInput"/, 'Username input is present');
 assert.match(site, /id="nxeFtpPasswordInput"/, 'Password input is present');
 assert.match(site, /id="nxeFtpAuth"/, 'Authentication verification indicator is present');
-assert.match(site, /id="nxeFtpBtnCredentials"/, 'Set Username & Password button is present');
-assert.match(site, /id="nxeFtpCredModal"/, 'Credentials modal dialog is present');
+
+// Credential Action Buttons & Modals
+assert.match(site, /id="nxeFtpBtnSetCredentials"/, 'Set Username & Password button is present');
+assert.match(site, /id="nxeFtpBtnChangeCredentials"/, 'Change Username & Password button is present');
+assert.match(site, /id="nxeFtpBtnViewCredentials"/, 'View Username & Password button is present');
+assert.match(site, /id="nxeFtpCredModal"/, 'Credentials edit modal dialog is present');
 assert.match(site, /id="nxeFtpCredUser"/, 'Credentials username input is present');
 assert.match(site, /id="nxeFtpCredPass"/, 'Credentials password input is present');
 assert.match(site, /id="nxeFtpCredConfirm"/, 'Credentials confirm password input is present');
 assert.match(site, /id="nxeFtpCredRemove"/, 'Remove credentials button is present');
+assert.match(site, /id="nxeFtpViewCredModal"/, 'View credentials modal dialog is present');
+assert.match(site, /id="nxeFtpViewUser"/, 'View credentials username display is present');
+assert.match(site, /id="nxeFtpViewPass"/, 'View credentials password display is present');
+assert.match(site, /id="nxeFtpToggleViewPass"/, 'Toggle view password button is present');
+assert.match(site, /id="nxeFtpCopyViewPass"/, 'Copy view password button is present');
 assert.match(site, /How to access your Xbox storage/, 'FTP client usage guidance is present');
 
 assert.match(controller, /storageVerified/, 'controller checks storageVerified from Xbox status');
 assert.match(controller, /✓ Yes/, 'controller displays green checkmark for verified storage authentication');
+assert.match(controller, /setCredentialButtons/, 'controller dynamically manages Set vs Change & View buttons');
 
 assert.match(auth, /waitForInitialSession/, 'Firebase restoration completes before showing signed-out UI');
 assert.match(worker, /controlTokenEncrypted: await encryptNxeControlToken/, 'claimed NXE token is encrypted before persistence');
@@ -48,7 +58,7 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
   const nodes = new Map();
   const storage = new Map();
   const requests = [];
-  const hiddenInitially = new Set(['nxeFtpAuthPanel', 'nxeFtpPairPanel', 'nxeFtpSuccessPanel', 'nxeFtpApp']);
+  const hiddenInitially = new Set(['nxeFtpAuthPanel', 'nxeFtpPairPanel', 'nxeFtpSuccessPanel', 'nxeFtpApp', 'nxeFtpCredModal', 'nxeFtpViewCredModal', 'nxeFtpBtnChangeCredentials', 'nxeFtpBtnViewCredentials']);
 
   function node(id) {
     if (!nodes.has(id)) nodes.set(id, {
@@ -94,7 +104,7 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
       };
     }
     if (String(url).includes('/api/v1/device/status')) {
-      return { ok: true, json: async () => ({ ftpRunning: true, storageVerified: true }) };
+      return { ok: true, json: async () => ({ ftpRunning: true, storageVerified: true, hasCredentials: true, username: 'xbox' }) };
     }
     return { ok: true, json: async () => ({ ok: true, path: '/', items: [] }) };
   };
@@ -153,4 +163,4 @@ const unreachable = harness({ initialUser: { email: 'user@example.invalid' }, pa
 await settle();
 assert.match(unreachable.node('nxeFtpPairMessage').textContent, /Double-check every IP digit/, 'unreachable saved IP gives correction guidance');
 
-console.log('NXE FTP authentication & storage verification tests passed.');
+console.log('NXE FTP authentication, change credentials & view credentials tests passed.');
