@@ -123,6 +123,10 @@
         return parts.length === 4 && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
     }
 
+    function localFetch(url, options) {
+        return fetch(url, Object.assign({ targetAddressSpace: 'local' }, options || {}));
+    }
+
     // API Wrapper for NXE Web Management Service (Port 2123)
     async function api(pathname, options) {
         options = options || {};
@@ -130,7 +134,7 @@
         const headers = new Headers(options.headers || {});
         headers.set('X-NXE-Control', pairKey);
         headers.set('Accept', 'application/json');
-        const response = await fetch(apiBase + pathname, Object.assign({}, options, { headers: headers, mode: 'cors' }));
+        const response = await localFetch(apiBase + pathname, Object.assign({}, options, { headers: headers, mode: 'cors' }));
         const data     = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.message || 'NXE request failed (' + response.status + ').');
         return data;
@@ -157,7 +161,7 @@
             // Step 1: Probe /api/v1/device/identify (no auth) to get Xbox pairId
             let consolePairId = '';
             try {
-                const idResp = await fetch(baseUrl + '/api/v1/device/identify', {
+                const idResp = await localFetch(baseUrl + '/api/v1/device/identify', {
                     mode: 'cors', signal: AbortSignal.timeout(8000)
                 });
                 if (idResp.ok) {
@@ -173,7 +177,7 @@
                 controlKey = localStorage.getItem('nxe-pair-key:' + consolePairId) || '';
                 if (controlKey) {
                     try {
-                        const vResp = await fetch(baseUrl + '/api/v1/device/status', {
+                        const vResp = await localFetch(baseUrl + '/api/v1/device/status', {
                             headers: { 'X-NXE-Control': controlKey }, mode: 'cors',
                             signal: AbortSignal.timeout(8000)
                         });
@@ -205,7 +209,7 @@
                         controlKey = localStorage.getItem('nxe-pair-key:' + matchedPair.pairId) || '';
                         if (controlKey) {
                             try {
-                                const sr = await fetch(baseUrl + '/api/v1/device/status', {
+                                const sr = await localFetch(baseUrl + '/api/v1/device/status', {
                                     headers: { 'X-NXE-Control': controlKey }, mode: 'cors',
                                     signal: AbortSignal.timeout(8000)
                                 });
@@ -234,7 +238,7 @@
             controlKey = saveData.controlToken || '';
             if (!pair || !controlKey) throw new Error('Vortex Prime could not restore this console connection.');
             pairKey    = controlKey;
-            const statusResp = await fetch(baseUrl + '/api/v1/device/status', {
+            const statusResp = await localFetch(baseUrl + '/api/v1/device/status', {
                 headers: { 'X-NXE-Control': controlKey }, mode: 'cors',
                 signal: AbortSignal.timeout(8000)
             });
@@ -624,7 +628,7 @@
     // Single File Download
     async function download(name) {
         try {
-            const response = await fetch(apiBase + '/api/v1/files/download?path=' + encodeURIComponent(itemPath(name)), {
+            const response = await localFetch(apiBase + '/api/v1/files/download?path=' + encodeURIComponent(itemPath(name)), {
                 headers: { 'X-NXE-Control': pairKey }
             });
             if (!response.ok) throw new Error('Download failed (' + response.status + ').');
@@ -846,7 +850,7 @@
         try {
             if (apiBase && pairKey) {
                 try {
-                    const resp = await fetch(apiBase + '/api/v1/ftp/' + type, {
+                    const resp = await localFetch(apiBase + '/api/v1/ftp/' + type, {
                         method: 'POST', headers: { 'X-NXE-Control': pairKey }, mode: 'cors',
                         signal: AbortSignal.timeout(12000)
                     });
