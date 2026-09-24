@@ -234,6 +234,10 @@ export default {
         return await handleNxePairClaim(request, env, allowedOrigin);
       }
 
+      if (path === 'api/nxe/pair/connect') {
+        return await handleNxePairConnect(request, env, allowedOrigin);
+      }
+
       if (path === 'api/nxe/pair/command') {
         return await handleNxePairCommand(request, env, allowedOrigin);
       }
@@ -588,6 +592,66 @@ async function handleNxePairClaim(request, env, origin) {
     return { db: { ...db, nxePairs: pairs }, value: next };
   });
   return json({ ok: true, pair: sanitizeNxePair(result, false) }, 200, origin);
+}
+
+// Manual IP connect — user typed the console IP instead of scanning QR.
+// Finds or creates a pair record for this IP tied to the signed-in account.
+// Returns the controlToken (plaintext) so the website can auth directly to
+// the NxeWebManagementServer running on the Xbox at port 2123.
+async function handleNxePairConnect(request, env, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'NXE connect requires POST.');
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google to connect an NXE console.');
+  const body = await request.json().catch(() => null);
+  const consoleIp = String(body?.consoleIp || '').trim();
+  const ftpPort   = String(body?.ftpPort || '2121').trim() || '2121';
+  if (!consoleIp || !/^\d{1,3}(\.\d{1,3}){3}$/.test(consoleIp)) {
+    throw httpError(400, 'A valid console IP address is required.');
+  }
+  const accountId = user.firebaseUid || user.sub || user.email;
+  // Generate a new ephemeral controlToken for this IP-based connection.
+  // If there is already a pair record for this IP + account, reuse it (update IP/port).
+  const rawToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+  const controlTokenHash = await sha256Base64Url(`nxe-control:${rawToken}`);
+  const result = await updateStreamzDatabase(env, async (db) => {
+    const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
+    // Find existing pair for this account with the same IP
+    const existing = pairs.findIndex(e => e.accountId === accountId && e.consoleIp === consoleIp);
+    const now = new Date().toISOString();
+    if (existing >= 0) {
+      // Update the record — new token, updated port and timestamp
+      const next = {
+        ...pairs[existing],
+        consoleIp,
+        ftpPort,
+        controlTokenHash,
+        claimedAt: now,
+        lastSeenAt: now,
+      };
+      pairs[existing] = next;
+      return { db: { ...db, nxePairs: pairs }, value: next };
+    }
+    // Create a new pair record
+    const pairId = `ip_${crypto.randomUUID().replace(/-/g, '').slice(0, 24)}`;
+    const newEntry = {
+      id: `nxe_${crypto.randomUUID()}`,
+      pairId,
+      consoleIp,
+      ftpPort,
+      running: false,
+      failure: '',
+      controlTokenHash,
+      deviceTokenHash: '',
+      accountId,
+      createdAt: now,
+      claimedAt: now,
+      lastSeenAt: now,
+    };
+    pairs.push(newEntry);
+    return { db: { ...db, nxePairs: pairs }, value: newEntry };
+  });
+  // Return the plaintext control token to the authenticated client only
+  return json({ ok: true, pair: sanitizeNxePair(result, false), controlToken: rawToken }, 200, origin);
 }
 
 async function handleNxePairCommand(request, env, origin) {

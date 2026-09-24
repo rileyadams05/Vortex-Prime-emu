@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="icon" href="./favicon-48x48.png" sizes="48x48" type="image/png">
-  <link rel="icon" href="./favicon-96x96.png" sizes="96x96" type="image/png">
-  <link rel="icon" href="./favicon-192x192.png" sizes="192x192" type="image/png">
-  <link rel="icon" href="./favicon.png" type="image/png">
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png">
+  <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png">
+  <link rel="icon" href="/favicon-192x192.png" sizes="192x192" type="image/png">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
   <!-- iOS PWA: launches full-screen after Add to Home Screen -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -4072,14 +4072,23 @@
                     <div class="project-card-header">
                         <div class="project-title"><h2>Xbox file management</h2></div>
                     </div>
-                    <p id="nxeFtpLoading" class="project-description" role="status">Checking your Vortex Prime account…</p>
+                    <p id="nxeFtpLoading" class="project-description" role="status">Checking your Vortex Prime account&#8230;</p>
                     <div id="nxeFtpAuthPanel" hidden>
-                        <p class="project-description">Sign in with your existing Vortex Prime Google account to pair and manage an NXE console.</p>
+                        <p class="project-description">Sign in with your existing Vortex Prime Google account to connect and manage an NXE console.</p>
                         <div id="nxeFtpGoogleBtnSlot"></div>
                     </div>
                     <div id="nxeFtpPairPanel" hidden>
                         <h3>Connect your NXE console</h3>
-                        <p class="project-description">Open NXE Settings → FTP and scan its QR code to pair this console with your Vortex Prime account.</p>
+                        <p class="project-description">Scan the QR code shown in NXE Settings &#8594; FTP, or enter the Console IP manually below.</p>
+                        <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin:1.25rem 0;">
+                            <div style="flex:1;min-width:200px;">
+                                <label for="nxeFtpIpInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">Console IP Address</label>
+                                <input id="nxeFtpIpInput" type="text" placeholder="192.168.1.xxx" autocomplete="off" inputmode="decimal"
+                                    style="width:100%;padding:.65rem .9rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:1rem;box-sizing:border-box;">
+                            </div>
+                            <button class="btn btn-primary" type="button" id="nxeFtpConnectBtn" style="white-space:nowrap;">Connect</button>
+                        </div>
+                        <p style="font-size:.85rem;color:var(--color-text-secondary);margin-top:-.5rem;margin-bottom:1rem;">You can also scan the QR code shown in NXE Settings &#8594; FTP to open this page with your console pre-filled.</p>
                         <p id="nxeFtpPairMessage" class="project-description" role="status"></p>
                     </div>
                     <div id="nxeFtpApp" hidden>
@@ -4090,32 +4099,59 @@
                         </div>
                         <section id="nxeFtpServerTab" class="nxe-ftp-tab-panel">
                             <div class="project-meta">
-                                <div class="project-meta-row"><span>Console IP</span><strong id="nxeFtpIp">—</strong></div>
+                                <div class="project-meta-row"><span>Console IP</span><strong id="nxeFtpIp">&#8212;</strong></div>
                                 <div class="project-meta-row"><span>FTP port</span><strong id="nxeFtpPort">2121</strong></div>
                                 <div class="project-meta-row"><span>Connection</span><strong id="nxeFtpConnection">Disconnected</strong></div>
                                 <div class="project-meta-row"><span>FTP server</span><strong id="nxeFtpStatus">Unknown</strong></div>
                             </div>
                             <div class="project-links" style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;">
-                                <button class="btn btn-secondary" type="button" data-nxe-command="start">Start</button>
-                                <button class="btn btn-secondary" type="button" data-nxe-command="stop">Stop</button>
-                                <button class="btn btn-secondary" type="button" data-nxe-command="restart">Restart</button>
+                                <button class="btn btn-secondary" type="button" data-nxe-command="start" id="nxeFtpBtnStart">Turn On</button>
+                                <button class="btn btn-secondary" type="button" data-nxe-command="stop" id="nxeFtpBtnStop">Turn Off</button>
+                                <button class="btn btn-secondary" type="button" data-nxe-command="restart" id="nxeFtpBtnRestart">Restart</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpReconnect">Reconnect</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpChangeIp">Change IP</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpForget">Forget console</button>
                             </div>
                             <p id="nxeFtpMessage" class="project-description" role="status"></p>
                         </section>
                         <section id="nxeFtpFilesTab" class="nxe-ftp-tab-panel" hidden>
+                            <!-- Toolbar -->
                             <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
-                                <button class="btn btn-secondary" type="button" id="nxeFtpBack">Back</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpBack">&#8592; Back</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpRefresh">Refresh</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpCreateFolder">New folder</button>
-                                <label class="btn btn-secondary" for="nxeFtpUploadInput">Upload files</label>
+                                <label class="btn btn-secondary" for="nxeFtpUploadInput" style="cursor:pointer;margin:0;">Upload files</label>
                                 <input id="nxeFtpUploadInput" type="file" multiple hidden>
+
+                                <!-- Search / Filter -->
+                                <div style="margin-left:auto;min-width:180px;">
+                                    <input id="nxeFtpSearchInput" type="text" placeholder="Filter files..." autocomplete="off"
+                                        style="width:100%;padding:.45rem .75rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:6px;color:inherit;font-size:.88rem;box-sizing:border-box;">
+                                </div>
                             </div>
-                            <div id="nxeFtpBreadcrumb" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem;"></div>
-                            <div id="nxeFtpDropZone" class="file-upload-area" style="padding:1.5rem;text-align:center;margin-bottom:1rem;">Drop files here to upload to the current folder</div>
+
+                            <!-- Bulk Selection Action Bar -->
+                            <div id="nxeFtpBulkActions" style="display:none;align-items:center;gap:1rem;padding:.6rem 1rem;background:rgba(143,204,62,0.12);border:1px solid rgba(143,204,62,0.3);border-radius:6px;margin-bottom:1rem;">
+                                <span id="nxeFtpSelectedCount" style="font-weight:600;font-size:.9rem;color:#8fcc3e;">0 items selected</span>
+                                <div style="margin-left:auto;display:flex;gap:.5rem;">
+                                    <button class="btn btn-secondary" type="button" id="nxeFtpBulkMove" style="font-size:.82rem;padding:.3rem .65rem;">Move Selected</button>
+                                    <button class="btn btn-secondary" type="button" id="nxeFtpBulkDelete" style="font-size:.82rem;padding:.3rem .65rem;color:#ff8b80;border-color:#ff8b80;">Delete Selected</button>
+                                </div>
+                            </div>
+
+                            <!-- Breadcrumb -->
+                            <div id="nxeFtpBreadcrumb" style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;"></div>
+
+                            <!-- Drop Zone -->
+                            <div id="nxeFtpDropZone" style="padding:1.25rem;text-align:center;margin-bottom:1rem;border:2px dashed var(--color-border,#333);border-radius:8px;color:var(--color-text-secondary);font-size:.92rem;transition:all .2s ease-in-out;cursor:pointer;">
+                                📁 Drag & drop files here to upload to the current Xbox folder
+                            </div>
+
+                            <!-- Upload Queue Progress -->
                             <div id="nxeFtpTransfers" aria-live="polite"></div>
-                            <div id="nxeFtpFileList" class="project-meta"></div>
+
+                            <!-- File Browser Data Table -->
+                            <div id="nxeFtpFileList" class="project-meta" style="overflow-x:auto;"></div>
                         </section>
                     </div>
                 </div>
@@ -5812,254 +5848,9 @@
                     document.querySelector('[data-streamz-refresh-channels]')?.addEventListener('click', loadStreamzDashboardData);
                     loadStreamzDashboardData();
 
-                    (function initializeNxeFtp() {
-                        const authPanel = document.getElementById('nxeFtpAuthPanel');
-                        const app = document.getElementById('nxeFtpApp');
-                        const loading = document.getElementById('nxeFtpLoading');
-                        const pairPanel = document.getElementById('nxeFtpPairPanel');
-                        const pairMessage = document.getElementById('nxeFtpPairMessage');
-                        const message = document.getElementById('nxeFtpMessage');
-                        const files = document.getElementById('nxeFtpFileList');
-                        const breadcrumb = document.getElementById('nxeFtpBreadcrumb');
-                        const transfers = document.getElementById('nxeFtpTransfers');
-                        let pair = null;
-                        let pairKey = '';
-                        let path = '/';
-                        let apiBase = '';
-                        let pairRequestId = 0;
+                    <!-- NXE FTP Manager Module -->
+                    <script src="/assets/js/nxe-ftp-manager.js" defer></script>
 
-                        function setMessage(value, error = false) {
-                            const target = pairPanel.hidden ? message : pairMessage;
-                            target.textContent = value || '';
-                            target.style.color = error ? '#ff8b80' : '';
-                        }
-
-                        function setState(value) {
-                            const connection = document.getElementById('nxeFtpConnection');
-                            if (connection) connection.textContent = value;
-                        }
-
-                        function renderAuth(user) {
-                            loading.hidden = true;
-                            authPanel.hidden = Boolean(user);
-                            pairPanel.hidden = !user || Boolean(pair);
-                            app.hidden = !user || !pair;
-                            if (!user) {
-                                pairRequestId += 1;
-                                pair = null;
-                                pairKey = '';
-                                apiBase = '';
-                                pairMessage.textContent = '';
-                                message.textContent = '';
-                            } else if (!pair) {
-                                claimPair();
-                            }
-                        }
-
-                        function parsePairHash() {
-                            const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-                            return { pairId: params.get('pair') || '', key: params.get('key') || '' };
-                        }
-
-                        async function api(pathname, options = {}) {
-                            if (!apiBase || !pairKey) throw new Error('Select an NXE console first.');
-                            const headers = new Headers(options.headers || {});
-                            headers.set('X-NXE-Control', pairKey);
-                            headers.set('Accept', 'application/json');
-                            const response = await fetch(apiBase + pathname, { ...options, headers, mode: 'cors' });
-                            const data = await response.json().catch(() => ({}));
-                            if (!response.ok) throw new Error(data.message || `NXE request failed (${response.status}).`);
-                            return data;
-                        }
-
-                        function renderPair() {
-                            if (!pair) return;
-                            document.getElementById('nxeFtpPairLabel').textContent = pair.consoleIp || pair.pairId;
-                            document.getElementById('nxeFtpIp').textContent = pair.consoleIp || 'Unknown';
-                            document.getElementById('nxeFtpPort').textContent = pair.ftpPort || '2121';
-                            document.getElementById('nxeFtpStatus').textContent = pair.running ? 'Running' : 'Stopped';
-                            apiBase = pair.consoleIp ? `http://${pair.consoleIp}:2123` : '';
-                        }
-
-                        async function claimPair() {
-                            if (!currentUser) return;
-                            const user = currentUser;
-                            const requestId = ++pairRequestId;
-                            const parsed = parsePairHash();
-                            try {
-                                if (!parsed.pairId || !parsed.key) {
-                                    const saved = await fetch('/api/nxe/pair/list', { credentials: 'include' });
-                                    const data = await saved.json().catch(() => ({}));
-                                    if (!saved.ok) throw new Error(data.message || 'Unable to load paired consoles.');
-                                    const selected = data.pairs?.[0];
-                                    if (!selected) return;
-                                    parsed.pairId = selected.pairId;
-                                    parsed.key = localStorage.getItem(`nxe-pair-key:${selected.pairId}`) || '';
-                                    if (!parsed.key) return;
-                                }
-                                const response = await fetch('/api/nxe/pair/claim', {
-                                    method: 'POST',
-                                    credentials: 'include',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ pairId: parsed.pairId, controlToken: parsed.key }),
-                                });
-                                const data = await response.json().catch(() => ({}));
-                                if (user !== currentUser || requestId !== pairRequestId) return;
-                                if (!response.ok) throw new Error(data.message || 'Unable to pair this console.');
-                                pair = data.pair;
-                                pairKey = parsed.key;
-                                localStorage.setItem(`nxe-pair-key:${pair.pairId}`, pairKey);
-                                pairPanel.hidden = true;
-                                app.hidden = false;
-                                renderPair();
-                                setState(pair.connected ? 'Connected' : 'Disconnected');
-                                await refreshFiles();
-                            } catch (error) {
-                                if (user === currentUser && requestId === pairRequestId) setMessage(error.message, true);
-                            }
-                        }
-
-                        async function refreshStatus() {
-                            if (!pair) return;
-                            try {
-                                const status = await api('/api/v1/device/status');
-                                pair.running = Boolean(status.ftpRunning);
-                                document.getElementById('nxeFtpStatus').textContent = pair.running ? 'Running' : 'Stopped';
-                                setState('Connected');
-                                if (status.failure) setMessage(status.failure, true);
-                            } catch (error) {
-                                setState('Disconnected');
-                                setMessage(error.message, true);
-                            }
-                        }
-
-                        function renderBreadcrumb() {
-                            breadcrumb.innerHTML = '';
-                            const parts = path.split('/').filter(Boolean);
-                            const paths = ['/'];
-                            parts.forEach((part) => paths.push(`${paths[paths.length - 1].replace(/\/$/, '')}/${part}`));
-                            paths.forEach((value, index) => {
-                                const button = document.createElement('button');
-                                button.className = 'btn btn-secondary';
-                                button.type = 'button';
-                                button.textContent = index === 0 ? 'Root' : parts[index - 1];
-                                button.addEventListener('click', () => { path = value; refreshFiles(); });
-                                breadcrumb.appendChild(button);
-                            });
-                        }
-
-                        function itemPath(name) { return `${path === '/' ? '' : path}/${name}`; }
-
-                        async function refreshFiles() {
-                            if (!pair) return;
-                            try {
-                                const data = await api(`/api/v1/files?path=${encodeURIComponent(path)}`);
-                                files.innerHTML = '';
-                                renderBreadcrumb();
-                                (data.items || []).sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1)).forEach((item) => {
-                                    const row = document.createElement('div');
-                                    row.style.cssText = 'display:flex;align-items:center;gap:.75rem;padding:.7rem 0;border-bottom:1px solid var(--color-border);';
-                                    const label = document.createElement('strong');
-                                    label.textContent = `${item.type === 'folder' ? 'Folder' : 'File'}: ${item.name}`;
-                                    label.style.flex = '1';
-                                    const details = document.createElement('span');
-                                    details.textContent = item.type === 'folder' ? 'Folder' : `${item.size || 0} bytes · ${item.modified ? new Date(item.modified).toLocaleString() : 'Modified date unavailable'}`;
-                                    details.style.color = 'var(--color-text-secondary)';
-                                    row.append(label, details);
-                                    if (item.type === 'folder') {
-                                        row.addEventListener('dblclick', () => { path = itemPath(item.name); refreshFiles(); });
-                                    }
-                                    const open = document.createElement('button');
-                                    open.className = 'btn btn-secondary'; open.type = 'button'; open.textContent = item.type === 'folder' ? 'Open' : 'Download';
-                                    open.addEventListener('click', () => item.type === 'folder' ? (path = itemPath(item.name), refreshFiles()) : download(item.name));
-                                    const rename = document.createElement('button');
-                                    rename.className = 'btn btn-secondary'; rename.type = 'button'; rename.textContent = 'Rename';
-                                    rename.addEventListener('click', () => renameItem(item.name));
-                                    const move = document.createElement('button');
-                                    move.className = 'btn btn-secondary'; move.type = 'button'; move.textContent = 'Move';
-                                    move.addEventListener('click', () => moveItem(item.name));
-                                    const remove = document.createElement('button');
-                                    remove.className = 'btn btn-secondary'; remove.type = 'button'; remove.textContent = 'Delete';
-                                    remove.addEventListener('click', () => deleteItem(item.name));
-                                    row.append(open, rename, move, remove);
-                                    files.appendChild(row);
-                                });
-                            } catch (error) { setMessage(error.message, true); }
-                        }
-
-                        async function download(name) {
-                            try {
-                                const response = await fetch(`${apiBase}/api/v1/files/download?path=${encodeURIComponent(itemPath(name))}`, { headers: { 'X-NXE-Control': pairKey } });
-                                if (!response.ok) throw new Error('Download failed.');
-                                const blob = await response.blob();
-                                const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = name; link.click();
-                                setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-                            } catch (error) { setMessage(error.message, true); }
-                        }
-
-                        async function renameItem(name) {
-                            const next = window.prompt('New name', name);
-                            if (!next || next === name) return;
-                            try { await api('/api/v1/files/rename', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: itemPath(name), name: next }) }); await refreshFiles(); }
-                            catch (error) { setMessage(error.message, true); }
-                        }
-
-                        async function deleteItem(name) {
-                            if (!window.confirm(`Delete ${name}?`)) return;
-                            try { await api('/api/v1/files', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: itemPath(name) }) }); await refreshFiles(); }
-                            catch (error) { setMessage(error.message, true); }
-                        }
-
-                        async function moveItem(name) {
-                            const destination = window.prompt('Destination folder', path);
-                            if (!destination) return;
-                            try { await api('/api/v1/files/move', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: itemPath(name), destination }) }); await refreshFiles(); }
-                            catch (error) { setMessage(error.message, true); }
-                        }
-
-                        async function upload(file) {
-                            const xhr = new XMLHttpRequest();
-                            xhr.open('POST', `${apiBase}/api/v1/files/upload?path=${encodeURIComponent(path)}&name=${encodeURIComponent(file.name)}`);
-                            xhr.setRequestHeader('X-NXE-Control', pairKey);
-                            xhr.setRequestHeader('X-NXE-Path', path);
-                            xhr.setRequestHeader('X-NXE-File-Name', file.name);
-                            const row = document.createElement('div'); row.textContent = `Uploading ${file.name}: 0%`; transfers.appendChild(row);
-                            xhr.upload.onprogress = (event) => { if (event.lengthComputable) row.textContent = `Uploading ${file.name}: ${Math.round(event.loaded / event.total * 100)}%`; };
-                            xhr.onload = async () => { if (xhr.status >= 200 && xhr.status < 300) { row.textContent = `${file.name}: complete`; await refreshFiles(); } else row.textContent = `${file.name}: failed`; };
-                            xhr.onerror = () => { row.textContent = `${file.name}: connection error`; };
-                            xhr.send(file);
-                        }
-
-                        document.getElementById('nxeFtpRefresh')?.addEventListener('click', refreshFiles);
-                        document.getElementById('nxeFtpBack')?.addEventListener('click', () => { if (path !== '/') { path = path.substring(0, path.lastIndexOf('/')) || '/'; refreshFiles(); } });
-                        document.getElementById('nxeFtpUploadInput')?.addEventListener('change', (event) => Array.from(event.target.files || []).forEach(upload));
-                        document.getElementById('nxeFtpDropZone')?.addEventListener('dragover', (event) => { event.preventDefault(); });
-                        document.getElementById('nxeFtpDropZone')?.addEventListener('drop', (event) => { event.preventDefault(); Array.from(event.dataTransfer.files || []).forEach(upload); });
-                        document.getElementById('nxeFtpCreateFolder')?.addEventListener('click', async () => { const name = window.prompt('Folder name'); if (!name) return; try { await api('/api/v1/files/folders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, name }) }); await refreshFiles(); } catch (error) { setMessage(error.message, true); } });
-                        document.getElementById('nxeFtpReconnect')?.addEventListener('click', refreshStatus);
-                        document.getElementById('nxeFtpForget')?.addEventListener('click', () => {
-                            if (pair) localStorage.removeItem(`nxe-pair-key:${pair.pairId}`);
-                            pairRequestId += 1;
-                            pair = null;
-                            pairKey = '';
-                            apiBase = '';
-                            app.hidden = true;
-                            pairPanel.hidden = false;
-                            pairMessage.textContent = '';
-                        });
-                        document.querySelectorAll('[data-nxe-command]').forEach((button) => button.addEventListener('click', async () => { try { setState(button.dataset.nxeCommand === 'restart' ? 'Restarting' : `${button.dataset.nxeCommand}ing`); await fetch('/api/nxe/pair/command', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pairId: pair.pairId, type: button.dataset.nxeCommand }) }); setMessage('Command queued.'); } catch (error) { setMessage(error.message, true); } }));
-                        document.querySelectorAll('.nxe-ftp-tab').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.nxe-ftp-tab').forEach((entry) => entry.classList.toggle('active', entry === button)); document.getElementById('nxeFtpServerTab').hidden = button.dataset.nxeTab !== 'server'; document.getElementById('nxeFtpFilesTab').hidden = button.dataset.nxeTab !== 'files'; if (button.dataset.nxeTab === 'files') refreshFiles(); }));
-                        window.addEventListener('vortex-account-changed', (event) => renderAuth(event.detail.user));
-                        window.addEventListener('hashchange', () => {
-                            if (!currentUser) return;
-                            pairRequestId += 1;
-                            pair = null;
-                            app.hidden = true;
-                            pairPanel.hidden = false;
-                            claimPair();
-                        });
-                        if (currentUser) renderAuth(currentUser);
-                    }());
 
                     document.querySelectorAll('[data-nxe-lightbox]').forEach((trigger) => trigger.addEventListener('click', () => {
                         const overlay = document.createElement('div');
