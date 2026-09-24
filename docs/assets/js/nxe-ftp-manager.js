@@ -168,11 +168,14 @@
         if (relayPromise) return relayPromise;
         relayPromise = new Promise((resolve, reject) => {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const socket = new WebSocket(protocol + '//' + window.location.host + '/api/nxe/relay/browser?pairId=' + encodeURIComponent(pair.pairId));
+            let relayUrl = protocol + '//' + window.location.host + '/api/nxe/relay/browser?pairId=' + encodeURIComponent(pair.pairId);
+            if (pairKey) relayUrl += '&key=' + encodeURIComponent(pairKey);
+            const socket = new WebSocket(relayUrl);
             let settled = false;
             const timeout = setTimeout(() => {
                 if (!settled) {
                     settled = true;
+                    relayPromise = null;
                     try { socket.close(); } catch (error) {}
                     reject(new Error('Timed out waiting for the NXE cloud relay.'));
                 }
@@ -198,9 +201,17 @@
                         pending.reject(new Error(data.message || 'NXE console is not connected.'));
                     });
                     relayPending.clear();
+                } else if (data.type === 'console-state') {
+                    if (data.connected) {
+                        setState('Connected');
+                        refreshStatus();
+                    } else {
+                        setState('Disconnected');
+                    }
                 }
             };
             socket.onerror = () => {
+                relayPromise = null;
                 if (!settled) { settled = true; clearTimeout(timeout); reject(new Error('Could not open the NXE cloud relay.')); }
             };
             socket.onclose = () => {
@@ -365,19 +376,26 @@
     }
 
     // Refresh Console Status & Reachability Check
-    async function refreshStatus() {
+    async function refreshStatus(retries = 2) {
         if (!pair) return;
-        try {
-            const status = await api('/api/v1/device/status');
-            pair.running = Boolean(status.ftpRunning);
-            setState('Connected');
-            setFtpStatusDisplay(pair.running);
-            if (status.failure) setMessage(status.failure, true); else setMessage('');
-        } catch (error) {
-            const savedIp = pair.consoleIp || localStorage.getItem(SAVED_IP_KEY) || 'console';
-            setState('Disconnected');
-            setFtpStatusDisplay(false);
-            setMessage('NXE console not reachable at ' + savedIp + '. Double-check every IP digit. If the Xbox address changed, select Change IP and enter the new address shown in NXE Settings → FTP.', true);
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                const status = await api('/api/v1/device/status');
+                pair.running = Boolean(status.ftpRunning);
+                setState('Connected');
+                setFtpStatusDisplay(pair.running);
+                if (status.failure) setMessage(status.failure, true); else setMessage('');
+                return;
+            } catch (error) {
+                if (attempt < retries) {
+                    await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
+                    continue;
+                }
+                const savedIp = pair.consoleIp || localStorage.getItem(SAVED_IP_KEY) || 'console';
+                setState('Disconnected');
+                setFtpStatusDisplay(false);
+                setMessage('NXE console not reachable at ' + savedIp + '. Double-check every IP digit. If the Xbox address changed, select Change IP and enter the new address shown in NXE Settings → FTP.', true);
+            }
         }
     }
 
@@ -917,7 +935,11 @@
         } catch(error) { setMessage(error.message, true); }
     });
 
-    document.getElementById('nxeFtpReconnect')?.addEventListener('click', refreshStatus);
+    document.getElementById('nxeFtpReconnect')?.addEventListener('click', async () => {
+        closeRelay();
+        setMessage('Reconnecting to console...');
+        await refreshStatus(2);
+    });
     document.getElementById('nxeFtpChangeIp')?.addEventListener('click', changeConsoleIp);
     document.getElementById('nxeFtpForget')?.addEventListener('click', forgetConsole);
     continueBtn?.addEventListener('click', enterFileManager);

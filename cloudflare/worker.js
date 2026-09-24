@@ -757,14 +757,30 @@ async function handleNxeRelayUpgrade(request, env, path) {
 
   let role;
   if (path.endsWith('/console')) {
-    const deviceToken = String(request.headers.get('X-NXE-Device') || '').trim();
+    const deviceToken = String(request.headers.get('X-NXE-Device') || url.searchParams.get('deviceToken') || url.searchParams.get('token') || '').trim();
     const deviceTokenHash = await sha256Base64Url(`nxe-device:${deviceToken}`);
     if (!deviceToken || deviceTokenHash !== pair.deviceTokenHash) throw httpError(401, 'Unknown NXE relay device.');
     role = 'console';
   } else {
-    const user = await ensureAuthenticated(request, env, 'Sign in with Google to use the NXE relay.');
-    const accountId = user.firebaseUid || user.sub || user.email;
-    if (!pair.accountId || pair.accountId !== accountId) throw httpError(403, 'This NXE console is not saved to your account.');
+    const controlKey = String(url.searchParams.get('key') || url.searchParams.get('controlToken') || '').trim();
+    const controlKeyHash = controlKey ? await sha256Base64Url(`nxe-control:${controlKey}`) : '';
+    let authenticated = false;
+    let accountId = '';
+    try {
+      const user = await ensureAuthenticated(request, env, 'Sign in with Google to use the NXE relay.');
+      accountId = user.firebaseUid || user.sub || user.email;
+      authenticated = true;
+    } catch (_) {}
+
+    if (authenticated) {
+      if (pair.accountId && pair.accountId !== accountId) {
+        throw httpError(403, 'This NXE console is not saved to your account.');
+      }
+    } else if (controlKeyHash && controlKeyHash === pair.controlTokenHash) {
+      // Authenticated via pairing key
+    } else {
+      throw httpError(401, 'Sign in with Google or provide a valid pairing key to use the NXE relay.');
+    }
     role = 'browser';
   }
 
