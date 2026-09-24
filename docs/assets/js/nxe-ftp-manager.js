@@ -1,7 +1,8 @@
 /**
  * NXE FTP Server Remote Control - Vortex Prime
  * Handles Manual Connection (IP, Port, Username, Password), Account-backed Session Persistence,
- * Real-time Server Status & Control (Turn On, Turn Off, Restart, Reconnect, Change Details, Forget).
+ * Genuine Console & Storage Verification (Authentication: ✓ Yes / No),
+ * and Server Credentials Management (Set Username & Password dialog).
  */
 
 (function initializeNxeFtp() {
@@ -18,6 +19,18 @@
     const usernameInput      = document.getElementById('nxeFtpUsernameInput');
     const passwordInput      = document.getElementById('nxeFtpPasswordInput');
     const connectBtn         = document.getElementById('nxeFtpConnectBtn');
+
+    // Credentials Modal Elements
+    const credModal          = document.getElementById('nxeFtpCredModal');
+    const credUser           = document.getElementById('nxeFtpCredUser');
+    const credPass           = document.getElementById('nxeFtpCredPass');
+    const credConfirm        = document.getElementById('nxeFtpCredConfirm');
+    const credError          = document.getElementById('nxeFtpCredError');
+    const credSaveBtn        = document.getElementById('nxeFtpCredSave');
+    const credRemoveBtn      = document.getElementById('nxeFtpCredRemove');
+    const credCancelBtn      = document.getElementById('nxeFtpCredCancel');
+    const credCloseBtn       = document.getElementById('nxeFtpCredClose');
+    const btnOpenCredentials = document.getElementById('nxeFtpBtnCredentials');
     
     let pair          = null;
     let pairKey       = '';
@@ -47,7 +60,20 @@
         if (el) el.textContent = value;
     }
 
-    // Helper: Server Button State Controls & Unreachable Banner
+    // Helper: Authentication / Storage Verification Indicator
+    function setAuthStatus(verified, reason = '') {
+        const el = document.getElementById('nxeFtpAuth');
+        if (!el) return;
+        if (verified === true) {
+            el.innerHTML = '<span style="color:#8fcc3e;font-weight:600;">✓ Yes</span>';
+        } else if (verified === false) {
+            el.innerHTML = '<span style="color:#ff8b80;font-weight:600;">No' + (reason ? ' (' + reason + ')' : '') + '</span>';
+        } else {
+            el.innerHTML = '<span style="color:var(--color-text-secondary);">&#8212;</span>';
+        }
+    }
+
+    // Helper: Server Button State Controls
     function setFtpStatusDisplay(running, transient) {
         const el = document.getElementById('nxeFtpStatus');
         if (!el) return;
@@ -94,8 +120,8 @@
             const savedPort = localStorage.getItem(SAVED_PORT_KEY) || '2121';
             const savedUser = localStorage.getItem(SAVED_USER_KEY) || '';
             if (ipInput && savedIp) ipInput.value = savedIp;
-            if (portInput && savedPort) portInput.value = savedPort;
-            if (usernameInput && savedUser) usernameInput.value = savedUser;
+            if (portInput) portInput.value = savedPort;
+            if (usernameInput) usernameInput.value = savedUser;
             claimPair();
         }
     }
@@ -105,17 +131,14 @@
         if (!pair) return;
         const ip = pair.consoleIp || 'Unknown';
         const port = pair.ftpPort || localStorage.getItem(SAVED_PORT_KEY) || '2121';
-        const user = pair.username || localStorage.getItem(SAVED_USER_KEY) || '';
         
         const ipEl        = document.getElementById('nxeFtpIp');
         const portEl      = document.getElementById('nxeFtpPort');
-        const authModeEl  = document.getElementById('nxeFtpAuthMode');
         const guideIpEl   = document.getElementById('nxeFtpGuideIp');
         const guidePortEl = document.getElementById('nxeFtpGuidePort');
         
         if (ipEl)        ipEl.textContent        = ip;
         if (portEl)      portEl.textContent      = port;
-        if (authModeEl)  authModeEl.textContent  = user ? ('Username / Password (' + user + ')') : 'None';
         if (guideIpEl)   guideIpEl.textContent   = ip;
         if (guidePortEl) guidePortEl.textContent = port;
         
@@ -211,6 +234,7 @@
                         refreshStatus();
                     } else {
                         setState('Disconnected');
+                        setAuthStatus(false);
                     }
                 }
             };
@@ -264,6 +288,7 @@
         let ip = ipInput ? ipInput.value : '';
         const port = (portInput && portInput.value ? portInput.value.trim() : '') || '2121';
         const user = usernameInput ? usernameInput.value.trim() : '';
+        const pass = passwordInput ? passwordInput.value : '';
         
         ip = normalizeIpv4Input(ip);
         if (ipInput) ipInput.value = ip;
@@ -350,7 +375,6 @@
         
         try {
             if (!parsed.pairId || !parsed.key) {
-                // Restore saved console session from list
                 const saved     = await fetch('/api/nxe/pair/list', { credentials: 'include' });
                 const savedData = await saved.json().catch(() => ({}));
                 if (!saved.ok) throw new Error(savedData.message || 'Unable to load paired consoles.');
@@ -395,7 +419,7 @@
         }
     }
 
-    // Refresh Console Status & Reachability Check
+    // Refresh Console Status & Reachability / Storage Verification Check
     async function refreshStatus(retries = 2) {
         if (!pair) return;
         for (let attempt = 0; attempt <= retries; attempt++) {
@@ -404,6 +428,16 @@
                 pair.running = Boolean(status.ftpRunning);
                 setState('Connected');
                 setFtpStatusDisplay(pair.running);
+                
+                // Genuine console & storage verification indicator: ✓ Yes if verified, No otherwise
+                const isStorageVerified = Boolean(status.storageVerified);
+                setAuthStatus(isStorageVerified, isStorageVerified ? '' : (status.storageMessage || 'Storage not available'));
+                
+                if (status.username) {
+                    pair.username = status.username;
+                    localStorage.setItem(SAVED_USER_KEY, status.username);
+                }
+                
                 if (status.failure) setMessage(status.failure, true); else setMessage('');
                 return;
             } catch (error) {
@@ -414,8 +448,82 @@
                 const savedIp = pair.consoleIp || localStorage.getItem(SAVED_IP_KEY) || 'console';
                 setState('Disconnected');
                 setFtpStatusDisplay(false);
+                setAuthStatus(false, 'Console unreachable');
                 setMessage('NXE console not reachable at ' + savedIp + '. Double-check every IP digit. If the Xbox address changed, select Change Connection Details and enter the new address shown in NXE Settings → FTP.', true);
             }
+        }
+    }
+
+    // Modal: Open Set Username & Password Dialog
+    function openCredentialsDialog() {
+        if (!credModal) return;
+        const currentUser = pair ? (pair.username || localStorage.getItem(SAVED_USER_KEY) || '') : '';
+        if (credUser) credUser.value = currentUser;
+        if (credPass) credPass.value = '';
+        if (credConfirm) credConfirm.value = '';
+        if (credError) credError.textContent = '';
+        credModal.hidden = false;
+        if (credUser) credUser.focus();
+    }
+
+    // Modal: Close Dialog
+    function closeCredentialsDialog() {
+        if (credModal) credModal.hidden = true;
+        if (credError) credError.textContent = '';
+    }
+
+    // Modal: Save Credentials
+    async function saveCredentials() {
+        const user = credUser ? credUser.value.trim() : '';
+        const pass = credPass ? credPass.value : '';
+        const confirm = credConfirm ? credConfirm.value : '';
+
+        if (pass && pass !== confirm) {
+            if (credError) credError.textContent = 'Passwords do not match.';
+            return;
+        }
+
+        if (credSaveBtn) { credSaveBtn.disabled = true; credSaveBtn.textContent = 'Saving...'; }
+        if (credError) credError.textContent = '';
+
+        try {
+            const data = await api('/api/v1/ftp/credentials', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            });
+            if (pair) pair.username = user;
+            if (user) localStorage.setItem(SAVED_USER_KEY, user); else localStorage.removeItem(SAVED_USER_KEY);
+            closeCredentialsDialog();
+            setMessage(user ? 'FTP username and password saved successfully.' : 'FTP credentials updated.');
+            await refreshStatus(1);
+        } catch (error) {
+            if (credError) credError.textContent = error.message || 'Failed to save credentials.';
+        } finally {
+            if (credSaveBtn) { credSaveBtn.disabled = false; credSaveBtn.textContent = 'Save'; }
+        }
+    }
+
+    // Modal: Remove / Disable Credentials (Revert to Anonymous Access)
+    async function removeCredentials() {
+        if (credRemoveBtn) { credRemoveBtn.disabled = true; credRemoveBtn.textContent = 'Removing...'; }
+        if (credError) credError.textContent = '';
+
+        try {
+            await api('/api/v1/ftp/credentials', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: '', password: '' })
+            });
+            if (pair) pair.username = '';
+            localStorage.removeItem(SAVED_USER_KEY);
+            closeCredentialsDialog();
+            setMessage('FTP login credentials removed. Server is set to anonymous access.');
+            await refreshStatus(1);
+        } catch (error) {
+            if (credError) credError.textContent = error.message || 'Failed to remove credentials.';
+        } finally {
+            if (credRemoveBtn) { credRemoveBtn.disabled = false; credRemoveBtn.textContent = 'Remove'; }
         }
     }
 
@@ -451,6 +559,7 @@
         if (portInput) portInput.value = '2121';
         if (usernameInput) usernameInput.value = '';
         if (passwordInput) passwordInput.value = '';
+        setAuthStatus(null);
     }
 
     // Send Server Command (Turn On, Turn Off, Restart)
@@ -464,6 +573,7 @@
             pair.running = Boolean(data.ftpRunning);
             setFtpStatusDisplay(pair.running);
             setState('Connected');
+            setAuthStatus(Boolean(data.storageVerified), data.storageVerified ? '' : (data.storageMessage || 'Storage not available'));
         } catch(error) { setMessage(error.message, true); refreshStatus(); }
     }
 
@@ -483,6 +593,16 @@
     document.getElementById('nxeFtpChangeIp')?.addEventListener('click', changeConnectionDetails);
     document.getElementById('nxeFtpForget')?.addEventListener('click', forgetConsole);
     continueBtn?.addEventListener('click', enterControlPanel);
+
+    // Modal Events
+    btnOpenCredentials?.addEventListener('click', openCredentialsDialog);
+    credCloseBtn?.addEventListener('click', closeCredentialsDialog);
+    credCancelBtn?.addEventListener('click', closeCredentialsDialog);
+    credSaveBtn?.addEventListener('click', saveCredentials);
+    credRemoveBtn?.addEventListener('click', removeCredentials);
+    [credUser, credPass, credConfirm].forEach(inp => {
+        if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveCredentials(); });
+    });
 
     document.querySelectorAll('[data-nxe-command]').forEach((btn) => {
         btn.addEventListener('click', () => sendCommand(btn.dataset.nxeCommand));

@@ -4081,7 +4081,10 @@
                         #nxeFtpIpInput:focus, #nxeFtpIpInput:focus-visible,
                         #nxeFtpPortInput:focus, #nxeFtpPortInput:focus-visible,
                         #nxeFtpUsernameInput:focus, #nxeFtpUsernameInput:focus-visible,
-                        #nxeFtpPasswordInput:focus, #nxeFtpPasswordInput:focus-visible {
+                        #nxeFtpPasswordInput:focus, #nxeFtpPasswordInput:focus-visible,
+                        #nxeFtpCredUser:focus, #nxeFtpCredUser:focus-visible,
+                        #nxeFtpCredPass:focus, #nxeFtpCredPass:focus-visible,
+                        #nxeFtpCredConfirm:focus, #nxeFtpCredConfirm:focus-visible {
                             outline: none !important;
                             box-shadow: none !important;
                             border-color: rgba(255, 255, 255, 0.42) !important;
@@ -4138,13 +4141,14 @@
                                 <div class="project-meta-row"><span>FTP Port</span><strong id="nxeFtpPort">2121</strong></div>
                                 <div class="project-meta-row"><span>Connection</span><strong id="nxeFtpConnection">Disconnected</strong></div>
                                 <div class="project-meta-row"><span>FTP Server</span><strong id="nxeFtpStatus">Unknown</strong></div>
-                                <div class="project-meta-row"><span>Authentication</span><strong id="nxeFtpAuthMode">None</strong></div>
+                                <div class="project-meta-row"><span>Authentication</span><strong id="nxeFtpAuth"><span style="color:#ff8b80;">No</span></strong></div>
                             </div>
                             <div class="project-links" style="margin-top:1.25rem;display:flex;gap:.75rem;flex-wrap:wrap;">
                                 <button class="btn btn-secondary" type="button" data-nxe-command="start" id="nxeFtpBtnStart">Turn On</button>
                                 <button class="btn btn-secondary" type="button" data-nxe-command="stop" id="nxeFtpBtnStop">Turn Off</button>
                                 <button class="btn btn-secondary" type="button" data-nxe-command="restart" id="nxeFtpBtnRestart">Restart</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpReconnect">Reconnect</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpBtnCredentials">Set Username &amp; Password</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpChangeConnection">Change Connection Details</button>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpForget">Forget console</button>
                             </div>
@@ -4160,6 +4164,40 @@
                                 </ul>
                             </div>
                         </section>
+                    </div>
+
+                    <!-- Set Username & Password Modal Dialog -->
+                    <div id="nxeFtpCredModal" hidden style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem;">
+                        <div class="project-card" style="width:100%;max-width:440px;background:#141414;border:1px solid var(--color-border,#333);border-radius:12px;padding:1.5rem;box-shadow:0 12px 36px rgba(0,0,0,0.6);">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                                <h3 style="margin:0;font-size:1.25rem;">Set Username &amp; Password</h3>
+                                <button type="button" id="nxeFtpCredClose" style="background:none;border:none;color:var(--color-text-secondary);font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem;">&times;</button>
+                            </div>
+                            <p class="project-description" style="margin-bottom:1.25rem;font-size:.88rem;">Optional: configure login credentials for your NXE FTP server. Leave blank or choose Remove to allow anonymous access.</p>
+                            <div style="display:flex;flex-direction:column;gap:.9rem;">
+                                <div>
+                                    <label for="nxeFtpCredUser" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.3rem;">Username</label>
+                                    <input id="nxeFtpCredUser" type="text" placeholder="Optional (e.g. xbox)" autocomplete="off"
+                                        style="width:100%;padding:.6rem .85rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:.95rem;box-sizing:border-box;">
+                                </div>
+                                <div>
+                                    <label for="nxeFtpCredPass" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.3rem;">Password</label>
+                                    <input id="nxeFtpCredPass" type="password" placeholder="Optional" autocomplete="new-password"
+                                        style="width:100%;padding:.6rem .85rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:.95rem;box-sizing:border-box;">
+                                </div>
+                                <div>
+                                    <label for="nxeFtpCredConfirm" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.3rem;">Confirm Password</label>
+                                    <input id="nxeFtpCredConfirm" type="password" placeholder="Confirm password" autocomplete="new-password"
+                                        style="width:100%;padding:.6rem .85rem;background:var(--color-surface,#1a1a1a);border:1px solid var(--color-border,#333);border-radius:8px;color:inherit;font-size:.95rem;box-sizing:border-box;">
+                                </div>
+                            </div>
+                            <p id="nxeFtpCredError" role="status" style="color:#ff8b80;font-size:.85rem;margin:.75rem 0 0;min-height:1.2rem;"></p>
+                            <div style="display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap;margin-top:1.25rem;">
+                                <button class="btn btn-secondary" type="button" id="nxeFtpCredRemove" style="color:#ff8b80;border-color:rgba(255,139,128,0.4);margin-right:auto;">Remove</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpCredCancel">Cancel</button>
+                                <button class="btn btn-secondary" type="button" id="nxeFtpCredSave" style="background:var(--color-primary,#10b981);color:#000;border-color:var(--color-primary,#10b981);font-weight:600;">Save</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
