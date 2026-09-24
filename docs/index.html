@@ -4121,6 +4121,16 @@
                         
                         <p id="nxeFtpPairMessage" class="project-description" role="status" style="margin-top: 1rem;"></p>
                     </div>
+                    <div id="nxeFtpSuccessPanel" hidden style="text-align: center; padding: 2rem 1rem;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); border: 2px solid var(--color-primary, #10b981); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; color: var(--color-primary, #10b981);">
+                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-text, #fafafa); margin-bottom: 0.5rem;">Connection successful</h3>
+                        <p class="project-description" style="max-width: 480px; margin: 0 auto 1.75rem;">Your NXE console has been paired successfully and is ready to use.</p>
+                        <button class="btn btn-secondary" type="button" id="nxeFtpContinueBtn" style="min-width: 160px; padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600;">Continue</button>
+                    </div>
                     <div id="nxeFtpApp" hidden>
                         <div class="nxe-ftp-toolbar" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin:1rem 0;">
                             <button class="btn btn-secondary nxe-ftp-tab active" type="button" data-nxe-tab="server">Server</button>

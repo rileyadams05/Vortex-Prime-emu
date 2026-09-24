@@ -9,6 +9,8 @@
     const app              = document.getElementById('nxeFtpApp');
     const loading          = document.getElementById('nxeFtpLoading');
     const pairPanel        = document.getElementById('nxeFtpPairPanel');
+    const successPanel     = document.getElementById('nxeFtpSuccessPanel');
+    const continueBtn      = document.getElementById('nxeFtpContinueBtn');
     const pairMessage      = document.getElementById('nxeFtpPairMessage');
     const message          = document.getElementById('nxeFtpMessage');
     const filesContainer   = document.getElementById('nxeFtpFileList');
@@ -78,8 +80,9 @@
     function renderAuth(user) {
         if (loading) loading.hidden = true;
         if (authPanel) authPanel.hidden = Boolean(user);
-        if (pairPanel) pairPanel.hidden = !user || Boolean(pair);
-        if (app) app.hidden = !user || !pair;
+        const inSuccess = successPanel && !successPanel.hidden;
+        if (pairPanel) pairPanel.hidden = !user || Boolean(pair) || inSuccess;
+        if (app) app.hidden = !user || !pair || inSuccess;
         
         if (!user) {
             pairRequestId += 1;
@@ -237,8 +240,23 @@
         if (pairObj.pairId) localStorage.setItem(LAST_PAIR_ID_KEY, pairObj.pairId);
     }
 
-    function onConnected() {
+    function onConnected(isInitialPairing = true) {
+        if (isInitialPairing) {
+            if (pairPanel) pairPanel.hidden = true;
+            if (app) app.hidden = true;
+            if (successPanel) successPanel.hidden = false;
+            renderPair();
+            setState('Connected');
+            setMessage('');
+            if (connectBtn) { connectBtn.disabled = false; connectBtn.textContent = 'Connect'; }
+        } else {
+            enterFileManager();
+        }
+    }
+
+    function enterFileManager() {
         if (pairPanel) pairPanel.hidden = true;
+        if (successPanel) successPanel.hidden = true;
         if (app) app.hidden = false;
         renderPair();
         setState('Connected');
@@ -253,6 +271,7 @@
         const user      = currentUser;
         const requestId = ++pairRequestId;
         const parsed    = parsePairHash();
+        let isInitialPair = Boolean(parsed.pairId && parsed.key);
         
         try {
             if (!parsed.pairId || !parsed.key) {
@@ -273,6 +292,7 @@
                     if (pairPanel) pairPanel.hidden = false;
                     return;
                 }
+                isInitialPair = false;
             }
             
             const response = await fetch('/api/nxe/pair/claim', {
@@ -289,7 +309,7 @@
             saveConsoleSession(pair, pairKey);
             
             if (window.location.hash.indexOf('pair=') >= 0) history.replaceState(null, '', window.location.pathname);
-            onConnected();
+            onConnected(isInitialPair);
         } catch (error) {
             if (typeof currentUser !== 'undefined' && user === currentUser && requestId === pairRequestId && pairPanel) {
                 pairPanel.hidden = false;
@@ -343,6 +363,7 @@
         pairRequestId += 1;
         pair = null; pairKey = ''; apiBase = '';
         if (app) app.hidden = true;
+        if (successPanel) successPanel.hidden = true;
         if (pairPanel) pairPanel.hidden = false;
         if (pairMessage) pairMessage.textContent = '';
         if (ipInput) ipInput.value = '';
@@ -896,6 +917,7 @@
     document.getElementById('nxeFtpReconnect')?.addEventListener('click', refreshStatus);
     document.getElementById('nxeFtpChangeIp')?.addEventListener('click', changeConsoleIp);
     document.getElementById('nxeFtpForget')?.addEventListener('click', forgetConsole);
+    continueBtn?.addEventListener('click', enterFileManager);
 
     document.querySelectorAll('[data-nxe-command]').forEach((btn) => {
         btn.addEventListener('click', () => sendCommand(btn.dataset.nxeCommand));
