@@ -11,6 +11,14 @@ routes = [
 [triggers]
 crons = ["*/1 * * * *"]
 
+[[durable_objects.bindings]]
+name = "NXE_PAIR_SESSIONS"
+class_name = "NxePairSession"
+
+[[migrations]]
+tag = "nxe-relay-v1"
+new_sqlite_classes = ["NxePairSession"]
+
 [vars]
 STREAMZ_BUGS_CHANNEL_ID = "1526100653586255974"
 GEMINI_PRIMARY_MODEL = "gemini-3-flash-preview"

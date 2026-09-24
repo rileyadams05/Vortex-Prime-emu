@@ -4,3 +4,11 @@ compatibility_date = "2026-05-25"
 # Production routes are already configured in Cloudflare. The GitHub Actions
 # token only deploys Worker code, so CI must not try to edit zone routes.
 workers_dev = false
+
+[[durable_objects.bindings]]
+name = "NXE_PAIR_SESSIONS"
+class_name = "NxePairSession"
+
+[[migrations]]
+tag = "nxe-relay-v1"
+new_sqlite_classes = ["NxePairSession"]

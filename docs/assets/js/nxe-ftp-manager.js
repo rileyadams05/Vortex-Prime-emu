@@ -31,6 +31,10 @@
     let selectedItemNames = new Set();
     let uploadQueue = [];
     let isUploading = false;
+    let relaySocket = null;
+    let relayPromise = null;
+    let relaySequence = 0;
+    const relayPending = new Map();
     
     const NXE_WEB_PORT = '2123';
     const SAVED_IP_KEY = 'nxe-saved-ip';
@@ -89,6 +93,7 @@
             pair = null; pairKey = ''; apiBase = '';
             if (pairMessage) pairMessage.textContent = '';
             if (message) message.textContent = '';
+            closeRelay();
             return;
         }
         
@@ -146,21 +151,96 @@
         return candidates.length === 1 ? candidates[0] : entered;
     }
 
-    function localFetch(url, options) {
-        return fetch(url, Object.assign({ targetAddressSpace: 'local' }, options || {}));
+    function closeRelay() {
+        const socket = relaySocket;
+        relaySocket = null;
+        relayPromise = null;
+        if (socket) try { socket.close(1000, 'Page closed'); } catch (error) {}
+        relayPending.forEach(pending => pending.reject(new Error('NXE cloud relay disconnected.')));
+        relayPending.clear();
     }
 
-    // API Wrapper for NXE Web Management Service (Port 2123)
+    function ensureRelay() {
+        if (!pair || !pair.pairId) return Promise.reject(new Error('No console connected.'));
+        if (relaySocket && relaySocket.readyState === WebSocket.OPEN) return Promise.resolve(relaySocket);
+        if (relayPromise) return relayPromise;
+        relayPromise = new Promise((resolve, reject) => {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socket = new WebSocket(protocol + '//' + window.location.host + '/api/nxe/relay/browser?pairId=' + encodeURIComponent(pair.pairId));
+            let settled = false;
+            const timeout = setTimeout(() => {
+                if (!settled) {
+                    settled = true;
+                    try { socket.close(); } catch (error) {}
+                    reject(new Error('Timed out waiting for the NXE cloud relay.'));
+                }
+            }, 15000);
+            socket.onopen = () => {
+                relaySocket = socket;
+                clearTimeout(timeout);
+                if (!settled) { settled = true; resolve(socket); }
+            };
+            socket.onmessage = (event) => {
+                let data;
+                try { data = JSON.parse(event.data); } catch (error) { return; }
+                if (data.type === 'response' && data.id) {
+                    const pending = relayPending.get(data.id);
+                    if (!pending) return;
+                    relayPending.delete(data.id);
+                    clearTimeout(pending.timeout);
+                    if (data.ok) pending.resolve(data);
+                    else pending.reject(new Error(data.message || 'NXE relay request failed.'));
+                } else if (data.type === 'relay-error') {
+                    relayPending.forEach(pending => {
+                        clearTimeout(pending.timeout);
+                        pending.reject(new Error(data.message || 'NXE console is not connected.'));
+                    });
+                    relayPending.clear();
+                }
+            };
+            socket.onerror = () => {
+                if (!settled) { settled = true; clearTimeout(timeout); reject(new Error('Could not open the NXE cloud relay.')); }
+            };
+            socket.onclose = () => {
+                if (relaySocket === socket) relaySocket = null;
+                relayPromise = null;
+                relayPending.forEach(pending => {
+                    clearTimeout(pending.timeout);
+                    pending.reject(new Error('NXE cloud relay disconnected.'));
+                });
+                relayPending.clear();
+            };
+        });
+        return relayPromise;
+    }
+
+    async function relayRequest(payload, timeoutMs) {
+        const socket = await ensureRelay();
+        const id = 'relay_' + Date.now().toString(36) + '_' + (++relaySequence).toString(36);
+        payload = Object.assign({ type: 'request', id: id }, payload || {});
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                relayPending.delete(id);
+                reject(new Error('NXE did not answer the cloud relay request in time.'));
+            }, timeoutMs || 30000);
+            relayPending.set(id, { resolve: resolve, reject: reject, timeout: timeout });
+            try { socket.send(JSON.stringify(payload)); }
+            catch (error) { clearTimeout(timeout); relayPending.delete(id); reject(error); }
+        });
+    }
+
+    // API wrapper routed through the authenticated console WebSocket. This avoids
+    // mobile-browser mixed-content and local-network permission failures.
     async function api(pathname, options) {
         options = options || {};
-        if (!apiBase || !pairKey) throw new Error('No console connected.');
-        const headers = new Headers(options.headers || {});
-        headers.set('X-NXE-Control', pairKey);
-        headers.set('Accept', 'application/json');
-        const response = await localFetch(apiBase + pathname, Object.assign({}, options, { headers: headers, mode: 'cors' }));
-        const data     = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.message || 'NXE request failed (' + response.status + ').');
-        return data;
+        if (!pair || !pairKey) throw new Error('No console connected.');
+        const response = await relayRequest({
+            operation: 'api',
+            method: options.method || 'GET',
+            path: pathname,
+            body: typeof options.body === 'string' ? options.body : ''
+        });
+        return response.body || {};
     }
 
     // Manual IP Connect Flow (Primary manual fallback method)
@@ -314,6 +394,7 @@
 
     // Forget Console / Clear Local Credentials
     function forgetConsole() {
+        closeRelay();
         if (pair && pair.pairId) localStorage.removeItem('nxe-pair-key:' + pair.pairId);
         localStorage.removeItem(SAVED_IP_KEY);
         localStorage.removeItem(LAST_PAIR_ID_KEY);
@@ -569,16 +650,18 @@
     // Single File Download
     async function download(name) {
         try {
-            const response = await localFetch(apiBase + '/api/v1/files/download?path=' + encodeURIComponent(itemPath(name)), {
-                headers: { 'X-NXE-Control': pairKey }
-            });
-            if (!response.ok) throw new Error('Download failed (' + response.status + ').');
-            const blob = await response.blob();
+            setMessage('Downloading ' + name + ' through the secure console relay...');
+            const response = await relayRequest({ operation: 'download', path: itemPath(name) }, 60000);
+            const binary = atob(response.data || '');
+            const bytes = new Uint8Array(binary.length);
+            for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+            const blob = new Blob([bytes]);
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = name;
             a.click();
             setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+            setMessage('');
         } catch (error) { setMessage(error.message, true); }
     }
 
@@ -742,44 +825,35 @@
         nextTask.status = 'uploading';
         renderUploadQueueUI();
 
-        const xhr = new XMLHttpRequest();
-        nextTask.xhr = xhr;
-        xhr.open('POST', apiBase + '/api/v1/files/upload?path=' + encodeURIComponent(currentPath) + '&name=' + encodeURIComponent(nextTask.name));
-        xhr.setRequestHeader('X-NXE-Control', pairKey);
-        xhr.setRequestHeader('X-NXE-Path', currentPath);
-        xhr.setRequestHeader('X-NXE-File-Name', nextTask.name);
-        xhr.setRequestHeader('Content-Length', String(nextTask.size));
-
-        xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-                nextTask.loaded = e.loaded;
-                renderUploadQueueUI();
-            }
-        };
-
-        xhr.onload = async () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                nextTask.status = 'complete';
-                nextTask.loaded = nextTask.size;
-                await refreshFiles();
-            } else {
-                nextTask.status = 'failed';
-                nextTask.errorMsg = 'HTTP ' + xhr.status;
-            }
+        try {
+            if (nextTask.size > 20 * 1024 * 1024) throw new Error('Cloud relay uploads are currently limited to 20 MB per file.');
+            const buffer = await nextTask.file.arrayBuffer();
+            nextTask.loaded = Math.round(nextTask.size * 0.35);
             renderUploadQueueUI();
-            isUploading = false;
-            processUploadQueue();
-        };
-
-        xhr.onerror = () => {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            const chunkSize = 0x8000;
+            for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+                binary += String.fromCharCode.apply(null, bytes.subarray(offset, Math.min(offset + chunkSize, bytes.length)));
+            }
+            nextTask.loaded = Math.round(nextTask.size * 0.7);
+            renderUploadQueueUI();
+            await relayRequest({
+                operation: 'upload',
+                path: currentPath,
+                name: nextTask.name,
+                data: btoa(binary)
+            }, 120000);
+            nextTask.status = 'complete';
+            nextTask.loaded = nextTask.size;
+            await refreshFiles();
+        } catch (error) {
             nextTask.status = 'failed';
-            nextTask.errorMsg = 'Network Error';
-            renderUploadQueueUI();
-            isUploading = false;
-            processUploadQueue();
-        };
-
-        xhr.send(nextTask.file);
+            nextTask.errorMsg = error.message || 'Upload failed';
+        }
+        renderUploadQueueUI();
+        isUploading = false;
+        processUploadQueue();
     }
 
     // Send Server Command (Turn On, Turn Off, Restart)
@@ -789,26 +863,10 @@
         setFtpStatusDisplay(null, labels[type] || type);
         setMessage('');
         try {
-            if (apiBase && pairKey) {
-                try {
-                    const resp = await localFetch(apiBase + '/api/v1/ftp/' + type, {
-                        method: 'POST', headers: { 'X-NXE-Control': pairKey }, mode: 'cors',
-                        signal: AbortSignal.timeout(12000)
-                    });
-                    if (resp.ok) {
-                        const d = await resp.json().catch(() => ({}));
-                        pair.running = Boolean(d.ftpRunning);
-                        setFtpStatusDisplay(pair.running); setState('Connected'); return;
-                    }
-                } catch(e) {}
-            }
-            await fetch('/api/nxe/pair/command', {
-                method: 'POST', credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pairId: pair.pairId, type: type })
-            });
-            setMessage('Command queued — waiting for console response.');
-            setTimeout(refreshStatus, 5000);
+            const data = await api('/api/v1/ftp/' + type, { method: 'POST' });
+            pair.running = Boolean(data.ftpRunning);
+            setFtpStatusDisplay(pair.running);
+            setState('Connected');
         } catch(error) { setMessage(error.message, true); refreshStatus(); }
     }
 

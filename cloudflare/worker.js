@@ -243,6 +243,10 @@ export default {
         return await handleNxePairCommand(request, env, allowedOrigin);
       }
 
+      if (path === 'api/nxe/relay/console' || path === 'api/nxe/relay/browser') {
+        return await handleNxeRelayUpgrade(request, env, path);
+      }
+
       if (path.startsWith('api/streamz/auth/')) {
         return await handleStreamzAuthRequest(request, env, path, allowedOrigin);
       }
@@ -382,8 +386,58 @@ export class NxePairSession {
     this.env = env;
   }
 
-  async fetch() {
-    return json({ ok: false, message: 'NXE pairing sessions are managed by the Vortex Prime account database.' }, 410);
+  async fetch(request) {
+    if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
+      return new Response('WebSocket upgrade required.', { status: 426 });
+    }
+    const role = request.headers.get('X-NXE-Relay-Role');
+    if (role !== 'console' && role !== 'browser') {
+      return new Response('Invalid relay role.', { status: 403 });
+    }
+    const pair = new WebSocketPair();
+    const client = pair[0];
+    const server = pair[1];
+    if (role === 'console') {
+      for (const existing of this.state.getWebSockets('console')) {
+        try { existing.close(1000, 'Console reconnected'); } catch (_) {}
+      }
+    }
+    this.state.acceptWebSocket(server, [role]);
+    server.serializeAttachment({ role });
+    server.send(JSON.stringify({
+      type: 'relay-ready',
+      consoleConnected: role === 'console' || this.state.getWebSockets('console').length > 0,
+    }));
+    if (role === 'console') this.broadcast('browser', JSON.stringify({ type: 'console-state', connected: true }));
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  webSocketMessage(socket, message) {
+    const attachment = socket.deserializeAttachment() || {};
+    const targetRole = attachment.role === 'console' ? 'browser' : 'console';
+    const targets = this.state.getWebSockets(targetRole);
+    if (!targets.length && attachment.role === 'browser') {
+      socket.send(JSON.stringify({ type: 'relay-error', message: 'NXE console is not connected to Vortex Prime.' }));
+      return;
+    }
+    for (const target of targets) {
+      try { target.send(message); } catch (_) {}
+    }
+  }
+
+  webSocketClose(socket) {
+    const attachment = socket.deserializeAttachment() || {};
+    if (attachment.role === 'console') this.broadcast('browser', JSON.stringify({ type: 'console-state', connected: false }));
+  }
+
+  webSocketError(socket) {
+    this.webSocketClose(socket);
+  }
+
+  broadcast(role, message) {
+    for (const socket of this.state.getWebSockets(role)) {
+      try { socket.send(message); } catch (_) {}
+    }
   }
 }
 
@@ -671,6 +725,40 @@ async function getNxeNetworkHash(request, env) {
   const forwarded = String(request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '').split(',')[0].trim();
   if (!forwarded) return '';
   return sha256Base64Url(`nxe-network:${forwarded}:${String(env.SESSION_SECRET || '')}`);
+}
+
+async function handleNxeRelayUpgrade(request, env, path) {
+  if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
+    throw httpError(426, 'NXE relay requires a WebSocket connection.');
+  }
+  const url = new URL(request.url);
+  const pairId = String(url.searchParams.get('pairId') || '').trim();
+  if (!/^[A-Za-z0-9_-]{12,256}$/.test(pairId)) throw httpError(400, 'Invalid NXE console identity.');
+  const db = await loadDatabase(env);
+  const pair = (Array.isArray(db.nxePairs) ? db.nxePairs : []).find((entry) => entry.pairId === pairId);
+  if (!pair) throw httpError(404, 'NXE console is not registered.');
+
+  let role;
+  if (path.endsWith('/console')) {
+    const deviceToken = String(request.headers.get('X-NXE-Device') || '').trim();
+    const deviceTokenHash = await sha256Base64Url(`nxe-device:${deviceToken}`);
+    if (!deviceToken || deviceTokenHash !== pair.deviceTokenHash) throw httpError(401, 'Unknown NXE relay device.');
+    role = 'console';
+  } else {
+    const user = await ensureAuthenticated(request, env, 'Sign in with Google to use the NXE relay.');
+    const accountId = user.firebaseUid || user.sub || user.email;
+    if (!pair.accountId || pair.accountId !== accountId) throw httpError(403, 'This NXE console is not saved to your account.');
+    role = 'browser';
+  }
+
+  if (!env.NXE_PAIR_SESSIONS) throw httpError(503, 'NXE relay is not configured.');
+  const stub = env.NXE_PAIR_SESSIONS.getByName(pairId);
+  const headers = new Headers(request.headers);
+  headers.set('X-NXE-Relay-Role', role);
+  headers.delete('Authorization');
+  headers.delete('Cookie');
+  headers.delete('X-NXE-Device');
+  return stub.fetch(new Request(request.url, { method: 'GET', headers }));
 }
 
 async function handleNxePairCommand(request, env, origin) {
