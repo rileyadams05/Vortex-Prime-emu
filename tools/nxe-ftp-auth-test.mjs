@@ -88,7 +88,10 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
       return { ok: true, json: async () => ({ pairId: 'console-pair-1234' }) };
     }
     if (String(url).includes('/api/nxe/pair/list')) {
-      return { ok: true, json: async () => ({ pairs }) };
+      // Simulate the updated API that returns controlToken for account-owned pairs.
+      // Only inject a default token if the pair entry doesn't already have a controlToken property.
+      const pairsWithToken = pairs.map((p) => ('controlToken' in p ? p : { ...p, controlToken: '0123456789abcdef0123456789abcdef' }));
+      return { ok: true, json: async () => ({ pairs: pairsWithToken }) };
     }
     if (String(url).includes('/api/nxe/pair/connect')) {
       if (connectError) {
@@ -150,17 +153,20 @@ assert.equal(signedOut.node('nxeFtpPairPanel').hidden, false, 'signed-in users w
 const savedPair = { pairId: 'console-pair-1234', consoleIp: '192.168.0.70', ftpPort: '2121' };
 const restored = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair] });
 await settle();
-assert.equal(restored.node('nxeFtpIpInput').value, '192.168.0.70', 'account IP is restored on a new browser');
-assert.equal(restored.node('nxeFtpSuccessPanel').hidden, false, 'account-backed credential restore reaches success');
-assert.equal(restored.storage.get('nxe-pair-key:console-pair-1234'), '0123456789abcdef0123456789abcdef', 'restored credential is cached locally after server recovery');
-const connectRequest = restored.requests.find((entry) => String(entry.url).includes('/api/nxe/pair/connect'));
-assert.deepEqual(JSON.parse(connectRequest.options.body), {
-  consoleIp: '192.168.0.70',
-  ftpPort: '2121',
-});
+// Silent restore uses controlToken from pair/list → goes straight to control panel
+// The display element nxeFtpIp (not the form input) shows the restored console IP
+assert.equal(restored.node('nxeFtpIp').textContent, '192.168.0.70', 'restored console IP is shown in control panel');
+assert.equal(restored.node('nxeFtpApp').hidden, false, 'account-backed restore goes straight to control panel');
+assert.equal(restored.node('nxeFtpSuccessPanel').hidden, true, 'success screen is skipped on silent restore');
+assert.equal(restored.storage.get('nxe-pair-key:console-pair-1234'), '0123456789abcdef0123456789abcdef', 'restored credential is cached locally');
 
-const unreachable = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair], connectError: true });
+// Unreachable: list returns no controlToken, so it falls through to connectByManual which fails
+function harnessPairNoToken(options) {
+  return harness({ ...options, pairs: options.pairs.map((p) => ({ ...p, controlToken: '' })) });
+}
+const unreachable = harnessPairNoToken({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair], connectError: true });
 await settle();
 assert.match(unreachable.node('nxeFtpPairMessage').textContent, /Double-check every IP digit/, 'unreachable saved IP gives correction guidance');
 
 console.log('NXE FTP authentication, change credentials & view credentials tests passed.');
+

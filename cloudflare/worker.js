@@ -635,11 +635,26 @@ async function handleNxePairList(request, env, origin) {
   const user = await ensureAuthenticated(request, env, 'Sign in with Google to view paired consoles.');
   const db = await loadDatabase(env);
   const accountId = user.firebaseUid || user.sub || user.email;
-  const pairs = (Array.isArray(db.nxePairs) ? db.nxePairs : [])
-    .filter((entry) => entry.accountId === accountId)
-    .map((entry) => sanitizeNxePair(entry, false));
+  const rawPairs = (Array.isArray(db.nxePairs) ? db.nxePairs : [])
+    .filter((entry) => entry.accountId === accountId);
+  const pairs = await Promise.all(rawPairs.map(async (entry) => {
+    const safe = sanitizeNxePair(entry, false);
+    // Return the decrypted controlToken so the browser can silently restore its
+    // session on any signed-in device without needing a cached localStorage key.
+    if (entry.controlTokenEncrypted) {
+      try {
+        safe.controlToken = await decryptNxeControlToken(entry.controlTokenEncrypted, entry.pairId, env);
+      } catch (_) {
+        safe.controlToken = '';
+      }
+    } else {
+      safe.controlToken = '';
+    }
+    return safe;
+  }));
   return json({ ok: true, pairs }, 200, origin);
 }
+
 
 async function handleNxePairClaim(request, env, origin) {
   if (request.method !== 'POST') throw httpError(405, 'NXE pairing claim requires POST.');

@@ -526,7 +526,7 @@
     //  Connection flow
     // ══════════════════════════════════════════════════════════════════════════
 
-    async function connectByManual() {
+    async function connectByManual(silent) {
         let ip   = ipInput ? ipInput.value : '';
         const port = (portInput && portInput.value ? portInput.value.trim() : '') || '2121';
         const user = usernameInput ? usernameInput.value.trim() : '';
@@ -538,7 +538,7 @@
             setMessage('Enter a valid console IP address including the dots, for example 192.168.0.70, and double-check every digit.', true);
             return false;
         }
-        setMessage('Connecting to console\u2026');
+        if (!silent) setMessage('Connecting to console\u2026');
         if (connectBtn) { connectBtn.disabled = true; connectBtn.textContent = 'Connecting\u2026'; }
 
         try {
@@ -565,7 +565,8 @@
             }
 
             saveConsoleSession(pair, pairKey);
-            onConnected();
+            // silent = auto-restore from claimPair → skip success panel
+            onConnected(silent ? false : undefined);
             return true;
         } catch (error) {
             setMessage(error.message, true);
@@ -573,6 +574,7 @@
             return false;
         }
     }
+
 
     function saveConsoleSession(pairObj, key) {
         if (!pairObj) return;
@@ -624,53 +626,78 @@
         const user      = currentUser;
         const requestId = ++pairRequestId;
         const parsed    = parsePairHash();
-        let isInitialPair = Boolean(parsed.pairId && parsed.key);
 
         try {
-            if (!parsed.pairId || !parsed.key) {
-                const saved     = await fetch('/api/nxe/pair/list', { credentials: 'include' });
-                const savedData = await saved.json().catch(() => ({}));
-                if (!saved.ok) throw new Error(savedData.message || 'Unable to load paired consoles.');
-                const lastPairId = localStorage.getItem(LAST_PAIR_ID_KEY);
-                const pairs      = savedData.pairs || [];
-                const selected   = (lastPairId ? pairs.find((p) => p.pairId === lastPairId) : null) || pairs[0];
-                if (!selected) {
-                    if (pairPanel) pairPanel.hidden = false;
-                    return;
-                }
-                parsed.pairId = selected.pairId;
-                parsed.key    = localStorage.getItem('nxe-pair-key:' + selected.pairId) || '';
-                if (!parsed.key) {
-                    if (pairPanel) pairPanel.hidden = false;
-                    if (ipInput)   ipInput.value    = selected.consoleIp || '';
-                    if (portInput) portInput.value  = selected.ftpPort   || '2121';
-                    if (selected.consoleIp) await connectByManual();
-                    return;
-                }
-                isInitialPair = false;
+            // ── Path A: URL hash has a brand-new pairId+key (QR / one-time link) ──
+            if (parsed.pairId && parsed.key) {
+                const response = await fetch('/api/nxe/pair/claim', {
+                    method: 'POST', credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pairId: parsed.pairId, controlToken: parsed.key })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (typeof currentUser === 'undefined' || user !== currentUser || requestId !== pairRequestId) return;
+                if (!response.ok) throw new Error(data.message || 'Unable to pair this console.');
+                pair    = data.pair;
+                pairKey = parsed.key;
+                saveConsoleSession(pair, pairKey);
+                if (window.location.hash.indexOf('pair=') >= 0) history.replaceState(null, '', window.location.pathname);
+                // Brand-new pairing: show success screen so user knows it worked
+                onConnected(true);
+                return;
             }
 
-            const response = await fetch('/api/nxe/pair/claim', {
-                method: 'POST', credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pairId: parsed.pairId, controlToken: parsed.key })
-            });
-            const data = await response.json().catch(() => ({}));
+            // ── Path B: Restore from signed-in account ───────────────────────────
+            // The pair/list API now returns the decrypted controlToken for each
+            // pair owned by this account, so we don't need localStorage at all.
+            const listResp = await fetch('/api/nxe/pair/list', { credentials: 'include' });
+            const listData = await listResp.json().catch(() => ({}));
             if (typeof currentUser === 'undefined' || user !== currentUser || requestId !== pairRequestId) return;
-            if (!response.ok) throw new Error(data.message || 'Unable to pair this console.');
+            if (!listResp.ok) throw new Error(listData.message || 'Unable to load paired consoles.');
 
-            pair    = data.pair;
-            pairKey = parsed.key;
-            saveConsoleSession(pair, pairKey);
+            const pairs      = listData.pairs || [];
+            const lastPairId = localStorage.getItem(LAST_PAIR_ID_KEY);
+            const selected   = (lastPairId ? pairs.find((p) => p.pairId === lastPairId) : null) || pairs[0];
 
-            if (window.location.hash.indexOf('pair=') >= 0) history.replaceState(null, '', window.location.pathname);
-            onConnected(isInitialPair ? true : false);
+            if (!selected) {
+                // No console saved — show the connect form
+                if (pairPanel) pairPanel.hidden = false;
+                return;
+            }
+
+            // Prefer the server-returned token; fall back to localStorage cache
+            const restoredKey = selected.controlToken || localStorage.getItem('nxe-pair-key:' + selected.pairId) || '';
+
+            if (restoredKey) {
+                // We have everything needed — go straight into the control panel.
+                // This is a silent restore: no success screen, no button press needed.
+                pair    = selected;
+                pairKey = restoredKey;
+                saveConsoleSession(pair, pairKey);
+                onConnected(false);   // false = skip success panel → enterControlPanel()
+                return;
+            }
+
+            // No token at all — try /pair/connect with the saved IP as a fallback.
+            // This is a silent connect: show pre-filled form briefly but auto-submit.
+            if (ipInput)   ipInput.value   = selected.consoleIp || '';
+            if (portInput) portInput.value = selected.ftpPort   || '2121';
+            if (selected.consoleIp) {
+                await connectByManual(true);   // true = silent (skip success screen)
+            } else {
+                if (pairPanel) pairPanel.hidden = false;
+            }
         } catch (_error) {
             if (typeof currentUser !== 'undefined' && user === currentUser && requestId === pairRequestId && pairPanel) {
                 pairPanel.hidden = false;
+                // Pre-fill IP if we know it from localStorage, so the user just needs to press Connect
+                const savedIp = localStorage.getItem(SAVED_IP_KEY);
+                if (savedIp && ipInput) ipInput.value = savedIp;
+                if (portInput) portInput.value = localStorage.getItem(SAVED_PORT_KEY) || '2121';
             }
         }
     }
+
 
     // ══════════════════════════════════════════════════════════════════════════
     //  Server commands (Turn On / Turn Off / Restart)
