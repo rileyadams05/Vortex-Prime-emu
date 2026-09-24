@@ -123,6 +123,25 @@
         return parts.length === 4 && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
     }
 
+    function normalizeIpv4Input(value) {
+        const entered = String(value || '').trim();
+        if (isValidIpv4Address(entered)) return entered;
+        if (!/^192168\d{2,6}$/.test(entered)) return entered;
+
+        const tail = entered.slice(6);
+        const candidates = [];
+        for (let split = 1; split < tail.length; split += 1) {
+            const third = tail.slice(0, split);
+            const fourth = tail.slice(split);
+            if ((third === '0' || !third.startsWith('0')) &&
+                (fourth === '0' || !fourth.startsWith('0')) &&
+                Number(third) <= 255 && Number(fourth) <= 255) {
+                candidates.push('192.168.' + Number(third) + '.' + Number(fourth));
+            }
+        }
+        return candidates.length === 1 ? candidates[0] : entered;
+    }
+
     function localFetch(url, options) {
         return fetch(url, Object.assign({ targetAddressSpace: 'local' }, options || {}));
     }
@@ -142,10 +161,11 @@
 
     // Manual IP Connect Flow (Primary manual fallback method)
     async function connectByIp(ip) {
-        ip = (ip || '').trim();
+        ip = normalizeIpv4Input(ip);
+        if (ipInput) ipInput.value = ip;
         if (!ip) { setMessage('Enter the console IP address first.', true); return false; }
         if (!isValidIpv4Address(ip)) {
-            setMessage('Enter a valid console IP address and double-check every digit.', true);
+            setMessage('Enter a valid console IP address including the dots, for example 192.168.0.70, and double-check every digit.', true);
             return false;
         }
         setMessage('Connecting to console...');

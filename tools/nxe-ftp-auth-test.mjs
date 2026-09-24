@@ -16,6 +16,8 @@ assert.match(worker, /decryptNxeControlToken\(current\.controlTokenEncrypted, pa
 assert.match(worker, /current\.accountId && current\.accountId !== accountId/, 'saved credentials cannot cross Google accounts');
 assert.match(controller, /pairId: consolePairId/, 'manual connect binds the typed IP to the live console identity');
 assert.match(controller, /Double-check every IP digit/, 'connection failures explain invalid or changed addresses');
+assert.match(controller, /function normalizeIpv4Input/, 'mobile dotless IPv4 input has a safe normalization path');
+assert.match(controller, /candidates\.length === 1/, 'ambiguous dotless addresses are not guessed');
 
 function harness({ initialUser = null, pairs = [], identifyError = false } = {}) {
   const listeners = new Map();
