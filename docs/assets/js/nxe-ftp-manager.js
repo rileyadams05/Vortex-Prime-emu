@@ -1,6 +1,6 @@
 /**
  * NXE FTP File Manager & Connection Controller - Vortex Prime
- * Handles QR Code Pairing, Manual IP Backup Connection, Automatic Session Persistence,
+ * Handles Manual IP Connection, Account-backed Session Persistence,
  * Unreachable State Fallback with Change IP / Retry / Forget, and Graphical File Management.
  */
 
@@ -118,6 +118,11 @@
         return { pairId: params.get('pair') || '', key: params.get('key') || '' };
     }
 
+    function isValidIpv4Address(value) {
+        const parts = String(value || '').split('.');
+        return parts.length === 4 && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
+    }
+
     // API Wrapper for NXE Web Management Service (Port 2123)
     async function api(pathname, options) {
         options = options || {};
@@ -134,7 +139,11 @@
     // Manual IP Connect Flow (Primary manual fallback method)
     async function connectByIp(ip) {
         ip = (ip || '').trim();
-        if (!ip) { setMessage('Enter the console IP address first.', true); return; }
+        if (!ip) { setMessage('Enter the console IP address first.', true); return false; }
+        if (!isValidIpv4Address(ip)) {
+            setMessage('Enter a valid console IP address and double-check every digit.', true);
+            return false;
+        }
         setMessage('Connecting to console...');
         if (connectBtn) { connectBtn.disabled = true; connectBtn.textContent = 'Connecting...'; }
         
@@ -156,7 +165,7 @@
                     consolePairId = idData.pairId || '';
                 }
             } catch(e) {
-                throw new Error('Cannot reach NXE at ' + ip + ':' + NXE_WEB_PORT + '. Check the IP address and verify NXE is running on your Xbox.');
+                throw new Error('Cannot reach NXE at ' + ip + ':' + NXE_WEB_PORT + '. Double-check every IP digit, confirm the address has not changed, and make sure NXE is open on your Xbox.');
             }
 
             // Step 2: If we got pairId, check stored key
@@ -180,7 +189,7 @@
                             pair    = Object.assign({ pairId: consolePairId, ftpPort: '2121' }, matchedPair || {}, { consoleIp: ip, ftpPort: vd.ftpPort || '2121', running: Boolean(vd.ftpRunning) });
                             pairKey = controlKey;
                             saveConsoleSession(pair, pairKey);
-                            onConnected(); return;
+                            onConnected(); return true;
                         }
                     } catch(e) {}
                 }
@@ -205,7 +214,7 @@
                                     pair    = Object.assign({}, matchedPair, { consoleIp: ip, ftpPort: sd.ftpPort || '2121', running: Boolean(sd.ftpRunning) });
                                     pairKey = controlKey;
                                     saveConsoleSession(pair, pairKey);
-                                    onConnected(); return;
+                                    onConnected(); return true;
                                 }
                             } catch(e) {}
                         }
@@ -217,19 +226,28 @@
             const saveResp = await fetch('/api/nxe/pair/connect', {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ consoleIp: ip, ftpPort: ftpPort })
+                body: JSON.stringify({ consoleIp: ip, pairId: consolePairId, ftpPort: ftpPort })
             });
             const saveData = await saveResp.json().catch(() => ({}));
             if (!saveResp.ok) throw new Error(saveData.message || 'Unable to register console with your account.');
             pair       = saveData.pair;
             controlKey = saveData.controlToken || '';
+            if (!pair || !controlKey) throw new Error('Vortex Prime could not restore this console connection.');
             pairKey    = controlKey;
-            if (pair) pair.running = ftpRunning;
+            const statusResp = await fetch(baseUrl + '/api/v1/device/status', {
+                headers: { 'X-NXE-Control': controlKey }, mode: 'cors',
+                signal: AbortSignal.timeout(8000)
+            });
+            const statusData = await statusResp.json().catch(() => ({}));
+            if (!statusResp.ok) throw new Error(statusData.message || 'NXE rejected the saved console connection. Restart NXE and try again.');
+            pair.running = Boolean(statusData.ftpRunning);
             saveConsoleSession(pair, pairKey);
             onConnected();
+            return true;
         } catch (error) {
             setMessage(error.message, true);
             if (connectBtn) { connectBtn.disabled = false; connectBtn.textContent = 'Connect'; }
+            return false;
         }
     }
 
@@ -265,7 +283,7 @@
         refreshStatus();
     }
 
-    // QR Code / Session Restore Claim Flow
+    // Restore the console saved under the signed-in Vortex Prime account.
     async function claimPair() {
         if (typeof currentUser === 'undefined' || !currentUser) return;
         const user      = currentUser;
@@ -290,6 +308,8 @@
                 parsed.key    = localStorage.getItem('nxe-pair-key:' + selected.pairId) || '';
                 if (!parsed.key) {
                     if (pairPanel) pairPanel.hidden = false;
+                    if (ipInput) ipInput.value = selected.consoleIp || '';
+                    if (selected.consoleIp) await connectByIp(selected.consoleIp);
                     return;
                 }
                 isInitialPair = false;
@@ -330,7 +350,7 @@
             const savedIp = pair.consoleIp || localStorage.getItem(SAVED_IP_KEY) || 'console';
             setState('Disconnected');
             setFtpStatusDisplay(false);
-            setMessage('NXE console not reachable at ' + savedIp + '. Verify your Xbox is powered on and NXE is running.', true);
+            setMessage('NXE console not reachable at ' + savedIp + '. Double-check every IP digit. If the Xbox address changed, select Change IP and enter the new address shown in NXE Settings → FTP.', true);
         }
     }
 
@@ -343,16 +363,8 @@
         const targetIp = newIp.trim();
         setMessage('Updating console IP to ' + targetIp + '...');
         
-        if (pair) {
-            pair.consoleIp = targetIp;
-        }
-        localStorage.setItem(SAVED_IP_KEY, targetIp);
-        
-        try {
-            await connectByIp(targetIp);
-        } catch (error) {
-            setMessage('Unable to connect to ' + targetIp + ': ' + error.message, true);
-        }
+        if (ipInput) ipInput.value = targetIp;
+        await connectByIp(targetIp);
     }
 
     // Forget Console / Clear Local Credentials
@@ -856,20 +868,6 @@
     }
 
     // Event Wireup
-    const qrView = document.getElementById('nxeFtpQrView');
-    const manualView = document.getElementById('nxeFtpManualView');
-    const showManualBtn = document.getElementById('nxeFtpShowManualBtn');
-    const showQrBtn = document.getElementById('nxeFtpShowQrBtn');
-
-    if (showManualBtn) showManualBtn.addEventListener('click', () => {
-        if (qrView) qrView.style.display = 'none';
-        if (manualView) manualView.style.display = 'block';
-    });
-    if (showQrBtn) showQrBtn.addEventListener('click', () => {
-        if (manualView) manualView.style.display = 'none';
-        if (qrView) qrView.style.display = 'block';
-    });
-
     if (connectBtn) connectBtn.addEventListener('click', () => connectByIp(ipInput ? ipInput.value : ''));
     if (ipInput) ipInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') connectByIp(ipInput.value); });
 

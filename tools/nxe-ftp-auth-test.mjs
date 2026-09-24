@@ -3,78 +3,127 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const site = await readFile(new URL('../docs/index.html', import.meta.url), 'utf8');
+const controller = await readFile(new URL('../docs/assets/js/nxe-ftp-manager.js', import.meta.url), 'utf8');
 const auth = await readFile(new URL('../docs/assets/js/streamz-firebase-auth.js', import.meta.url), 'utf8');
 const worker = await readFile(new URL('../cloudflare/worker.js', import.meta.url), 'utf8');
-const start = site.indexOf('(function initializeNxeFtp() {');
-const end = site.indexOf('}());', start) + 5;
-assert(start >= 0 && end > start, 'NXE FTP controller is present');
-assert.doesNotMatch(site.slice(site.indexOf('id="nxeFtpShell"'), site.indexOf('id="nxeFtpAuthPanel"')), /project-status|nxeFtpConnectionState/, 'FTP heading has no gold status badge');
-assert.match(site, /window\.dispatchEvent\(new CustomEvent\('vortex-account-changed'/, 'shared account state notifies the FTP page');
-assert.match(site, /renderButton\(buttonSlot/, 'shared Google button renderer serves both locations');
-assert.match(auth, /waitForInitialSession/, 'Firebase restoration completes before showing signed-out UI');
-assert.match(site, /if \(await refreshModsSession\(true\)\) return;[\s\S]*?await window\.StreamzFirebaseAuth\.waitForInitialSession\(\);[\s\S]*?await refreshModsSession\(\);/, 'initialization waits for persisted Firebase session');
-assert.match(worker, /path === 'api\/nxe\/pair\/list'/, 'paired-console lookup route exists');
-assert.match(worker, /ensureAuthenticated\(request, env, 'Sign in with Google to view paired consoles/, 'console lookup uses the existing Vortex session');
 
-function harness(initialUser = null, initialHash = '') {
+assert.match(site, /id="nxeFtpManualView"/, 'manual IP view is present');
+assert.match(site, /saved securely under your signed-in Google account/, 'manual UI explains account-backed saving');
+assert.doesNotMatch(site, /nxeFtpQrView|nxeFtpShowQrBtn|Scan the QR code/, 'QR connection UI is removed');
+assert.match(auth, /waitForInitialSession/, 'Firebase restoration completes before showing signed-out UI');
+assert.match(worker, /controlTokenEncrypted: await encryptNxeControlToken/, 'claimed NXE token is encrypted before persistence');
+assert.match(worker, /decryptNxeControlToken\(current\.controlTokenEncrypted, pairId, env\)/, 'account restore decrypts the saved token');
+assert.match(worker, /current\.accountId && current\.accountId !== accountId/, 'saved credentials cannot cross Google accounts');
+assert.match(controller, /pairId: consolePairId/, 'manual connect binds the typed IP to the live console identity');
+assert.match(controller, /Double-check every IP digit/, 'connection failures explain invalid or changed addresses');
+
+function harness({ initialUser = null, pairs = [], identifyError = false } = {}) {
   const listeners = new Map();
   const nodes = new Map();
   const storage = new Map();
-  const hiddenInitially = new Set(['nxeFtpAuthPanel', 'nxeFtpPairPanel', 'nxeFtpApp']);
+  const requests = [];
+  const hiddenInitially = new Set(['nxeFtpAuthPanel', 'nxeFtpPairPanel', 'nxeFtpSuccessPanel', 'nxeFtpApp']);
+
   function node(id) {
     if (!nodes.has(id)) nodes.set(id, {
-      hidden: hiddenInitially.has(id), textContent: '', innerHTML: '', style: {},
-      addEventListener() {}, appendChild() {},
+      hidden: hiddenInitially.has(id),
+      textContent: '',
+      innerHTML: '',
+      value: '',
+      disabled: false,
+      dataset: {},
+      style: {},
+      addEventListener() {},
+      appendChild() {},
     });
     return nodes.get(id);
   }
+
   const window = {
-    location: { hash: initialHash },
+    location: { hash: '', pathname: '/projects/nxe/ftp/' },
     addEventListener(name, callback) { listeners.set(name, callback); },
     dispatchEvent(event) { listeners.get(event.type)?.(event); },
+    prompt() { return null; },
   };
+
+  const fetch = async (url, options = {}) => {
+    requests.push({ url, options });
+    if (String(url).includes('/api/v1/device/identify')) {
+      if (identifyError) throw new Error('unreachable');
+      return { ok: true, json: async () => ({ pairId: 'console-pair-1234' }) };
+    }
+    if (String(url).includes('/api/nxe/pair/list')) {
+      return { ok: true, json: async () => ({ pairs }) };
+    }
+    if (String(url).includes('/api/nxe/pair/connect')) {
+      const body = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: async () => ({
+          pair: { pairId: body.pairId, consoleIp: body.consoleIp, ftpPort: '2121', running: true },
+          controlToken: '0123456789abcdef0123456789abcdef',
+        }),
+      };
+    }
+    if (String(url).includes('/api/v1/device/status')) {
+      return { ok: true, json: async () => ({ ftpRunning: true }) };
+    }
+    return { ok: true, json: async () => ({ ok: true, path: '/', items: [] }) };
+  };
+
   const context = {
-    window, document: { getElementById: node, querySelectorAll: () => [], createElement: () => ({ addEventListener() {} }) },
-    localStorage: { getItem: (key) => storage.get(key), setItem: (key, value) => storage.set(key, value), removeItem: (key) => storage.delete(key) },
+    AbortSignal,
+    Headers,
     URLSearchParams,
-    fetch: async (url) => ({
-      ok: true,
-      json: async () => url.includes('/pair/list') ? { pairs: [] } :
-        url.includes('/pair/claim') ? { pair: { pairId: 'test-console', consoleIp: '192.168.1.2', connected: true, running: true } } :
-          { ok: true, path: '/', items: [] },
-    }),
+    fetch,
+    history: { replaceState() {} },
+    localStorage: {
+      getItem: (key) => storage.get(key) || null,
+      setItem: (key, value) => storage.set(key, String(value)),
+      removeItem: (key) => storage.delete(key),
+    },
+    window,
+    document: {
+      getElementById: node,
+      querySelectorAll: () => [],
+      createElement: () => ({ addEventListener() {}, appendChild() {}, style: {}, dataset: {} }),
+    },
+    setTimeout() {},
   };
-  vm.runInNewContext(`let currentUser = ${JSON.stringify(initialUser)}; ${site.slice(start, end)}; globalThis.setUser = (user) => { currentUser = user; window.dispatchEvent({ type: 'vortex-account-changed', detail: { user } }); };`, context);
-  return { node, setUser: context.setUser };
+
+  vm.runInNewContext(
+    `let currentUser = ${JSON.stringify(initialUser)}; ${controller}; globalThis.setUser = (user) => { currentUser = user; window.dispatchEvent({ type: 'vortex-account-changed', detail: { user } }); };`,
+    context,
+  );
+  return { node, requests, setUser: context.setUser, storage };
+}
+
+async function settle() {
+  for (let step = 0; step < 5; step += 1) await new Promise((resolve) => setImmediate(resolve));
 }
 
 const signedOut = harness();
-assert.equal(signedOut.node('nxeFtpLoading').hidden, false, 'loading is distinct from signed out');
-assert.equal(signedOut.node('nxeFtpAuthPanel').hidden, true, 'login does not flash during restoration');
 signedOut.setUser(null);
-assert.equal(signedOut.node('nxeFtpLoading').hidden, true);
-assert.equal(signedOut.node('nxeFtpAuthPanel').hidden, false, 'signed-out users see the shared Google button');
-assert.equal(signedOut.node('nxeFtpPairPanel').hidden, true);
+assert.equal(signedOut.node('nxeFtpAuthPanel').hidden, false, 'signed-out users see Google sign-in');
+signedOut.setUser({ email: 'user@example.invalid' });
+await settle();
+assert.equal(signedOut.node('nxeFtpPairPanel').hidden, false, 'signed-in users without a console see manual IP entry');
 
-const account = { email: 'user@example.invalid' };
-signedOut.setUser(account);
-assert.equal(signedOut.node('nxeFtpAuthPanel').hidden, true, 'login hides Google prompt immediately');
-assert.equal(signedOut.node('nxeFtpPairPanel').hidden, false, 'login shows NXE pairing when no console is paired');
-assert.equal(signedOut.node('nxeFtpApp').hidden, true, 'console controls require pairing');
+const savedPair = { pairId: 'console-pair-1234', consoleIp: '192.168.0.70', ftpPort: '2121' };
+const restored = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair] });
+await settle();
+assert.equal(restored.node('nxeFtpIpInput').value, '192.168.0.70', 'account IP is restored on a new browser');
+assert.equal(restored.node('nxeFtpSuccessPanel').hidden, false, 'account-backed credential restore reaches success');
+assert.equal(restored.storage.get('nxe-pair-key:console-pair-1234'), '0123456789abcdef0123456789abcdef', 'restored credential is cached locally after server recovery');
+const connectRequest = restored.requests.find((entry) => String(entry.url).includes('/api/nxe/pair/connect'));
+assert.deepEqual(JSON.parse(connectRequest.options.body), {
+  consoleIp: '192.168.0.70',
+  pairId: 'console-pair-1234',
+  ftpPort: '2121',
+});
 
-const restored = harness(account);
-assert.equal(restored.node('nxeFtpAuthPanel').hidden, true, 'existing account skips login on direct URL or refresh');
-assert.equal(restored.node('nxeFtpPairPanel').hidden, false, 'existing account sees pairing immediately');
-restored.setUser(null);
-assert.equal(restored.node('nxeFtpAuthPanel').hidden, false, 'logout returns to Google sign-in');
-assert.equal(restored.node('nxeFtpPairPanel').hidden, true, 'logout hides pairing');
-assert.equal(restored.node('nxeFtpApp').hidden, true, 'logout hides console controls');
+const unreachable = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair], identifyError: true });
+await settle();
+assert.match(unreachable.node('nxeFtpPairMessage').textContent, /Double-check every IP digit/, 'unreachable saved IP gives correction guidance');
 
-const paired = harness(account, '#pair=test-console&key=test-key');
-for (let step = 0; step < 8; step += 1) await Promise.resolve();
-assert.equal(paired.node('nxeFtpPairPanel').hidden, true, 'valid pairing shows the console');
-assert.equal(paired.node('nxeFtpApp').hidden, false, 'paired users see Server and Files controls');
-paired.setUser(null);
-assert.equal(paired.node('nxeFtpApp').hidden, true, 'logout hides already paired console controls immediately');
-assert.equal(paired.node('nxeFtpAuthPanel').hidden, false, 'logout restores the shared Google sign-in UI');
-console.log('NXE FTP shared authentication UI tests passed.');
+console.log('NXE FTP account-backed manual connection tests passed.');

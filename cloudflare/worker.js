@@ -172,6 +172,7 @@ const textDecoder = new TextDecoder();
 
 let sessionKeyCache = null;
 let streamzStateKeyCache = null;
+let nxeControlTokenKeyCache = null;
 
 export default {
   async fetch(request, env, ctx) {
@@ -505,6 +506,7 @@ async function handleNxePairRegister(request, env, origin) {
   const now = new Date().toISOString();
   const deviceTokenHash = await sha256Base64Url(`nxe-device:${deviceToken}`);
   const controlTokenHash = await sha256Base64Url(`nxe-control:${controlToken}`);
+  const controlTokenEncrypted = await encryptNxeControlToken(controlToken, pairId, env);
   const result = await updateStreamzDatabase(env, async (db) => {
     const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
     const index = pairs.findIndex((entry) => entry.pairId === pairId);
@@ -514,6 +516,7 @@ async function handleNxePairRegister(request, env, origin) {
       pairId,
       deviceTokenHash,
       controlTokenHash,
+      controlTokenEncrypted,
       consoleIp: String(body.consoleIp || '').trim(),
       ftpPort: String(body.ftpPort || '2121').trim() || '2121',
       running: Boolean(body.running),
@@ -587,71 +590,67 @@ async function handleNxePairClaim(request, env, origin) {
     const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
     const index = pairs.findIndex((entry) => entry.pairId === pairId && entry.controlTokenHash === controlTokenHash);
     if (index < 0) throw httpError(404, 'NXE pairing not found or pairing key is invalid.');
-    const next = { ...pairs[index], accountId, claimedAt: new Date().toISOString() };
+    const next = {
+      ...pairs[index],
+      accountId,
+      controlTokenEncrypted: await encryptNxeControlToken(controlToken, pairId, env),
+      claimedAt: new Date().toISOString(),
+    };
     pairs[index] = next;
     return { db: { ...db, nxePairs: pairs }, value: next };
   });
   return json({ ok: true, pair: sanitizeNxePair(result, false) }, 200, origin);
 }
 
-// Manual IP connect — user typed the console IP instead of scanning QR.
-// Finds or creates a pair record for this IP tied to the signed-in account.
-// Returns the controlToken (plaintext) so the website can auth directly to
-// the NxeWebManagementServer running on the Xbox at port 2123.
+// Manual IP connect. The browser first reads the console's public identify
+// endpoint, then supplies the returned pairId here. The Worker only releases
+// the encrypted control token when the live IP + pairId match an NXE record
+// and that record is unclaimed or already belongs to this Google account.
 async function handleNxePairConnect(request, env, origin) {
   if (request.method !== 'POST') throw httpError(405, 'NXE connect requires POST.');
   const user = await ensureAuthenticated(request, env, 'Sign in with Google to connect an NXE console.');
   const body = await request.json().catch(() => null);
   const consoleIp = String(body?.consoleIp || '').trim();
+  const pairId = String(body?.pairId || '').trim();
   const ftpPort   = String(body?.ftpPort || '2121').trim() || '2121';
-  if (!consoleIp || !/^\d{1,3}(\.\d{1,3}){3}$/.test(consoleIp)) {
-    throw httpError(400, 'A valid console IP address is required.');
-  }
+  if (!isValidIpv4Address(consoleIp)) throw httpError(400, 'Enter a valid console IP address and double-check every digit.');
+  if (!pairId || !/^[A-Za-z0-9_-]{12,256}$/.test(pairId)) throw httpError(400, 'NXE did not return a valid console identity.');
   const accountId = user.firebaseUid || user.sub || user.email;
-  // Generate a new ephemeral controlToken for this IP-based connection.
-  // If there is already a pair record for this IP + account, reuse it (update IP/port).
-  const rawToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-    .map(b => b.toString(16).padStart(2, '0')).join('');
-  const controlTokenHash = await sha256Base64Url(`nxe-control:${rawToken}`);
   const result = await updateStreamzDatabase(env, async (db) => {
     const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
-    // Find existing pair for this account with the same IP
-    const existing = pairs.findIndex(e => e.accountId === accountId && e.consoleIp === consoleIp);
-    const now = new Date().toISOString();
-    if (existing >= 0) {
-      // Update the record — new token, updated port and timestamp
-      const next = {
-        ...pairs[existing],
-        consoleIp,
-        ftpPort,
-        controlTokenHash,
-        claimedAt: now,
-        lastSeenAt: now,
-      };
-      pairs[existing] = next;
-      return { db: { ...db, nxePairs: pairs }, value: next };
+    const existing = pairs.findIndex((entry) => entry.pairId === pairId && entry.consoleIp === consoleIp);
+    if (existing < 0) {
+      throw httpError(404, 'NXE could not verify this console. Double-check every IP digit and confirm the address has not changed.');
     }
-    // Create a new pair record
-    const pairId = `ip_${crypto.randomUUID().replace(/-/g, '').slice(0, 24)}`;
-    const newEntry = {
-      id: `nxe_${crypto.randomUUID()}`,
-      pairId,
+    const current = pairs[existing];
+    if (current.accountId && current.accountId !== accountId) {
+      throw httpError(409, 'This NXE console is saved to a different Vortex Prime account.');
+    }
+    if (!current.controlTokenEncrypted) {
+      throw httpError(409, 'NXE must be updated and restarted once before this console can be saved across devices.');
+    }
+    const controlToken = await decryptNxeControlToken(current.controlTokenEncrypted, pairId, env);
+    const now = new Date().toISOString();
+    const next = {
+      ...current,
       consoleIp,
       ftpPort,
-      running: false,
-      failure: '',
-      controlTokenHash,
-      deviceTokenHash: '',
       accountId,
-      createdAt: now,
       claimedAt: now,
-      lastSeenAt: now,
     };
-    pairs.push(newEntry);
-    return { db: { ...db, nxePairs: pairs }, value: newEntry };
+    pairs[existing] = next;
+    return { db: { ...db, nxePairs: pairs }, value: { pair: next, controlToken } };
   });
-  // Return the plaintext control token to the authenticated client only
-  return json({ ok: true, pair: sanitizeNxePair(result, false), controlToken: rawToken }, 200, origin);
+  return json({
+    ok: true,
+    pair: sanitizeNxePair(result.pair, false),
+    controlToken: result.controlToken,
+  }, 200, origin);
+}
+
+function isValidIpv4Address(value) {
+  const parts = String(value || '').split('.');
+  return parts.length === 4 && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
 }
 
 async function handleNxePairCommand(request, env, origin) {
@@ -5357,6 +5356,46 @@ async function decryptStreamzState(token, env) {
     return JSON.parse(textDecoder.decode(plaintext));
   } catch (error) {
     throw httpError(400, 'Invalid or expired OAuth state.');
+  }
+}
+
+async function importNxeControlTokenKey(env) {
+  const secret = requireEnv(env, 'SESSION_SECRET');
+  if (nxeControlTokenKeyCache?.secret === secret) return nxeControlTokenKeyCache.key;
+  const digest = await crypto.subtle.digest('SHA-256', textEncoder.encode(`nxe-control-token:${secret}`));
+  const key = await crypto.subtle.importKey('raw', digest, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  nxeControlTokenKeyCache = { secret, key };
+  return key;
+}
+
+async function encryptNxeControlToken(controlToken, pairId, env) {
+  const key = await importNxeControlTokenKey(env);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv, additionalData: textEncoder.encode(`nxe-pair:${pairId}`) },
+    key,
+    textEncoder.encode(controlToken),
+  );
+  return `${base64UrlEncode(iv)}.${base64UrlEncode(new Uint8Array(ciphertext))}`;
+}
+
+async function decryptNxeControlToken(encryptedToken, pairId, env) {
+  const [ivPart, ciphertextPart] = String(encryptedToken || '').split('.');
+  if (!ivPart || !ciphertextPart) throw httpError(409, 'Saved NXE credentials are incomplete. Restart NXE and try again.');
+  try {
+    const key = await importNxeControlTokenKey(env);
+    const plaintext = await crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: base64UrlDecode(ivPart),
+        additionalData: textEncoder.encode(`nxe-pair:${pairId}`),
+      },
+      key,
+      base64UrlDecode(ciphertextPart),
+    );
+    return textDecoder.decode(plaintext);
+  } catch (error) {
+    throw httpError(409, 'Saved NXE credentials could not be restored. Restart NXE and save the console again.');
   }
 }
 

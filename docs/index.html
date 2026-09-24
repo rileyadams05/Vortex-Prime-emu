@@ -4085,22 +4085,9 @@
                         }
                     </style>
                     <div id="nxeFtpPairPanel" hidden>
-                        <div id="nxeFtpQrView">
+                        <div id="nxeFtpManualView">
                             <h3>Connect your NXE console</h3>
-                            <p class="project-description">Scan the QR code shown in NXE Settings &#8594; FTP.</p>
-                            
-                            <div style="display:flex; align-items:center; margin: 2rem 0;">
-                                <hr style="flex:1; border:none; border-top:1px solid var(--color-border,#333);">
-                                <span style="padding:0 1rem; color:var(--color-text-secondary); font-size:0.85rem; font-weight:600;">OR</span>
-                                <hr style="flex:1; border:none; border-top:1px solid var(--color-border,#333);">
-                            </div>
-                            
-                            <button class="btn btn-secondary" type="button" id="nxeFtpShowManualBtn" style="width:100%; justify-content:center;">Enter Console IP Manually</button>
-                        </div>
-                        
-                        <div id="nxeFtpManualView" style="display:none;">
-                            <h3>Connect manually</h3>
-                            <p class="project-description">Enter the Console IP shown in NXE Settings &#8594; FTP.</p>
+                            <p class="project-description">Enter the Console IP shown in NXE Settings &#8594; FTP. It is saved securely under your signed-in Google account and restored when you use Vortex Prime on another phone or PC.</p>
                             <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin:1.25rem 0;">
                                 <div style="flex:1;min-width:200px;">
                                     <label for="nxeFtpIpInput" style="display:block;font-size:.85rem;color:var(--color-text-secondary);margin-bottom:.4rem;">Console IP Address</label>
@@ -4109,14 +4096,7 @@
                                 </div>
                                 <button class="btn btn-secondary" type="button" id="nxeFtpConnectBtn" style="white-space:nowrap;">Connect</button>
                             </div>
-                            
-                            <div style="display:flex; align-items:center; margin: 2rem 0;">
-                                <hr style="flex:1; border:none; border-top:1px solid var(--color-border,#333);">
-                                <span style="padding:0 1rem; color:var(--color-text-secondary); font-size:0.85rem; font-weight:600;">OR</span>
-                                <hr style="flex:1; border:none; border-top:1px solid var(--color-border,#333);">
-                            </div>
-                            
-                            <button class="btn btn-secondary" type="button" id="nxeFtpShowQrBtn" style="width:100%; justify-content:center;">Use QR Code Instead</button>
+                            <p class="project-description">If connection fails, double-check every digit. Your Xbox address may have changed; use the current address shown on the NXE FTP screen.</p>
                         </div>
                         
                         <p id="nxeFtpPairMessage" class="project-description" role="status" style="margin-top: 1rem;"></p>
@@ -4128,7 +4108,7 @@
                             </svg>
                         </div>
                         <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--color-text, #fafafa); margin-bottom: 0.5rem;">Connection successful</h3>
-                        <p class="project-description" style="max-width: 480px; margin: 0 auto 1.75rem;">Your NXE console has been paired successfully and is ready to use.</p>
+                        <p class="project-description" style="max-width: 480px; margin: 0 auto 1.75rem;">Your NXE console is saved to your Vortex Prime account and is ready to use.</p>
                         <button class="btn btn-secondary" type="button" id="nxeFtpContinueBtn" style="min-width: 160px; padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600;">Continue</button>
                     </div>
                     <div id="nxeFtpApp" hidden>
