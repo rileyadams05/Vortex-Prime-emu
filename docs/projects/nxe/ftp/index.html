@@ -1,138 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <title>NXE FTP Control | Vortex Prime</title>
-  <style>
-    :root{color-scheme:dark;--bg:#080b09;--card:#171d19;--line:#334237;--green:#8fcc3e;--muted:#aeb8b0;--bad:#ff7b72}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 15% 0,#17330b 0,transparent 38%),linear-gradient(135deg,#080b09,#121714);color:#f4f6f4;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-    .shell{width:min(780px,calc(100% - 32px));margin:auto;padding:42px 0 64px}.brand{color:var(--green);font-weight:800;letter-spacing:.08em;text-transform:uppercase}.hero h1{font-size:clamp(2rem,7vw,3.5rem);margin:.3rem 0}.hero p{color:var(--muted);max-width:640px}.card{background:rgba(23,29,25,.96);border:1px solid var(--line);border-radius:16px;padding:24px;margin-top:18px;box-shadow:0 18px 45px rgba(0,0,0,.25)}
-    .status-row{display:flex;align-items:center;justify-content:space-between;gap:20px}.status-copy strong{font-size:1.3rem}.status-copy small{display:block;color:var(--muted);margin-top:2px}.state{font-weight:800;color:#ffc04a}.state.ok{color:var(--green)}.state.bad{color:var(--bad)}
-    .facts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.fact{background:#0d120f;border-radius:10px;padding:14px}.fact span{display:block;color:var(--muted);font-size:.82rem}.fact strong{display:block;font-size:1.15rem;margin-top:4px;word-break:break-all}
-    h2{margin:0 0 8px}label{display:block;color:#d4ed9a;font-weight:650;margin:16px 0 6px}input{width:100%;border:1px solid #47623d;border-radius:9px;background:#0b110d;color:white;padding:13px;font:inherit}button,.button{display:inline-flex;justify-content:center;align-items:center;text-decoration:none;border:0;border-radius:9px;padding:13px 18px;background:var(--green);color:#081006;font:700 1rem inherit;cursor:pointer}.secondary{background:#29322c;color:white;border:1px solid #465249}.danger{background:var(--bad);color:#180604}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.note{color:var(--muted)}.message{min-height:24px;margin-top:12px;color:#d4ed9a}.hidden{display:none!important}
-    @media(max-width:560px){.shell{padding-top:24px}.card{padding:19px}.facts{grid-template-columns:1fr}.status-row{align-items:flex-start;flex-direction:column}}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NXE FTP — Vortex Prime</title>
 </head>
 <body>
-  <main class="shell">
-    <header class="hero">
-      <div class="brand">Vortex Prime · NXE</div>
-      <h1>FTP control</h1>
-      <p>Manage the FTP service running on your Xbox. NXE keeps the server on the console; this secure page sends your settings to the paired console.</p>
-    </header>
-
-    <section class="card" id="unpairedCard">
-      <h2>Pair your console</h2>
-      <p class="note">Open NXE Settings → FTP and scan the QR code. The QR contains the private pairing information required to control that Xbox.</p>
-      <div class="actions"><a class="button secondary" href="/projects/">View NXE project</a><a class="button secondary" href="https://github.com/rileyadams05/NXE" rel="noopener">Repository</a></div>
-    </section>
-
-    <div id="pairedArea" class="hidden">
-      <section class="card">
-        <div class="status-row">
-          <div class="status-copy"><strong>NXE FTP</strong><small>Xbox file transfer service</small></div>
-          <div class="state" id="statusText">Connecting…</div>
-        </div>
-        <div class="facts">
-          <div class="fact"><span>Console IP</span><strong id="consoleIp">Detecting…</strong></div>
-          <div class="fact"><span>FTP address</span><strong id="ftpAddress">Waiting for NXE…</strong></div>
-        </div>
-        <p class="message" id="statusMessage" aria-live="polite"></p>
-        <button type="button" class="danger hidden" id="restartButton">Restart FTP server</button>
-      </section>
-
-      <section class="card">
-        <h2>Optional FTP login</h2>
-        <p class="note">Enter both fields to require a login, or leave both blank for password-free access. NXE restarts FTP after applying the change.</p>
-        <form id="loginForm">
-          <label for="username">Username</label><input id="username" maxlength="64" autocomplete="username">
-          <label for="password">Password</label><input id="password" type="password" maxlength="128" autocomplete="new-password">
-          <div class="actions"><button type="submit">Save and restart FTP</button><a class="button secondary" href="https://github.com/rileyadams05/NXE" rel="noopener">NXE repository</a></div>
-        </form>
-        <p class="message" id="formMessage" aria-live="polite"></p>
-      </section>
-    </div>
-  </main>
   <script>
-    (() => {
-      const API = '/api/nxe/pair/';
-      const fragment = new URLSearchParams(location.hash.replace(/^#/, ''));
-      let pair = fragment.get('pair') || sessionStorage.getItem('nxePairId') || '';
-      let key = fragment.get('key') || sessionStorage.getItem('nxeControlKey') || '';
-      if (fragment.get('pair') && fragment.get('key')) {
-        sessionStorage.setItem('nxePairId', pair);
-        sessionStorage.setItem('nxeControlKey', key);
-        history.replaceState(null, '', location.pathname + '#connected');
-      }
-      const paired = /^[a-f0-9]{32}$/.test(pair) && /^[a-f0-9]{64}$/.test(key);
-      const unpairedCard = document.getElementById('unpairedCard');
-      const pairedArea = document.getElementById('pairedArea');
-      const statusText = document.getElementById('statusText');
-      const consoleIp = document.getElementById('consoleIp');
-      const ftpAddress = document.getElementById('ftpAddress');
-      const statusMessage = document.getElementById('statusMessage');
-      const formMessage = document.getElementById('formMessage');
-      const restartButton = document.getElementById('restartButton');
-
-      if (!paired) return;
-      unpairedCard.classList.add('hidden');
-      pairedArea.classList.remove('hidden');
-
-      async function request(operation, extra = {}) {
-        const response = await fetch(API + operation, {
-          method: 'POST',
-          headers: {'content-type':'application/json','authorization':'Bearer ' + key},
-          body: JSON.stringify({pairId: pair, ...extra}),
-          cache: 'no-store',
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.message || 'The NXE control request failed.');
-        return data;
-      }
-
-      async function refresh() {
-        try {
-          const {state} = await request('status');
-          statusText.textContent = state.running ? 'Running' : (state.online ? 'Failed' : 'Offline');
-          statusText.className = 'state ' + (state.running ? 'ok' : 'bad');
-          consoleIp.textContent = state.consoleIp || 'Unavailable';
-          ftpAddress.textContent = state.consoleIp ? `ftp://${state.consoleIp}:${state.ftpPort || '2121'}` : 'Waiting for NXE…';
-          statusMessage.textContent = state.running ? 'The FTP server is ready.' : (state.failure || 'NXE is not currently connected.');
-          restartButton.classList.toggle('hidden', state.running || !state.online);
-        } catch (error) {
-          statusText.textContent = 'Unavailable';
-          statusText.className = 'state bad';
-          statusMessage.textContent = error.message;
-          restartButton.classList.add('hidden');
-        }
-      }
-
-      document.getElementById('loginForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        formMessage.textContent = 'Sending settings to NXE…';
-        try {
-          const username = document.getElementById('username').value.trim();
-          const password = document.getElementById('password').value;
-          await request('configure', {username, password});
-          document.getElementById('password').value = '';
-          formMessage.textContent = 'Settings queued. NXE will apply them within a few seconds.';
-        } catch (error) { formMessage.textContent = error.message; }
-      });
-
-      restartButton.addEventListener('click', async () => {
-        statusMessage.textContent = 'Sending restart request…';
-        try {
-          await request('restart');
-          statusMessage.textContent = 'Restart queued. Waiting for NXE…';
-          restartButton.classList.add('hidden');
-        } catch (error) { statusMessage.textContent = error.message; }
-      });
-
-      refresh();
-      setInterval(refresh, 4000);
-    })();
+    sessionStorage.setItem('vortex-route', 'nxe-ftp');
+    location.replace('/' + location.hash);
   </script>
+  <a href="/">Open Vortex Prime NXE FTP</a>
 </body>
 </html>
