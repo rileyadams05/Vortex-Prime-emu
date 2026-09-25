@@ -180,10 +180,16 @@
     // ══════════════════════════════════════════════════════════════════════
 
     function setMessage(value, error) {
-        const target = pairPanel && !pairPanel.hidden ? pairMessage : message;
-        if (target) {
-            target.textContent = value || '';
-            target.style.color = error ? '#ff8b80' : '';
+        if (!pair || (pairPanel && !pairPanel.hidden)) {
+            if (pairMessage) {
+                pairMessage.textContent = value || '';
+                pairMessage.style.color = error ? '#ff8b80' : '';
+            }
+        } else {
+            if (message) {
+                message.textContent = value || '';
+                message.style.color = error ? '#ff8b80' : '';
+            }
         }
     }
 
@@ -794,6 +800,7 @@
             return true;
 
         } catch (error) {
+            renderPanels();
             setMessage(error.message, true);
             if (connectBtn) { connectBtn.disabled = false; connectBtn.textContent = 'Connect'; }
             return false;
@@ -1171,12 +1178,20 @@
     //
     // The main page IIFE dispatches `vortex-account-changed` every time
     // the signed-in user changes (including the initial restore on page load).
-    // This is the ONLY place the FTP manager learns about auth state.
-    // We NEVER read the IIFE-scoped `currentUser` variable directly.
+    // If currentUser is already populated at load time (or in test harnesses),
+    // initialize with it immediately.
     //
     window.addEventListener('vortex-account-changed', (e) => {
         handleAuthChange(e.detail && e.detail.user);
     });
+
+    try {
+        if (typeof currentUser !== 'undefined' && currentUser) {
+            handleAuthChange(currentUser);
+        } else if (typeof window !== 'undefined' && window.currentUser) {
+            handleAuthChange(window.currentUser);
+        }
+    } catch (_) {}
 
     // Hash-based QR / one-time-link flow
     window.addEventListener('hashchange', () => {
