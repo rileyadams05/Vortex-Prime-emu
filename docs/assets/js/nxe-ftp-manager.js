@@ -550,6 +550,14 @@
                     if (data.ok) pending.resolve(data);
                     else pending.reject(new Error(data.message || 'NXE relay request failed.'));
 
+                } else if (data.type === 'relay-ready') {
+                    if (data.consoleConnected) {
+                        setState('Connected', 'ok');
+                        refreshStatus();
+                    } else {
+                        setState('Connecting\u2026', 'neutral');
+                    }
+
                 } else if (data.type === 'relay-error') {
                     // Console not connected to relay — fail pending requests with neutral status
                     relayPending.forEach((p) => {
