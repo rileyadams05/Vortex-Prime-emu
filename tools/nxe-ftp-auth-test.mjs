@@ -53,7 +53,8 @@ assert.match(controller, /function normalizeIpv4Input/, 'mobile dotless IPv4 inp
 assert.match(controller, /return '192\.168\.0\.' \+ Number\(missingZeroOctet\[1\]\)/, 'a missing zero octet is corrected for the console subnet shown by NXE');
 assert.match(controller, /candidates\.length === 1/, 'ambiguous dotless addresses are not guessed');
 
-function harness({ initialUser = null, pairs = [], connectError = false } = {}) {
+function harness({ initialUser = null, pairs = [], pairsByAccount = null, connectError = false } = {}) {
+  let activeUser = initialUser;
   const listeners = new Map();
   const nodes = new Map();
   const storage = new Map();
@@ -99,9 +100,9 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
       return { ok: true, json: async () => ({ pairId: 'console-pair-1234' }) };
     }
     if (String(url).includes('/api/nxe/pair/list')) {
-      // Simulate the updated API that returns controlToken for account-owned pairs.
-      // Only inject a default token if the pair entry doesn't already have a controlToken property.
-      const pairsWithToken = pairs.map((p) => ('controlToken' in p ? p : { ...p, controlToken: '0123456789abcdef0123456789abcdef' }));
+      const userEmail = activeUser?.email || '';
+      const currentPairs = pairsByAccount ? (pairsByAccount[userEmail] || []) : pairs;
+      const pairsWithToken = currentPairs.map((p) => ('controlToken' in p ? p : { ...p, controlToken: '0123456789abcdef0123456789abcdef' }));
       return { ok: true, json: async () => ({ pairs: pairsWithToken }) };
     }
     if (String(url).includes('/api/nxe/pair/forget')) {
@@ -153,59 +154,127 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
     `let currentUser = ${JSON.stringify(initialUser)}; ${controller}; globalThis.setUser = (user) => { currentUser = user; window.dispatchEvent({ type: 'vortex-account-changed', detail: { user } }); };`,
     context,
   );
-  return { node, requests, setUser: context.setUser, storage };
+  return {
+    node,
+    requests,
+    setUser: (user) => {
+      activeUser = user;
+      context.setUser(user);
+    },
+    storage,
+  };
 }
 
 async function settle() {
   for (let step = 0; step < 5; step += 1) await new Promise((resolve) => setImmediate(resolve));
 }
 
-const signedOut = harness();
-signedOut.setUser(null);
-assert.equal(signedOut.node('nxeFtpAuthPanel').hidden, false, 'signed-out users see Google sign-in');
-signedOut.setUser({ email: 'user@example.invalid' });
+// ── Test 1: Completely new account ──────────────────────────────────────────
+const brandNewUser = harness({ initialUser: { email: 'brandnew@example.invalid' }, pairs: [] });
+// Inject stale localStorage to prove server state wins and stale keys are purged
+brandNewUser.storage.set('nxe-saved-ip', '192.168.0.70');
+brandNewUser.storage.set('nxe-saved-username', 'olduser');
 await settle();
-assert.equal(signedOut.node('nxeFtpPairPanel').hidden, false, 'signed-in users without a console see manual IP entry');
+assert.equal(brandNewUser.node('nxeFtpPairPanel').hidden, false, 'Test 1: new user sees manual connect form');
+assert.equal(brandNewUser.node('nxeFtpIpInput').value, '', 'Test 1: Console IP is completely empty (no stale/pre-filled IP)');
+assert.equal(brandNewUser.node('nxeFtpUsernameInput').value, '', 'Test 1: Username is completely empty');
+assert.equal(brandNewUser.node('nxeFtpPasswordInput').value, '', 'Test 1: Password is completely empty');
+assert.equal(brandNewUser.node('nxeFtpPortInput').value, '2121', 'Test 1: FTP Port defaults to 2121');
+assert.equal(brandNewUser.node('nxeFtpSuccessPanel').hidden, true, 'Test 1: success screen is hidden');
+assert.equal(brandNewUser.node('nxeFtpApp').hidden, true, 'Test 1: control panel is hidden');
 
-const savedPair = { pairId: 'console-pair-1234', consoleIp: '192.168.0.70', ftpPort: '2121' };
-const restored = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair] });
+// ── Test 2: First successful pairing ─────────────────────────────────────────
+brandNewUser.node('nxeFtpIpInput').value = '192.168.0.68';
+brandNewUser.node('nxeFtpConnectBtn').click();
 await settle();
-// Silent restore uses controlToken from pair/list → goes straight to control panel
-// The display element nxeFtpIp (not the form input) shows the restored console IP
-assert.equal(restored.node('nxeFtpIp').textContent, '192.168.0.70', 'restored console IP is shown in control panel');
-assert.equal(restored.node('nxeFtpApp').hidden, false, 'account-backed restore goes straight to control panel');
-assert.equal(restored.node('nxeFtpSuccessPanel').hidden, true, 'success screen is skipped on silent restore');
-assert.equal(restored.storage.get('nxe-pair-key:console-pair-1234'), '0123456789abcdef0123456789abcdef', 'restored credential is cached locally');
+assert.equal(brandNewUser.node('nxeFtpSuccessPanel').hidden, false, 'Test 2: first successful pair shows success screen');
+assert.equal(brandNewUser.node('nxeFtpPairPanel').hidden, true, 'Test 2: connect form is hidden on success screen');
+assert.equal(brandNewUser.node('nxeFtpApp').hidden, true, 'Test 2: control panel is hidden before pressing Continue');
 
-// Test "Forget this console" flow
-restored.node('nxeFtpForget').click();
+// Press Continue
+brandNewUser.node('nxeFtpContinueBtn').click();
 await settle();
-assert.equal(restored.node('nxeFtpApp').hidden, true, 'control panel is hidden after forgetting console');
-assert.equal(restored.node('nxeFtpPairPanel').hidden, false, 'manual connect form is shown after forgetting console');
-assert.equal(restored.storage.has('nxe-pair-key:console-pair-1234'), false, 'pair key is removed from storage');
-assert.equal(restored.storage.has('nxe-ftp-saved-ip'), false, 'saved IP is removed from storage');
-const forgetReq = restored.requests.find((r) => String(r.url).includes('/api/nxe/pair/forget'));
-assert.ok(forgetReq, 'forget request was sent to backend');
-assert.equal(JSON.parse(forgetReq.options.body).pairId, 'console-pair-1234', 'forget request contains correct pairId');
+assert.equal(brandNewUser.node('nxeFtpApp').hidden, false, 'Test 2: control panel visible after pressing Continue');
+assert.equal(brandNewUser.node('nxeFtpSuccessPanel').hidden, true, 'Test 2: success panel hidden after pressing Continue');
 
-// Test "Change Connection Details" flow
-const changeFlow = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair] });
+// ── Test 3: Refresh after pairing ────────────────────────────────────────────
+const savedPair = { pairId: 'console-pair-series-x', consoleIp: '192.168.0.68', ftpPort: '2121', controlToken: 'tok-series-x-123' };
+const refreshedUser = harness({ initialUser: { email: 'brandnew@example.invalid' }, pairs: [savedPair] });
 await settle();
-assert.equal(changeFlow.node('nxeFtpApp').hidden, false, 'control panel active before change');
-changeFlow.node('nxeFtpChangeConnection').click();
-await settle();
-assert.equal(changeFlow.node('nxeFtpApp').hidden, true, 'control panel hidden after clicking change connection');
-assert.equal(changeFlow.node('nxeFtpPairPanel').hidden, false, 'pair form shown after clicking change connection');
-assert.equal(changeFlow.node('nxeFtpIpInput').value, '192.168.0.70', 'IP input pre-filled with previous console IP');
-assert.equal(changeFlow.node('nxeFtpPortInput').value, '2121', 'Port input pre-filled with previous port');
+assert.equal(refreshedUser.node('nxeFtpApp').hidden, false, 'Test 3: returning user on refresh goes directly to control panel');
+assert.equal(refreshedUser.node('nxeFtpSuccessPanel').hidden, true, 'Test 3: success screen is skipped on normal refresh');
+assert.equal(refreshedUser.node('nxeFtpPairPanel').hidden, true, 'Test 3: pair form is hidden on normal refresh');
+assert.equal(refreshedUser.node('nxeFtpIp').textContent, '192.168.0.68', 'Test 3: control panel displays correct console IP');
 
-// Unreachable: list returns no controlToken, so it falls through to connectByManual which fails
-function harnessPairNoToken(options) {
-  return harness({ ...options, pairs: options.pairs.map((p) => ({ ...p, controlToken: '' })) });
-}
-const unreachable = harnessPairNoToken({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair], connectError: true });
+// ── Test 4: Close / reopen browser ───────────────────────────────────────────
+const reopenedSession = harness({ initialUser: { email: 'brandnew@example.invalid' }, pairs: [savedPair] });
 await settle();
-assert.match(unreachable.node('nxeFtpPairMessage').textContent, /Double-check every IP digit/, 'unreachable saved IP gives correction guidance');
+assert.equal(reopenedSession.node('nxeFtpApp').hidden, false, 'Test 4: reopened browser goes directly to control panel');
+assert.equal(reopenedSession.node('nxeFtpSuccessPanel').hidden, true, 'Test 4: success screen is skipped on reopened session');
 
-console.log('NXE FTP authentication, forget console & change connection details tests passed.');
+// ── Test 5: Sign out and sign back in ────────────────────────────────────────
+refreshedUser.setUser(null);
+await settle();
+assert.equal(refreshedUser.node('nxeFtpAuthPanel').hidden, false, 'Test 5: signed out shows auth panel');
+assert.equal(refreshedUser.node('nxeFtpApp').hidden, true, 'Test 5: signed out hides control panel');
+refreshedUser.setUser({ email: 'brandnew@example.invalid' });
+await settle();
+assert.equal(refreshedUser.node('nxeFtpApp').hidden, false, 'Test 5: signing back in restores control panel directly');
+assert.equal(refreshedUser.node('nxeFtpSuccessPanel').hidden, true, 'Test 5: signing back in skips success screen');
+
+// ── Test 6: Forget console ───────────────────────────────────────────────────
+refreshedUser.node('nxeFtpForget').click();
+await settle();
+assert.equal(refreshedUser.node('nxeFtpApp').hidden, true, 'Test 6: control panel is hidden after Forget');
+assert.equal(refreshedUser.node('nxeFtpPairPanel').hidden, false, 'Test 6: connection form is shown after Forget');
+assert.equal(refreshedUser.node('nxeFtpSuccessPanel').hidden, true, 'Test 6: success panel is NOT shown on Forget');
+assert.equal(refreshedUser.node('nxeFtpIpInput').value, '', 'Test 6: IP input is blanked on Forget');
+assert.equal(refreshedUser.storage.has('nxe-saved-ip'), false, 'Test 6: saved IP removed from storage');
+assert.equal(refreshedUser.storage.has('nxe-pair-key:console-pair-series-x'), false, 'Test 6: pair key removed from storage');
+const forgetReq = refreshedUser.requests.find((r) => String(r.url).includes('/api/nxe/pair/forget'));
+assert.ok(forgetReq, 'Test 6: forget request sent to backend');
+assert.equal(JSON.parse(forgetReq.options.body).pairId, 'console-pair-series-x', 'Test 6: forget payload includes pairId');
+
+// ── Test 7: Refresh after Forget ─────────────────────────────────────────────
+const afterForgetUser = harness({ initialUser: { email: 'brandnew@example.invalid' }, pairs: [] });
+await settle();
+assert.equal(afterForgetUser.node('nxeFtpPairPanel').hidden, false, 'Test 7: blank connection form shown after refresh following Forget');
+assert.equal(afterForgetUser.node('nxeFtpIpInput').value, '', 'Test 7: IP field remains completely blank on refresh');
+assert.equal(afterForgetUser.node('nxeFtpApp').hidden, true, 'Test 7: control panel remains hidden');
+assert.equal(afterForgetUser.node('nxeFtpSuccessPanel').hidden, true, 'Test 7: success screen remains hidden');
+
+// ── Test 8: Pair again after Forget ──────────────────────────────────────────
+afterForgetUser.node('nxeFtpIpInput').value = '192.168.0.68';
+afterForgetUser.node('nxeFtpConnectBtn').click();
+await settle();
+assert.equal(afterForgetUser.node('nxeFtpSuccessPanel').hidden, false, 'Test 8: pairing again shows success screen with tick');
+assert.equal(afterForgetUser.node('nxeFtpApp').hidden, true, 'Test 8: control panel hidden until Continue is clicked');
+afterForgetUser.node('nxeFtpContinueBtn').click();
+await settle();
+assert.equal(afterForgetUser.node('nxeFtpApp').hidden, false, 'Test 8: control panel entered after Continue');
+
+// ── Test 9: Different Google account (Cross-account isolation) ───────────────
+const accountA = harness({
+  initialUser: { email: 'accountA@example.invalid' },
+  pairsByAccount: {
+    'accountA@example.invalid': [savedPair],
+    'accountB@example.invalid': []
+  }
+});
+await settle();
+assert.equal(accountA.node('nxeFtpApp').hidden, false, 'Test 9: Account A has saved console');
+
+// Switch to Account B (which has no paired console)
+accountA.setUser({ email: 'accountB@example.invalid' });
+await settle();
+assert.equal(accountA.node('nxeFtpPairPanel').hidden, false, 'Test 9: Account B sees manual connect form');
+assert.equal(accountA.node('nxeFtpIpInput').value, '', 'Test 9: Account B sees empty IP field (no leak from Account A)');
+assert.equal(accountA.node('nxeFtpApp').hidden, true, 'Test 9: Account B does not have control panel open');
+
+// Switch back to Account A
+accountA.setUser({ email: 'accountA@example.invalid' });
+await settle();
+assert.equal(accountA.node('nxeFtpApp').hidden, false, 'Test 9: switching back to Account A restores console');
+
+console.log('ALL 9 NXE FTP LIFECYCLE & STATE MACHINE TESTS PASSED.');
 

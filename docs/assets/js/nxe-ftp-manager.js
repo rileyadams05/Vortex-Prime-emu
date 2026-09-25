@@ -351,13 +351,7 @@
         // No console, not restoring → show connect form
         if (pairPanel) {
             pairPanel.hidden = false;
-            // Pre-fill from localStorage for convenience
-            const savedIp   = localStorage.getItem(SAVED_IP_KEY)  || '';
-            const savedPort = localStorage.getItem(SAVED_PORT_KEY) || '2121';
-            const savedUser = localStorage.getItem(SAVED_USER_KEY) || '';
-            if (ipInput      && savedIp  && !ipInput.value)      ipInput.value      = savedIp;
-            if (portInput    && !portInput.value)                 portInput.value    = savedPort;
-            if (usernameInput && !usernameInput.value)            usernameInput.value = savedUser;
+            if (portInput && !portInput.value) portInput.value = '2121';
         }
         if (successPanel) successPanel.hidden = true;
         if (app)          app.hidden          = true;
@@ -399,28 +393,47 @@
         // renderPanels() uses this to decide when it is safe to dismiss the spinner.
         authResolved = true;
 
-        const userChanged = (user?.uid || null) !== (ftpCurrentUser?.uid || null);
+        const prevUser = ftpCurrentUser;
+        const userChanged = (user?.uid || user?.email || null) !== (prevUser?.uid || prevUser?.email || null);
         ftpCurrentUser = user || null;
 
         if (!user) {
             // Signed out — reset all state
             pairRequestId += 1;
+            statusGeneration += 1;
             pair          = null;
             pairKey       = '';
             isNewConnection = false;
             claimPairInProgress = false;
             if (pairMessage) pairMessage.textContent = '';
             if (message)     message.textContent     = '';
+            if (ipInput)     ipInput.value           = '';
+            if (portInput)   portInput.value         = '2121';
+            if (usernameInput) usernameInput.value   = '';
+            if (passwordInput) passwordInput.value   = '';
             stopPolling();
             closeRelay();
             renderPanels();
             return;
         }
 
-        if (pair) {
-            // Already have an active console — just refresh the UI
-            // (handles the case where Firebase fires a second auth event
-            //  after we've already entered the control panel).
+        if (userChanged) {
+            // Switched to a different account — reset active console state and start fresh restore
+            pairRequestId += 1;
+            statusGeneration += 1;
+            pair          = null;
+            pairKey       = '';
+            isNewConnection = false;
+            if (pairMessage) pairMessage.textContent = '';
+            if (message)     message.textContent     = '';
+            if (ipInput)     ipInput.value           = '';
+            if (portInput)   portInput.value         = '2121';
+            if (usernameInput) usernameInput.value   = '';
+            if (passwordInput) passwordInput.value   = '';
+            stopPolling();
+            closeRelay();
+        } else if (pair) {
+            // Same user and already have an active console — just refresh UI
             renderPanels();
             return;
         }
@@ -430,7 +443,7 @@
             return;
         }
 
-        // Start the console restore
+        // Start the console restore from the authenticated account
         claimPairInProgress = true;
         renderPanels();   // shows "Restoring console…"
         claimPair();
@@ -900,7 +913,15 @@
             const selected   = (lastPairId ? pairs.find((p) => p.pairId === lastPairId) : null) || pairs[0];
 
             if (!selected) {
-                // No console saved on this account — show connect form
+                // No console saved on this account — clear stale local caches and show clean blank connect form
+                localStorage.removeItem(SAVED_IP_KEY);
+                localStorage.removeItem(SAVED_PORT_KEY);
+                localStorage.removeItem(SAVED_USER_KEY);
+                localStorage.removeItem(LAST_PAIR_ID_KEY);
+                if (ipInput)       ipInput.value       = '';
+                if (portInput)     portInput.value     = '2121';
+                if (usernameInput) usernameInput.value = '';
+                if (passwordInput) passwordInput.value = '';
                 claimPairInProgress = false;
                 renderPanels();
                 return;
@@ -931,6 +952,10 @@
 
             // Nothing to work with → show connect form
             claimPairInProgress = false;
+            if (ipInput)       ipInput.value       = '';
+            if (portInput)     portInput.value     = '2121';
+            if (usernameInput) usernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
             renderPanels();
 
         } catch (_error) {
@@ -940,10 +965,10 @@
                 return;
             }
             claimPairInProgress = false;
-            // Pre-fill form from localStorage for convenience
-            const savedIp = localStorage.getItem(SAVED_IP_KEY);
-            if (savedIp && ipInput && !ipInput.value)   ipInput.value   = savedIp;
-            if (portInput && !portInput.value)           portInput.value = localStorage.getItem(SAVED_PORT_KEY) || '2121';
+            if (ipInput)       ipInput.value       = '';
+            if (portInput)     portInput.value     = '2121';
+            if (usernameInput) usernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
             renderPanels();   // shows connect form
         }
     }
