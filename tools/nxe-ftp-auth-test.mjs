@@ -61,17 +61,28 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
   const hiddenInitially = new Set(['nxeFtpAuthPanel', 'nxeFtpPairPanel', 'nxeFtpSuccessPanel', 'nxeFtpApp', 'nxeFtpCredModal', 'nxeFtpViewCredModal', 'nxeFtpBtnChangeCredentials', 'nxeFtpBtnViewCredentials']);
 
   function node(id) {
-    if (!nodes.has(id)) nodes.set(id, {
-      hidden: hiddenInitially.has(id),
-      textContent: '',
-      innerHTML: '',
-      value: '',
-      disabled: false,
-      dataset: {},
-      style: {},
-      addEventListener() {},
-      appendChild() {},
-    });
+    if (!nodes.has(id)) {
+      const eventHandlers = new Map();
+      nodes.set(id, {
+        hidden: hiddenInitially.has(id),
+        textContent: '',
+        innerHTML: '',
+        value: '',
+        disabled: false,
+        dataset: {},
+        style: {},
+        addEventListener(event, handler) {
+          if (!eventHandlers.has(event)) eventHandlers.set(event, []);
+          eventHandlers.get(event).push(handler);
+        },
+        click() {
+          const list = eventHandlers.get('click') || [];
+          for (const handler of list) handler({ preventDefault() {} });
+        },
+        focus() {},
+        appendChild() {},
+      });
+    }
     return nodes.get(id);
   }
 
@@ -92,6 +103,9 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
       // Only inject a default token if the pair entry doesn't already have a controlToken property.
       const pairsWithToken = pairs.map((p) => ('controlToken' in p ? p : { ...p, controlToken: '0123456789abcdef0123456789abcdef' }));
       return { ok: true, json: async () => ({ pairs: pairsWithToken }) };
+    }
+    if (String(url).includes('/api/nxe/pair/forget')) {
+      return { ok: true, json: async () => ({ ok: true }) };
     }
     if (String(url).includes('/api/nxe/pair/connect')) {
       if (connectError) {
@@ -129,7 +143,10 @@ function harness({ initialUser = null, pairs = [], connectError = false } = {}) 
       querySelectorAll: () => [],
       createElement: () => ({ addEventListener() {}, appendChild() {}, style: {}, dataset: {} }),
     },
-    setTimeout() {},
+    setTimeout(cb, ms) { return setTimeout(cb, ms); },
+    clearTimeout(id) { clearTimeout(id); },
+    setInterval(cb, ms) { return setInterval(cb, ms); },
+    clearInterval(id) { clearInterval(id); },
   };
 
   vm.runInNewContext(
@@ -160,6 +177,28 @@ assert.equal(restored.node('nxeFtpApp').hidden, false, 'account-backed restore g
 assert.equal(restored.node('nxeFtpSuccessPanel').hidden, true, 'success screen is skipped on silent restore');
 assert.equal(restored.storage.get('nxe-pair-key:console-pair-1234'), '0123456789abcdef0123456789abcdef', 'restored credential is cached locally');
 
+// Test "Forget this console" flow
+restored.node('nxeFtpForget').click();
+await settle();
+assert.equal(restored.node('nxeFtpApp').hidden, true, 'control panel is hidden after forgetting console');
+assert.equal(restored.node('nxeFtpPairPanel').hidden, false, 'manual connect form is shown after forgetting console');
+assert.equal(restored.storage.has('nxe-pair-key:console-pair-1234'), false, 'pair key is removed from storage');
+assert.equal(restored.storage.has('nxe-ftp-saved-ip'), false, 'saved IP is removed from storage');
+const forgetReq = restored.requests.find((r) => String(r.url).includes('/api/nxe/pair/forget'));
+assert.ok(forgetReq, 'forget request was sent to backend');
+assert.equal(JSON.parse(forgetReq.options.body).pairId, 'console-pair-1234', 'forget request contains correct pairId');
+
+// Test "Change Connection Details" flow
+const changeFlow = harness({ initialUser: { email: 'user@example.invalid' }, pairs: [savedPair] });
+await settle();
+assert.equal(changeFlow.node('nxeFtpApp').hidden, false, 'control panel active before change');
+changeFlow.node('nxeFtpChangeConnection').click();
+await settle();
+assert.equal(changeFlow.node('nxeFtpApp').hidden, true, 'control panel hidden after clicking change connection');
+assert.equal(changeFlow.node('nxeFtpPairPanel').hidden, false, 'pair form shown after clicking change connection');
+assert.equal(changeFlow.node('nxeFtpIpInput').value, '192.168.0.70', 'IP input pre-filled with previous console IP');
+assert.equal(changeFlow.node('nxeFtpPortInput').value, '2121', 'Port input pre-filled with previous port');
+
 // Unreachable: list returns no controlToken, so it falls through to connectByManual which fails
 function harnessPairNoToken(options) {
   return harness({ ...options, pairs: options.pairs.map((p) => ({ ...p, controlToken: '' })) });
@@ -168,5 +207,5 @@ const unreachable = harnessPairNoToken({ initialUser: { email: 'user@example.inv
 await settle();
 assert.match(unreachable.node('nxeFtpPairMessage').textContent, /Double-check every IP digit/, 'unreachable saved IP gives correction guidance');
 
-console.log('NXE FTP authentication, change credentials & view credentials tests passed.');
+console.log('NXE FTP authentication, forget console & change connection details tests passed.');
 

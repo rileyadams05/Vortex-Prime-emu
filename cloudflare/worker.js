@@ -243,6 +243,10 @@ export default {
         return await handleNxePairCommand(request, env, allowedOrigin);
       }
 
+      if (path === 'api/nxe/pair/forget') {
+        return await handleNxePairForget(request, env, allowedOrigin);
+      }
+
       if (path === 'api/nxe/relay/console' || path === 'api/nxe/relay/browser') {
         return await handleNxeRelayUpgrade(request, env, path);
       }
@@ -835,6 +839,30 @@ async function handleNxePairCommand(request, env, origin) {
     return { db: { ...db, nxePairs: pairs }, value: { id, type } };
   });
   return json({ ok: true, command: result }, 202, origin);
+}
+
+async function handleNxePairForget(request, env, origin) {
+  if (request.method !== 'POST') throw httpError(405, 'NXE forget requires POST.');
+  const user = await ensureAuthenticated(request, env, 'Sign in with Google before unpairing NXE.');
+  const body = await request.json().catch(() => null);
+  const pairId = String(body?.pairId || '').trim();
+  if (!pairId) throw httpError(400, 'Pair ID is required.');
+  const accountId = user.firebaseUid || user.sub || user.email;
+  await updateStreamzDatabase(env, async (db) => {
+    const pairs = Array.isArray(db.nxePairs) ? [...db.nxePairs] : [];
+    const index = pairs.findIndex((entry) => entry.pairId === pairId && entry.accountId === accountId);
+    if (index >= 0) {
+      const next = {
+        ...pairs[index],
+        accountId: null,
+        controlTokenEncrypted: null,
+        claimedAt: null,
+      };
+      pairs[index] = next;
+    }
+    return { db: { ...db, nxePairs: pairs }, value: true };
+  });
+  return json({ ok: true }, 200, origin);
 }
 
 function sanitizeNxePair(pair, includeSecrets = false) {

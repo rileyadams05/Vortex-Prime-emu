@@ -633,9 +633,14 @@
     // ══════════════════════════════════════════════════════════════════════
 
     function startPolling() {
-        if (pollTimer) return;   // already running — do not stack timers
+        stopPolling();   // singleton enforcement — stop existing timer before starting a new one
+        if (!pair || !app || app.hidden) return;
         pollTimer = _setInterval(() => {
-            if (pair && app && !app.hidden) refreshStatus();
+            if (!pair || !app || app.hidden) {
+                stopPolling();
+                return;
+            }
+            refreshStatus();
         }, POLL_INTERVAL_MS);
     }
 
@@ -659,19 +664,23 @@
      *     reach the Xbox — those are unknowns, not confirmed states.
      *
      * The monotonic `statusGeneration` counter prevents stale async responses
-     * from overwriting a more recent successful result.
+     * from overwriting a more recent successful result or executing after
+     * a console has been forgotten or switched.
      */
     async function refreshStatus(retries) {
         if (!pair) return;
+        const currentPairId = pair.pairId || null;
         retries = (retries == null) ? 2 : retries;
         const generation = ++statusGeneration;
 
         for (let attempt = 0; attempt <= retries; attempt++) {
             try {
+                if (!pair || (currentPairId && pair.pairId !== currentPairId) || generation !== statusGeneration) return;
+
                 const status = await api('/api/v1/device/status');
 
-                // Discard if a newer call already completed
-                if (generation !== statusGeneration) return;
+                // Discard if a newer call already completed or console was changed/forgotten
+                if (!pair || (currentPairId && pair.pairId !== currentPairId) || generation !== statusGeneration) return;
 
                 pair.running = Boolean(status.ftpRunning);
                 setState('Connected', 'ok');
@@ -692,15 +701,19 @@
                 return;
 
             } catch (error) {
+                // If console was forgotten or changed while request was in-flight, exit cleanly
+                if (!pair || (currentPairId && pair.pairId !== currentPairId) || generation !== statusGeneration) return;
+
                 if (attempt < retries) {
                     await new Promise((r) => _setTimeout(r, 600 * (attempt + 1)));
+                    if (!pair || (currentPairId && pair.pairId !== currentPairId) || generation !== statusGeneration) return;
                     continue;
                 }
 
                 // All retries exhausted
-                if (generation !== statusGeneration) return;
+                if (!pair || (currentPairId && pair.pairId !== currentPairId) || generation !== statusGeneration) return;
 
-                const savedIp = pair.consoleIp || localStorage.getItem(SAVED_IP_KEY) || 'console';
+                const savedIp = (pair && pair.consoleIp) || localStorage.getItem(SAVED_IP_KEY) || 'console';
                 setState('Disconnected', 'err');
                 setFtpStatusDisplay(null, 'Unknown');   // NOT "Stopped" — we don't know
                 setAuthStatus(null);                    // NOT "No"      — we don't know
@@ -941,11 +954,13 @@
 
     async function sendCommand(type) {
         if (!pair) return;
+        const currentPairId = pair.pairId || null;
         const labels = { start: 'Starting\u2026', stop: 'Stopping\u2026', restart: 'Restarting\u2026' };
         setFtpStatusDisplay(null, labels[type] || type);
         setMessage('');
         try {
             const data = await api('/api/v1/ftp/' + type, { method: 'POST' });
+            if (!pair || (currentPairId && pair.pairId !== currentPairId)) return;
             pair.running = Boolean(data.ftpRunning);
             setFtpStatusDisplay(pair.running);
             setState('Connected', 'ok');
@@ -953,6 +968,7 @@
             setAuthStatus(storageOk, storageOk ? '' : (data.storageMessage || 'Storage not available'));
             setCredentialButtons(Boolean(data.hasCredentials || (data.username && data.username.length > 0)));
         } catch (error) {
+            if (!pair || (currentPairId && pair.pairId !== currentPairId)) return;
             setMessage(error.message, true);
             refreshStatus();
         }
@@ -1091,11 +1107,14 @@
         // Capture current values before nulling pair
         const currentIp   = pair ? pair.consoleIp : '';
         const currentPort = pair ? pair.ftpPort   : '';
+        statusGeneration += 1;
+        pairRequestId    += 1;
+        stopPolling();
+        closeRelay();
         pair    = null;
         pairKey = '';
         isNewConnection     = false;
         claimPairInProgress = false;
-        stopPolling();
         // Pre-fill with the previous IP/port so the user just edits what changed
         if (ipInput)   ipInput.value   = currentIp   || localStorage.getItem(SAVED_IP_KEY)   || '';
         if (portInput) portInput.value = currentPort || localStorage.getItem(SAVED_PORT_KEY) || '2121';
@@ -1107,14 +1126,27 @@
     }
 
     function forgetConsole() {
+        const targetPair = pair;
+        statusGeneration += 1;
+        pairRequestId    += 1;
         stopPolling();
         closeRelay();
-        if (pair && pair.pairId) localStorage.removeItem('nxe-pair-key:' + pair.pairId);
+
+        if (targetPair && targetPair.pairId) {
+            localStorage.removeItem('nxe-pair-key:' + targetPair.pairId);
+            fetch('/api/nxe/pair/forget', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pairId: targetPair.pairId })
+            }).catch(() => {});
+        }
+
         localStorage.removeItem(SAVED_IP_KEY);
         localStorage.removeItem(SAVED_PORT_KEY);
         localStorage.removeItem(SAVED_USER_KEY);
         localStorage.removeItem(LAST_PAIR_ID_KEY);
-        pairRequestId += 1;
+
         pair            = null;
         pairKey         = '';
         isNewConnection = false;
