@@ -39,11 +39,11 @@ test("accepts private IPv4 only for production address checks", () => {
   for (const value of ["8.8.8.8", "192.168.1.256", "192.168.1", "localhost"]) assert.throws(() => validatePrivateIPv4(value));
 });
 test("pairs, sends a serialized request, and accepts receiver acknowledgement", async () => {
-  let seen;
+  let seen;\n  let addressSpace;
   const realFetch = globalThis.fetch;
   const fetchImpl = async (url, options) => {
     const response = await realFetch(url, options);
-    if (url.endsWith("/requests")) seen = { body: JSON.parse(options.body), auth: options.headers.Authorization };
+    if (url.endsWith("/requests")) { seen = { body: JSON.parse(options.body), auth: options.headers.Authorization }; addressSpace = options.targetAddressSpace; }
     return response;
   };
   const sent = await sendToConsole({
@@ -53,7 +53,7 @@ test("pairs, sends a serialized request, and accepts receiver acknowledgement", 
   assert.equal(sent.acknowledgement.status, "awaiting-user-confirmation");
   assert.equal(seen.body.downloadUrl, "https://example.com/download/homebrew.pkg");
   assert.equal(seen.body.target, "ps4-goldhen");
-  assert.match(seen.auth, /^Bearer /);
+  assert.match(seen.auth, /^Bearer /);\n  assert.equal(addressSpace, "loopback");
 });
 test("rejects invalid pairing and unsupported PS5 send", async () => {
   await assert.rejects(sendToConsole({
