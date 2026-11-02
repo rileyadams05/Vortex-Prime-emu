@@ -26,7 +26,7 @@
   <p class="intro">Send a package download link to the PSX WebKit receiver running on your PlayStation. Your browser contacts the console directly; Vortex Prime does not download or store the package URL.</p>
   <section class="panel" aria-labelledby="sender-heading">
     <h2 id="sender-heading">Send a download link</h2>
-    <p class="muted">Start the PSX WebKit receiver on your console first. Enter the local IP and pairing code shown on its screen.</p>
+    <p class="muted">Start the PSX WebKit receiver on your console first, then enter the local IP shown on its screen.</p>
     <form id="senderForm" novalidate>
       <fieldset style="border:0;padding:0;margin:0">
         <legend class="legend">Console</legend>
@@ -37,7 +37,6 @@
       </fieldset>
       <div class="field"><label for="downloadUrl">Download URL</label><input id="downloadUrl" name="downloadUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com/download/homebrew.pkg" required maxlength="8192"><p class="hint">Paste the actual HTTP or HTTPS link. The website does not fetch or rewrite it.</p></div>
       <div class="field"><label for="consoleIp">PlayStation IP Address</label><input id="consoleIp" name="consoleIp" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50" required><p class="hint">Use the private IPv4 address shown in PSX WebKit.</p></div>
-      <div class="field"><label for="pairingCode">PSX WebKit pairing code</label><input id="pairingCode" name="pairingCode" type="text" autocomplete="one-time-code" required minlength="6" maxlength="128" placeholder="Code shown on the console"><p class="hint">The receiver issues a short-lived code. It is sent directly to your console.</p></div>
       <div class="field"><label for="receiverPort">Receiver port</label><input id="receiverPort" name="receiverPort" type="number" min="1" max="65535" value="19871" required><p class="hint">PSX WebKit default: 19871. Change this only if your receiver uses another port.</p></div>
       <button id="sendButton" class="send" type="submit">Send to PlayStation</button>
     </form>
@@ -64,12 +63,11 @@
     const target = new FormData(form).get("target");
     button.disabled = true;
     pendingRequestId ||= crypto.randomUUID();
-    show("Connecting to PSX WebKit and requesting pairing…", "working");
+    show("Connecting directly to PSX WebKit…", "working");
     try {
       const result = await sendToConsole({
         ip: form.elements.consoleIp.value,
         port: Number(form.elements.receiverPort.value) || DEFAULT_RECEIVER_PORT,
-        pairingCode: form.elements.pairingCode.value,
         target,
         downloadUrl: form.elements.downloadUrl.value,
         requestId: pendingRequestId
