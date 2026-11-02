@@ -219,37 +219,7 @@ export default {
         return handleLogout(env, allowedOrigin);
       }
 
-      if (path === 'api/nxe/pair/register') {
-        return await handleNxePairRegister(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/nxe/pair/poll') {
-        return await handleNxePairPoll(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/nxe/pair/list') {
-        return await handleNxePairList(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/nxe/pair/claim') {
-        return await handleNxePairClaim(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/nxe/pair/connect') {
-        return await handleNxePairConnect(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/nxe/pair/command') {
-        return await handleNxePairCommand(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/nxe/pair/forget') {
-        return await handleNxePairForget(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/nxe/relay/console' || path === 'api/nxe/relay/browser') {
-        return await handleNxeRelayUpgrade(request, env, path);
-      }
+      // NXE pairing remains legacy code and is not exposed by the primary website API.
 
       if (path.startsWith('api/streamz/auth/')) {
         return await handleStreamzAuthRequest(request, env, path, allowedOrigin);
