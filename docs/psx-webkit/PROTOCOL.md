@@ -9,7 +9,7 @@
 - Only user-entered private IPv4 addresses are accepted by the website. It does not scan addresses or accept public IPs.
 - The receiver must require pairing and console-side user confirmation. It must not begin a download or installation when a request arrives.
 - Serve CORS preflight and replies for the exact production origin `https://vortex-prime-emu.com` (and an explicit development origin when enabled). Allow methods `POST, OPTIONS`; headers `Authorization, Content-Type`; do not use wildcard origins with credentials.
-- Browsers may gate website-to-LAN traffic with local-network permission, mixed-content rules, or platform-specific controls. A failed browser request must be shown as failure. Do not treat an attempted fetch as delivery.
+- Browsers may gate website-to-LAN traffic with local-network permission, mixed-content rules, or platform-specific controls. On Chrome, declare `targetAddressSpace: 'local'` on the browser fetch so an HTTP LAN request can use the LNA permission flow. A failed browser request must be shown as failure. Do not treat an attempted fetch as delivery.
 - Bind to LAN only, use short-lived pairing credentials, rate-limit pairing attempts, and never expose the listener through router port forwarding.
 
 ## Pairing
@@ -75,4 +75,4 @@ This response means the receiver accepted and displayed the URL for user review.
 
 ## Browser behavior
 
-The website sets CORS mode and an 8 second timeout. The console must answer `OPTIONS` preflight for both POST routes and include CORS headers on success and error responses. Chrome may ask the user to grant local-network access after the Send button is pressed. iOS, Android, Firefox, Safari, and managed browsers can apply different local-network and mixed-content policies; hardware/browser testing is still required.
+The website sets CORS mode, declares the local target address space, checks supported browser permission state, and applies an 8 second timeout. The console must answer `OPTIONS` preflight for both POST routes and include CORS headers on success and error responses. Chrome may ask the user to grant local-network access after the Send button is pressed. iOS, Android, Firefox, Safari, and managed browsers can apply different local-network and mixed-content policies; hardware/browser testing is still required.
