@@ -753,7 +753,6 @@
             padding-top: 72px;
         }
 
-        #page-mods,
         #page-games,
         #page-projects,
         #page-streamz,
@@ -2243,7 +2242,6 @@
 
 
 
-        /* Mods Page */
         .store-hero {
             max-width: 1400px;
             margin: 0 auto;
@@ -3664,7 +3662,7 @@
             .store-search-input { padding-left: 2.5rem; }
             /* Help page heading clearance on mobile (smaller nav height) */
             #page-help { padding-top: calc(64px + 2.5rem); }
-            #page-mods, #page-games, #page-projects, #page-streamz, #page-streamz-plugin { padding-top: calc(64px + 2.5rem); }
+            #page-games, #page-projects, #page-streamz, #page-streamz-plugin { padding-top: calc(64px + 2.5rem); }
             .projects-grid { grid-template-columns: 1fr; padding: 0 1rem 3rem; }
             .project-meta-row { flex-direction: column; gap: 0.25rem; }
             .project-meta-row strong { text-align: left; }
@@ -3822,13 +3820,7 @@
                             <p>Explore PlayStation and Xbox resources, homebrew information, and console development references.</p>
                         </div>
 
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                            </div>
-                            <h3>Community Mods</h3>
-                            <p>Browse the community catalogue and discover available modifications, guides, and shared resources.</p>
-                        </div>
+                        
 
                         <div class="feature-card">
                             <div class="feature-icon">
@@ -4130,62 +4122,7 @@
                 </div>
             </div>
             <!-- Mods Page -->
-            <div class="page" id="page-mods">
-                <section class="store-hero">
-                    <h1>Mods</h1>
-                    <p>Browse community mods for Vortex Prime-supported platforms.</p>
-
-                    <div style="display: flex; justify-content: center; margin: 1.5rem 0 2rem;">
-                        <a class="btn" href="/admin/?type=mods" data-no-gate="true" style="background: #10B981; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 700; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
-                            Upload
-                        </a>
-                    </div>
-
-                    <div class="store-search-wrap">
-                        <div class="store-search-field">
-                            <svg class="store-search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                            <input
-                                class="store-search-input"
-                                id="modsSearchInput"
-                                type="text"
-                                placeholder="Search by mod's name or creator name"
-                                oninput="handleModsSearch(this.value)"
-                                autocomplete="off"
-                                spellcheck="false"
-                            >
-                        </div>
-                        <div class="store-controls">
-                            <div class="filter-group">
-                                <div class="store-filter-buttons" id="modsPlatformDropdown" aria-label="Mod platform filters">
-                                    <button type="button" class="store-filter-option active" data-platform="All" onclick="setModsPlatform('All')">All Platforms</button>
-                                    <button type="button" class="store-filter-option" data-platform="PS4" onclick="setModsPlatform('PS4')">PS4</button>
-                                    <button type="button" class="store-filter-option" data-platform="PS3" onclick="setModsPlatform('PS3')">PS3</button>
-                                    <button type="button" class="store-filter-option" data-platform="PS2" onclick="setModsPlatform('PS2')">PS2</button>
-                                    <button type="button" class="store-filter-option" data-platform="PS Vita" onclick="setModsPlatform('PS Vita')">PS Vita</button>
-                                    <button type="button" class="store-filter-option" data-platform="PSP" onclick="setModsPlatform('PSP')">PSP</button>
-                                    <button type="button" class="store-filter-option" data-platform="Original Xbox" onclick="setModsPlatform('Original Xbox')">Original Xbox</button>
-                                    <button type="button" class="store-filter-option" data-platform="Xbox 360" onclick="setModsPlatform('Xbox 360')">Xbox 360</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="store-search-hint">Search by mod's name or creator name.</div>
-                    </div>
-                </section>
-
-                <div class="store-grid" id="modsGrid">
-                    <div class="store-no-results" id="modsNoResults">
-                        <div class="store-no-results-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.28 7.28 0 0 0-1.69-.98L14.5 2.42A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42L9.12 5.07c-.61.24-1.18.56-1.69.98l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s-.02.66-.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.43.34.68.22l2.41-.97c.51.4 1.07.72 1.69.96l.38 2.68c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.68c.61-.24 1.18-.56 1.69-.96l2.41.97c.25.12.54.02.68-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/></svg>
-                        </div>
-                        <h3>No mods listed yet</h3>
-                        <p id="modsNoResultsMsg">Mods content will appear here soon.</p>
-                        <div class="store-no-results-sub" id="modsNoResultsSub">Upload mods through the Mods upload flow to populate this feed.</div>
-                    </div>
-                </div>
-
-                <div id="modsPagination" class="store-pagination"></div>
-            </div>
+            
 
             <!-- Help Page -->
             <div class="page" id="page-help">
@@ -4277,7 +4214,6 @@
                     <div id="itemDetailContent"></div>
                 </section>
             </div>
-            <script type="module" src="/assets/js/mods-catalogue.js?v=20261103-static"></script>
 <script>
                 (function () {
                     const CARDS_PER_PAGE = 10;
@@ -4892,23 +4828,6 @@
 
 
                     const installModal = document.getElementById('installModal');
-                    const modsGrid = document.getElementById('modsGrid');
-                    const modsNoResults = document.getElementById('modsNoResults');
-                    const modsNoResultsMsg = document.getElementById('modsNoResultsMsg');
-                    const modsNoResultsSub = document.getElementById('modsNoResultsSub');
-                    const modsPagination = document.getElementById('modsPagination');
-                    const modsSearchInput = document.getElementById('modsSearchInput');
-
-                    let modItems = [];
-                    let filteredMods = [];
-                    let modsQuery = '';
-                    let modsPlatform = 'All';
-                    let modsPage = 1;
-
-                    function initializeModsFilters() {
-                        setModsPlatform(modsPlatform);
-                    }
-                    initializeModsFilters();
 
                     function showPage(pageId) {
                         document.querySelectorAll('.page').forEach((page) => page.classList.remove('active'));
@@ -4930,11 +4849,6 @@
                         // Close mobile drawer on navigation
                         if (typeof window._closeMobileMenu === 'function') window._closeMobileMenu();
                         
-                        if (pageId === 'mods') {
-                            modsPlatform = 'All';
-                            initializeModsFilters();
-                            applyModsFilters();
-                        }
 
                         const routePath = getRoutePath(pageId);
                         if (window.location.pathname !== routePath) {
@@ -4947,7 +4861,6 @@
                     function getRoutePath(pageId) {
                         const routes = {
                             home: '/',
-                            'mods': '/mods/',
                             games: '/games/',
                             projects: '/projects/',
                             streamz: '/projects/streamz/',
@@ -4968,7 +4881,6 @@
                         const routes = {
                             '': 'home',
                             '/index.html': 'home',
-                            '/mods': 'mods',
                             '/games': 'games',
                             '/projects': 'projects',
                             '/projects/streamz': 'streamz',
@@ -6347,36 +6259,6 @@
                         updateModsNoResults(modsQuery, filteredMods.length > 0);
                     }
 
-                    async function loadModsCatalog() {
-                        if (isLocalPreview) {
-                            modItems = [];
-                            applyModsFilters();
-                            return;
-                        }
-                        try {
-                            const api = await ensureModsApi();
-                            const items = await api.loadMods();
-                            const status = api.getStatus ? api.getStatus() : null;
-                            if (status?.configured) {
-                                showBackendStatus(null);
-                            } else if (status?.message) {
-                                showBackendStatus(status.message);
-                            }
-                            modItems = Array.isArray(items) ? items.filter(item => item && item.published !== false) : [];
-                        } catch (error) {
-                            console.error('Failed to load mods catalogue', error);
-                            showBackendStatus('Community catalogue is temporarily unavailable. Please try again later.');
-                            modItems = [];
-                        }
-
-                        applyModsFilters();
-                    }
-
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', loadModsCatalog);
-                    } else {
-                        loadModsCatalog();
-                    }
 
                     document.addEventListener('keydown', (event) => {
                         if (event.key === 'Escape') {
@@ -6386,9 +6268,6 @@
                     });
 
                      window.showPage = showPage;
-                    window.handleModsSearch = handleModsSearch;
-                    window.setModsPlatform = setModsPlatform;
-                    window.clearModsSearch = clearModsSearch;
                     window.copyCode = copyCode;
                     window.closeModal = closeModal;
 
