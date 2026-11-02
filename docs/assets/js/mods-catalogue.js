@@ -16,7 +16,14 @@ async function request(path, options = {}) {
     try {
       payload = text ? JSON.parse(text) : null;
     } catch (_) {}
-    throw new Error(payload?.message || payload?.error || text || `Request failed with status ${response.status}`);
+    const contentType = response.headers.get("content-type") || "";
+    const serverMessage = payload && typeof payload === "object"
+      ? (typeof payload.message === "string" ? payload.message : typeof payload.error === "string" ? payload.error : "")
+      : "";
+    const safeMessage = !contentType.includes("text/html") && serverMessage && !/<[a-z][\s\S]*>/i.test(serverMessage)
+      ? serverMessage.slice(0, 240)
+      : `The community catalogue is temporarily unavailable (HTTP ${response.status}). Please try again later.`;
+    throw new Error(safeMessage);
   }
   if (response.status === 204) return null;
   return response.json();

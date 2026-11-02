@@ -3841,7 +3841,7 @@
                 <section class="features-section">
                     <div class="section-header">
                         <h2>Built for the Community</h2>
-                        <p>Everything you need to discover and share content.</p>
+                        <p>Explore the console resources, community projects, and development tools available on Vortex Prime.</p>
                     </div>
 
                     <div class="features-grid">
@@ -3849,24 +3849,24 @@
                             <div class="feature-icon">
                                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
                             </div>
-                            <h3>Upload Packages</h3>
-                            <p>Share your custom themes, dashboards, and plugins with the community instantly via the Creator Portal.</p>
+                            <h3>Console Resources</h3>
+                            <p>Explore PlayStation and Xbox resources, homebrew information, and console development references.</p>
                         </div>
 
                         <div class="feature-card">
                             <div class="feature-icon">
                                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                             </div>
-                            <h3>Discover Content</h3>
-                            <p>Browse a growing marketplace of community creations. Find new content and install it directly to Vortex Prime.</p>
+                            <h3>Community Mods</h3>
+                            <p>Browse the community catalogue and discover available modifications, guides, and shared resources.</p>
                         </div>
 
                         <div class="feature-card">
                             <div class="feature-icon">
                                 <svg viewBox="0 0 16 16" fill="#ffffff"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                             </div>
-                            <h3>Open Platform</h3>
-                            <p>Vortex Prime is completely open. Anyone can build, share, and manage community mods without gatekeeping.</p>
+                            <h3>Projects &amp; Documentation</h3>
+                            <p>Follow active projects, read documentation, and explore development resources.</p>
                         </div>
                     </div>
                 </section>
@@ -6885,7 +6885,7 @@
                             modItems = Array.isArray(items) ? items.filter(item => item && item.published !== false) : [];
                         } catch (error) {
                             console.error('Failed to load mods catalogue', error);
-                            showBackendStatus(error?.message || 'Production Companion API is not configured yet. Deploy the backend and set the API URL.');
+                            showBackendStatus('Community catalogue is temporarily unavailable. Please try again later.');
                             modItems = [];
                         }
 
