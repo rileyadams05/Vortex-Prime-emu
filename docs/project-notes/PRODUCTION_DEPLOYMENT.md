@@ -19,7 +19,7 @@ Route changes are infrastructure changes: review the current Cloudflare attachme
 
 ## Preserved legacy configuration
 
-The Worker source still contains dormant legacy storage and catalogue helpers, and Cloudflare may still hold related secrets or bindings. The public website no longer calls the Drive-backed endpoints, and those storage routes now return HTTP 410. Existing Cloudflare secrets, Workers, Durable Object namespaces, and stored records have deliberately not been deleted. Review their dependencies and backups before any later cleanup.
+The Worker still contains and exposes account, Streamz, and ModX operations that use the same Drive-backed database. Catalogue and upload endpoints return HTTP 410, but the broader API has not been disabled because that could break sign-in and Streamz features. Until those routes are separately retired or migrated, do not describe the whole website API as Drive-free. Existing Cloudflare secrets, Workers, Durable Object namespaces, and stored records have deliberately not been deleted.
 
 ## Verification
 
