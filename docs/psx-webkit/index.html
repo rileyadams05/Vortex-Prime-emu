@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#09090b">
-  <meta name="description" content="Send a download URL directly to the PSX WebKit receiver on your local network.">
-  <title>PSX WebKit | Vortex Prime EMU</title>
+  <meta name="description" content="Send a download URL directly to the PlayStation receiver on your local network.">
+  <title>PSX payload sender | Vortex Prime EMU</title>
   <style>
     :root{color-scheme:dark;--bg:#09090b;--card:#18181b;--raised:#27272a;--border:#3f3f46;--text:#fafafa;--muted:#a1a1aa;--green:#10b981;--green2:#34d399;--red:#fca5a5;--amber:#fcd34d}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
@@ -18,28 +18,28 @@
 </head>
 <body>
 <header class="topbar"><nav class="nav" aria-label="Main navigation">
-  <a href="/">Home</a><a href="/modx/">ModX Cheat Tables</a><a href="/psx-webkit/" aria-current="page">PSX WebKit</a><a href="/projects/">Projects</a><a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" target="_blank" rel="noopener">Docs</a><a href="/help/">Help</a>
+  <a href="/">Home</a><a href="/modx/">ModX Cheat Tables</a><a href="/psx-webkit/" aria-current="page">PSX payload sender</a><a href="/projects/">Projects</a><a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" target="_blank" rel="noopener">Docs</a><a href="/help/">Help</a>
 </nav></header>
 <main>
   <p class="eyebrow">Local network sender</p>
-  <h1>PSX WebKit</h1>
-  <p class="intro">Send a package download link to the PSX WebKit receiver running on your PlayStation. Your browser contacts the console directly; Vortex Prime does not download or store the package URL.</p>
+  <h1>PSX payload sender</h1>
+  <p class="intro">Send a package download link from this page to the receiver app on your PlayStation. Your browser contacts the console directly; Vortex Prime does not download or store the package URL.</p>
   <section class="panel" aria-labelledby="sender-heading">
     <h2 id="sender-heading">Send a download link</h2>
-    <p class="muted">Start the PSX WebKit receiver on your console first, then enter the local IP shown on its screen.</p>
+    <p class="muted">Start the PlayStation receiver on your console first, then enter the local IP shown on its screen.</p>
     <form id="senderForm" novalidate>
       <p class="muted" style="margin:0">Currently supported: PlayStation 4 — GoldHEN</p>
       <div class="field"><label for="downloadUrl">Download URL</label><input id="downloadUrl" name="downloadUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com/download/homebrew.pkg" required maxlength="8192"><p class="hint">Paste the actual HTTP or HTTPS link. The website does not fetch or rewrite it.</p></div>
-      <div class="field"><label for="consoleIp">PlayStation IP Address</label><input id="consoleIp" name="consoleIp" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50" required><p class="hint">Use the private IPv4 address shown in PSX WebKit.</p></div>
-      <div class="field"><label for="receiverPort">Receiver port</label><input id="receiverPort" name="receiverPort" type="number" min="1" max="65535" value="19871" required><p class="hint">PSX WebKit default: 19871. Change this only if your receiver uses another port.</p></div>
+      <div class="field"><label for="consoleIp">PlayStation IP Address</label><input id="consoleIp" name="consoleIp" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50" required><p class="hint">Use the private IPv4 address shown in the receiver app.</p></div>
+      <div class="field"><label for="receiverPort">Receiver port</label><input id="receiverPort" name="receiverPort" type="number" min="1" max="65535" value="19871" required><p class="hint">Receiver default: 19871. Change this only if your receiver uses another port.</p></div>
       <button id="sendButton" class="send" type="submit">Send to PlayStation</button>
     </form>
-    <div id="deliveryStatus" class="status" role="status" aria-live="polite" data-kind="info">Waiting for details. PSX WebKit receiver support is required on the console.</div>
+    <div id="deliveryStatus" class="status" role="status" aria-live="polite" data-kind="info">Waiting for details. Start the receiver app on your PlayStation.</div>
   </section>
-  <aside class="note"><strong>Console confirmation required.</strong> A successful response means PSX WebKit received and displayed the URL for review. Confirm the request on your PlayStation before any download or installation begins.</aside>
+  <aside class="note"><strong>Console confirmation required.</strong> A successful response means the PlayStation receiver received and displayed the URL for review. Confirm the request on your PlayStation before any download or installation begins.</aside>
   <p class="hint" style="margin-top:1rem">Browser local-network permission, receiver CORS support, and the same local network are required.</p>
 </main>
-<footer>Vortex Prime EMU · PSX WebKit website sender<br>PlayStation 5 is planned to be supported soon.</footer>
+<footer>Vortex Prime EMU · PSX payload sender<br>PlayStation 5 is planned to be supported soon.</footer>
 <script type="module">
   import { sendToConsole, DEFAULT_RECEIVER_PORT } from "/assets/js/psx-webkit-sender.mjs";
   const form = document.querySelector("#senderForm");
@@ -57,7 +57,7 @@
     const target = "ps4-goldhen";
     button.disabled = true;
     pendingRequestId ||= crypto.randomUUID();
-    show("Connecting directly to PSX WebKit…", "working");
+    show("Connecting to the PlayStation receiver…", "working");
     try {
       const result = await sendToConsole({
         ip: form.elements.consoleIp.value,
@@ -67,7 +67,7 @@
         requestId: pendingRequestId
       });
       pendingRequestId = null;
-      show(`PSX WebKit acknowledged request ${result.request.requestId}. Confirm the download on your PlayStation.`, "success");
+      show(`PlayStation receiver acknowledged request ${result.request.requestId}. Confirm the download on your PlayStation.`, "success");
     } catch (error) {
       show(error instanceof Error ? error.message : "The request could not be sent.", "error");
     } finally {
