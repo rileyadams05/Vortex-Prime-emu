@@ -48,7 +48,7 @@ export async function sendToConsole({
   const checkedPort = parsePort(port);
   const originalUrl = validateDownloadUrl(downloadUrl);
   if (target !== "ps4-goldhen" && target !== "ps5-etahen") throw new Error("Choose a supported console target.");
-  if (target === "ps5-etahen") throw new Error("PS5 sending is not enabled until a compatible PSX WebKit receiver is verified.");
+  if (target === "ps5-etahen") throw new Error("PS5 sending is not enabled until a compatible PlayStation receiver is verified.");
   if (typeof fetchImpl !== "function") throw new Error("This browser does not support network requests.");
   if (typeof requestId !== "string" || !UUID_PATTERN.test(requestId)) throw new Error("This browser could not create a secure request ID.");
 
@@ -88,17 +88,17 @@ export async function sendToConsole({
       });
     } catch (error) {
       if (error?.name === "AbortError") throw new Error("The receiver did not respond before the connection timed out.");
-      throw new Error("Could not reach PSX WebKit. Check the console IP, same Wi-Fi/LAN, browser local-network permission, and receiver CORS support.");
+      throw new Error("Could not reach the PlayStation receiver. Check the console IP, same Wi-Fi/LAN, browser local-network permission, and receiver CORS support.");
     }
 
     const acknowledgement = await readJson(response);
     if (response.status !== 202 || acknowledgement.protocolVersion !== PROTOCOL_VERSION ||
         acknowledgement.requestId !== requestId || acknowledgement.status !== "awaiting-user-confirmation") {
       const messages = {
-        400: "PSX WebKit rejected the request as invalid.",
-        403: "PSX WebKit rejected this website origin.",
+        400: "The PlayStation receiver rejected the request as invalid.",
+        403: "The PlayStation receiver rejected this website origin.",
         409: "This request ID conflicts with a different request.",
-        429: "PSX WebKit is receiving requests too quickly. Wait and try again."
+        429: "The PlayStation receiver is receiving requests too quickly. Wait and try again."
       };
       throw new Error(acknowledgement.message || messages[response.status] || "The receiver did not provide a valid request acknowledgement.");
     }
