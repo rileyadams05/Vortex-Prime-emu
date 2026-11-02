@@ -11,8 +11,8 @@
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
     a{color:inherit}.topbar{border-bottom:1px solid var(--border);background:rgba(9,9,11,.94)}.nav{max-width:1120px;margin:auto;padding:.7rem 1rem;min-height:68px;display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.nav a{color:var(--muted);text-decoration:none;padding:.55rem .8rem;border-radius:8px}.nav a:hover,.nav a[aria-current=page]{color:var(--green2);background:var(--raised)}
     main{width:min(820px,100%);margin:0 auto;padding:3rem 1rem 4rem}.eyebrow{color:var(--green2);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:.75rem}h1{font-size:clamp(2rem,5vw,3rem);line-height:1.15;margin:.45rem 0 .75rem}h2{font-size:1.05rem;margin:0 0 .35rem}.intro,.muted{color:var(--muted)}.panel{margin-top:1.5rem;padding:clamp(1rem,4vw,1.6rem);border:1px solid var(--border);border-radius:16px;background:var(--card);box-shadow:0 18px 50px rgba(0,0,0,.25)}
-    form{display:grid;gap:1.1rem}.field{display:grid;gap:.42rem}.field label,.legend{font-size:.9rem;font-weight:750}.field input,.field select{width:100%;min-height:50px;padding:.75rem .85rem;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font:inherit}.field input:focus,.field select:focus{outline:3px solid rgba(16,185,129,.32);border-color:var(--green)}.hint{font-size:.82rem;color:var(--muted);margin:0}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.choice{display:flex;align-items:flex-start;gap:.65rem;padding:.8rem;border:1px solid var(--border);border-radius:10px;background:#111113;cursor:pointer;min-height:70px}.choice:has(input:checked){border-color:var(--green);box-shadow:0 0 0 1px var(--green)}.choice input{margin:.2rem 0 0;accent-color:var(--green);width:18px;height:18px;flex:none}.choice small{display:block;color:var(--muted)}.send{width:100%;min-height:52px;border:0;border-radius:10px;background:var(--green);color:#04130e;font:inherit;font-weight:850;cursor:pointer}.send:hover{background:var(--green2)}.send:disabled{opacity:.6;cursor:wait}.status{min-height:3.2rem;margin-top:1rem;padding:.75rem .9rem;border:1px solid var(--border);border-radius:9px;color:var(--muted);overflow-wrap:anywhere}.status[data-kind=success]{color:#bbf7d0;border-color:#166534}.status[data-kind=error]{color:var(--red);border-color:#7f1d1d}.status[data-kind=working]{color:var(--amber);border-color:#854d0e}.note{margin-top:1.25rem;padding:.85rem 1rem;border-left:3px solid var(--green);background:rgba(16,185,129,.07);color:var(--muted);font-size:.88rem}.note strong{color:var(--text)}footer{text-align:center;color:var(--muted);border-top:1px solid var(--border);padding:1.25rem 1rem;font-size:.85rem}
-    @media(max-width:560px){.nav{gap:.1rem;padding:.55rem .5rem}.nav a{font-size:.84rem;padding:.5rem .55rem}main{padding-top:2rem}.choices{grid-template-columns:1fr}.panel{border-radius:12px}}
+    form{display:grid;gap:1.1rem}.field{display:grid;gap:.42rem}.field label,.legend{font-size:.9rem;font-weight:750}.field input,.field select{width:100%;min-height:50px;padding:.75rem .85rem;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font:inherit}.field input:focus,.field select:focus{outline:3px solid rgba(16,185,129,.32);border-color:var(--green)}.hint{font-size:.82rem;color:var(--muted);margin:0}.send{width:100%;min-height:52px;border:1px solid var(--border);border-radius:10px;background:var(--raised);color:var(--text);font:inherit;font-weight:700;cursor:pointer}.send:hover{background:#3f3f46}.send:disabled{opacity:.6;cursor:wait}.status{min-height:3.2rem;margin-top:1rem;padding:.75rem .9rem;border:1px solid var(--border);border-radius:9px;color:var(--muted);overflow-wrap:anywhere}.status[data-kind=success]{color:#bbf7d0;border-color:#166534}.status[data-kind=error]{color:var(--red);border-color:#7f1d1d}.status[data-kind=working]{color:var(--amber);border-color:#854d0e}.note{margin-top:1.25rem;padding:.85rem 1rem;border-left:3px solid var(--green);background:rgba(16,185,129,.07);color:var(--muted);font-size:.88rem}.note strong{color:var(--text)}footer{text-align:center;color:var(--muted);border-top:1px solid var(--border);padding:1.25rem 1rem;font-size:.85rem}
+    @media(max-width:560px){.nav{gap:.1rem;padding:.55rem .5rem}.nav a{font-size:.84rem;padding:.5rem .55rem}main{padding-top:2rem}.panel{border-radius:12px}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
@@ -28,13 +28,7 @@
     <h2 id="sender-heading">Send a download link</h2>
     <p class="muted">Start the PSX WebKit receiver on your console first, then enter the local IP shown on its screen.</p>
     <form id="senderForm" novalidate>
-      <fieldset style="border:0;padding:0;margin:0">
-        <legend class="legend">Console</legend>
-        <div class="choices">
-          <label class="choice"><input type="radio" name="target" value="ps4-goldhen" checked><span><strong>PlayStation 4 — GoldHEN</strong><small>PS4 is the current website target.</small></span></label>
-          <label class="choice"><input type="radio" name="target" value="ps5-etahen"><span><strong>PlayStation 5 — etaHEN</strong><small>Planned; sending is not verified yet.</small></span></label>
-        </div>
-      </fieldset>
+      <p class="muted" style="margin:0">Currently supported: PlayStation 4 — GoldHEN</p>
       <div class="field"><label for="downloadUrl">Download URL</label><input id="downloadUrl" name="downloadUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com/download/homebrew.pkg" required maxlength="8192"><p class="hint">Paste the actual HTTP or HTTPS link. The website does not fetch or rewrite it.</p></div>
       <div class="field"><label for="consoleIp">PlayStation IP Address</label><input id="consoleIp" name="consoleIp" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50" required><p class="hint">Use the private IPv4 address shown in PSX WebKit.</p></div>
       <div class="field"><label for="receiverPort">Receiver port</label><input id="receiverPort" name="receiverPort" type="number" min="1" max="65535" value="19871" required><p class="hint">PSX WebKit default: 19871. Change this only if your receiver uses another port.</p></div>
@@ -43,9 +37,9 @@
     <div id="deliveryStatus" class="status" role="status" aria-live="polite" data-kind="info">Waiting for details. PSX WebKit receiver support is required on the console.</div>
   </section>
   <aside class="note"><strong>Console confirmation required.</strong> A successful response means PSX WebKit received and displayed the URL for review. Confirm the request on your PlayStation before any download or installation begins.</aside>
-  <p class="hint" style="margin-top:1rem">Browser local-network permission, receiver CORS support, and the same local network are required. PS5 sending remains unavailable until its receiver is separately implemented and verified.</p>
+  <p class="hint" style="margin-top:1rem">Browser local-network permission, receiver CORS support, and the same local network are required.</p>
 </main>
-<footer>Vortex Prime EMU · PSX WebKit website sender</footer>
+<footer>Vortex Prime EMU · PSX WebKit website sender<br>PlayStation 5 is planned to be supported soon.</footer>
 <script type="module">
   import { sendToConsole, DEFAULT_RECEIVER_PORT } from "/assets/js/psx-webkit-sender.mjs";
   const form = document.querySelector("#senderForm");
@@ -60,7 +54,7 @@
   form.addEventListener("submit", async event => {
     event.preventDefault();
     if (!form.reportValidity()) return;
-    const target = new FormData(form).get("target");
+    const target = "ps4-goldhen";
     button.disabled = true;
     pendingRequestId ||= crypto.randomUUID();
     show("Connecting directly to PSX WebKit…", "working");
