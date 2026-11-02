@@ -53,9 +53,22 @@ export async function sendToConsole({
   if (typeof fetchImpl !== "function") throw new Error("This browser does not support network requests.");
 
   const base = `http://${ip}:${checkedPort}/api/v1`;
+  const permissionName = allowLoopback ? "loopback-network" : "local-network";
+  try {
+    const permission = await globalThis.navigator?.permissions?.query?.({ name: permissionName });
+    if (permission?.state === "denied") {
+      throw new Error("Local network access is blocked for this website. Allow it in your browser's site settings, then try again.");
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Local network access is blocked")) throw error;
+    // Older browsers do not recognize the permission name; continue from this user-initiated submit.
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const requestOptions = { signal: controller.signal, mode: "cors", cache: "no-store" };
+  const requestOptions = {
+    signal: controller.signal, mode: "cors", cache: "no-store",
+    targetAddressSpace: allowLoopback ? "loopback" : "local"
+  };
   const jsonOptions = { ...requestOptions, method: "POST", headers: { "Content-Type": "application/json" } };
   try {
     let pairResponse;
