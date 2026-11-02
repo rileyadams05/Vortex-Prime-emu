@@ -12,7 +12,7 @@ Main areas include:
 - ModX Cheat Tables
 - Xbox exploit resources
 - Games and Vortex Prime projects
-- Streamz Pro tools and account pages
+- Streamz project overview and support
 - Help, privacy, and legal pages
 
 ## PlayStation shortcut links

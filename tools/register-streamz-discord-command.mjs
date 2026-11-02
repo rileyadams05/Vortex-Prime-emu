@@ -13,32 +13,8 @@ const dmCommandBase = {
 };
 
 const commands = [
-  {
-    ...dmCommandBase,
-    name: "verify-pro",
-    description: "DM-only Streamz Pro activation-code verification.",
-    options: [
-      {
-        name: "code",
-        description: "The 10-character Streamz Pro activation code from the PDF pass.",
-        type: 3,
-        required: true,
-      },
-    ],
-  },
-  {
-    ...dmCommandBase,
-    name: "code-expired",
-    description: "DM-only expired Streamz Pro activation-code review.",
-    options: [
-      {
-        name: "activation_pass",
-        description: "Attach the original Streamz Pro Activation Pass PDF.",
-        type: 11,
-        required: true,
-      },
-    ],
-  },
+
+
   {
     ...dmCommandBase,
     name: "contact-support",

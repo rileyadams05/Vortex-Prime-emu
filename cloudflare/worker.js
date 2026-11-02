@@ -233,44 +233,8 @@ export default {
         return await handleStreamzCredentials(request, env, allowedOrigin);
       }
 
-      if (path === 'api/streamz/pro/config') {
-        return await handleStreamzProConfig(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro/payment-intent') {
-        return await handleStreamzProPaymentIntent(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro/upgrade-session') {
-        return await handleStreamzProUpgradeSession(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro/upgrade-session/code') {
-        return await handleStreamzProUpgradeSessionCode(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro/purchase-code') {
-        return await handleStreamzProPurchaseCode(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro/entitlement') {
-        return await handleStreamzProEntitlement(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro/app-entitlement') {
-        return await handleStreamzProAppEntitlement(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro/source-archive') {
-        return await handleStreamzProSourceArchive(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro/verify-discord') {
-        return await handleStreamzProVerifyDiscord(request, env, allowedOrigin);
-      }
-
-      if (path.startsWith('api/streamz/pro/expired-code-review/')) {
-        return await handleStreamzProExpiredCodeReviewRequest(request, env, path, allowedOrigin);
+      if (path === 'api/streamz/pro' || (path.startsWith('api/streamz/pro/') && path !== 'api/streamz/pro/webhook')) {
+        return json({ ok: false, message: 'Streamz Pro has been retired.' }, 410, allowedOrigin);
       }
 
       if (path.startsWith('api/streamz/support/')) {
@@ -1795,11 +1759,14 @@ async function handleStreamzDiscordInteractions(request, env) {
     });
   }
 
-  if (interaction.data?.name === 'verify-pro') {
-    return await handleStreamzDiscordVerifyProCommand(interaction, env);
-  }
-  if (interaction.data?.name === 'code-expired') {
-    return await handleStreamzDiscordCodeExpiredCommand(interaction, env);
+  if (interaction.data?.name === 'verify-pro' || interaction.data?.name === 'code-expired') {
+    return discordJson({
+      type: 4,
+      data: {
+        flags: 64,
+        content: 'Streamz Pro has been retired. New purchases and activations are unavailable.',
+      },
+    });
   }
   if (interaction.data?.name === 'contact-support') {
     return await handleStreamzDiscordContactSupportCommand(interaction, env);
