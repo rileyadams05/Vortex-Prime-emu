@@ -195,6 +195,15 @@ export default {
         return json({ ok: true, service: 'Vortex Prime Companion Worker' }, 200, allowedOrigin);
       }
 
+      if (path === 'api/status' || path === 'api/public/catalogue' ||
+          path === 'api/public/submit-video' || path.startsWith('api/catalogue/') ||
+          path.startsWith('api/uploads/')) {
+        return json({
+          ok: false,
+          message: 'Storage-backed catalogue endpoints are retired. The public catalogue is served from /mods/mods.json.'
+        }, 410, allowedOrigin);
+      }
+
       if (path === 'api/status') {
         return handleStatus(request, env, allowedOrigin);
       }
