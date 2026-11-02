@@ -141,6 +141,6 @@ test("page markup removes credentials and keeps mobile-friendly sender controls"
   assert.doesNotMatch(page, /pairing code/i);
   assert.doesNotMatch(page, /pairingCode|pairing-code/i);
   assert.match(page, /id="sendButton"/);
-  assert.match(page, /min-height:\\s*52px/);
+  assert.match(page, /min-height:\s*52px/);
   assert.match(page, /Confirm the request on your PlayStation/);
 });
