@@ -5,6 +5,12 @@ compatibility_date = "2026-05-25"
 # token only deploys Worker code, so CI must not try to edit zone routes.
 workers_dev = false
 
+routes = [
+  { pattern = "vortex-prime-emu.com/api", zone_name = "vortex-prime-emu.com" },
+  { pattern = "vortex-prime-emu.com/api/*", zone_name = "vortex-prime-emu.com" },
+  { pattern = "vortex-prime-emu.com/privacy-policy", zone_name = "vortex-prime-emu.com" }
+]
+
 [[durable_objects.bindings]]
 name = "NXE_PAIR_SESSIONS"
 class_name = "NxePairSession"
