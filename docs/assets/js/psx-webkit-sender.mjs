@@ -17,7 +17,7 @@ export function validateDownloadUrl(value) {
 export function validatePrivateIPv4(value, { allowLoopback = false } = {}) {
   if (typeof value !== "string" || value.trim() !== value) throw new Error("Enter the PlayStation's local IPv4 address.");
   const parts = value.split(".");
-  if (parts.length !== 4 || parts.some(part => !/^(0|[1-9]\\d{0,2})$/.test(part) || Number(part) > 255)) {
+  if (parts.length !== 4 || parts.some(part => !/^(0|[1-9]\d{0,2})$/.test(part) || Number(part) > 255)) {
     throw new Error("Enter a valid IPv4 address, for example 192.168.1.50.");
   }
   const [a,b,c,d] = parts.map(Number);
