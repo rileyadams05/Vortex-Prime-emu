@@ -6166,21 +6166,8 @@ function base64UrlDecode(input) {
   return bytes;
 }
 
-async function driveRequest(env, url, options = {}, retry = true) {
-  throw httpError(410, 'Google Drive backed website storage has been retired. Public catalogues are served from the repository.');
-  const token = await getAccessToken(env);
-  const headers = new Headers(options.headers || {});
-  headers.set('Authorization', `Bearer ${token}`);
-  if (!headers.has('Accept')) {
-    headers.set('Accept', 'application/json');
-  }
-
-  const response = await fetch(url, { ...options, headers });
-  if (response.status === 401 && retry) {
-    tokenCache = null;
-    return driveRequest(env, url, options, false);
-  }
-  return response;
+async function driveRequest() {
+  throw httpError(410, 'Google Drive backed website storage has been retired. Public catalogues are served from repository files.');
 }
 
 // Obtains a Google Drive access token by exchanging the stored OAuth refresh
