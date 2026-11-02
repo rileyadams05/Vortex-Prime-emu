@@ -52,12 +52,18 @@
   const form = document.querySelector("#senderForm");
   const status = document.querySelector("#deliveryStatus");
   const button = document.querySelector("#sendButton");
+  let pendingRequestId = null;
+  for (const field of form.querySelectorAll("input")) {
+    field.addEventListener("input", () => { pendingRequestId = null; });
+    field.addEventListener("change", () => { pendingRequestId = null; });
+  }
   function show(message, kind = "info") { status.textContent = message; status.dataset.kind = kind; }
   form.addEventListener("submit", async event => {
     event.preventDefault();
     if (!form.reportValidity()) return;
     const target = new FormData(form).get("target");
     button.disabled = true;
+    pendingRequestId ||= crypto.randomUUID();
     show("Connecting to PSX WebKit and requesting pairing…", "working");
     try {
       const result = await sendToConsole({
@@ -65,8 +71,10 @@
         port: Number(form.elements.receiverPort.value) || DEFAULT_RECEIVER_PORT,
         pairingCode: form.elements.pairingCode.value,
         target,
-        downloadUrl: form.elements.downloadUrl.value
+        downloadUrl: form.elements.downloadUrl.value,
+        requestId: pendingRequestId
       });
+      pendingRequestId = null;
       show(`PSX WebKit acknowledged request ${result.request.requestId}. Confirm the download on your PlayStation.`, "success");
     } catch (error) {
       show(error instanceof Error ? error.message : "The request could not be sent.", "error");
