@@ -1,5 +1,22 @@
-const API_BASE = "https://vortex-prime-emu.com";
-const NOT_CONFIGURED_MESSAGE = "Mods backend is not configured yet.";
+const API_BASE = window.location.origin;
+const CATALOGUE_URL = new URL("/mods/mods.json", window.location.origin).toString();
+
+async function loadMods() {
+  const response = await fetch(CATALOGUE_URL, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`The community catalogue could not be loaded (HTTP ${response.status}).`);
+  }
+  const payload = await response.json();
+  return Array.isArray(payload) ? payload : Array.isArray(payload.mods) ? payload.mods : [];
+}
+
+function getStatus() {
+  return {
+    configured: true,
+    storage: "repository",
+    message: "The catalogue is served as a static file from this website."
+  };
+}
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -16,22 +33,13 @@ async function request(path, options = {}) {
     try {
       payload = text ? JSON.parse(text) : null;
     } catch (_) {}
-    const contentType = response.headers.get("content-type") || "";
     const serverMessage = payload && typeof payload === "object"
       ? (typeof payload.message === "string" ? payload.message : typeof payload.error === "string" ? payload.error : "")
       : "";
-    const safeMessage = !contentType.includes("text/html") && serverMessage && !/<[a-z][\s\S]*>/i.test(serverMessage)
-      ? serverMessage.slice(0, 240)
-      : `The community catalogue is temporarily unavailable (HTTP ${response.status}). Please try again later.`;
-    throw new Error(safeMessage);
+    throw new Error(serverMessage || `Request failed (HTTP ${response.status}).`);
   }
   if (response.status === 204) return null;
   return response.json();
-}
-
-async function loadMods() {
-  const items = await request("/api/catalogue/mods");
-  return Array.isArray(items) ? items : [];
 }
 
 async function getAuthConfig() {
@@ -50,19 +58,8 @@ async function logout() {
   return request("/api/auth/logout", { method: "POST" }).catch(() => null);
 }
 
-async function getStatus() {
-  try {
-    return await request("/api/status");
-  } catch (error) {
-    return { configured: false, message: error?.message || NOT_CONFIGURED_MESSAGE };
-  }
-}
-
-async function submitPublicVideo(itemId, url, title, submittedBy) {
-  return request("/api/public/submit-video", {
-    method: "POST",
-    body: JSON.stringify({ itemId, url, title, submittedBy }),
-  });
+async function submitPublicVideo() {
+  throw new Error("Community tutorial submissions are paused.");
 }
 
 window.VortexModsBackend = {
