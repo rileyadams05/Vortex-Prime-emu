@@ -75,7 +75,7 @@ test("reports connection refusal, timeout, and invalid acknowledgements", async 
   await assert.rejects(sendToConsole({
     ip: "127.0.0.1", allowLoopback: true, port: 1,
     downloadUrl: "https://example.com/a.pkg", requestId
-  }), /Could not reach PSX WebKit/);
+  }), /Could not reach the PlayStation receiver/);
   const timeoutFetch = (_, { signal }) => new Promise((_, reject) =>
     signal.addEventListener("abort", () => reject(Object.assign(new Error("aborted"), { name: "AbortError" })), { once: true })
   );
