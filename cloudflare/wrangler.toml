@@ -6,6 +6,7 @@ workers_dev = true
 routes = [
   { pattern = "vortex-prime-emu.com/api", zone_name = "vortex-prime-emu.com" },
   { pattern = "vortex-prime-emu.com/api/*", zone_name = "vortex-prime-emu.com" },
+  { pattern = "vortex-prime-emu.com/api*", zone_name = "vortex-prime-emu.com" },
   { pattern = "vortex-prime-emu.com/privacy-policy", zone_name = "vortex-prime-emu.com" }
 ]
 
