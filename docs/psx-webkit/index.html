@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09090b">
+  <meta name="description" content="Send a download URL directly to the PSX WebKit receiver on your local network.">
+  <title>PSX WebKit | Vortex Prime EMU</title>
+  <style>
+    :root{color-scheme:dark;--bg:#09090b;--card:#18181b;--raised:#27272a;--border:#3f3f46;--text:#fafafa;--muted:#a1a1aa;--green:#10b981;--green2:#34d399;--red:#fca5a5;--amber:#fcd34d}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    a{color:inherit}.topbar{border-bottom:1px solid var(--border);background:rgba(9,9,11,.94)}.nav{max-width:1120px;margin:auto;padding:.7rem 1rem;min-height:68px;display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.nav a{color:var(--muted);text-decoration:none;padding:.55rem .8rem;border-radius:8px}.nav a:hover,.nav a[aria-current=page]{color:var(--green2);background:var(--raised)}
+    main{width:min(820px,100%);margin:0 auto;padding:3rem 1rem 4rem}.eyebrow{color:var(--green2);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:.75rem}h1{font-size:clamp(2rem,5vw,3rem);line-height:1.15;margin:.45rem 0 .75rem}h2{font-size:1.05rem;margin:0 0 .35rem}.intro,.muted{color:var(--muted)}.panel{margin-top:1.5rem;padding:clamp(1rem,4vw,1.6rem);border:1px solid var(--border);border-radius:16px;background:var(--card);box-shadow:0 18px 50px rgba(0,0,0,.25)}
+    form{display:grid;gap:1.1rem}.field{display:grid;gap:.42rem}.field label,.legend{font-size:.9rem;font-weight:750}.field input,.field select{width:100%;min-height:50px;padding:.75rem .85rem;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font:inherit}.field input:focus,.field select:focus{outline:3px solid rgba(16,185,129,.32);border-color:var(--green)}.hint{font-size:.82rem;color:var(--muted);margin:0}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.choice{display:flex;align-items:flex-start;gap:.65rem;padding:.8rem;border:1px solid var(--border);border-radius:10px;background:#111113;cursor:pointer;min-height:70px}.choice:has(input:checked){border-color:var(--green);box-shadow:0 0 0 1px var(--green)}.choice input{margin:.2rem 0 0;accent-color:var(--green);width:18px;height:18px;flex:none}.choice small{display:block;color:var(--muted)}.send{width:100%;min-height:52px;border:0;border-radius:10px;background:var(--green);color:#04130e;font:inherit;font-weight:850;cursor:pointer}.send:hover{background:var(--green2)}.send:disabled{opacity:.6;cursor:wait}.status{min-height:3.2rem;margin-top:1rem;padding:.75rem .9rem;border:1px solid var(--border);border-radius:9px;color:var(--muted);overflow-wrap:anywhere}.status[data-kind=success]{color:#bbf7d0;border-color:#166534}.status[data-kind=error]{color:var(--red);border-color:#7f1d1d}.status[data-kind=working]{color:var(--amber);border-color:#854d0e}.note{margin-top:1.25rem;padding:.85rem 1rem;border-left:3px solid var(--green);background:rgba(16,185,129,.07);color:var(--muted);font-size:.88rem}.note strong{color:var(--text)}footer{text-align:center;color:var(--muted);border-top:1px solid var(--border);padding:1.25rem 1rem;font-size:.85rem}
+    @media(max-width:560px){.nav{gap:.1rem;padding:.55rem .5rem}.nav a{font-size:.84rem;padding:.5rem .55rem}main{padding-top:2rem}.choices{grid-template-columns:1fr}.panel{border-radius:12px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<header class="topbar"><nav class="nav" aria-label="Main navigation">
+  <a href="/">Home</a><a href="/modx/">ModX Cheat Tables</a><a href="/psx-webkit/" aria-current="page">PSX WebKit</a><a href="/projects/">Projects</a><a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" target="_blank" rel="noopener">Docs</a><a href="/help/">Help</a>
+</nav></header>
+<main>
+  <p class="eyebrow">Local network sender</p>
+  <h1>PSX WebKit</h1>
+  <p class="intro">Send a package download link to the PSX WebKit receiver running on your PlayStation. Your browser contacts the console directly; Vortex Prime does not download or store the package URL.</p>
+  <section class="panel" aria-labelledby="sender-heading">
+    <h2 id="sender-heading">Send a download link</h2>
+    <p class="muted">Start the PSX WebKit receiver on your console first. Enter the local IP and pairing code shown on its screen.</p>
+    <form id="senderForm" novalidate>
+      <fieldset style="border:0;padding:0;margin:0">
+        <legend class="legend">Console</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="target" value="ps4-goldhen" checked><span><strong>PlayStation 4 — GoldHEN</strong><small>PS4 is the current website target.</small></span></label>
+          <label class="choice"><input type="radio" name="target" value="ps5-etahen"><span><strong>PlayStation 5 — etaHEN</strong><small>Planned; sending is not verified yet.</small></span></label>
+        </div>
+      </fieldset>
+      <div class="field"><label for="downloadUrl">Download URL</label><input id="downloadUrl" name="downloadUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com/download/homebrew.pkg" required maxlength="8192"><p class="hint">Paste the actual HTTP or HTTPS link. The website does not fetch or rewrite it.</p></div>
+      <div class="field"><label for="consoleIp">PlayStation IP Address</label><input id="consoleIp" name="consoleIp" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50" required><p class="hint">Use the private IPv4 address shown in PSX WebKit.</p></div>
+      <div class="field"><label for="pairingCode">PSX WebKit pairing code</label><input id="pairingCode" name="pairingCode" type="text" autocomplete="one-time-code" required minlength="6" maxlength="128" placeholder="Code shown on the console"><p class="hint">The receiver issues a short-lived code. It is sent directly to your console.</p></div>
+      <div class="field"><label for="receiverPort">Receiver port</label><input id="receiverPort" name="receiverPort" type="number" min="1" max="65535" value="19871" required><p class="hint">PSX WebKit default: 19871. Change this only if your receiver uses another port.</p></div>
+      <button id="sendButton" class="send" type="submit">Send to PlayStation</button>
+    </form>
+    <div id="deliveryStatus" class="status" role="status" aria-live="polite" data-kind="info">Waiting for details. PSX WebKit receiver support is required on the console.</div>
+  </section>
+  <aside class="note"><strong>Console confirmation required.</strong> A successful response means PSX WebKit received and displayed the URL for review. Confirm the request on your PlayStation before any download or installation begins.</aside>
+  <p class="hint" style="margin-top:1rem">Browser local-network permission, receiver CORS support, and the same local network are required. PS5 sending remains unavailable until its receiver is separately implemented and verified.</p>
+</main>
+<footer>Vortex Prime EMU · PSX WebKit website sender</footer>
+<script type="module">
+  import { sendToConsole, DEFAULT_RECEIVER_PORT } from "/assets/js/psx-webkit-sender.mjs";
+  const form = document.querySelector("#senderForm");
+  const status = document.querySelector("#deliveryStatus");
+  const button = document.querySelector("#sendButton");
+  let pendingRequestId = null;
+  for (const field of form.querySelectorAll("input")) {
+    field.addEventListener("input", () => { pendingRequestId = null; });
+    field.addEventListener("change", () => { pendingRequestId = null; });
+  }
+  function show(message, kind = "info") { status.textContent = message; status.dataset.kind = kind; }
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const target = new FormData(form).get("target");
+    button.disabled = true;
+    pendingRequestId ||= crypto.randomUUID();
+    show("Connecting to PSX WebKit and requesting pairing…", "working");
+    try {
+      const result = await sendToConsole({
+        ip: form.elements.consoleIp.value,
+        port: Number(form.elements.receiverPort.value) || DEFAULT_RECEIVER_PORT,
+        pairingCode: form.elements.pairingCode.value,
+        target,
+        downloadUrl: form.elements.downloadUrl.value,
+        requestId: pendingRequestId
+      });
+      pendingRequestId = null;
+      show(`PSX WebKit acknowledged request ${result.request.requestId}. Confirm the download on your PlayStation.`, "success");
+    } catch (error) {
+      show(error instanceof Error ? error.message : "The request could not be sent.", "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
