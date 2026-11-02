@@ -1,4 +1,3 @@
-const API_BASE = window.location.origin;
 const CATALOGUE_URL = new URL("/mods/mods.json", window.location.origin).toString();
 
 async function loadMods() {
@@ -18,55 +17,8 @@ function getStatus() {
   };
 }
 
-async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    credentials: "include",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
-  if (!response.ok) {
-    const text = await response.text().catch(() => response.statusText);
-    let payload = null;
-    try {
-      payload = text ? JSON.parse(text) : null;
-    } catch (_) {}
-    const serverMessage = payload && typeof payload === "object"
-      ? (typeof payload.message === "string" ? payload.message : typeof payload.error === "string" ? payload.error : "")
-      : "";
-    throw new Error(serverMessage || `Request failed (HTTP ${response.status}).`);
-  }
-  if (response.status === 204) return null;
-  return response.json();
-}
-
-async function getAuthConfig() {
-  return request("/api/auth/config");
-}
-
-async function loginWithCredential(credential) {
-  if (!credential) throw new Error("Google credential is required.");
-  return request("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify({ credential }),
-  });
-}
-
-async function logout() {
-  return request("/api/auth/logout", { method: "POST" }).catch(() => null);
-}
-
 async function submitPublicVideo() {
   throw new Error("Community tutorial submissions are paused.");
 }
 
-window.VortexModsBackend = {
-  loadMods,
-  getStatus,
-  submitPublicVideo,
-  getAuthConfig,
-  loginWithCredential,
-  logout,
-};
+window.VortexModsBackend = { loadMods, getStatus, submitPublicVideo };
