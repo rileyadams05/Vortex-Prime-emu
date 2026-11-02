@@ -34,9 +34,6 @@
     
     <title>Vortex Prime EMU</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --color-primary: #10B981;
@@ -4885,21 +4882,6 @@
                     if (itemDetailBackdrop) itemDetailBackdrop.addEventListener('click', closeItemDetails);
                     if (itemDetailCloseBtn) itemDetailCloseBtn.addEventListener('click', closeItemDetails);
 
-                    async function initModsAuth() {
-                        if (mainSignInBtn) {
-                            mainSignInBtn.removeAttribute('disabled');
-                            mainSignInBtn.removeAttribute('title');
-                        }
-                        if (await refreshModsSession(true)) return;
-                        try {
-                            if (!window.StreamzFirebaseAuth) await import('/assets/js/streamz-firebase-auth.js');
-                            await window.StreamzFirebaseAuth.waitForInitialSession();
-                        } catch (error) {
-                            console.warn('Unable to restore the existing Google session.', error);
-                        }
-                        await refreshModsSession();
-                    }
-
                     if ('serviceWorker' in navigator) {
                         window.addEventListener('load', () => {
                             navigator.serviceWorker.register('/app-sw.js').catch((error) => {
@@ -5415,39 +5397,6 @@
                         });
                     }
 
-                    async function loadStreamzDashboardData() {
-                        if (isLocalPreview) return;
-                        try {
-                            const authResponse = await fetch('https://vortex-prime-emu.com/api/auth/config', { credentials: 'include' });
-                            const auth = await authResponse.json().catch(() => ({}));
-                            if (!auth.authenticated) return;
-                            const [channelsResponse, credentialsResponse] = await Promise.all([
-                                fetch('https://vortex-prime-emu.com/api/streamz/channels', { credentials: 'include' }),
-                                fetch('https://vortex-prime-emu.com/api/streamz/credentials', { credentials: 'include' }),
-                            ]);
-                            const channelsPayload = await channelsResponse.json();
-                            const credentialsPayload = await credentialsResponse.json();
-                            window.streamzDashboardState.channels = Array.isArray(channelsPayload.channels) ? channelsPayload.channels : [];
-                            window.streamzDashboardState.credentials = Array.isArray(credentialsPayload.credentials) ? credentialsPayload.credentials : [];
-                            window.streamzDashboardState.loaded = true;
-                            renderStreamzChannels(window.streamzDashboardState.channels);
-                            const primaryCredential = window.streamzDashboardState.credentials.find((entry) => entry?.serverUrl && entry?.streamKey);
-                            const serverField = document.getElementById('streamzRtmpsUrl');
-                            const keyField = document.getElementById('streamzStreamKey');
-                            const copyButtons = document.querySelectorAll('.streamz-plugin-copy');
-                            if (primaryCredential && serverField && keyField) {
-                                serverField.value = primaryCredential.serverUrl;
-                                serverField.placeholder = '';
-                                keyField.value = primaryCredential.streamKey;
-                                keyField.placeholder = '';
-                                copyButtons.forEach((button) => { button.disabled = false; });
-                            }
-                            window.dispatchEvent(new CustomEvent('streamz:credentials-loaded', { detail: window.streamzDashboardState.credentials }));
-                        } catch (error) {
-                            console.error('Unable to load Streamz account data', error);
-                        }
-                    }
-
                     async function startLocalStreamzRelay(credentials) {
                         const invoke = window.__TAURI__?.core?.invoke;
                         if (!invoke || !Array.isArray(credentials)) return;
@@ -5471,16 +5420,7 @@
                     window.addEventListener('streamz:encoder-connected', () => setStreamzEncoderStatus(true));
                     window.addEventListener('streamz:encoder-disconnected', () => setStreamzEncoderStatus(false));
                     setStreamzEncoderStatus(false);
-                    document.querySelectorAll('[data-streamz-connect]').forEach((button) => {
-                        button.addEventListener('click', () => {
-                            const provider = button.getAttribute('data-streamz-connect');
-                            if (!provider) return;
-                            button.disabled = true;
-                            window.location.href = `/api/streamz/auth/${encodeURIComponent(provider)}/start?redirect=1&return_to=${encodeURIComponent('/projects/streamz/')}`;
-                        });
-                    });
-                    document.querySelector('[data-streamz-refresh-channels]')?.addEventListener('click', loadStreamzDashboardData);
-                    if (document.getElementById('page-streamz-plugin')) loadStreamzDashboardData();
+
 
 
                     document.querySelectorAll('[data-nxe-lightbox]').forEach((trigger) => trigger.addEventListener('click', () => {
