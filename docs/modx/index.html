@@ -1,217 +1,123 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Publish a ModX Community Table | Vortex Prime</title>
-  <meta name="description" content="Catalogue a finished GitHub-hosted Mod X trainer by identifying its game executable.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse ModX cheat table listings and propose additions by GitHub pull request.">
+  <title>ModX Cheat Tables | Vortex Prime EMU</title>
   <style>
-    :root{color-scheme:dark;--bg:#080b11;--panel:#111720;--line:#293342;--muted:#95a2b4;--text:#f4f7fb;--accent:#70a9e3;--success:#43c9a4;--danger:#ff6b78}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -20%,#172333 0,transparent 42%),var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif}a{color:inherit;text-decoration:none}
-    header{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,72px);border-bottom:1px solid var(--line);background:rgba(8,11,17,.9)}.brand{font-size:20px;font-weight:800}.brand span{color:var(--accent)}.header-actions{display:flex;gap:22px}.header-actions a{color:var(--muted);font-size:14px}.header-actions a:hover{color:#fff}
-    main{width:min(1040px,calc(100% - 32px));margin:56px auto 80px}.eyebrow{color:#8bb9e8;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}h1{max-width:760px;margin:12px 0 16px;font-size:clamp(34px,5vw,58px);line-height:1.02}.lead{max-width:780px;margin:0 0 36px;color:var(--muted);font-size:17px;line-height:1.65}
-    .layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px}.layout[hidden],[hidden]{display:none!important}.card,.auth-gate{padding:24px;border:1px solid var(--line);border-radius:18px;background:rgba(17,22,32,.94);box-shadow:0 24px 80px rgba(0,0,0,.25)}.auth-gate{max-width:650px;padding:30px}.auth-gate h2{margin:0 0 10px}.auth-gate p{margin:0;color:var(--muted);line-height:1.65}.auth-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
-    .button,.submit{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border:1px solid #3b4656;border-radius:9px;background:#171e28;color:#fff;font-weight:800;cursor:pointer}.button:hover{background:#202936}.submit{width:100%;height:50px;border:0;background:#f4f6f8;color:#11151b}.submit:disabled{opacity:.35;cursor:not-allowed}
-    .step{padding:0 0 25px;margin:0 0 25px;border-bottom:1px solid var(--line);transition:opacity 160ms ease}.step:last-of-type{border-bottom:0}.step.is-locked{opacity:.5}.step-title{display:flex;align-items:center;gap:11px;margin:0 0 8px;font-size:18px}.step-number{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#202936;color:#fff;font-size:12px}.step-number.done{background:#163d34;color:#63dfbd}.step-state{min-height:18px;margin:0 0 15px;color:var(--muted);font-size:12px;font-weight:650}.step-state.complete{color:var(--success)}.step-state.error{color:var(--danger)}.step-state.locked::before{content:"🔒 ";filter:grayscale(1)}
-    label,.field-label{display:block;margin:0 0 8px;font-size:13px;font-weight:750}input[type="url"],select{width:100%;height:48px;padding:0 14px;border:1px solid #303949;border-radius:10px;outline:none;background:#0b0f16;color:var(--text);font:inherit}input[type="url"]:focus,select:focus{border-color:#57799d;box-shadow:0 0 0 3px rgba(77,143,216,.13)}.field-note{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.55}.readme-notice,.version-notice{margin:14px 0 0;padding:13px 14px;border-left:3px solid #527eaa;border-radius:7px;background:#0d141d;color:#bbc7d5;font-size:12px;line-height:1.55}.version-result{margin-top:14px;padding:13px 14px;border:1px solid #3c695d;border-radius:10px;background:#101b19}.version-result strong,.version-result span{display:block}.version-result span{margin-top:3px;color:var(--muted);font-size:11px}.asset-field{margin-top:14px}
-    .file-input{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.drop-zone{min-height:166px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;border:1px dashed #46566a;border-radius:14px;background:#0b0f16;text-align:center;cursor:pointer}.drop-zone:hover,.drop-zone:focus-visible,.drop-zone.is-dragging{border-color:#568dca;box-shadow:0 0 0 4px rgba(77,143,216,.09)}.drop-zone.is-disabled{opacity:.65;cursor:wait;pointer-events:none}.drop-zone strong{font-size:15px}.drop-zone p{margin:7px 0 0;color:var(--muted);font-size:12px}.drop-zone small{margin-top:12px;color:#718095}.selected-exe{display:flex;align-items:center;gap:12px;margin-top:12px;padding:13px 14px;border:1px solid #3c695d;border-radius:11px;background:#101b19}.file-type{width:39px;height:39px;display:grid;place-items:center;border-radius:9px;background:#1a2634;color:#bed8f2;font-size:10px;font-weight:900}.file-details{min-width:0;display:grid;gap:3px;flex:1}.file-name{overflow:hidden;font-size:13px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}.file-size{color:var(--muted);font-size:10px}.remove-file{width:32px;height:32px;border:1px solid #3d4655;border-radius:8px;background:#151b25;color:#9ba7b8;cursor:pointer}
-    fieldset{min-width:0;margin:0;padding:0;border:0}.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.choice{display:flex;align-items:flex-start;gap:10px;margin:0;padding:14px;border:1px solid #303949;border-radius:10px;background:#0b0f16;cursor:pointer}.choice:has(input:checked){border-color:#587797;background:#111c28}.choice input{width:16px;height:16px;margin:2px 0 0;accent-color:#5d87b2}.choice-copy{display:grid;gap:4px}.choice-copy strong{font-size:13px}.choice-copy small{color:var(--muted);font-size:11px;font-weight:500;line-height:1.5}.verification-panel{padding:14px;border:1px solid #303949;border-radius:11px;background:#0b0f16}.verification-copy{margin:0 0 12px;color:var(--muted);font-size:12px;line-height:1.55}.verification-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}.verification-list li{display:flex;align-items:center;gap:9px;color:#bbc5d2;font-size:12px}.verification-list li::before{width:17px;content:"○";color:#68778a;text-align:center}.verification-list li[data-status="checking"]::before{content:"◌";color:var(--accent);animation:spin 900ms linear infinite}.verification-list li[data-status="pass"]::before{content:"✓";color:var(--success)}.verification-list li[data-status="fail"]::before{content:"×";color:var(--danger)}.verification-list li[data-status="review"]::before{content:"!";color:#f2c66d}.verification-result{margin-top:13px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;font-weight:800}.verification-reasons{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:11px;line-height:1.5}.policy-confirm{display:flex;align-items:flex-start;gap:10px;margin:2px 0 0;padding:14px;border:1px solid #303949;border-radius:10px;background:#0b0f16;color:#c8d0dc;font-size:12px;line-height:1.45;cursor:pointer;transition:opacity 160ms ease}.policy-confirm.is-locked{opacity:.5;cursor:not-allowed}.policy-confirm input{width:16px;height:16px;margin:1px 0 0;accent-color:#5d87b2}.policy-copy{display:grid;gap:4px}.policy-lock{color:var(--muted);font-size:11px;font-weight:600}.status{min-height:20px;margin-top:14px;color:var(--muted);font-size:13px;line-height:1.5}.status.ok{color:var(--success)}.status.error{color:var(--danger)}@keyframes spin{to{transform:rotate(360deg)}}
-    aside h2{margin-top:0;font-size:17px}aside li{color:var(--muted);font-size:13px;line-height:1.6}aside ul{padding-left:18px}.repo{display:block;margin-top:18px;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:13px}.repo+.repo{margin-top:10px}.repo:hover{background:#171e29}
-    @media(max-width:800px){.layout{grid-template-columns:1fr}header{padding:0 20px}main{margin-top:36px}}@media(max-width:560px){.card{padding:18px}.choice-grid{grid-template-columns:1fr}.header-actions a:last-child{display:none}}
+    :root { color-scheme: dark; --bg:#09090b; --panel:#18181b; --border:#3f3f46; --text:#fafafa; --muted:#a1a1aa; --green:#10b981; --green-light:#34d399; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    nav { min-height:76px; display:flex; align-items:center; justify-content:center; padding:12px; border-bottom:1px solid var(--border); }
+    .nav-links { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; }
+    .nav-link { min-height:44px; display:inline-flex; align-items:center; padding:10px 14px; border-radius:8px; color:var(--muted); text-decoration:none; }
+    .nav-link:hover,.nav-link.active { background:#27272a; color:var(--green-light); }
+    main { max-width:1100px; margin:auto; padding:52px 24px 72px; }
+    h1 { margin:0 0 12px; font-size:clamp(2rem,5vw,3rem); }
+    h2 { margin:34px 0 10px; }
+    p,li { color:var(--muted); line-height:1.65; }
+    .intro { max-width:760px; }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; }
+    .button { min-height:44px; display:inline-flex; align-items:center; justify-content:center; padding:10px 16px; border-radius:8px; background:var(--green); color:#fff; font-weight:750; text-decoration:none; }
+    .button.secondary { background:#27272a; border:1px solid var(--border); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-top:22px; }
+    .card { padding:20px; border:1px solid var(--border); border-radius:12px; background:var(--panel); }
+    .card h3 { margin:0 0 8px; }
+    .card a { color:var(--green-light); }
+    .tag { display:inline-block; margin:5px 0 10px; padding:4px 9px; border-radius:999px; background:#064e3b; color:#a7f3d0; font-size:.8rem; }
+    .empty,.guide { margin-top:22px; padding:20px; border:1px solid var(--border); border-radius:12px; background:var(--panel); }
+    .guide ol { padding-left:22px; }
+    .guide li { margin:8px 0; }
+    footer { padding:24px; border-top:1px solid var(--border); color:var(--muted); text-align:center; }
   </style>
 </head>
 <body>
-  <header><a class="brand" href="/">Vortex Prime <span>× ModX</span></a><nav class="header-actions"><a href="/">Back to Vortex Prime</a></nav></header>
-  <main>
-    <div class="eyebrow">Creator publishing</div>
-    <h1 id="pageTitle">Publish to ModX Cheat Tables</h1>
-    <p class="lead" id="pageLead">Publish the finished trainer built by Mod X without uploading it to Vortex Prime or Mod X. Attach the <strong>.modxtrainer</strong> build to a public GitHub Release and paste that Release URL here.</p>
-    <section class="auth-gate" id="authGate">
-      <h2>Sign in to publish</h2>
-      <p id="authGateMessage">Publishing requires a Vortex Prime account.</p>
-      <div class="auth-actions"><a class="button" href="/">Go to the home page to sign in</a></div>
-    </section>
-    <div class="layout" id="publisherLayout" hidden>
-      <form class="card" id="form" novalidate>
-        <section class="step" id="gameStep" aria-labelledby="gameStepTitle">
-          <h2 class="step-title" id="gameStepTitle"><span class="step-number" id="gameStepNumber">1</span>Identify game</h2>
-          <p class="step-state" id="gameStepState">Select the game’s executable to begin.</p>
-          <span class="field-label">Game executable</span>
-          <input class="file-input" id="gameExecutable" type="file" accept=".exe,application/x-msdownload,application/vnd.microsoft.portable-executable">
-          <label class="drop-zone" id="dropZone" for="gameExecutable" tabindex="0">
-            <strong>Drag and drop or browse for the game’s .exe</strong>
-            <p>Upload the game’s executable so ModX can identify which game this table belongs to.</p>
-            <small>The executable is fingerprinted in your browser and is not uploaded or stored.</small>
-          </label>
-          <div class="selected-exe" id="selectedExecutable" hidden><span class="file-type">EXE</span><span class="file-details"><span class="file-name" id="executableName"></span><span class="file-size" id="executableSize"></span></span><button class="remove-file" id="removeExecutable" type="button" aria-label="Remove selected game executable">×</button></div>
-        </section>
-
-        <section class="step is-locked" id="sourceStep" aria-labelledby="sourceStepTitle" aria-disabled="true">
-          <h2 class="step-title" id="sourceStepTitle"><span class="step-number" id="sourceStepNumber">2</span>Finished trainer release</h2>
-          <p class="step-state locked" id="sourceStepState">Complete Step 1 to continue.</p>
-          <fieldset id="sourceFields" disabled>
-            <label for="githubUrl">GitHub release URL</label>
-            <input id="githubUrl" name="githubUrl" type="url" maxlength="2048" autocomplete="url" spellcheck="false" placeholder="https://github.com/username/repository/releases/tag/v1.0.0" required>
-            <p class="field-note">Paste the full URL to the GitHub Release containing the finished <strong>.modxtrainer</strong> build. Repository-only URLs are not accepted. Vortex Prime and Mod X store the link and metadata only.</p>
-            <p class="version-notice">Mod X reads the trainer version from the release tag. Rebuild after changing the cheat list, then publish the new <strong>.modxtrainer</strong> in a new GitHub Release, such as <strong>v1.0.0 → v1.0.1</strong>. Mod X checks that repository for newer Releases automatically.</p>
-            <div class="version-result" id="releaseResult" hidden><strong id="releaseVersion"></strong><span id="releaseAssetSummary"></span></div>
-            <div class="asset-field" id="releaseAssetField" hidden><label for="releaseAsset">Finished Mod X trainer</label><select id="releaseAsset"></select><p class="field-note">This Release contains multiple .modxtrainer builds. Select the finished trainer Mod X should use.</p></div>
-            <p class="readme-notice">Include supported game versions, storefronts/services, requirements, features, instructions and other important information in your GitHub README or Release notes.</p>
-          </fieldset>
-        </section>
-
-        <section class="step is-locked" id="maintenanceStep" aria-labelledby="maintenanceStepTitle" aria-disabled="true">
-          <h2 class="step-title" id="maintenanceStepTitle"><span class="step-number" id="maintenanceStepNumber">3</span>Maintenance</h2>
-          <p class="step-state locked" id="maintenanceStepState">Complete Step 2 to continue.</p>
-          <fieldset id="maintenanceFields" disabled><legend class="field-label">Who will maintain this GitHub table?</legend><div class="choice-grid">
-            <label class="choice"><input type="radio" name="maintenanceMode" value="author"><span class="choice-copy"><strong>I’ll maintain this table myself</strong><small>You keep full control through your normal GitHub repository settings. You update the table, README and release notes yourself, then publish a new GitHub Release with a new version tag whenever the table changes. You do not need to give anyone else access.</small></span></label>
-            <label class="choice"><input type="radio" name="maintenanceMode" value="community"><span class="choice-copy"><strong>Community maintenance allowed</strong><small>Open the project to community contributions through GitHub. Community members can submit or upload table updates for review; accepted updates are merged into this same canonical repository, and new official Releases are published from here. Mod X will not treat separate copies or alternate repositories as the official table.</small></span></label>
-          </div></fieldset>
-        </section>
-
-        <section class="step is-locked" id="verificationStep" aria-labelledby="verificationStepTitle" aria-disabled="true">
-          <h2 class="step-title" id="verificationStepTitle"><span class="step-number" id="verificationStepNumber">4</span>Submission Verification</h2>
-          <p class="step-state locked" id="verificationStepState">Complete Step 3 to continue.</p>
-          <div class="verification-panel">
-            <p class="verification-copy">Mod X checks the target game, GitHub Release, documentation and finished trainer metadata before publishing. The finished build is inspected statically and never executed.</p>
-            <ul class="verification-list" id="verificationChecks">
-              <li data-check="game">Target game identified</li><li data-check="eligibility">Game eligible for Mod X</li><li data-check="release">GitHub Release verified</li><li data-check="asset">Finished trainer build found</li><li data-check="table">Finished trainer parsed safely</li><li data-check="policy">Offline/single-player policy passed</li>
-            </ul>
-            <div class="verification-result" id="verificationResult">Waiting for the previous steps.</div>
-            <ul class="verification-reasons" id="verificationReasons" hidden></ul>
-          </div>
-        </section>
-
-        <section class="step is-locked" id="confirmationStep" aria-labelledby="confirmationStepTitle" aria-disabled="true">
-          <h2 class="step-title" id="confirmationStepTitle"><span class="step-number" id="confirmationStepNumber">5</span>Offline / single-player confirmation</h2>
-          <p class="step-state locked" id="confirmationStepState">Pass Submission Verification to continue.</p>
-          <label class="policy-confirm is-locked" id="offlinePolicy"><input id="offlineOnlyConfirmed" type="checkbox" required disabled><span class="policy-copy"><span>I confirm this table is intended for offline or single-player use only.</span><small class="policy-lock" id="policyLock">Submission Verification must return PASS.</small></span></label>
-        </section>
-
-        <section class="step is-locked" id="publishStep" aria-labelledby="publishStepTitle" aria-disabled="true">
-          <h2 class="step-title" id="publishStepTitle"><span class="step-number" id="publishStepNumber">6</span>Publish</h2>
-          <p class="step-state locked" id="publishStepState">Complete the confirmation above to publish.</p>
-          <button class="submit" id="submitBtn" type="submit" disabled>Publish table</button>
-        </section>
-        <div class="status" id="status" role="status" aria-live="polite"></div>
-      </form>
-
-      <aside class="card"><h2>How publishing works</h2><p>Each step unlocks only after the previous step is complete.</p><ol><li>Select the game’s executable. Mod X fingerprints it locally; the file is not uploaded.</li><li>In Mod X DEV Mode, import the CT locally and build the finished .modxtrainer file. Editable source files remain on your computer.</li><li>Attach only that finished build to a public GitHub Release, then paste the full Release URL here.</li><li>Choose who will maintain the one canonical repository through GitHub.</li><li>Mod X verifies the game, Release, documentation and finished build without executing it.</li><li>Confirm offline/single-player intent, then publish. Mod X stores metadata only, downloads come directly from GitHub, and newer Releases are detected automatically.</li></ol><a class="repo" href="https://github.com/rileyadams05/ModX" target="_blank" rel="noopener noreferrer">View the ModX Repository →</a></aside>
+  <nav aria-label="Main navigation">
+    <div class="nav-links">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/mods/" class="nav-link">Community Mods</a>
+      <a href="/modx/" class="nav-link active">ModX Cheat Tables</a>
+      <a href="/games/" class="nav-link">Games</a>
+      <a href="/projects/" class="nav-link">Projects</a>
+      <a href="/help/" class="nav-link">Help</a>
     </div>
+  </nav>
+  <main>
+    <h1>ModX Cheat Tables</h1>
+    <p class="intro">Browse reviewed ModX table listings. Vortex Prime does not ask you to sign in, upload files, or connect a Google account. To propose a listing, open a pull request on GitHub; GitHub handles contributor sign-in.</p>
+    <div class="actions">
+      <a class="button" href="https://github.com/rileyadams05/Vortex-Prime-emu/edit/main/docs/modx/catalogue.json" target="_blank" rel="noopener">Propose a listing on GitHub</a>
+      <a class="button secondary" href="https://github.com/rileyadams05/Vortex-Prime-emu/blob/main/docs/modx/CONTRIBUTING.md" target="_blank" rel="noopener">Read contribution guide</a>
+    </div>
+    <h2>Published listings</h2>
+    <section id="results" class="grid" aria-live="polite"></section>
+    <p id="empty" class="empty" hidden></p>
+    <section class="guide">
+      <h2>How a pull request works</h2>
+      <ol>
+        <li>Fork the Vortex Prime repository on GitHub and add listing metadata to <code>docs/modx/catalogue.json</code>.</li>
+        <li>Link to the creator's public GitHub project or Release. Keep table files and builds in their creator-owned location.</li>
+        <li>Open a pull request. Maintainers review attribution, compatibility details, and permissions before merging.</li>
+        <li>After merge, the website reads the reviewed metadata directly from this repository.</li>
+      </ol>
+      <p>This website stores catalogue text in GitHub and does not accept file uploads. Do not include binaries or third-party files without redistribution permission.</p>
+    </section>
   </main>
+  <footer>ModX Cheat Tables · GitHub pull requests are reviewed before publication.</footer>
   <script>
-    const el=id=>document.getElementById(id);
-    const form=el('form'),authGate=el('authGate'),publisherLayout=el('publisherLayout'),fileInput=el('gameExecutable'),dropZone=el('dropZone'),selectedExecutable=el('selectedExecutable'),sourceStep=el('sourceStep'),sourceFields=el('sourceFields'),githubUrl=el('githubUrl'),releaseResult=el('releaseResult'),releaseAssetField=el('releaseAssetField'),releaseAsset=el('releaseAsset'),maintenanceStep=el('maintenanceStep'),maintenanceFields=el('maintenanceFields'),verificationStep=el('verificationStep'),confirmationStep=el('confirmationStep'),publishStep=el('publishStep'),offlinePolicy=el('offlinePolicy'),offlineOnlyConfirmed=el('offlineOnlyConfirmed'),submitBtn=el('submitBtn'),statusEl=el('status');
-    const workflow={step1Status:'pending',step2Status:'locked',step3Status:'locked',step4Status:'locked'};
-    let authUser=null,executableMetadata=null,verifiedRelease=null,verifiedReview=null,submitting=false,executableSequence=0,releaseSequence=0,reviewSequence=0,releaseTimer=0,reviewTimer=0,reviewPollCount=0,step2Message='';
+    const results = document.getElementById("results");
+    const empty = document.getElementById("empty");
 
-    function status(message='',kind=''){statusEl.textContent=message;statusEl.className='status'+(kind?' '+kind:'')}
-    function formatBytes(value){if(value<1024)return value+' B';if(value<1048576)return(value/1024).toFixed(1)+' KB';return(value/1048576).toFixed(1)+' MB'}
-    function validGithubReleaseUrl(value){try{const url=new URL(value);const parts=url.pathname.split('/').filter(Boolean);return url.protocol==='https:'&&url.hostname.toLowerCase()==='github.com'&&!url.username&&!url.password&&!url.port&&!url.search&&!url.hash&&parts.length>=5&&parts[2]==='releases'&&parts[3]==='tag'&&parts.slice(4).join('/').length>0}catch{return false}}
-    function maintenanceMode(){return document.querySelector('input[name="maintenanceMode"]:checked')?.value||''}
-    function releaseReady(){return workflow.step2Status==='complete'&&!!verifiedRelease&&verifiedRelease.url===githubUrl.value.trim()&&!!verifiedRelease.assetId}
-    function setStepVisual(numberId,stateId,number,statusValue,message){const numberEl=el(numberId),stateEl=el(stateId),complete=statusValue==='complete';numberEl.classList.toggle('done',complete);numberEl.textContent=complete?'✓':number;stateEl.className='step-state '+(statusValue==='locked'?'locked':statusValue==='complete'?'complete':statusValue==='error'||statusValue==='reject'?'error':'');stateEl.textContent=message}
-    function clearSubmissionReview(){clearTimeout(reviewTimer);reviewSequence++;reviewPollCount=0;verifiedReview=null;offlineOnlyConfirmed.checked=false;workflow.step4Status='locked';renderReviewChecks(null)}
-    function clearMaintenance(){document.querySelectorAll('input[name="maintenanceMode"]').forEach(input=>input.checked=false);workflow.step3Status='locked';clearSubmissionReview()}
-    function clearReleaseVerification(){clearTimeout(releaseTimer);releaseSequence++;verifiedRelease=null;step2Message='';releaseResult.hidden=true;releaseAssetField.hidden=true;releaseAsset.replaceChildren();clearMaintenance();workflow.step2Status=workflow.step1Status==='complete'?'pending':'locked'}
-
-    function update(){
-      const step1Complete=workflow.step1Status==='complete'&&!!executableMetadata;
-      const step2Complete=step1Complete&&releaseReady();
-      const step3Complete=step2Complete&&workflow.step3Status==='complete'&&!!maintenanceMode();
-      const step4Passed=step3Complete&&workflow.step4Status==='pass'&&verifiedReview?.decision==='pass';
-      const confirmationEnabled=step4Passed&&!submitting;
-      const confirmationComplete=confirmationEnabled&&offlineOnlyConfirmed.checked;
-      const step1Message=workflow.step1Status==='processing'?'Processing executable…':workflow.step1Status==='complete'?'Game identified.':workflow.step1Status==='error'?'Game could not be identified. Choose another executable.':'Select the game’s executable to begin.';
-      const step2StateMessage=workflow.step2Status==='locked'?'Complete Step 1 to continue.':workflow.step2Status==='checking'?'Checking GitHub Release…':workflow.step2Status==='complete'?'GitHub Release verified · Version '+verifiedRelease.version:workflow.step2Status==='error'?'Release not verified. Correct the URL and try again.':step2Message||'Paste the full GitHub Release URL to continue.';
-      const step3Message=workflow.step3Status==='locked'?'Complete Step 2 to continue.':workflow.step3Status==='complete'?'Maintenance choice completed.':'Choose who will maintain this GitHub table.';
-      const step4Message=workflow.step4Status==='locked'?'Complete Step 3 to continue.':workflow.step4Status==='checking'?'Verification in progress…':workflow.step4Status==='pass'?'Approved for publishing.':workflow.step4Status==='review'?'Manual review required.':workflow.step4Status==='reject'?'Submission rejected.':'Verification could not be completed.';
-      setStepVisual('gameStepNumber','gameStepState','1',workflow.step1Status,step1Message);
-      setStepVisual('sourceStepNumber','sourceStepState','2',workflow.step2Status,step2StateMessage);
-      setStepVisual('maintenanceStepNumber','maintenanceStepState','3',workflow.step3Status,step3Message);
-      setStepVisual('verificationStepNumber','verificationStepState','4',workflow.step4Status==='pass'?'complete':workflow.step4Status,step4Message);
-      setStepVisual('confirmationStepNumber','confirmationStepState','5',confirmationComplete?'complete':step4Passed?'pending':'locked',confirmationComplete?'Offline/single-player intent confirmed.':step4Passed?'Explicit confirmation is required.':'Pass Submission Verification to continue.');
-      setStepVisual('publishStepNumber','publishStepState','6',submitting?'processing':confirmationComplete?'pending':'locked',submitting?'Publishing listing…':confirmationComplete?'Ready to publish.':'Complete the confirmation above to publish.');
-      sourceStep.classList.toggle('is-locked',!step1Complete);sourceStep.setAttribute('aria-disabled',String(!step1Complete));sourceFields.disabled=submitting||!step1Complete||workflow.step2Status==='checking';
-      maintenanceStep.classList.toggle('is-locked',!step2Complete);maintenanceStep.setAttribute('aria-disabled',String(!step2Complete));maintenanceFields.disabled=submitting||!step2Complete;
-      verificationStep.classList.toggle('is-locked',!step3Complete);verificationStep.setAttribute('aria-disabled',String(!step3Complete));
-      confirmationStep.classList.toggle('is-locked',!step4Passed);confirmationStep.setAttribute('aria-disabled',String(!step4Passed));offlinePolicy.classList.toggle('is-locked',!step4Passed);offlineOnlyConfirmed.disabled=!confirmationEnabled;el('policyLock').hidden=step4Passed;
-      publishStep.classList.toggle('is-locked',!confirmationComplete);publishStep.setAttribute('aria-disabled',String(!confirmationComplete));
-      fileInput.disabled=submitting||workflow.step1Status==='processing';dropZone.classList.toggle('is-disabled',fileInput.disabled);dropZone.setAttribute('aria-disabled',String(fileInput.disabled));dropZone.tabIndex=fileInput.disabled?-1:0;
-      submitBtn.disabled=submitting||!authUser||!step1Complete||!step2Complete||!step3Complete||!step4Passed||!offlineOnlyConfirmed.checked;
+    function safeGithubUrl(value) {
+      try {
+        const url = new URL(value);
+        return url.protocol === "https:" && (url.hostname === "github.com" || url.hostname.endsWith(".github.com")) ? url.href : "";
+      } catch (_) { return ""; }
     }
 
-    async function api(url,options={}){const response=await fetch(url,{headers:{Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{})},...options});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.message||payload.error||'The request failed.');return payload}
-
-    async function selectExecutable(file){
-      const sequence=++executableSequence;executableMetadata=null;selectedExecutable.hidden=true;workflow.step1Status=file?'processing':'pending';clearReleaseVerification();status('');update();
-      if(!file)return;
-      if(!file.name.toLowerCase().endsWith('.exe')||!file.size){fileInput.value='';workflow.step1Status='error';status('Choose a valid, non-empty Windows game executable.','error');return update()}
-      status('Identifying game… The executable is being fingerprinted locally.');
-      try{const signature=new Uint8Array(await file.slice(0,2).arrayBuffer());if(signature[0]!==0x4d||signature[1]!==0x5a)throw new Error('The selected file is not a valid Windows executable.');const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))].map(byte=>byte.toString(16).padStart(2,'0')).join('');if(sequence!==executableSequence)return;executableMetadata={name:file.name,size:file.size,sha256:digest};workflow.step1Status='complete';workflow.step2Status='pending';el('executableName').textContent=file.name;el('executableSize').textContent=formatBytes(file.size)+' · fingerprinted locally';selectedExecutable.hidden=false;fileInput.value='';status('Game executable identified. Step 2 is now available. The file was not uploaded.','ok')}
-      catch(error){if(sequence===executableSequence){workflow.step1Status='error';status(error.message||'The executable could not be read.','error')}}
-      finally{if(sequence===executableSequence)update()}
-    }
-
-    function clearExecutable(){executableSequence++;executableMetadata=null;fileInput.value='';selectedExecutable.hidden=true;workflow.step1Status='pending';clearReleaseVerification();status('');update()}
-    function showSignedOut(message='Publishing requires a Vortex Prime account.'){authUser=null;el('authGateMessage').textContent=message;authGate.hidden=false;publisherLayout.hidden=true;update()}
-
-    async function verifyRelease(){
-      clearTimeout(releaseTimer);if(workflow.step1Status!=='complete')return;
-      const url=githubUrl.value.trim(),sequence=++releaseSequence;verifiedRelease=null;step2Message='';releaseResult.hidden=true;releaseAssetField.hidden=true;releaseAsset.replaceChildren();clearMaintenance();
-      if(!validGithubReleaseUrl(url)){workflow.step2Status='error';status('Paste the full https://github.com/OWNER/REPOSITORY/releases/tag/VERSION URL.','error');return update()}
-      workflow.step2Status='checking';status('Checking GitHub Release…');update();
-      try{const data=await api('/api/modx/resolve-release',{method:'POST',body:JSON.stringify({githubUrl:url})});if(sequence!==releaseSequence)return;const assets=Array.isArray(data.trainerAssets)?data.trainerAssets:[];const automatic=data.release?.asset||null;if(!automatic&&!assets.length)throw new Error('This GitHub Release does not contain a finished .modxtrainer build.');verifiedRelease={url,version:data.version,assetId:automatic?.id||''};el('releaseVersion').textContent='Detected version: '+data.version;el('releaseAssetSummary').textContent=automatic?'Finished trainer: '+automatic.name:assets.length+' .modxtrainer builds found — choose one below.';releaseResult.hidden=false;if(automatic){workflow.step2Status='complete';workflow.step3Status='pending';status('GitHub Release verified. Step 3 is now available.','ok')}else{releaseAsset.append(new Option('Select a finished trainer',''));for(const asset of assets)releaseAsset.append(new Option(asset.name,asset.id));releaseAssetField.hidden=false;workflow.step2Status='pending';step2Message='GitHub Release verified. Select the intended .modxtrainer build to continue.';status(step2Message,'ok')}}
-      catch(error){if(sequence===releaseSequence){verifiedRelease=null;workflow.step2Status='error';status(error.message||'The GitHub Release could not be verified.','error')}}
-      finally{if(sequence===releaseSequence)update()}
-    }
-
-    function renderReviewChecks(review){
-      const labels={game:'Target game identified',eligibility:'Game eligible for Mod X',release:'GitHub Release verified',asset:'Finished trainer build found',table:'Finished trainer parsed safely',policy:'Offline/single-player policy passed'};
-      const nodes=[...el('verificationChecks').querySelectorAll('li')];nodes.forEach(node=>node.dataset.status='waiting');
-      const stageOrder=['queued','game','release','documentation','table','safety','complete'];const stageIndex=stageOrder.indexOf(review?.stage||'queued');
-      const stageChecks={game:['game','eligibility'],release:['release','asset'],documentation:['release','asset'],table:['table'],safety:['policy']};
-      if(review&&review.status!=='completed'){for(const stage of stageOrder.slice(1,Math.max(1,stageIndex))){for(const key of stageChecks[stage]||[]){const node=nodes.find(item=>item.dataset.check===key);if(node)node.dataset.status='pass'}}for(const key of stageChecks[review.stage]||[]){const node=nodes.find(item=>item.dataset.check===key);if(node)node.dataset.status='checking'}}
-      if(review?.status==='completed'){for(const item of review.checks||[]){const key=Object.keys(labels).find(name=>labels[name]===item.label);const node=nodes.find(candidate=>candidate.dataset.check===key);if(node)node.dataset.status=item.status||'waiting'}}
-      el('verificationResult').textContent=!review?'Waiting for the previous steps.':review.status!=='completed'?'Verification in progress':review.decision==='pass'?'Approved for publishing':review.decision==='review'?'Manual review required':'Submission rejected';
-      const reasons=Array.isArray(review?.reasons)?review.reasons:[];el('verificationReasons').replaceChildren(...reasons.map(reason=>{const item=document.createElement('li');item.textContent=reason;return item}));el('verificationReasons').hidden=!reasons.length;
-    }
-
-    async function startSubmissionReview(){
-      clearTimeout(reviewTimer);const sequence=++reviewSequence;reviewPollCount=0;verifiedReview=null;offlineOnlyConfirmed.checked=false;
-      if(!executableMetadata||!releaseReady()||!maintenanceMode()){workflow.step4Status='locked';renderReviewChecks(null);return update()}
-      workflow.step4Status='checking';renderReviewChecks({status:'queued',stage:'queued'});status('Starting Mod X Submission Verification…');update();
-      try{const data=await api('/api/modx/reviews',{method:'POST',body:JSON.stringify({gameExecutable:executableMetadata,githubUrl:githubUrl.value.trim(),releaseAssetId:verifiedRelease.assetId,maintenanceMode:maintenanceMode()})});if(sequence!==reviewSequence)return;verifiedReview=data.review;renderReviewChecks(verifiedReview);if(verifiedReview?.status==='completed')return finishSubmissionReview(verifiedReview,sequence);status('Submission Verification is running. The finished trainer is inspected statically and is never executed.');reviewTimer=setTimeout(()=>pollSubmissionReview(sequence),1500)}
-      catch(error){if(sequence===reviewSequence){workflow.step4Status='error';renderReviewChecks({status:'completed',decision:'review',reasons:[error.message||'Verification could not be started.'],checks:[]});status(error.message||'Submission Verification could not be started.','error');update()}}
-    }
-
-    async function pollSubmissionReview(sequence){
-      if(sequence!==reviewSequence||!verifiedReview?.id)return;
-      if(++reviewPollCount>120){workflow.step4Status='error';status('Submission Verification is taking longer than expected. Try again later.','error');return update()}
-      try{const data=await api('/api/modx/reviews/'+encodeURIComponent(verifiedReview.id));if(sequence!==reviewSequence)return;verifiedReview=data.review;renderReviewChecks(verifiedReview);if(verifiedReview.status==='completed')return finishSubmissionReview(verifiedReview,sequence);reviewTimer=setTimeout(()=>pollSubmissionReview(sequence),1500)}
-      catch(error){if(sequence===reviewSequence){workflow.step4Status='error';status(error.message||'Submission Verification status could not be loaded.','error');update()}}
-    }
-
-    function finishSubmissionReview(review,sequence){
-      if(sequence!==reviewSequence)return;verifiedReview=review;workflow.step4Status=review.decision==='pass'?'pass':review.decision==='reject'?'reject':'review';renderReviewChecks(review);
-      if(review.decision==='pass')status('Submission Verification passed. Confirm offline/single-player use to continue.','ok');
-      else if(review.decision==='review')status('Manual review required. This submission cannot be published automatically.','error');
-      else status(review.reasons?.[0]||'This submission cannot be published through Mod X.','error');
-      update();
-    }
-
-    async function loadAuth(){const data=await api('/api/auth/config');if(!data.user)return showSignedOut();authUser=data.user;authGate.hidden=true;publisherLayout.hidden=false;update()}
-    fileInput.addEventListener('change',()=>selectExecutable(fileInput.files[0]));
-    el('removeExecutable').addEventListener('click',clearExecutable);
-    githubUrl.addEventListener('input',()=>{if(workflow.step1Status!=='complete')return;clearReleaseVerification();workflow.step2Status='pending';status('');update();if(validGithubReleaseUrl(githubUrl.value.trim()))releaseTimer=setTimeout(verifyRelease,500)});
-    githubUrl.addEventListener('blur',()=>{if(workflow.step1Status!=='complete'||releaseReady()||workflow.step2Status==='checking')return;if(validGithubReleaseUrl(githubUrl.value.trim()))verifyRelease();else if(githubUrl.value.trim()){workflow.step2Status='error';status('Paste the full https://github.com/OWNER/REPOSITORY/releases/tag/VERSION URL.','error');update()}});
-    releaseAsset.addEventListener('change',()=>{if(!verifiedRelease)return;verifiedRelease.assetId=releaseAsset.value;workflow.step2Status=verifiedRelease.assetId?'complete':'pending';clearMaintenance();workflow.step3Status=verifiedRelease.assetId?'pending':'locked';step2Message=verifiedRelease.assetId?'':'GitHub Release verified. Select the intended .modxtrainer build to continue.';status(verifiedRelease.assetId?'GitHub Release verified. Step 3 is now available.':'Select the intended finished trainer.',verifiedRelease.assetId?'ok':'');update()});
-    document.querySelectorAll('input[name="maintenanceMode"]').forEach(input=>input.addEventListener('change',()=>{if(!releaseReady())return;clearSubmissionReview();workflow.step3Status=maintenanceMode()?'complete':'pending';workflow.step4Status=maintenanceMode()?'checking':'locked';update();if(maintenanceMode())startSubmissionReview()}));
-    offlineOnlyConfirmed.addEventListener('change',update);
-    dropZone.addEventListener('keydown',event=>{if(fileInput.disabled)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();fileInput.click()}});
-    dropZone.addEventListener('dragover',event=>{event.preventDefault();if(!fileInput.disabled)dropZone.classList.add('is-dragging')});dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('is-dragging'));dropZone.addEventListener('drop',event=>{event.preventDefault();dropZone.classList.remove('is-dragging');if(!fileInput.disabled)selectExecutable(event.dataTransfer.files[0])});
-    form.addEventListener('submit',async event=>{event.preventDefault();if(!authUser)return showSignedOut();if(workflow.step1Status!=='complete'||!executableMetadata)return status('Complete Step 1 before publishing.','error');if(!validGithubReleaseUrl(githubUrl.value.trim())||!releaseReady())return status('Complete GitHub Release verification before publishing.','error');if(workflow.step3Status!=='complete'||!maintenanceMode())return status('Choose a maintenance option before publishing.','error');if(workflow.step4Status!=='pass'||verifiedReview?.decision!=='pass')return status('Submission Verification must return PASS before publishing.','error');if(offlineOnlyConfirmed.disabled||!offlineOnlyConfirmed.checked)return status('Confirm offline or single-player use.','error');submitting=true;update();status('Publishing the verified GitHub Release metadata to the Mod X catalogue…');try{await api('/api/modx/submit',{method:'POST',body:JSON.stringify({gameExecutable:executableMetadata,githubUrl:githubUrl.value.trim(),releaseAssetId:verifiedRelease.assetId,maintenanceMode:maintenanceMode(),reviewId:verifiedReview.id,offlineOnlyConfirmed:true})});githubUrl.value='';clearExecutable();status('Trainer published. Mod X stored the reviewed GitHub Release metadata; the finished trainer remains hosted and downloaded directly from GitHub.','ok')}catch(error){status(error.message||'Publishing failed.','error')}finally{submitting=false;update()}});
-    renderReviewChecks(null);loadAuth().catch(error=>showSignedOut(error.message||'Vortex Prime could not verify your current session.'));update();
+    fetch("/modx/catalogue.json", { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+      })
+      .then((data) => {
+        const tables = Array.isArray(data.tables) ? data.tables.filter((item) =>
+          item && typeof item.name === "string" && typeof item.game === "string" &&
+          typeof item.creator === "string" && typeof item.summary === "string"
+        ) : [];
+        results.replaceChildren();
+        for (const table of tables) {
+          const card = document.createElement("article");
+          card.className = "card";
+          const title = document.createElement("h3");
+          title.textContent = table.name;
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = table.game;
+          const creator = document.createElement("p");
+          creator.textContent = "By " + table.creator;
+          const summary = document.createElement("p");
+          summary.textContent = table.summary;
+          card.append(title, tag, creator, summary);
+          const href = safeGithubUrl(table.releaseUrl);
+          if (href) {
+            const link = document.createElement("a");
+            link.href = href;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "Open creator's project or Release";
+            card.append(link);
+          }
+          results.append(card);
+        }
+        empty.hidden = tables.length > 0;
+        empty.textContent = tables.length ? "" : "No ModX listings are published yet. Propose the first one through GitHub.";
+      })
+      .catch(() => {
+        empty.hidden = false;
+        empty.textContent = "The repository-hosted listings could not be loaded. Please try again later.";
+      });
   </script>
 </body>
 </html>
