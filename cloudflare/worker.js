@@ -187,6 +187,26 @@ export default {
     const path = url.pathname.replace(/^\/+/, '');
 
     try {
+      if (path === 'api/auth/logout') {
+        return handleLogout(env, allowedOrigin);
+      }
+
+      if (path.startsWith('api/auth/')) {
+        return json({ ok: false, message: 'Website sign-in and account APIs have been retired.' }, 410, allowedOrigin);
+      }
+
+      if (path.startsWith('api/streamz/auth/')) {
+        return json({ ok: false, message: 'Website sign-in and provider linking have been retired.' }, 410, allowedOrigin);
+      }
+
+      if (path.startsWith('api/modx/')) {
+        return json({ ok: false, message: 'ModX catalogue changes are submitted as GitHub pull requests.' }, 410, allowedOrigin);
+      }
+
+      if (path === 'api/risc/events') {
+        return json({ ok: false, message: 'Google account security integration has been retired.' }, 410, allowedOrigin);
+      }
+
       if (path === 'privacy-policy') {
         return await servePublicJoblessPrivacyPolicy(request);
       }
@@ -6147,6 +6167,7 @@ function base64UrlDecode(input) {
 }
 
 async function driveRequest(env, url, options = {}, retry = true) {
+  throw httpError(410, 'Google Drive backed website storage has been retired. Public catalogues are served from the repository.');
   const token = await getAccessToken(env);
   const headers = new Headers(options.headers || {});
   headers.set('Authorization', `Bearer ${token}`);
