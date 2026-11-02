@@ -1,8 +1,9 @@
 name = "vortex-prime-store-api"
 main = "worker.js"
 compatibility_date = "2026-05-25"
-# Production routes are already configured in Cloudflare. The GitHub Actions
-# token only deploys Worker code, so CI must not try to edit zone routes.
+# These route declarations document the existing production attachment.
+# CI uploads and promotes versions without applying trigger changes, so the
+# API token does not need permission to edit Cloudflare zone routes.
 workers_dev = false
 
 routes = [
