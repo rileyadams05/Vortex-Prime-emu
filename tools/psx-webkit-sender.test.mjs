@@ -7,6 +7,7 @@ let receiver;
 let base;
 const origin = "https://vortex-prime-emu.com";
 const requestId = "00000000-0000-4000-8000-000000000001";
+const duplicateRequestId = "00000000-0000-4000-8000-000000000002";
 
 before(async () => {
   const port = 21000 + Math.floor(Math.random() * 20000);
@@ -89,7 +90,7 @@ test("reports connection refusal, timeout, and invalid acknowledgements", async 
 });
 test("mock receiver deduplicates identical request IDs and rejects conflicting reuse", async () => {
   const payload = {
-    protocolVersion: 1, requestId, target: "ps4-goldhen",
+    protocolVersion: 1, requestId: duplicateRequestId, target: "ps4-goldhen",
     downloadUrl: "https://example.com/a.pkg", fileName: null, requestedAt: new Date().toISOString()
   };
   const send = () => mockFetch(base + "/api/v1/requests", {
