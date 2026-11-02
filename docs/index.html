@@ -5982,28 +5982,10 @@
                             <div class="community-tutorials-section">
                                 <div class="section-header">
                                     <h4><svg class="youtube-icon" viewBox="0 0 24 24" style="width:20px;height:20px;fill:#FF0000;vertical-align:middle;display:inline-block;margin-right:6px;"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.108C19.528 3.545 12 3.545 12 3.545s-7.528 0-9.388.51a3.003 3.003 0 0 0-2.11 2.108C0 8.024 0 12 0 12s0 3.976.502 5.837a3.003 3.003 0 0 0 2.11 2.108c1.86.51 9.388.51 9.388.51s7.53 0 9.388-.51a3.003 3.003 0 0 0 2.11-2.108c.502-1.861.502-5.837.502-5.837s0-3.976-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>YouTube Tutorials</h4>
-                                    <button class="btn-submit-tutorial" id="btnShowSubmitForm" type="button">+ Submit Tutorial</button>
+                                    <button class="btn-submit-tutorial" type="button" disabled aria-disabled="true">Submissions paused</button>
                                 </div>
-                                <div class="tutorial-form-container" id="tutorialFormContainer" style="display: none;">
-                                    <form id="publicTutorialForm" onsubmit="event.preventDefault()">
-                                        <div class="form-group">
-                                            <label for="tutorialUrl">YouTube Video URL *</label>
-                                            <input type="url" id="tutorialUrl" placeholder="https://www.youtube.com/watch?v=..." required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="tutorialTitle">Video Title *</label>
-                                            <input type="text" id="tutorialTitle" placeholder="e.g., PS4 Tutorial & Showcase" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="tutorialUser">Your Name (optional)</label>
-                                            <input type="text" id="tutorialUser" placeholder="Anonymous">
-                                        </div>
-                                        <div class="form-actions">
-                                            <button class="btn-primary" type="submit" id="btnSubmitTutorialForm">Add to Gallery</button>
-                                            <button class="btn-secondary" type="button" id="btnCancelSubmitForm">Cancel</button>
-                                        </div>
-                                        <div class="form-status" id="tutorialFormStatus"></div>
-                                    </form>
+                                <div class="tutorial-form-container" role="status" style="display: block;">
+                                    <p>Community tutorial submissions are paused.</p>
                                 </div>
                             </div>
 
