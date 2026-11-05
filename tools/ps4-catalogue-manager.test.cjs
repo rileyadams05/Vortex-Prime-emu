@@ -1,0 +1,95 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const validation = require('../docs/assets/js/ps4-catalogue-validation.js');
+const state = require('../docs/assets/js/ps4-catalogue-state.js');
+const { createClient } = require('../docs/assets/js/ps4-catalogue-api.js');
+
+function expectError(callback, pattern) {
+  assert.throws(callback, pattern);
+}
+
+const goodCatalogue = {
+  schema: 'vortex-prime.ps4-catalogue/v1',
+  name: 'Test Homebrew',
+  items: [{ id: 'publisher.app', name: 'Example app', pkg_url: 'https://cdn.example.test/app.pkg' }]
+};
+
+assert.deepEqual(validation.validateCatalogueDocument(goodCatalogue, 'vortex-v1'), {
+  name: 'Test Homebrew', count: 1, schema: 'vortex-prime.ps4-catalogue/v1', adapter_id: 'vortex-v1'
+});
+for (const category of ['games', 'updates', 'dlc', 'homebrew', 'applications']) assert.ok(validation.categories.includes(category));
+expectError(() => validation.parseCatalogueUrl('not a url'), /complete catalogue URL/);
+expectError(() => validation.parseCatalogueUrl('ftp://example.org/catalogue.json'), /HTTP or HTTPS/);
+expectError(() => validation.parseCatalogueUrl('https://user:pass@example.org/catalogue.json'), /credentials/);
+expectError(() => validation.validateCatalogueDocument({ ...goodCatalogue, schema: 'unknown/v9' }, 'vortex-v1'), /Unsupported catalogue schema/);
+expectError(() => validation.validateCatalogueDocument({ schema: goodCatalogue.schema, name: '', items: [] }, 'vortex-v1'), /non-empty "name"/);
+expectError(() => validation.validateCatalogueDocument({ schema: goodCatalogue.schema, name: 'No items' }, 'vortex-v1'), /"items" array/);
+expectError(() => validation.validateCatalogueDocument({ ...goodCatalogue, items: [goodCatalogue.items[0], goodCatalogue.items[0]] }, 'vortex-v1'), /Duplicate item id/);
+expectError(() => validation.validateCatalogueDocument({ ...goodCatalogue, items: [{ id: 'bad', name: 'Bad URL', pkg_url: 'file:///tmp/not-a-pkg.pkg' }] }, 'vortex-v1'), /http\(s\)/);
+assert.equal(validation.isPrivateIPv4('192.168.1.50'), true);
+assert.equal(validation.isPrivateIPv4('8.8.8.8'), false);
+assert.equal(validation.isDuplicateUrl([{ url: 'https://example.org/catalogue.json' }], 'https://example.org:443/catalogue.json'), true);
+
+const remote = [
+  { id: 'remote-a', url: 'https://catalogue.example/a.json', category: 'games', enabled: true, user_pref: 'preserve' },
+  { id: 'remote-b', url: 'https://catalogue.example/b.json', category: 'dlc', enabled: true }
+];
+let queue = [];
+queue = state.queue(queue, { operation_id: 'add-1', op: 'add', source: { id: 'local-c', url: 'https://catalogue.example/c.json', category: 'homebrew', enabled: true } });
+queue = state.queue(queue, { operation_id: 'change-enable', op: 'set-enabled', source_id: 'local-c', enabled: false });
+queue = state.queue(queue, { operation_id: 'change-category', op: 'set-category', source_id: 'local-c', category: 'applications' });
+assert.equal(queue.length, 1, 'edits to a pending new source should coalesce into its add operation');
+assert.equal(queue[0].source.enabled, false);
+assert.equal(queue[0].source.category, 'applications');
+let merged = state.applyPending(remote, queue);
+assert.equal(merged.length, 3);
+assert.equal(merged.find(source => source.id === 'remote-a').user_pref, 'preserve');
+assert.equal(merged.find(source => source.id === 'local-c').category, 'applications');
+
+queue = state.queue(queue, { operation_id: 'remove-local', op: 'remove', source_id: 'local-c' });
+assert.equal(queue.length, 0, 'removing an unsynced new source should cancel its pending add');
+queue = state.queue(queue, { operation_id: 'disable-a', op: 'set-enabled', source_id: 'remote-a', enabled: false });
+queue = state.queue(queue, { operation_id: 'category-a', op: 'set-category', source_id: 'remote-a', category: 'updates' });
+queue = state.queue(queue, { operation_id: 'remove-b', op: 'remove', source_id: 'remote-b' });
+merged = state.applyPending(remote, queue);
+assert.equal(merged.length, 1, 'a remove must affect only its selected source');
+assert.equal(merged[0].enabled, false);
+assert.equal(merged[0].category, 'updates');
+assert.equal(merged[0].user_pref, 'preserve', 'unrelated server-owned settings must survive edits');
+assert.deepEqual(state.acknowledge(queue, ['disable-a']), queue.slice(1), 'only explicitly acknowledged operations may be cleared');
+const memory = new Map();
+const fakeStorage = { getItem: key => memory.get(key) || null, setItem: (key, value) => memory.set(key, value) };
+const offlineSnapshot = { sources: merged, pending: queue, revision: 'r1' };
+assert.equal(state.write(fakeStorage, 'catalogues', offlineSnapshot), true);
+assert.deepEqual(state.read(fakeStorage, 'catalogues'), offlineSnapshot, 'local sources and pending edits must survive a browser reconnect/reload');
+memory.set('broken', '{bad json');
+assert.deepEqual(state.read(fakeStorage, 'broken'), { sources: [], pending: [], revision: null });
+
+const calls = [];
+const mockFetch = async (url, options) => {
+  calls.push({ url, options });
+  if (url.endsWith('/conflict')) return { ok: false, status: 409, text: async () => JSON.stringify({ code: 'revision_conflict', message: 'Revision changed' }) };
+  if (url.endsWith('/invalid-json')) return { ok: true, status: 200, text: async () => '<html>not JSON</html>' };
+  if (url.endsWith('/offline')) throw new TypeError('fetch failed');
+  return { ok: true, status: 200, text: async () => JSON.stringify({ revision: 'r2', applied_operation_ids: ['op-1'], sources: [] }) };
+};
+const client = createClient(mockFetch, 12801);
+(async () => {
+  const result = await client.request('192.168.1.50', '/catalogues/operations', {
+    method: 'POST', token: 'pair-token',
+    headers: { 'If-Match': 'r1', 'Idempotency-Key': 'batch-1' },
+    body: { batch_id: 'batch-1', base_revision: 'r1', operations: [{ operation_id: 'op-1', op: 'remove', source_id: 'remote-b' }] }
+  });
+  assert.equal(result.revision, 'r2');
+  assert.equal(calls[0].url, 'http://192.168.1.50:12801/api/v1/catalogues/operations');
+  assert.equal(calls[0].options.credentials, 'omit');
+  assert.equal(calls[0].options.mode, 'cors');
+  assert.equal(calls[0].options.headers.Authorization, 'Bearer pair-token');
+  assert.equal(calls[0].options.headers['If-Match'], 'r1');
+  assert.equal(JSON.parse(calls[0].options.body).operations[0].source_id, 'remote-b');
+  await assert.rejects(client.request('192.168.1.50', '/conflict'), error => error.status === 409 && error.body.code === 'revision_conflict');
+  await assert.rejects(client.request('192.168.1.50', '/invalid-json'), /invalid JSON/);
+  await assert.rejects(client.request('192.168.1.50', '/offline'), /local PS4 service/);
+  process.stdout.write('PS4 catalogue validation, pending operations, revision sync, and API error tests passed.\n');
+})().catch(error => { console.error(error); process.exitCode = 1; });
