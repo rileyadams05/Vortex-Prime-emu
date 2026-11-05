@@ -75,6 +75,9 @@
     .empty { padding:28px 18px; border:1px dashed #315779; border-radius:12px; color:#9db2cf; text-align:center; }
     .schema-help { margin:12px 0 0; color:#8298b5; font-size:11px; }
     .schema-help code { color:#bbd9ff; }
+    .catalogue-entry { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; }
+    .catalogue-entry .field { min-width:0; margin:0; }
+    .catalogue-entry .button { min-height:46px; white-space:nowrap; }
     .transfer-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     .transfer-box { padding:16px; border:1px solid #1c3b60; border-radius:13px; background:#06152a; }
     .transfer-box h3 { margin:0 0 8px; font-size:15px; }
@@ -83,7 +86,7 @@
     progress { width:100%; height:10px; accent-color:#438cf1; }
     .footer-note { margin:18px 0 0; color:#7187a4; font-size:11px; }
     :focus-visible { outline:3px solid #83c5ff; outline-offset:3px; }
-    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .grid,.transfer-grid { grid-template-columns:1fr; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
+    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .grid,.transfer-grid,.catalogue-entry { grid-template-columns:1fr; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
     @media(max-width:420px) { nav a { padding:8px 9px; font-size:12px; } .source-top { flex-direction:column; } .source-status { align-self:flex-start; } .source-meta { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -125,14 +128,12 @@
         <div class="card-head"><h2 id="sourcesHeading">Catalogue sources</h2><p>Changes save in this browser immediately and sync automatically when the PS4 is paired.</p></div>
         <div class="card-body">
           <form id="addCatalogueForm" novalidate>
-            <div class="field"><label for="catalogueUrl">Catalogue URL</label><input id="catalogueUrl" type="url" autocomplete="url" placeholder="https://example.org/catalogue.json" required></div>
-            <div class="field"><label for="catalogueCategory">Category</label><select id="catalogueCategory" required>
-              <option value="games">Games</option><option value="updates">Updates</option><option value="dlc">DLC</option><option value="homebrew">Homebrew</option><option value="applications">Applications</option>
-            </select></div>
-            <div class="field"><label for="catalogueAdapter">Format</label><select id="catalogueAdapter"><option value="vortex-v1">Vortex PS4 Catalogue v1 (JSON)</option></select></div>
-            <button class="button" id="validateButton" type="submit">Validate &amp; add catalogue</button>
+            <div class="catalogue-entry">
+              <div class="field"><label for="catalogueUrl">Catalogue URL</label><input id="catalogueUrl" type="url" autocomplete="url" placeholder="https://example.org/catalogue.json" required></div>
+              <button class="button" id="validateButton" type="submit">Add catalogue</button>
+            </div>
             <p class="status" id="validationStatus" role="status" aria-live="polite"></p>
-            <p class="schema-help">Supported JSON requires <code>schema</code>, <code>name</code> and <code>items</code>. Each item requires a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>
+            <p class="schema-help">Vortex JSON catalogues require <code>schema</code>, <code>name</code> and <code>items</code>. Each item needs a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>
           </form>
 
           <div class="actions" style="margin:22px 0 14px;padding-top:18px;border-top:1px solid #ffffff18">

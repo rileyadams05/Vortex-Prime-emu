@@ -1,9 +1,15 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const validation = require('../docs/assets/js/ps4-catalogue-validation.js');
 const state = require('../docs/assets/js/ps4-catalogue-state.js');
 const { createClient } = require('../docs/assets/js/ps4-catalogue-api.js');
+
+const managerHtml = fs.readFileSync(path.join(__dirname, '../docs/ps4/catalogues/index.html'), 'utf8');
+assert.match(managerHtml, /class="catalogue-entry"/);
+assert.doesNotMatch(managerHtml, /id="catalogueCategory"|id="catalogueAdapter"|>Category</);
 
 function expectError(callback, pattern) {
   assert.throws(callback, pattern);

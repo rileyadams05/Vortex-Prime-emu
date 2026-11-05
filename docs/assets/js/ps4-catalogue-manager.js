@@ -14,8 +14,6 @@
   const apiModule = window.VortexPrimeCatalogueApi;
   if (!apiModule) throw new Error('Catalogue API module did not load.');
   const apiClient = apiModule.createClient(window.fetch.bind(window), API_PORT);
-  const categories = validation.categories;
-  const categoryLabels = { games: 'Games', updates: 'Updates', dlc: 'DLC', homebrew: 'Homebrew', applications: 'Applications' };
 
   const el = id => document.getElementById(id);
   const ipInput = el('ps4Ip');
@@ -106,14 +104,6 @@
       top.append(title, badge);
 
       const meta = document.createElement('div'); meta.className = 'source-meta';
-      const categoryWrap = document.createElement('div');
-      const categoryLabel = document.createElement('label'); categoryLabel.textContent = 'Category';
-      const category = document.createElement('select'); category.setAttribute('aria-label', `Category for ${source.name}`);
-      for (const value of categories) { const option = document.createElement('option'); option.value = value; option.textContent = categoryLabels[value]; category.append(option); }
-      category.value = categories.includes(source.category) ? source.category : 'games';
-      category.addEventListener('change', () => changeCategory(source.id, category.value));
-      categoryWrap.append(categoryLabel, category);
-
       const enabledWrap = document.createElement('div');
       const enabledLabel = document.createElement('label'); enabledLabel.textContent = 'Source status';
       const switchRow = document.createElement('label'); switchRow.className = 'switch-row';
@@ -122,7 +112,7 @@
       const enabledText = document.createElement('span'); enabledText.textContent = source.enabled === false ? 'Disabled' : 'Enabled';
       enabled.addEventListener('change', () => { enabledText.textContent = enabled.checked ? 'Enabled' : 'Disabled'; });
       switchRow.append(enabled, enabledText); enabledWrap.append(enabledLabel, switchRow);
-      meta.append(categoryWrap, enabledWrap);
+      meta.append(enabledWrap);
 
       const actions = document.createElement('div'); actions.className = 'source-actions';
       const refresh = document.createElement('button'); refresh.type = 'button'; refresh.className = 'button secondary'; refresh.textContent = 'Refresh now'; refresh.disabled = !connected;
@@ -159,14 +149,6 @@
     source.enabled = enabled;
     enqueue({ op: 'set-enabled', source_id: id, enabled });
     persistAndRender('Enable state saved in this browser; syncing to the PS4.');
-  }
-
-  function changeCategory(id, category) {
-    if (!categories.includes(category)) return;
-    const source = sources.find(item => item.id === id); if (!source) return;
-    source.category = category;
-    enqueue({ op: 'set-category', source_id: id, category });
-    persistAndRender('Category saved in this browser; syncing to the PS4.');
   }
 
   function removeSource(id) {
@@ -273,10 +255,8 @@
   async function validateAndAdd(event) {
     event.preventDefault();
     const button = el('validateButton');
-    const category = el('catalogueCategory').value;
-    const adapterId = el('catalogueAdapter').value;
-    if (!categories.includes(category)) { setStatus(validateStatus, 'Choose a supported catalogue category.', 'error'); return; }
-    if (!validation.adapters[adapterId]) { setStatus(validateStatus, 'This catalogue format is not supported.', 'error'); return; }
+    const adapterId = 'vortex-v1';
+    if (!validation.adapters[adapterId]) { setStatus(validateStatus, 'The Vortex JSON catalogue format is not supported by this page.', 'error'); return; }
     let url;
     try { url = parseCatalogueUrl(el('catalogueUrl').value); }
     catch (error) { setStatus(validateStatus, error.message, 'error'); return; }
@@ -290,7 +270,7 @@
       if (!response.ok) throw new Error(`Catalogue server returned HTTP ${response.status}.`);
       const data = await response.json();
       const details = validation.validateCatalogueDocument(data, adapterId);
-      const source = { id: newId(), url, name: details.name, category, enabled: true, schema: details.schema, adapter_id: details.adapter_id, item_count: details.count, added_at: new Date().toISOString() };
+      const source = { id: newId(), url, name: details.name, enabled: true, schema: details.schema, adapter_id: details.adapter_id, item_count: details.count, added_at: new Date().toISOString() };
       sources.push(source); enqueue({ op: 'add', source });
       el('catalogueUrl').value = '';
       persistAndRender(`Validated ${details.count} item${details.count === 1 ? '' : 's'} from “${details.name}”. The source is saved in this browser and queued for PS4 sync.`);

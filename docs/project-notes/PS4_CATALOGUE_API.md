@@ -30,7 +30,7 @@ The `vortex-v1` adapter accepts JSON shaped like this:
 }
 ```
 
-Required fields are `schema`, non-empty `name`, and an `items` array. Every item needs a unique, stable string `id`, non-empty `name`, and absolute HTTP(S) `pkg_url` whose path ends in `.pkg`. The browser validates but does not rewrite or invent item records. The selected manager category is one of `games`, `updates`, `dlc`, `homebrew`, or `applications`. Other formats must be added as separate validators/adapters; the browser must not guess a format.
+Required fields are `schema`, non-empty `name`, and an `items` array. Every item needs a unique, stable string `id`, non-empty `name`, and absolute HTTP(S) `pkg_url` whose path ends in `.pkg`. The browser validates but does not rewrite or invent item records. The manager uses this supported JSON schema automatically; it does not ask users to select a category or format. If the PS4 already has category metadata on a source, preserve it as-is.
 
 ## Endpoints
 
@@ -70,7 +70,7 @@ Returns the opaque revision and the existing source objects. Preserve server-own
 {
   "revision": "opaque-revision",
   "sources": [
-    { "id": "stable-source-id", "url": "https://example.org/catalogue.json", "name": "Homebrew", "category": "homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" }
+    { "id": "stable-source-id", "url": "https://example.org/catalogue.json", "name": "Homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" }
   ]
 }
 ```
@@ -84,9 +84,8 @@ Headers: `Authorization: Bearer ...`, `If-Match: <revision>`, `Idempotency-Key: 
   "batch_id": "opaque-batch-id",
   "base_revision": "opaque-revision",
   "operations": [
-    { "operation_id": "op-1", "op": "add", "source_id": "stable-source-id", "source": { "id": "stable-source-id", "url": "https://example.org/catalogue.json", "name": "Homebrew", "category": "homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" } },
+    { "operation_id": "op-1", "op": "add", "source_id": "stable-source-id", "source": { "id": "stable-source-id", "url": "https://example.org/catalogue.json", "name": "Homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" } },
     { "operation_id": "op-2", "op": "set-enabled", "source_id": "existing-source-id", "enabled": false },
-    { "operation_id": "op-3", "op": "set-category", "source_id": "existing-source-id", "category": "updates" },
     { "operation_id": "op-4", "op": "remove", "source_id": "another-source-id" }
   ]
 }
@@ -98,7 +97,7 @@ Successful response **must confirm persistence**, not merely queue receipt:
 { "revision": "new-opaque-revision", "applied_operation_ids": ["op-1", "op-2", "op-3", "op-4"], "sources": [] }
 ```
 
-The service must apply operations against individual source IDs and preserve unrelated sources/preferences. It must treat `batch_id` and each `operation_id` idempotently and reject duplicate normalized source URLs. If `base_revision` does not match current storage, return HTTP `409` with `{ "code": "revision_conflict", "revision": "current-revision" }` and make no changes. Do not silently replace the whole configuration. Reject unknown source IDs, invalid categories, invalid source URLs, unsupported adapters, or malformed operations with a 4xx response.
+The service must apply add, enable/disable, and remove operations against individual source IDs and preserve unrelated sources/preferences and any legacy category metadata. It must treat `batch_id` and each `operation_id` idempotently and reject duplicate normalized source URLs. If `base_revision` does not match current storage, return HTTP `409` with `{ "code": "revision_conflict", "revision": "current-revision" }` and make no changes. Do not silently replace the whole configuration. Reject unknown source IDs, invalid source URLs, unsupported schemas, or malformed operations with a 4xx response.
 
 ### `POST /catalogues/refresh` — paired bearer required
 
