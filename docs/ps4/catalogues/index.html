@@ -75,9 +75,15 @@
     .empty { padding:28px 18px; border:1px dashed #315779; border-radius:12px; color:#9db2cf; text-align:center; }
     .schema-help { margin:12px 0 0; color:#8298b5; font-size:11px; }
     .schema-help code { color:#bbd9ff; }
+    .transfer-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .transfer-box { padding:16px; border:1px solid #1c3b60; border-radius:13px; background:#06152a; }
+    .transfer-box h3 { margin:0 0 8px; font-size:15px; }
+    .transfer-box p { margin:0 0 14px; color:#9db2cf; font-size:12px; }
+    .file-input { height:auto; padding:10px; }
+    progress { width:100%; height:10px; accent-color:#438cf1; }
     .footer-note { margin:18px 0 0; color:#7187a4; font-size:11px; }
     :focus-visible { outline:3px solid #83c5ff; outline-offset:3px; }
-    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .grid { grid-template-columns:1fr; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
+    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .grid,.transfer-grid { grid-template-columns:1fr; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
     @media(max-width:420px) { nav a { padding:8px 9px; font-size:12px; } .source-top { flex-direction:column; } .source-status { align-self:flex-start; } .source-meta { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -138,6 +144,35 @@
         </div>
       </section>
     </div>
+
+    <section class="card" aria-labelledby="bgftHeading" style="margin-top:20px">
+      <div class="card-head"><h2 id="bgftHeading">Install a PKG via BGFT</h2><p>Send a direct URL for the PS4 to download, or stream a PKG from this browser to the paired PS4 service. Package bytes are never sent to Vortex Prime.</p></div>
+      <div class="card-body">
+        <div class="notice">Requires the paired Vortex Prime PS4 service with BGFT support. This is separate from flatz Remote Package Installer on port 12800. The service must confirm BGFT task registration before this page reports success.</div>
+        <div class="transfer-grid">
+          <form class="transfer-box" id="bgftUrlForm" novalidate>
+            <h3>Install from direct URL</h3>
+            <p>The PS4 downloads the package URL itself through BGFT.</p>
+            <div class="field"><label for="bgftPackageUrl">Direct PKG download URL</label><input id="bgftPackageUrl" type="url" autocomplete="url" placeholder="https://downloads.example.org/app.pkg" required></div>
+            <button class="button" id="bgftUrlButton" type="submit" disabled>Send URL to PS4</button>
+            <p class="status" id="bgftUrlStatus" role="status" aria-live="polite"></p>
+          </form>
+          <form class="transfer-box" id="bgftUploadForm">
+            <h3>Upload a PKG to PS4</h3>
+            <p>Stream the selected file to the paired console service, which registers it with BGFT. It is not added to a Vortex Prime store or catalogue.</p>
+            <div class="field"><label for="bgftPkgFile">PKG file</label><input class="file-input" id="bgftPkgFile" type="file" accept=".pkg,application/octet-stream" required></div>
+            <button class="button secondary" id="bgftUploadButton" type="submit" disabled>Upload to PS4</button>
+            <progress id="bgftUploadProgress" max="100" value="0" aria-label="Upload progress" hidden></progress>
+            <p class="status" id="bgftUploadStatus" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+        <div class="transfer-box" style="margin-top:16px">
+          <h3>BGFT task status</h3>
+          <div class="source-list" id="bgftTaskList" aria-live="polite"><div class="empty">No BGFT tasks submitted in this browser session.</div></div>
+          <p class="footer-note">A registered BGFT task means the PS4 accepted the request. Installation completion is shown only if the PS4 service reports it.</p>
+        </div>
+      </div>
+    </section>
   </main>
   <script src="../../assets/js/ps4-catalogue-validation.js" defer></script>
   <script src="../../assets/js/ps4-catalogue-state.js" defer></script>

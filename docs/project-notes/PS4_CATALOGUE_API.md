@@ -60,7 +60,7 @@ Response:
 { "challenge_id": "opaque-id", "expires_at": "2026-11-05T10:00:00Z" }
 ```
 
-The console displays a one-time pairing code and asks the user to approve this browser. `POST /pairing/authorize` accepts `{ "challenge_id": "opaque-id", "code": "console-displayed-code" }` after that approval and returns `{ "access_token": "opaque-short-lived-token", "expires_at": "...", "scopes": ["catalogues:read", "catalogues:write"], "console_name": "PS4" }`. Do not authorize merely because a website requested a challenge.
+The console displays a one-time pairing code and asks the user to approve this browser. `POST /pairing/authorize` accepts `{ "challenge_id": "opaque-id", "code": "console-displayed-code" }` after that approval and returns `{ "access_token": "opaque-short-lived-token", "expires_at": "...", "scopes": ["catalogues:read", "catalogues:write", "packages:install"], "console_name": "PS4" }`. Do not authorize merely because a website requested a challenge. A user may grant catalogue access and package-install access separately; deny an endpoint if its specific scope was not granted.
 
 ### `GET /catalogues` — paired bearer required
 
@@ -107,6 +107,58 @@ Request `{ "source_ids": ["stable-source-id"] }` for selected sources or `{}` to
 ### `GET /catalogues/refresh/{refresh_id}` — paired bearer required
 
 Returns `{ "refresh_id": "opaque-id", "status": "queued|running|complete|failed", "message": "optional status" }`. Only `complete` is a completed refresh acknowledgement; `failed` includes a useful message.
+
+## BGFT package installation bridge (required for the manager's install controls)
+
+The BGFT panel in the website is a client for a **separate PS4-side bridge**. It does not make port 12800's Remote Package Installer API into a BGFT API, and it cannot function against a catalogue-only service. The bridge described here is not implemented by this website repository; until a compatible console service is installed, the manager reports the connection or unsupported-endpoint error instead of simulating a transfer.
+
+The bridge must use the same versioned base URL and pairing token, require the `packages:install` scope for every route below, validate package URLs and metadata on-console, and bind to the console's private LAN only. Honor the website-origin CORS/PNA rules above. Never accept WAN/public exposure or unauthenticated installation requests. The bridge must route tasks through the console's supported BGFT/AppInstUtil flow and report its real state. The flatz Remote Package Installer on port 12800 remains a different service/protocol.
+
+### `POST /bgft/tasks` — direct URL, paired `packages:install` scope
+
+Request:
+
+```json
+{ "source": "url", "package_url": "https://downloads.example.org/authorized-homebrew.pkg" }
+```
+
+The PS4 resolves/validates package metadata and registers its own BGFT download/install task for that URL. It downloads package data itself; the Vortex website neither fetches nor relays the PKG. A successful response means BGFT registration was confirmed, not that installation completed:
+
+```json
+{ "task_id": "opaque-service-task-id", "source": "url", "status": "registered" }
+```
+
+Only return `registered` or `queued` after the console has actually accepted/registered the task. Return a useful 4xx/5xx error when URL fetch, metadata validation, BGFT registration or storage checks fail.
+
+### `POST /bgft/uploads?filename=<url-encoded-name.pkg>` — browser-to-console file upload
+
+Headers: `Authorization: Bearer ...`, `Content-Type: application/vnd.vortex-prime.pkg`. The request body is the raw `.pkg` byte stream, sent directly by the browser to the console service. Enforce a configured size limit and free-space checks, validate the filename and package metadata, and stream without buffering the full package in RAM. Do not put uploaded PKGs in the Vortex Prime website, cloud, store, catalogue, or any Vortex server. The console service owns staging/cleanup and must delete its temporary copy after the BGFT/install flow no longer needs it. It must only return success after the upload is accepted and the BGFT task is registered; if the console's BGFT implementation cannot safely install an uploaded file, reject the request and report unsupported instead of claiming success.
+
+Successful response:
+
+```json
+{ "task_id": "opaque-service-task-id", "source": "upload", "status": "registered" }
+```
+
+Upload progress in the website measures bytes sent from the browser to the console. It is not PS4 installation progress. The console must return task progress separately.
+
+### `GET /bgft/tasks/{task_id}` — paired task status
+
+Returns the real service status:
+
+```json
+{ "task_id": "opaque-service-task-id", "status": "downloading", "progress_percent": 42, "message": "optional console status" }
+```
+
+`status` is `registered|queued|downloading|installing|complete|failed|cancelled`. `progress_percent` is optional and must only be included when the console can report a meaningful value. `complete` may be returned only after the console installation flow confirms completion; a completed HTTP transfer alone is not installation completion. `failed` includes a useful error message. Return 404 for unknown task IDs and never expose another browser's task details without the paired token.
+
+### Upload/task lifecycle safeguards
+
+- Do not trust client-supplied package title/content IDs. Resolve metadata from the PKG or a trusted receiver-specific parser, and preserve valid update identifiers/version metadata.
+- Do not uninstall an existing app automatically. Keep the website's pre-install confirmation: “Important: Completely close the application on your PS4 before continuing. Make sure no downloads are active.”
+- Direct URLs and file uploads must remain individually visible as tasks. Do not mark them complete until a real console status reports it.
+- Pairing tokens and package bytes must not be logged. Provide a console-side revoke control and task cleanup policy.
+- The browser has no reliable raw-subnet discovery API; manual private IPv4 entry and last-address retry remain the supported connection fallback.
 
 ## Frontend sync behavior
 

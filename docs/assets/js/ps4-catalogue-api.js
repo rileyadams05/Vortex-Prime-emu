@@ -5,8 +5,9 @@
 })(typeof window !== 'undefined' ? window : globalThis, function () {
   'use strict';
 
-  function createClient(fetchFunction, port) {
+  function createClient(fetchFunction, port, xhrFactory) {
     const fetchImpl = fetchFunction || fetch;
+    const makeXhr = xhrFactory || (() => new XMLHttpRequest());
     const servicePort = Number(port) || 12801;
     async function request(ip, path, options) {
       const settings = options || {};
@@ -40,7 +41,34 @@
         throw error;
       } finally { clearTimeout(timer); }
     }
-    return Object.freeze({ request });
+    function upload(ip, path, file, token, onProgress) {
+      return new Promise((resolve, reject) => {
+        const xhr = makeXhr();
+        xhr.open('POST', `http://${ip}:${servicePort}/api/v1${path}`, true);
+        xhr.withCredentials = false;
+        xhr.timeout = 0;
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('Content-Type', 'application/vnd.vortex-prime.pkg');
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.upload.onprogress = event => {
+          if (event.lengthComputable && typeof onProgress === 'function') onProgress(Math.round((event.loaded / event.total) * 100));
+        };
+        xhr.onerror = () => reject(new Error('The browser could not upload to the local PS4 service. Check its availability, CORS and local-network permission.'));
+        xhr.ontimeout = () => reject(new Error('The PS4 upload service timed out.'));
+        xhr.onload = () => {
+          let body;
+          try { body = xhr.responseText ? JSON.parse(xhr.responseText) : {}; }
+          catch (_) { reject(new Error(`The PS4 upload service returned invalid JSON (HTTP ${xhr.status}).`)); return; }
+          if (xhr.status < 200 || xhr.status >= 300) {
+            reject(new Error(body.message || body.error || `PS4 upload service returned HTTP ${xhr.status}.`));
+            return;
+          }
+          resolve(body);
+        };
+        xhr.send(file);
+      });
+    }
+    return Object.freeze({ request, upload });
   }
 
   return Object.freeze({ createClient });

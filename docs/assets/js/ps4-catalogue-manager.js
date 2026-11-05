@@ -71,6 +71,8 @@
     el('connectionDot').classList.toggle('pending', !online && Boolean(pairingToken));
     el('syncButton').disabled = !connected || !pending.length || syncing;
     el('refreshAllButton').disabled = !connected || syncing;
+    el('bgftUrlButton').disabled = !connected;
+    el('bgftUploadButton').disabled = !connected;
   }
 
   function refreshLocalStatus() {
@@ -232,7 +234,7 @@
           try { sessionStorage.removeItem(TOKEN_KEY); } catch (_) { /* Ignore storage errors. */ }
         }
       }
-      const challenge = await apiRequest(ip, '/pairing/challenge', { method: 'POST', body: { client: 'Vortex Prime browser', api_version: API_VERSION } });
+      const challenge = await apiRequest(ip, '/pairing/challenge', { method: 'POST', body: { client: 'Vortex Prime browser', api_version: API_VERSION, scopes: ['catalogues:read', 'catalogues:write', 'packages:install'] } });
       if (typeof challenge.challenge_id !== 'string' || !challenge.challenge_id) throw new Error('The catalogue service did not return a pairing challenge.');
       challengeId = challenge.challenge_id;
       setConnection('Pairing required', `${status.console_name || 'PS4'} · ${ip}`, false);
@@ -255,7 +257,7 @@
     setStatus(pairStatus, 'Confirming pairing with the PS4…');
     try {
       const result = await apiRequest(activeIp, '/pairing/authorize', { method: 'POST', body: { challenge_id: challengeId, code } });
-      if (typeof result.access_token !== 'string' || !result.access_token || !Array.isArray(result.scopes) || !result.scopes.includes('catalogues:write')) throw new Error('The PS4 did not return a catalogue-management pairing token.');
+      if (typeof result.access_token !== 'string' || !result.access_token || !Array.isArray(result.scopes) || !result.scopes.includes('catalogues:write') || !result.scopes.includes('packages:install')) throw new Error('The PS4 did not return a paired token with catalogue and BGFT install permissions.');
       pairingToken = result.access_token;
       await loadRemoteConfig(activeIp, pairingToken);
       lastSyncError = '';
@@ -360,6 +362,108 @@
     } catch (error) { setStatus(syncStatus, error.message, 'error'); }
   }
 
+  const bgftTasks = [];
+  const packageUrl = raw => {
+    let url;
+    try { url = new URL(raw.trim()); } catch (_) { throw new Error('Enter a complete direct PKG URL.'); }
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Package links must use HTTP or HTTPS.');
+    if (url.username || url.password) throw new Error('Package URLs must not contain embedded credentials.');
+    if (!url.pathname.toLowerCase().endsWith('.pkg')) throw new Error('The direct URL must point to a .pkg file.');
+    url.hash = '';
+    return url.href;
+  };
+
+  function renderBgftTasks() {
+    const list = el('bgftTaskList'); list.replaceChildren();
+    if (!bgftTasks.length) {
+      const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No BGFT tasks submitted in this browser session.'; list.append(empty); return;
+    }
+    for (const task of bgftTasks) {
+      const row = document.createElement('article'); row.className = 'source';
+      const top = document.createElement('div'); top.className = 'source-top';
+      const title = document.createElement('div'); title.className = 'source-title';
+      const heading = document.createElement('h3'); heading.textContent = task.name;
+      const detail = document.createElement('span'); detail.className = 'source-url'; detail.textContent = task.detail;
+      title.append(heading, detail);
+      const badge = document.createElement('span'); badge.className = `source-status${task.status === 'complete' ? ' synced' : ''}`; badge.textContent = task.statusLabel || task.status;
+      top.append(title, badge); row.append(top);
+      if (task.progress !== null && task.progress !== undefined) {
+        const progress = document.createElement('progress'); progress.max = 100; progress.value = task.progress; progress.setAttribute('aria-label', `${task.name} progress`); row.append(progress);
+      }
+      if (task.message) { const message = document.createElement('p'); message.className = 'status'; message.textContent = task.message; row.append(message); }
+      list.append(row);
+    }
+  }
+
+  async function watchBgftTask(task) {
+    const terminal = new Set(['complete', 'failed', 'cancelled']);
+    for (let attempt = 0; attempt < 600; attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      if (!connected || !pairingToken) { task.statusLabel = 'Status unavailable'; task.message = 'Reconnect to the PS4 to check this task.'; renderBgftTasks(); return; }
+      try {
+        const state = await apiRequest(activeIp, `/bgft/tasks/${encodeURIComponent(task.taskId)}`, { token: pairingToken, timeout: 10000 });
+        if (state.task_id !== task.taskId || typeof state.status !== 'string') throw new Error('The PS4 returned an invalid BGFT task status.');
+        task.status = state.status;
+        task.statusLabel = ({ registered: 'Registered with BGFT', queued: 'Queued', downloading: 'Downloading on PS4', installing: 'Installing on PS4', complete: 'Complete' })[state.status] || state.status;
+        task.progress = Number.isFinite(state.progress_percent) ? Math.max(0, Math.min(100, state.progress_percent)) : null;
+        task.message = state.message || '';
+        renderBgftTasks();
+        if (terminal.has(state.status)) return;
+      } catch (error) {
+        task.statusLabel = 'Status check failed'; task.message = `${error.message} The BGFT task may still be running on the PS4.`; renderBgftTasks(); return;
+      }
+    }
+    task.statusLabel = 'Still running'; task.message = 'The PS4 has not reported a final status yet.'; renderBgftTasks();
+  }
+
+  function validateBgftReady() {
+    if (!connected || !pairingToken) throw new Error('Connect and pair with a compatible PS4 catalogue/BGFT service first.');
+  }
+
+  function confirmInstall() {
+    return window.confirm('Important: Completely close the application on your PS4 before continuing. Make sure no downloads are active. Continue with this BGFT installation?');
+  }
+
+  async function submitBgftUrl(event) {
+    event.preventDefault();
+    const button = el('bgftUrlButton');
+    try {
+      validateBgftReady();
+      const url = packageUrl(el('bgftPackageUrl').value);
+      if (!confirmInstall()) return;
+      button.disabled = true; setStatus(el('bgftUrlStatus'), 'Submitting the direct URL to the paired PS4 BGFT service…', 'pending');
+      const result = await apiRequest(activeIp, '/bgft/tasks', { method: 'POST', token: pairingToken, timeout: 20000, body: { source: 'url', package_url: url } });
+      if (typeof result.task_id !== 'string' || !result.task_id || typeof result.status !== 'string' || !['registered', 'queued'].includes(result.status)) throw new Error('The PS4 did not confirm BGFT task registration.');
+      const task = { taskId: result.task_id, name: 'Direct URL install', detail: url, status: result.status, statusLabel: result.status === 'registered' ? 'Registered with BGFT' : 'Queued', progress: null };
+      bgftTasks.unshift(task); el('bgftPackageUrl').value = ''; renderBgftTasks();
+      setStatus(el('bgftUrlStatus'), `The PS4 confirmed BGFT task ${result.task_id}.`, 'success'); watchBgftTask(task);
+    } catch (error) { setStatus(el('bgftUrlStatus'), error.message, 'error'); }
+    finally { button.disabled = !connected; }
+  }
+
+  async function submitBgftUpload(event) {
+    event.preventDefault();
+    const button = el('bgftUploadButton'); const file = el('bgftPkgFile').files[0];
+    try {
+      validateBgftReady();
+      if (!file) throw new Error('Choose a PKG file to upload.');
+      if (!file.name.toLowerCase().endsWith('.pkg')) throw new Error('Choose a file with the .pkg extension.');
+      if (!confirmInstall()) return;
+      button.disabled = true; el('bgftUploadProgress').hidden = false; el('bgftUploadProgress').value = 0;
+      setStatus(el('bgftUploadStatus'), `Uploading ${file.name} directly to the PS4 service…`, 'pending');
+      const path = `/bgft/uploads?filename=${encodeURIComponent(file.name)}`;
+      const result = await apiClient.upload(activeIp, path, file, pairingToken, percent => {
+        el('bgftUploadProgress').value = percent;
+        setStatus(el('bgftUploadStatus'), `Sending file to PS4: ${percent}%`, 'pending');
+      });
+      if (typeof result.task_id !== 'string' || !result.task_id || result.source !== 'upload' || !['registered', 'queued'].includes(result.status)) throw new Error('The PS4 did not confirm the upload and BGFT task registration.');
+      const task = { taskId: result.task_id, name: file.name, detail: `${(file.size / (1024 * 1024)).toFixed(1)} MB uploaded to PS4`, status: result.status, statusLabel: result.status === 'registered' ? 'Registered with BGFT' : 'Queued', progress: null };
+      bgftTasks.unshift(task); el('bgftPkgFile').value = ''; renderBgftTasks();
+      setStatus(el('bgftUploadStatus'), `The PS4 confirmed BGFT task ${result.task_id}; the upload was not stored by Vortex Prime.`, 'success'); watchBgftTask(task);
+    } catch (error) { setStatus(el('bgftUploadStatus'), error.message, 'error'); }
+    finally { button.disabled = !connected; }
+  }
+
   function initialize() {
     readStore();
     try { ipInput.value = localStorage.getItem(IP_KEY) || ''; } catch (_) { /* Storage is optional. */ }
@@ -372,11 +476,15 @@
       else setStatus(connectionStatus, 'No saved PS4 address to search. Enter the local IP shown in PS4 Network Settings; browsers cannot scan your subnet.', 'pending');
     });
     el('pairButton').addEventListener('click', pairBrowser);
+    el('bgftUrlForm').addEventListener('submit', submitBgftUrl);
+    el('bgftUploadForm').addEventListener('submit', submitBgftUpload);
     el('pairingCode').addEventListener('keydown', event => { if (event.key === 'Enter') pairBrowser(); });
     el('addCatalogueForm').addEventListener('submit', validateAndAdd);
     el('syncButton').addEventListener('click', () => { syncBlocked = false; lastSyncError = ''; syncPending(); });
     el('refreshAllButton').addEventListener('click', () => refreshCatalogues());
     ipInput.addEventListener('keydown', event => { if (event.key === 'Enter') connectToPs4(); });
+    el('bgftUrlButton').disabled = !connected;
+    el('bgftUploadButton').disabled = !connected;
   }
 
   initialize();

@@ -67,6 +67,13 @@ memory.set('broken', '{bad json');
 assert.deepEqual(state.read(fakeStorage, 'broken'), { sources: [], pending: [], revision: null });
 
 const calls = [];
+let xhrInstance;
+class FakeXhr {
+  constructor() { this.upload = {}; this.headers = {}; this.status = 200; this.responseText = '{"task_id":"task-1","source":"upload","status":"registered"}'; xhrInstance = this; }
+  open(method, url, async) { this.method = method; this.url = url; this.async = async; }
+  setRequestHeader(name, value) { this.headers[name] = value; }
+  send(body) { this.body = body; this.onload(); }
+}
 const mockFetch = async (url, options) => {
   calls.push({ url, options });
   if (url.endsWith('/conflict')) return { ok: false, status: 409, text: async () => JSON.stringify({ code: 'revision_conflict', message: 'Revision changed' }) };
@@ -74,7 +81,7 @@ const mockFetch = async (url, options) => {
   if (url.endsWith('/offline')) throw new TypeError('fetch failed');
   return { ok: true, status: 200, text: async () => JSON.stringify({ revision: 'r2', applied_operation_ids: ['op-1'], sources: [] }) };
 };
-const client = createClient(mockFetch, 12801);
+const client = createClient(mockFetch, 12801, () => new FakeXhr());
 (async () => {
   const result = await client.request('192.168.1.50', '/catalogues/operations', {
     method: 'POST', token: 'pair-token',
@@ -91,5 +98,13 @@ const client = createClient(mockFetch, 12801);
   await assert.rejects(client.request('192.168.1.50', '/conflict'), error => error.status === 409 && error.body.code === 'revision_conflict');
   await assert.rejects(client.request('192.168.1.50', '/invalid-json'), /invalid JSON/);
   await assert.rejects(client.request('192.168.1.50', '/offline'), /local PS4 service/);
-  process.stdout.write('PS4 catalogue validation, pending operations, revision sync, and API error tests passed.\n');
+  const uploadFile = { name: 'homebrew.pkg', size: 1234 };
+  const upload = await client.upload('192.168.1.50', '/bgft/uploads?filename=homebrew.pkg', uploadFile, 'pair-token', () => {});
+  assert.equal(upload.status, 'registered');
+  assert.equal(xhrInstance.url, 'http://192.168.1.50:12801/api/v1/bgft/uploads?filename=homebrew.pkg');
+  assert.equal(xhrInstance.method, 'POST');
+  assert.equal(xhrInstance.headers.Authorization, 'Bearer pair-token');
+  assert.equal(xhrInstance.headers['Content-Type'], 'application/vnd.vortex-prime.pkg');
+  assert.equal(xhrInstance.body, uploadFile, 'upload streams the selected file object directly to the console endpoint');
+  process.stdout.write('PS4 catalogue validation, pending operations, API errors, and direct BGFT upload client tests passed.\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
