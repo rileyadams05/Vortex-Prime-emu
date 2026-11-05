@@ -543,6 +543,10 @@
     ipInput.addEventListener('keydown', event => { if (event.key === 'Enter') connectToPs4(); });
     updatePackageButton();
     if (savedIp && validPrivateIp(savedIp)) connectToPs4(savedIp);
+    else {
+      setConnection('No PS4 address saved', 'Enter the console IP here if you downloaded the PKG to USB.', false);
+      setStatus(connectionStatus, 'No saved console address was found. Enter the PS4 IP to continue.', 'pending');
+    }
   }
 
   initialize();
