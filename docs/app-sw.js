@@ -5,7 +5,7 @@
 // stale caches without any manual version bumping.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = 'vortex-prime-v__BUILD_TS__';
+const CACHE_VERSION = 'vortex-prime-v-bce9b0a-__BUILD_TS__';
 
 // Same-origin asset paths that are safe to serve cache-first.
 // These are wiped and rebuilt whenever CACHE_VERSION changes (i.e. on deploy).
