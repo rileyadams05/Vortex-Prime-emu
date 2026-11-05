@@ -109,7 +109,9 @@ Returns `{ "refresh_id": "opaque-id", "status": "queued|running|complete|failed"
 
 ## BGFT package installation bridge (required for the manager's install controls)
 
-The BGFT panel in the website is a client for a **separate PS4-side bridge**. It does not make port 12800's Remote Package Installer API into a BGFT API, and it cannot function against a catalogue-only service. The bridge described here is not implemented by this website repository; until a compatible console service is installed, the manager reports the connection or unsupported-endpoint error instead of simulating a transfer.
+The manager reuses the PS4 IP stored by the Install on PS4 page (`vortexPrime.consoleIp.ps4`) and checks the documented Remote Package Installer API on port 12800. If detected, direct package URLs use its documented `POST /api/install` direct-package request; this endpoint internally registers the console's package download/install task. The manager can also send a URL through the separate BGFT bridge described below. A local PKG upload still requires that separate paired PS4-side bridge: the flatz Remote Package Installer direct-URL endpoint does not provide a browser file-upload route. The bridge described here is not implemented by this website repository; the manager reports connection or unsupported-endpoint errors instead of simulating a transfer.
+
+When no address is saved from the installer (for example, the user chose a USB download), the Catalogue sources card has a manual private-IP fallback. The page does not attempt broad LAN subnet scans.
 
 The bridge must use the same versioned base URL and pairing token, require the `packages:install` scope for every route below, validate package URLs and metadata on-console, and bind to the console's private LAN only. Honor the website-origin CORS/PNA rules above. Never accept WAN/public exposure or unauthenticated installation requests. The bridge must route tasks through the console's supported BGFT/AppInstUtil flow and report its real state. The flatz Remote Package Installer on port 12800 remains a different service/protocol.
 

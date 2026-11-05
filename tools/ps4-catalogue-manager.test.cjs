@@ -10,6 +10,9 @@ const { createClient } = require('../docs/assets/js/ps4-catalogue-api.js');
 const managerHtml = fs.readFileSync(path.join(__dirname, '../docs/ps4/catalogues/index.html'), 'utf8');
 assert.match(managerHtml, /class="catalogue-entry"/);
 assert.doesNotMatch(managerHtml, /id="catalogueCategory"|id="catalogueAdapter"|>Category</);
+assert.doesNotMatch(managerHtml, /Connect your PS4|Search for PS4|bgftUploadForm|Send URL to PS4/);
+assert.match(managerHtml, /id="pkgDropTarget"/);
+assert.match(managerHtml, />Send</);
 
 function expectError(callback, pattern) {
   assert.throws(callback, pattern);

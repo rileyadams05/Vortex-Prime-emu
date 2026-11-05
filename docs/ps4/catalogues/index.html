@@ -27,7 +27,7 @@
     .eyebrow { margin:0 0 8px; color:#65bcff; font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
     h1 { margin:0; font-size:clamp(34px,5vw,48px); line-height:1.08; letter-spacing:-.055em; }
     .lead { max-width:740px; margin:12px 0 0; color:#a4bad5; }
-    .grid { display:grid; grid-template-columns:minmax(270px,.8fr) minmax(0,1.2fr); gap:20px; align-items:start; }
+    .grid { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; align-items:start; }
     .card { border:1px solid #1b426c; border-radius:18px; background:linear-gradient(145deg,rgba(9,31,59,.98),rgba(4,20,42,.98)); box-shadow:0 18px 48px #0002; }
     .card-head { padding:22px 24px 0; }
     .card-head h2 { margin:0; font-size:20px; letter-spacing:-.03em; }
@@ -78,15 +78,23 @@
     .catalogue-entry { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; }
     .catalogue-entry .field { min-width:0; margin:0; }
     .catalogue-entry .button { min-height:46px; white-space:nowrap; }
-    .transfer-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    .transfer-box { padding:16px; border:1px solid #1c3b60; border-radius:13px; background:#06152a; }
-    .transfer-box h3 { margin:0 0 8px; font-size:15px; }
-    .transfer-box p { margin:0 0 14px; color:#9db2cf; font-size:12px; }
-    .file-input { height:auto; padding:10px; }
+    .console-bar { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr) auto; gap:12px; align-items:end; padding:0 24px 18px; }
+    .console-bar .field { margin:0; }
+    .console-state { display:flex; align-items:center; gap:10px; min-height:46px; }
+    .package-send { margin-top:22px; padding:18px; border:1px solid #1c3b60; border-radius:13px; background:#06152a; }
+    .package-send h3 { margin:0 0 5px; font-size:16px; }
+    .package-send > p { margin:0 0 14px; color:#9db2cf; font-size:12px; }
+    .send-fields { display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,.8fr); gap:12px; align-items:end; }
+    .send-fields .field { margin:0; }
+    .drop-target { display:grid; place-items:center; min-height:74px; padding:12px; border:1px dashed #4389ce; border-radius:10px; background:#071a34; color:#b9d7fa; text-align:center; cursor:pointer; }
+    .drop-target:hover,.drop-target.dragover { border-color:#7cc3ff; background:#0b2545; }
+    .drop-target small { display:block; color:#839bb9; }
+    .drop-target input { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+    .selected-file { min-height:18px; margin:7px 0 0!important; color:#7dd8b2!important; font-size:11px!important; }
     progress { width:100%; height:10px; accent-color:#438cf1; }
     .footer-note { margin:18px 0 0; color:#7187a4; font-size:11px; }
     :focus-visible { outline:3px solid #83c5ff; outline-offset:3px; }
-    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .grid,.transfer-grid,.catalogue-entry { grid-template-columns:1fr; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
+    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .grid,.send-fields,.catalogue-entry { grid-template-columns:1fr; } .console-bar { grid-template-columns:1fr; padding:0 18px 18px; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
     @media(max-width:420px) { nav a { padding:8px 9px; font-size:12px; } .source-top { flex-direction:column; } .source-status { align-self:flex-start; } .source-meta { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -106,27 +114,22 @@
     </section>
 
     <div class="grid">
-      <section class="card" aria-labelledby="consoleHeading">
-        <div class="card-head"><h2 id="consoleHeading">Connect your PS4</h2><p>Connect to the catalogue service running on your console.</p></div>
+      <section class="card" aria-labelledby="sourcesHeading">
+        <div class="card-head"><h2 id="sourcesHeading">Catalogue sources</h2><p>Changes save in this browser immediately and sync automatically when the PS4 is paired.</p></div>
+        <div class="console-bar">
+          <div class="console-state"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">Checking saved PS4…</strong><small id="connectionDetail">Reusing the address from Install on PS4 when available.</small></div></div>
+          <div class="field"><label for="ps4Ip">PS4 IP address <span style="font-weight:500;color:#8298b5">(manual fallback)</span></label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
+          <button class="button secondary" id="connectButton" type="button">Use IP</button>
+        </div>
         <div class="card-body">
-          <div class="connection"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">Disconnected</strong><small id="connectionDetail">No console service is connected.</small></div></div>
-          <div class="field"><label for="ps4Ip">PS4 local IP address</label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
-          <div class="actions"><button class="button secondary" id="searchButton" type="button">Search for PS4</button><button class="button" id="connectButton" type="button">Connect</button></div>
           <p class="status" id="connectionStatus" role="status" aria-live="polite"></p>
-          <div class="notice">Browser security does not permit reliable subnet scanning. Search checks the last saved console address; enter the PS4 IP shown in its network settings to connect manually.</div>
           <div id="pairingPanel" hidden>
-            <div class="notice warn">Confirm pairing on the PS4, then enter the one-time code displayed by the console. Pairing grants this browser permission to manage catalogues on this console.</div>
-            <div class="field"><label for="pairingCode">One-time PS4 pairing code</label><input id="pairingCode" autocomplete="one-time-code" inputmode="numeric" placeholder="Code shown on your PS4"></div>
+            <div class="notice warn">Approve this browser on the PS4, then enter its one-time pairing code.</div>
+            <div class="field"><label for="pairingCode">One-time pairing code</label><input id="pairingCode" autocomplete="one-time-code" inputmode="numeric" placeholder="Code shown on your PS4"></div>
             <button class="button" id="pairButton" type="button">Pair this browser</button>
             <p class="status" id="pairStatus" role="status" aria-live="polite"></p>
           </div>
-          <p class="footer-note">The PS4 catalogue service is separate from Remote Package Installer on port 12800. This page uses the versioned catalogue API on port 12801 and will stay disconnected until a compatible paired service is running. <a href="/project-notes/PS4_CATALOGUE_API.md">Read the API contract</a>.</p>
-        </div>
-      </section>
-
-      <section class="card" aria-labelledby="sourcesHeading">
-        <div class="card-head"><h2 id="sourcesHeading">Catalogue sources</h2><p>Changes save in this browser immediately and sync automatically when the PS4 is paired.</p></div>
-        <div class="card-body">
+          <p class="footer-note" style="margin-top:0">Install on PS4 saves the console address in this browser. If the PKG was downloaded to USB or that address is unavailable, enter the PS4 IP above. <a href="/project-notes/PS4_CATALOGUE_API.md">Catalogue and BGFT service details</a>.</p>
           <form id="addCatalogueForm" novalidate>
             <div class="catalogue-entry">
               <div class="field"><label for="catalogueUrl">Catalogue URL</label><input id="catalogueUrl" type="url" autocomplete="url" placeholder="https://example.org/catalogue.json" required></div>
@@ -134,6 +137,20 @@
             </div>
             <p class="status" id="validationStatus" role="status" aria-live="polite"></p>
             <p class="schema-help">Vortex JSON catalogues require <code>schema</code>, <code>name</code> and <code>items</code>. Each item needs a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>
+          </form>
+
+          <form class="package-send" id="bgftUrlForm" novalidate>
+            <h3>Send a package to PS4</h3>
+            <p>Paste a direct PKG URL or drop a local PKG file below. A dropped file automatically becomes the selected direct PKG.</p>
+            <div class="send-fields">
+              <div class="field"><label for="bgftPackageUrl">Direct PKG URL</label><input id="bgftPackageUrl" type="url" autocomplete="url" placeholder="https://downloads.example.org/app.pkg"></div>
+              <label class="drop-target" id="pkgDropTarget" for="bgftPkgFile"><span>Drop a .PKG file here or browse<small>Sent directly to the paired PS4 service</small></span><input id="bgftPkgFile" type="file" accept=".pkg,application/octet-stream"></label>
+            </div>
+            <p class="selected-file" id="selectedPkgName" aria-live="polite"></p>
+            <div class="actions" style="margin-top:12px"><button class="button" id="bgftUrlButton" type="submit" disabled>Send</button></div>
+            <progress id="bgftUploadProgress" max="100" value="0" aria-label="Upload progress" hidden></progress>
+            <p class="status" id="bgftUrlStatus" role="status" aria-live="polite"></p>
+            <div class="source-list" id="bgftTaskList" aria-live="polite"></div>
           </form>
 
           <div class="actions" style="margin:22px 0 14px;padding-top:18px;border-top:1px solid #ffffff18">
@@ -145,35 +162,6 @@
         </div>
       </section>
     </div>
-
-    <section class="card" aria-labelledby="bgftHeading" style="margin-top:20px">
-      <div class="card-head"><h2 id="bgftHeading">Install a PKG via BGFT</h2><p>Send a direct URL for the PS4 to download, or stream a PKG from this browser to the paired PS4 service. Package bytes are never sent to Vortex Prime.</p></div>
-      <div class="card-body">
-        <div class="notice">Requires the paired Vortex Prime PS4 service with BGFT support. This is separate from flatz Remote Package Installer on port 12800. The service must confirm BGFT task registration before this page reports success.</div>
-        <div class="transfer-grid">
-          <form class="transfer-box" id="bgftUrlForm" novalidate>
-            <h3>Install from direct URL</h3>
-            <p>The PS4 downloads the package URL itself through BGFT.</p>
-            <div class="field"><label for="bgftPackageUrl">Direct PKG download URL</label><input id="bgftPackageUrl" type="url" autocomplete="url" placeholder="https://downloads.example.org/app.pkg" required></div>
-            <button class="button" id="bgftUrlButton" type="submit" disabled>Send URL to PS4</button>
-            <p class="status" id="bgftUrlStatus" role="status" aria-live="polite"></p>
-          </form>
-          <form class="transfer-box" id="bgftUploadForm">
-            <h3>Upload a PKG to PS4</h3>
-            <p>Stream the selected file to the paired console service, which registers it with BGFT. It is not added to a Vortex Prime store or catalogue.</p>
-            <div class="field"><label for="bgftPkgFile">PKG file</label><input class="file-input" id="bgftPkgFile" type="file" accept=".pkg,application/octet-stream" required></div>
-            <button class="button secondary" id="bgftUploadButton" type="submit" disabled>Upload to PS4</button>
-            <progress id="bgftUploadProgress" max="100" value="0" aria-label="Upload progress" hidden></progress>
-            <p class="status" id="bgftUploadStatus" role="status" aria-live="polite"></p>
-          </form>
-        </div>
-        <div class="transfer-box" style="margin-top:16px">
-          <h3>BGFT task status</h3>
-          <div class="source-list" id="bgftTaskList" aria-live="polite"><div class="empty">No BGFT tasks submitted in this browser session.</div></div>
-          <p class="footer-note">A registered BGFT task means the PS4 accepted the request. Installation completion is shown only if the PS4 service reports it.</p>
-        </div>
-      </div>
-    </section>
   </main>
   <script src="../../assets/js/ps4-catalogue-validation.js" defer></script>
   <script src="../../assets/js/ps4-catalogue-state.js" defer></script>
