@@ -190,6 +190,7 @@
     const ip = (ipOverride || ipInput.value).trim();
     if (!validPrivateIp(ip)) { setStatus(connectionStatus, 'Enter a private PS4 IPv4 address, such as 192.168.1.50.', 'error'); return; }
     ipInput.value = ip;
+    el('manualIpPanel').hidden = true;
     activeIp = ip;
     pairingToken = '';
     lastSyncError = '';
@@ -345,7 +346,9 @@
     readStore();
     let savedIp = '';
     try { savedIp = localStorage.getItem(IP_KEY) || ''; } catch (_) { /* Storage is optional. */ }
-    ipInput.value = savedIp;
+    const hasSavedIp = validPrivateIp(savedIp);
+    ipInput.value = hasSavedIp ? savedIp : '';
+    el('manualIpPanel').hidden = hasSavedIp;
     renderSources();
     el('pairButton').addEventListener('click', pairBrowser);
     el('pairingCode').addEventListener('keydown', event => { if (event.key === 'Enter') pairBrowser(); });
@@ -359,9 +362,12 @@
     el('syncButton').addEventListener('click', () => { syncBlocked = false; lastSyncError = ''; syncPending(); });
     el('refreshAllButton').addEventListener('click', () => refreshCatalogues());
     ipInput.addEventListener('keydown', event => { if (event.key === 'Enter') connectToPs4(); });
-    if (savedIp && validPrivateIp(savedIp)) connectToPs4(savedIp);
+    if (hasSavedIp) {
+      setConnection('Connecting to saved PS4…', `Checking ${savedIp}:${API_PORT}`, false);
+      connectToPs4(savedIp);
+    }
     else {
-      setConnection('No PS4 address saved', 'Enter the console IP here if you downloaded the PKG to USB.', false);
+      setConnection('No PS4 address saved', 'Add the console IP to save it in this browser.', false);
     }
 
   }

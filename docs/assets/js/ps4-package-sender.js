@@ -70,6 +70,7 @@
     const ip = String(ipValue || '').trim();
     if (!validPrivateIp(ip)) { setStatus(el('connectionStatus'), 'Enter the PS4 private IPv4 address shown in its network settings.', 'error'); return; }
     ipInput.value = ip; activeIp = ip; rpiReady = false; bridgeReady = false; pairingToken = '';
+    el('manualIpPanel').hidden = true;
     try { localStorage.setItem(IP_KEY, ip); } catch (_) { /* Saving the address is optional. */ }
     setConnection('Checking PS4…', `Testing the saved local address ${ip}.`, false, true);
     setStatus(el('connectionStatus'), 'Checking the installation receiver…', 'pending');
@@ -179,11 +180,10 @@
   function selectFile(file) {
     if (!file) return;
     if (!file.name.toLowerCase().endsWith('.pkg')) {
-      el('pkgFile').value = ''; el('selectedFile').textContent = '';
+      el('pkgFile').value = ''; el('packageUrl').value = '';
       setStatus(el('sendStatus'), 'Choose a file ending in .pkg.', 'error'); updateSendButton(); return;
     }
-    el('packageUrl').value = '';
-    el('selectedFile').textContent = `Direct PKG selected · ${file.name} · ${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+    el('packageUrl').value = file.name;
     setStatus(el('sendStatus'), '', '');
     updateSendButton();
   }
@@ -217,7 +217,7 @@
         if (!result.task_id || result.source !== 'upload' || !['registered', 'queued'].includes(result.status)) throw new Error('The PS4 did not confirm the upload and BGFT task registration.');
         setStatus(el('sendStatus'), `The PS4 registered BGFT task ${result.task_id}.`, 'success');
         renderTask(file.name, result.task_id, 'Registered with BGFT', 'The PKG was sent to the PS4 service, not stored by Vortex Prime.');
-        el('pkgFile').value = ''; el('selectedFile').textContent = '';
+        el('pkgFile').value = ''; el('packageUrl').value = '';
         watchTask({ receiver: 'bgft', id: result.task_id, name: file.name });
       } else if (!bgftMode && rpiReady) {
         setStatus(el('sendStatus'), 'Sending the direct URL to Remote Package Installer…', 'pending');
@@ -244,7 +244,9 @@
   function initialize() {
     let savedIp = '';
     try { savedIp = localStorage.getItem(IP_KEY) || ''; } catch (_) { /* Storage is optional. */ }
-    ipInput.value = savedIp;
+    const hasSavedIp = validPrivateIp(savedIp);
+    ipInput.value = hasSavedIp ? savedIp : '';
+    el('manualIpPanel').hidden = hasSavedIp;
     if (bgftMode) {
       el('pageTitle').textContent = 'Send FPKG via BGFT';
       el('pageLead').textContent = 'Connect to the paired PS4 BGFT service and send a direct package URL or local FPKG.';
@@ -257,23 +259,34 @@
     el('pairingCode').addEventListener('keydown', event => { if (event.key === 'Enter') pairBrowser(); });
     el('sendPackageForm').addEventListener('submit', sendPackage);
     el('packageUrl').addEventListener('input', () => {
-      if (el('packageUrl').value.trim() && el('pkgFile').files.length) { el('pkgFile').value = ''; el('selectedFile').textContent = ''; }
+      if (el('pkgFile').files.length) el('pkgFile').value = '';
       updateSendButton();
     });
     el('pkgFile').addEventListener('change', () => selectFile(el('pkgFile').files[0]));
-    const drop = el('pkgDropTarget');
-    drop.addEventListener('dragover', event => { event.preventDefault(); drop.classList.add('dragover'); });
-    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
-    drop.addEventListener('drop', event => {
-      event.preventDefault(); drop.classList.remove('dragover');
+    el('choosePkgButton').addEventListener('click', () => el('pkgFile').click());
+    const hasFiles = event => event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files');
+    window.addEventListener('dragenter', event => {
+      if (hasFiles(event)) { event.preventDefault(); document.body.classList.add('pkg-drag-active'); }
+    });
+    window.addEventListener('dragover', event => {
+      if (hasFiles(event)) { event.preventDefault(); document.body.classList.add('pkg-drag-active'); }
+    });
+    window.addEventListener('dragleave', event => {
+      if (event.relatedTarget === null) document.body.classList.remove('pkg-drag-active');
+    });
+    window.addEventListener('drop', event => {
+      if (!hasFiles(event)) return;
+      event.preventDefault(); document.body.classList.remove('pkg-drag-active');
       const file = event.dataTransfer.files[0];
       if (!file) return;
       try { const transfer = new DataTransfer(); transfer.items.add(file); el('pkgFile').files = transfer.files; selectFile(file); }
-      catch (_) { setStatus(el('sendStatus'), 'This browser could not accept the dropped file. Use the file picker instead.', 'error'); }
+      catch (_) { setStatus(el('sendStatus'), 'This browser could not accept the dropped file. Choose it with Browse instead.', 'error'); }
     });
     updateSendButton();
-    if (savedIp && validPrivateIp(savedIp)) connect(savedIp);
-    else setConnection('No PS4 address saved', 'Enter the IP here if you downloaded the PKG to USB.', false, false);
+    if (hasSavedIp) {
+      setConnection('Connecting to saved PS4…', `Checking ${savedIp}`, false, true);
+      connect(savedIp);
+    } else setConnection('No PS4 address saved', 'Add the console IP to save it in this browser.', false, false);
   }
 
   initialize();

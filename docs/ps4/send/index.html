@@ -55,20 +55,17 @@
     .notice { margin:14px 0; padding:12px 13px; border:1px solid #315779; border-radius:10px; background:#071a34; color:#b6c9e2; font-size:12px; }
     .notice.warn { border-color:#85632e; background:#382b1766; color:#ffe19b; }
     .send-box { margin-top:18px; padding-top:18px; border-top:1px solid #ffffff18; }
-    .send-fields { display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,.8fr); gap:12px; align-items:end; }
-    .send-fields .field { margin:0; }
-    .drop-target { position:relative; display:grid; place-items:center; min-height:74px; padding:12px; border:1px dashed #4389ce; border-radius:10px; background:#071a34; color:#b9d7fa; text-align:center; cursor:pointer; }
-    .drop-target:hover,.drop-target.dragover { border-color:#7cc3ff; background:#0b2545; }
-    .drop-target small { display:block; color:#839bb9; }
-    .drop-target input { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
-    .selected-file { min-height:18px; margin:7px 0 0; color:var(--green); font-size:11px; }
+    .package-input-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; }
+    .package-input-row .field { margin:0; }
+    .package-input-row .button { min-height:46px; }
+    body.pkg-drag-active { outline:2px dashed #4389ce; outline-offset:-12px; }
     progress { width:100%; height:10px; accent-color:#438cf1; }
     .task { margin-top:14px; padding:12px; border:1px solid #1c3b60; border-radius:10px; background:#06152a; }
     .task strong,.task small { display:block; overflow-wrap:anywhere; }
     .task small { margin-top:4px; color:#9db2cf; }
     .footer-note { margin:16px 0 0; color:#7187a4; font-size:11px; }
     :focus-visible { outline:3px solid #83c5ff; outline-offset:3px; }
-    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } .send-fields { grid-template-columns:1fr; } }
+    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
     @media(max-width:420px) { nav a { padding:8px 9px; font-size:12px; } .ip-row { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -90,9 +87,9 @@
     <section class="card" aria-labelledby="sendHeading">
       <div class="card-head"><h2 id="sendHeading">PS4 connection</h2><p>The address saved by the installer is checked automatically.</p></div>
       <div class="card-body">
-        <div class="connection"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">Checking saved PS4…</strong><small id="connectionDetail">Looking for Remote Package Installer and the paired BGFT service.</small></div></div>
-        <div class="ip-row">
-          <div class="field"><label for="ps4Ip">PS4 IP address <span style="font-weight:500;color:#8298b5">(manual fallback · press Enter to connect)</span></label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
+        <div class="connection"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">No PS4 address saved</strong><small id="connectionDetail">The saved console address is reused automatically.</small></div></div>
+        <div class="ip-row" id="manualIpPanel" hidden>
+          <div class="field"><label for="ps4Ip">PS4 IP address</label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
         </div>
         <p class="status" id="connectionStatus" role="status" aria-live="polite" hidden></p>
         <div id="pairingPanel" hidden>
@@ -103,11 +100,11 @@
         </div>
         <div class="notice warn">Important: Completely close the application on your PS4 before continuing. Make sure no downloads are active.</div>
         <form class="send-box" id="sendPackageForm" novalidate>
-          <div class="send-fields">
-            <div class="field"><label for="packageUrl">Direct PKG URL</label><input id="packageUrl" type="url" autocomplete="url" placeholder="https://downloads.example.org/app.pkg"></div>
-            <label class="drop-target" id="pkgDropTarget" for="pkgFile"><span>Drop a .PKG file here or browse<small>Direct to the PS4 service · not stored by Vortex Prime</small></span><input id="pkgFile" type="file" accept=".pkg,application/octet-stream"></label>
+          <div class="package-input-row">
+            <div class="field"><label for="packageUrl">Direct PKG URL or selected file</label><input id="packageUrl" type="text" autocomplete="url" placeholder="Paste a PKG URL or drop a PKG anywhere on this page"></div>
+            <button class="button secondary" id="choosePkgButton" type="button">Browse</button>
+            <input id="pkgFile" type="file" accept=".pkg,application/octet-stream" hidden>
           </div>
-          <p class="selected-file" id="selectedFile" aria-live="polite"></p>
           <button class="button" id="sendButton" type="submit" disabled>Send</button>
           <progress id="uploadProgress" max="100" value="0" aria-label="Upload progress" hidden></progress>
           <p class="status" id="sendStatus" role="status" aria-live="polite" hidden></p>

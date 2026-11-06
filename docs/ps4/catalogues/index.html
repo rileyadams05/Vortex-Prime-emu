@@ -109,8 +109,8 @@
       <section class="card" aria-labelledby="sourcesHeading">
         <div class="card-head"><h2 id="sourcesHeading">Catalogue sources</h2><p>Changes save in this browser immediately and sync automatically when the PS4 is paired.</p></div>
         <div class="console-bar">
-          <div class="console-state"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">Checking saved PS4…</strong><small id="connectionDetail">Reusing the address from Install on PS4 when available.</small></div></div>
-          <div class="field"><label for="ps4Ip">PS4 IP address <span style="font-weight:500;color:#8298b5">(manual fallback · press Enter to connect)</span></label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
+          <div class="console-state"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">No PS4 address saved</strong><small id="connectionDetail">The saved console address is reused automatically.</small></div></div>
+          <div class="field" id="manualIpPanel" hidden><label for="ps4Ip">PS4 IP address</label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
         </div>
         <div class="card-body">
           <p class="status" id="connectionStatus" role="status" aria-live="polite" hidden></p>
@@ -120,13 +120,13 @@
             <button class="button" id="pairButton" type="button">Pair this browser</button>
             <p class="status" id="pairStatus" role="status" aria-live="polite"></p>
           </div>
-          <p class="footer-note" style="margin-top:0">Install on PS4 saves the console address in this browser. If the PKG was downloaded to USB or that address is unavailable, enter the PS4 IP above. <a href="/project-notes/PS4_CATALOGUE_API.md">Catalogue and BGFT service details</a>.</p>
+          <p class="footer-note" style="margin-top:0">The console address saved by Install on PS4 is reused automatically. <a href="/project-notes/PS4_CATALOGUE_API.md">Catalogue and BGFT service details</a>.</p>
           <form id="addCatalogueForm" novalidate>
             <div class="catalogue-entry">
               <div class="field"><label for="catalogueUrl">Catalogue URL</label><input id="catalogueUrl" type="url" autocomplete="url" placeholder="https://example.org/catalogue.json" required></div>
             </div>
             <p class="status" id="validationStatus" role="status" aria-live="polite"></p>
-            <p class="schema-help">Press Enter to add a catalogue. Vortex JSON catalogues require <code>schema</code>, <code>name</code> and <code>items</code>. Each item needs a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>
+            <p class="schema-help">Vortex JSON catalogues require <code>schema</code>, <code>name</code> and <code>items</code>. Each item needs a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>
           </form>
 
           <div class="actions" style="margin:22px 0 14px;padding-top:18px;border-top:1px solid #ffffff18">
