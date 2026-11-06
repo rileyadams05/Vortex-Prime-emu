@@ -3981,7 +3981,7 @@
 
                     <div class="project-card" aria-label="FPKGi 2.0 beta project">
                         <div class="project-card-header">
-                            <button class="btn btn-secondary nxe-cover-button" type="button" disabled aria-disabled="true" title="Add the FPKGi cover image to enable its preview">View cover photo</button>
+                            <button class="btn btn-secondary nxe-cover-button" type="button" data-nxe-lightbox="/assets/fpkgi-icon.png" data-lightbox-alt="FPKGi 2.0 beta icon">View cover photo</button>
                             <div class="project-title">
                                 <h2>FPKGi 2.0 beta</h2>
                                 <span class="project-status project-status-warning">
@@ -4720,7 +4720,7 @@
                         overlay.style.cssText = 'position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:2rem;';
                         const image = document.createElement('img');
                         image.src = trigger.dataset.nxeLightbox;
-                        image.alt = 'NXE screenshot';
+                        image.alt = trigger.dataset.lightboxAlt || 'Project cover image';
                         image.style.cssText = 'max-width:95vw;max-height:90vh;width:auto;height:auto;object-fit:contain;';
                         const close = document.createElement('button');
                         close.type = 'button'; close.className = 'btn btn-secondary'; close.textContent = 'Close';
