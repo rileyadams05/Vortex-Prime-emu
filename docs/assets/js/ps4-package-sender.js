@@ -199,7 +199,7 @@
         }
         throw new Error('No compatible PS4 installation receiver is connected.');
       }
-      if (!window.confirm('Important: Completely close the application on your PS4 before continuing. Make sure no downloads are active. Continue with this installation?')) return;
+      if (!window.confirm(`Send this package to your PS4 at ${activeIp}?`)) return;
       if (file) {
         el('uploadProgress').hidden = false; el('uploadProgress').value = 0;
         setStatus(el('sendStatus'), `Sending ${file.name} directly to the PS4…`, 'pending');

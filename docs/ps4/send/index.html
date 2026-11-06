@@ -99,7 +99,6 @@
           <button class="button" id="pairButton" type="button">Pair this browser</button>
           <p class="status" id="pairStatus" role="status" aria-live="polite" hidden></p>
         </div>
-        <div class="notice warn">Important: Completely close the application on your PS4 before continuing. Make sure no downloads are active.</div>
         <form class="send-box" id="sendPackageForm" novalidate>
           <div class="package-input-row">
             <div class="field"><label for="packageUrl">Direct PKG URL or selected file</label><div class="input-wrap"><input id="packageUrl" type="text" autocomplete="url" inputmode="url" enterkeyhint="send" placeholder="Paste a PKG URL or drop a PKG anywhere on this page"><button class="mobile-upload" id="choosePkgButton" type="button" aria-label="Upload a PKG" title="Upload a PKG">+</button><input id="pkgFile" type="file" accept=".pkg,application/octet-stream" hidden></div></div>
@@ -113,7 +112,7 @@
     </section>
   </main>
   <script src="../../assets/js/ps4-catalogue-api.js?v=a5be290702a6a2d8" defer></script>
-  <script src="../../assets/js/ps4-package-sender.js?v=b71937639552144c" defer></script>
+  <script src="../../assets/js/ps4-package-sender.js?v=81138836034892c8" defer></script>
   <script>
     // Check for site updates even when entering directly on a PS4 tool page.
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
