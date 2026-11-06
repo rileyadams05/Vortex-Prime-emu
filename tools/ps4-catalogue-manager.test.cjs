@@ -9,6 +9,8 @@ const { createClient } = require('../docs/assets/js/ps4-catalogue-api.js');
 
 const managerHtml = fs.readFileSync(path.join(__dirname, '../docs/ps4/catalogues/index.html'), 'utf8');
 const senderHtml = fs.readFileSync(path.join(__dirname, '../docs/ps4/send/index.html'), 'utf8');
+const projectsHtml = fs.readFileSync(path.join(__dirname, '../docs/index.html'), 'utf8');
+const senderScript = fs.readFileSync(path.join(__dirname, '../docs/assets/js/ps4-package-sender.js'), 'utf8');
 assert.match(managerHtml, /class="catalogue-entry"/);
 assert.doesNotMatch(managerHtml, /id="catalogueCategory"|id="catalogueAdapter"|>Category</);
 assert.doesNotMatch(managerHtml, /Send a package to PS4|id="pkgDropTarget"|packageToggle/);
@@ -16,6 +18,9 @@ assert.match(managerHtml, /href="\/ps4\/send\/"/);
 assert.match(senderHtml, /id="pkgDropTarget"/);
 assert.match(senderHtml, /id="sendButton"[^>]*>Send</);
 assert.match(senderHtml, /id="sendPackageForm"/);
+assert.match(projectsHtml, /href="\/ps4\/send\/\?receiver=bgft"[^>]*>Send FPKG</);
+assert.match(senderScript, /get\('receiver'\) === 'bgft'/);
+assert.match(senderScript, /if \(!bgftMode && rpiReady\)/);
 
 function expectError(callback, pattern) {
   assert.throws(callback, pattern);

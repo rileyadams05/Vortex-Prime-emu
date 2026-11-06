@@ -6,6 +6,7 @@
   const API_VERSION = 1;
   const IP_KEY = 'vortexPrime.consoleIp.ps4';
   const TOKEN_KEY = 'vortexPrime.ps4.catalogueManager.pairingToken';
+  const bgftMode = new URLSearchParams(window.location.search).get('receiver') === 'bgft';
   const apiModule = window.VortexPrimeCatalogueApi;
   if (!apiModule) throw new Error('The PS4 communication client did not load.');
   const api = apiModule.createClient(window.fetch.bind(window), API_PORT);
@@ -73,7 +74,9 @@
     setConnection('Checking PS4…', `Testing the saved local address ${ip}.`, false, true);
     setStatus(el('connectionStatus'), 'Checking the installation receiver…', 'pending');
     el('useIpButton').disabled = true;
-    try { await rpiRequest(ip, 'is_exists', { title_id: 'CUSA00000' }, 6000); rpiReady = true; } catch (_) { /* Check the separate paired bridge too. */ }
+    if (!bgftMode) {
+      try { await rpiRequest(ip, 'is_exists', { title_id: 'CUSA00000' }, 6000); rpiReady = true; } catch (_) { /* Check the separate paired bridge too. */ }
+    }
     try {
       const status = await api.request(ip, '/status');
       bridgeReady = status.service === API_ID && status.api_version === API_VERSION;
@@ -82,7 +85,17 @@
     if (bridgeReady && saved && saved.ip === ip && typeof saved.token === 'string') {
       pairingToken = saved.token;
     }
-    if (rpiReady && pairingToken) {
+    if (bgftMode && bridgeReady && pairingToken) {
+      setConnection('BGFT ready', `${ip} · paired console service`, true, false);
+      setStatus(el('connectionStatus'), 'This FPKG sender is connected to the paired BGFT service.', 'success');
+    } else if (bgftMode && bridgeReady) {
+      setConnection('BGFT pairing needed', `${ip} · BGFT service detected`, false, true);
+      setStatus(el('connectionStatus'), 'Pair this browser with the console to send FPKGs through BGFT.', 'pending');
+      try { await startPairing(); } catch (error) { setStatus(el('connectionStatus'), error.message, 'error'); }
+    } else if (bgftMode) {
+      setConnection('BGFT service unavailable', `${ip} · paired BGFT service not detected`, false, false);
+      setStatus(el('connectionStatus'), 'The BGFT service is unavailable at this address. This button will not switch to another receiver.', 'error');
+    } else if (rpiReady && pairingToken) {
       setConnection('PS4 ready', `${ip} · direct URL and paired BGFT uploads available`, true, false);
       setStatus(el('connectionStatus'), 'Remote Package Installer detected; this browser is paired with the BGFT bridge.', 'success');
     } else if (rpiReady) {
@@ -131,7 +144,9 @@
 
   function updateSendButton() {
     const fileSelected = el('pkgFile').files.length > 0;
-    el('sendButton').disabled = fileSelected ? !(rpiReady || bridgeReady) : !(rpiReady || bridgeReady && pairingToken);
+    el('sendButton').disabled = bgftMode
+      ? !(bridgeReady && pairingToken)
+      : fileSelected ? !(rpiReady || bridgeReady) : !(rpiReady || bridgeReady && pairingToken);
   }
 
   function renderTask(name, id, status, detail) {
@@ -182,11 +197,11 @@
     try {
       if (!activeIp) throw new Error('Use the saved console address or enter the PS4 IP first.');
       const url = file ? '' : validatePackageUrl(el('packageUrl').value);
-      if (file && (!bridgeReady || !pairingToken)) {
+      if ((file || bgftMode) && (!bridgeReady || !pairingToken)) {
         await startPairing();
         throw new Error('Pair the BGFT bridge with the one-time code, then press Send again.');
       }
-      if (!file && !rpiReady && !(bridgeReady && pairingToken)) {
+      if (!bgftMode && !file && !rpiReady && !(bridgeReady && pairingToken)) {
         if (bridgeReady) {
           await startPairing();
           throw new Error('Pair the PS4 with the one-time code, then press Send again.');
@@ -206,7 +221,7 @@
         renderTask(file.name, result.task_id, 'Registered with BGFT', 'The PKG was sent to the PS4 service, not stored by Vortex Prime.');
         el('pkgFile').value = ''; el('selectedFile').textContent = '';
         watchTask({ receiver: 'bgft', id: result.task_id, name: file.name });
-      } else if (rpiReady) {
+      } else if (!bgftMode && rpiReady) {
         setStatus(el('sendStatus'), 'Sending the direct URL to Remote Package Installer…', 'pending');
         const result = await rpiRequest(activeIp, 'install', { type: 'direct', packages: [url] }, 20000);
         const id = Number(result.task_id);
@@ -232,6 +247,13 @@
     let savedIp = '';
     try { savedIp = localStorage.getItem(IP_KEY) || ''; } catch (_) { /* Storage is optional. */ }
     ipInput.value = savedIp;
+    if (bgftMode) {
+      el('pageTitle').textContent = 'Send FPKG via BGFT';
+      el('pageLead').textContent = 'Connect to the paired PS4 BGFT service and send a direct package URL or local FPKG.';
+      el('sendButton').textContent = 'Send FPKG';
+      el('sendHeading').textContent = 'BGFT service connection';
+      el('pageNote').textContent = 'BGFT mode sends only through the paired PS4 BGFT service. If that service is unavailable, the request stops; it never falls back to Remote Package Installer or a Vortex server.';
+    }
     el('useIpButton').addEventListener('click', () => connect(ipInput.value));
     ipInput.addEventListener('keydown', event => { if (event.key === 'Enter') connect(ipInput.value); });
     el('pairButton').addEventListener('click', pairBrowser);
