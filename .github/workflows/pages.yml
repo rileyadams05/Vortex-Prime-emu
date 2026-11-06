@@ -1,7 +1,11 @@
 name: Deploy GitHub Pages
 
 on:
-  # The branch publisher serves main/docs. Keep this alternative manual only.
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -25,6 +29,8 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
+        with:
+          enablement: true
 
       - name: Stamp service worker version
         # Replaces the __BUILD_TS__ placeholder in app-sw.js with the current
