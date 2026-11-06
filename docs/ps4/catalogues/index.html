@@ -75,10 +75,9 @@
     .empty { padding:28px 18px; border:1px dashed #315779; border-radius:12px; color:#9db2cf; text-align:center; }
     .schema-help { margin:12px 0 0; color:#8298b5; font-size:11px; }
     .schema-help code { color:#bbd9ff; }
-    .catalogue-entry { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; }
+    .catalogue-entry { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; align-items:end; }
     .catalogue-entry .field { min-width:0; margin:0; }
-    .catalogue-entry .button { min-height:46px; white-space:nowrap; }
-    .console-bar { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr) auto; gap:12px; align-items:end; padding:0 24px 18px; }
+    .console-bar { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr); gap:12px; align-items:end; padding:0 24px 18px; }
     .console-bar .field { margin:0; }
     .console-state { display:flex; align-items:center; gap:10px; min-height:46px; }
     .console-state strong { display:block; font-size:13px; }
@@ -111,8 +110,7 @@
         <div class="card-head"><h2 id="sourcesHeading">Catalogue sources</h2><p>Changes save in this browser immediately and sync automatically when the PS4 is paired.</p></div>
         <div class="console-bar">
           <div class="console-state"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">Checking saved PS4…</strong><small id="connectionDetail">Reusing the address from Install on PS4 when available.</small></div></div>
-          <div class="field"><label for="ps4Ip">PS4 IP address <span style="font-weight:500;color:#8298b5">(manual fallback)</span></label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
-          <button class="button secondary" id="connectButton" type="button">Use IP</button>
+          <div class="field"><label for="ps4Ip">PS4 IP address <span style="font-weight:500;color:#8298b5">(manual fallback · press Enter to connect)</span></label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
         </div>
         <div class="card-body">
           <p class="status" id="connectionStatus" role="status" aria-live="polite" hidden></p>
@@ -126,10 +124,9 @@
           <form id="addCatalogueForm" novalidate>
             <div class="catalogue-entry">
               <div class="field"><label for="catalogueUrl">Catalogue URL</label><input id="catalogueUrl" type="url" autocomplete="url" placeholder="https://example.org/catalogue.json" required></div>
-              <button class="button" id="validateButton" type="submit">Add catalogue</button>
             </div>
             <p class="status" id="validationStatus" role="status" aria-live="polite"></p>
-            <p class="schema-help">Vortex JSON catalogues require <code>schema</code>, <code>name</code> and <code>items</code>. Each item needs a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>
+            <p class="schema-help">Press Enter to add a catalogue. Vortex JSON catalogues require <code>schema</code>, <code>name</code> and <code>items</code>. Each item needs a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>
           </form>
 
           <div class="actions" style="margin:22px 0 14px;padding-top:18px;border-top:1px solid #ffffff18">

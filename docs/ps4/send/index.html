@@ -38,7 +38,7 @@
     .connection strong,.connection small { display:block; }
     .connection strong { font-size:13px; }
     .connection small { color:var(--muted); font-size:11px; }
-    .ip-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; margin-top:14px; }
+    .ip-row { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; align-items:end; margin-top:14px; }
     .field { min-width:0; margin-bottom:15px; }
     .ip-row .field { margin:0; }
     label { display:block; margin-bottom:7px; color:#bfd0e5; font-size:12px; font-weight:750; }
@@ -92,8 +92,7 @@
       <div class="card-body">
         <div class="connection"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">Checking saved PS4…</strong><small id="connectionDetail">Looking for Remote Package Installer and the paired BGFT service.</small></div></div>
         <div class="ip-row">
-          <div class="field"><label for="ps4Ip">PS4 IP address <span style="font-weight:500;color:#8298b5">(manual fallback for USB downloads)</span></label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
-          <button class="button secondary" id="useIpButton" type="button">Use IP</button>
+          <div class="field"><label for="ps4Ip">PS4 IP address <span style="font-weight:500;color:#8298b5">(manual fallback · press Enter to connect)</span></label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
         </div>
         <p class="status" id="connectionStatus" role="status" aria-live="polite" hidden></p>
         <div id="pairingPanel" hidden>

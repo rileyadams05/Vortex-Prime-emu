@@ -34,6 +34,7 @@
   let syncBlocked = false;
   let lastSyncError = '';
   let syncTimer = 0;
+  let validatingCatalogue = false;
 
   function readStore() {
     const data = catalogueState.read(localStorage, STORE_KEY);
@@ -196,7 +197,6 @@
     connected = false;
     setConnection('Connecting…', `Checking ${ip}:${API_PORT}`, false);
     setStatus(connectionStatus, 'Checking for the Vortex Prime catalogue service…');
-    el('connectButton').disabled = true;
     try {
       const status = await apiRequest(ip, '/status');
       if (status.service !== API_ID || status.api_version !== API_VERSION) throw new Error('A service answered, but it does not match the Vortex Prime PS4 Catalogue API v1.');
@@ -228,7 +228,7 @@
       setStatus(connectionStatus, error.message, 'error');
       el('pairingPanel').hidden = true;
       renderSources();
-    } finally { el('connectButton').disabled = false; }
+    }
   }
 
   async function pairBrowser() {
@@ -253,14 +253,14 @@
 
   async function validateAndAdd(event) {
     event.preventDefault();
-    const button = el('validateButton');
+    if (validatingCatalogue) return;
     const adapterId = 'vortex-v1';
     if (!validation.adapters[adapterId]) { setStatus(validateStatus, 'The Vortex JSON catalogue format is not supported by this page.', 'error'); return; }
     let url;
     try { url = parseCatalogueUrl(el('catalogueUrl').value); }
     catch (error) { setStatus(validateStatus, error.message, 'error'); return; }
     if (validation.isDuplicateUrl(sources, url)) { setStatus(validateStatus, 'That catalogue URL is already configured.', 'error'); return; }
-    button.disabled = true; setStatus(validateStatus, 'Fetching and validating the catalogue JSON…');
+    validatingCatalogue = true; setStatus(validateStatus, 'Fetching and validating the catalogue JSON…');
     try {
       const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 12000);
       let response;
@@ -277,7 +277,7 @@
     } catch (error) {
       const message = error.name === 'AbortError' ? 'The catalogue request timed out.' : error instanceof SyntaxError ? 'The URL did not return valid JSON.' : error.message;
       setStatus(validateStatus, `${message}${error instanceof TypeError ? ' The catalogue host must allow browser CORS requests.' : ''}`, 'error');
-    } finally { button.disabled = false; }
+    } finally { validatingCatalogue = false; }
   }
 
   async function syncPending() {
@@ -347,10 +347,15 @@
     try { savedIp = localStorage.getItem(IP_KEY) || ''; } catch (_) { /* Storage is optional. */ }
     ipInput.value = savedIp;
     renderSources();
-    el('connectButton').addEventListener('click', () => connectToPs4());
     el('pairButton').addEventListener('click', pairBrowser);
     el('pairingCode').addEventListener('keydown', event => { if (event.key === 'Enter') pairBrowser(); });
     el('addCatalogueForm').addEventListener('submit', validateAndAdd);
+    el('catalogueUrl').addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        el('addCatalogueForm').requestSubmit();
+      }
+    });
     el('syncButton').addEventListener('click', () => { syncBlocked = false; lastSyncError = ''; syncPending(); });
     el('refreshAllButton').addEventListener('click', () => refreshCatalogues());
     ipInput.addEventListener('keydown', event => { if (event.key === 'Enter') connectToPs4(); });

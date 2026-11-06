@@ -73,7 +73,6 @@
     try { localStorage.setItem(IP_KEY, ip); } catch (_) { /* Saving the address is optional. */ }
     setConnection('Checking PS4…', `Testing the saved local address ${ip}.`, false, true);
     setStatus(el('connectionStatus'), 'Checking the installation receiver…', 'pending');
-    el('useIpButton').disabled = true;
     if (!bgftMode) {
       try { await rpiRequest(ip, 'is_exists', { title_id: 'CUSA00000' }, 6000); rpiReady = true; } catch (_) { /* Check the separate paired bridge too. */ }
     }
@@ -112,7 +111,6 @@
       setConnection('PS4 receiver unavailable', `${ip} · check the IP and receiver`, false, false);
       setStatus(el('connectionStatus'), 'Could not find Remote Package Installer or the paired BGFT bridge at this address.', 'error');
     }
-    el('useIpButton').disabled = false;
     updateSendButton();
   }
 
@@ -254,7 +252,6 @@
       el('sendHeading').textContent = 'BGFT service connection';
       el('pageNote').textContent = 'BGFT mode sends only through the paired PS4 BGFT service. If that service is unavailable, the request stops; it never falls back to Remote Package Installer or a Vortex server.';
     }
-    el('useIpButton').addEventListener('click', () => connect(ipInput.value));
     ipInput.addEventListener('keydown', event => { if (event.key === 'Enter') connect(ipInput.value); });
     el('pairButton').addEventListener('click', pairBrowser);
     el('pairingCode').addEventListener('keydown', event => { if (event.key === 'Enter') pairBrowser(); });
