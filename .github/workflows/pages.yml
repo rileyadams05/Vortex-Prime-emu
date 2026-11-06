@@ -1,9 +1,7 @@
 name: Deploy GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
+  # The branch publisher serves main/docs. Keep this alternative manual only.
   workflow_dispatch:
 
 permissions:
