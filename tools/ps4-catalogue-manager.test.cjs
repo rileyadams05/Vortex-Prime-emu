@@ -13,6 +13,8 @@ assert.doesNotMatch(managerHtml, /id="catalogueCategory"|id="catalogueAdapter"|>
 assert.doesNotMatch(managerHtml, /Connect your PS4|Search for PS4|bgftUploadForm|Send URL to PS4/);
 assert.match(managerHtml, /id="pkgDropTarget"/);
 assert.match(managerHtml, />Send</);
+assert.match(managerHtml, /id="packageToggle"[^>]*aria-expanded="false"/);
+assert.match(managerHtml, /id="bgftUrlForm"[^>]*hidden/);
 
 function expectError(callback, pattern) {
   assert.throws(callback, pattern);

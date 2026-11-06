@@ -81,6 +81,11 @@
     .console-bar { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr) auto; gap:12px; align-items:end; padding:0 24px 18px; }
     .console-bar .field { margin:0; }
     .console-state { display:flex; align-items:center; gap:10px; min-height:46px; }
+    .console-state strong { display:block; font-size:13px; }
+    .console-state small { display:block; color:var(--muted); font-size:11px; }
+    .package-toggle { display:flex; align-items:center; justify-content:space-between; width:100%; margin-top:16px; padding:13px 0; border:0; border-top:1px solid #ffffff18; background:transparent; color:#80c6ff; font:inherit; font-weight:800; text-align:left; cursor:pointer; }
+    .package-toggle:hover { color:#c2e5ff; }
+    .package-toggle-icon { display:grid; place-items:center; width:25px; height:25px; border:1px solid #315779; border-radius:50%; color:#b9d7fa; font-size:16px; }
     .package-send { margin-top:22px; padding:18px; border:1px solid #1c3b60; border-radius:13px; background:#06152a; }
     .package-send h3 { margin:0 0 5px; font-size:16px; }
     .package-send > p { margin:0 0 14px; color:#9db2cf; font-size:12px; }
@@ -122,7 +127,7 @@
           <button class="button secondary" id="connectButton" type="button">Use IP</button>
         </div>
         <div class="card-body">
-          <p class="status" id="connectionStatus" role="status" aria-live="polite"></p>
+          <p class="status" id="connectionStatus" role="status" aria-live="polite" hidden></p>
           <div id="pairingPanel" hidden>
             <div class="notice warn">Approve this browser on the PS4, then enter its one-time pairing code.</div>
             <div class="field"><label for="pairingCode">One-time pairing code</label><input id="pairingCode" autocomplete="one-time-code" inputmode="numeric" placeholder="Code shown on your PS4"></div>
@@ -139,8 +144,10 @@
             <p class="schema-help">Vortex JSON catalogues require <code>schema</code>, <code>name</code> and <code>items</code>. Each item needs a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>
           </form>
 
-          <form class="package-send" id="bgftUrlForm" novalidate>
-            <h3>Send a package to PS4</h3>
+          <button class="package-toggle" id="packageToggle" type="button" aria-expanded="false" aria-controls="bgftUrlForm">
+            <span>Send a package to PS4</span><span class="package-toggle-icon" aria-hidden="true">+</span>
+          </button>
+          <form class="package-send" id="bgftUrlForm" novalidate hidden>
             <p>Paste a direct PKG URL or drop a local PKG file below. A dropped file automatically becomes the selected direct PKG.</p>
             <div class="send-fields">
               <div class="field"><label for="bgftPackageUrl">Direct PKG URL</label><input id="bgftPackageUrl" type="url" autocomplete="url" placeholder="https://downloads.example.org/app.pkg"></div>

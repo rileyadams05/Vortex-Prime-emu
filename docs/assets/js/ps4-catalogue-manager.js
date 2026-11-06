@@ -51,6 +51,7 @@
   function setStatus(node, message, kind) {
     node.textContent = message || '';
     node.dataset.kind = kind || '';
+    node.hidden = !message;
   }
 
   const parseCatalogueUrl = validation.parseCatalogueUrl;
@@ -545,8 +546,14 @@
     if (savedIp && validPrivateIp(savedIp)) connectToPs4(savedIp);
     else {
       setConnection('No PS4 address saved', 'Enter the console IP here if you downloaded the PKG to USB.', false);
-      setStatus(connectionStatus, 'No saved console address was found. Enter the PS4 IP to continue.', 'pending');
     }
+    el('packageToggle').addEventListener('click', () => {
+      const panel = el('bgftUrlForm');
+      const expanded = panel.hidden;
+      panel.hidden = !expanded;
+      el('packageToggle').setAttribute('aria-expanded', String(expanded));
+      el('packageToggle').querySelector('.package-toggle-icon').textContent = expanded ? '−' : '+';
+    });
   }
 
   initialize();
