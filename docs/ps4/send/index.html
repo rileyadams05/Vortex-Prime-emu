@@ -117,7 +117,7 @@
   <script>
     // Check for site updates even when entering directly on a PS4 tool page.
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
-      navigator.serviceWorker.register('/app-sw.js', { updateViaCache: 'none' })
+      navigator.serviceWorker.register('/app-sw.js?v=refresh2', { updateViaCache: 'none' })
         .then(registration => registration.update()).catch(() => {});
     }
   </script>

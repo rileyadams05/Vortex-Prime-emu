@@ -4201,7 +4201,7 @@
 
                     if ('serviceWorker' in navigator) {
                         window.addEventListener('load', () => {
-                            navigator.serviceWorker.register('/app-sw.js', { updateViaCache: 'none' })
+                            navigator.serviceWorker.register('/app-sw.js?v=refresh2', { updateViaCache: 'none' })
                                 .then((registration) => registration.update())
                                 .catch((error) => {
                                     console.warn('App install service worker registration failed:', error);
