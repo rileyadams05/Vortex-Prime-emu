@@ -5,7 +5,7 @@
 // stale caches without any manual version bumping.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = 'vortex-prime-v-bce9b0a-__BUILD_TS__';
+const CACHE_VERSION = 'vortex-prime-v-refresh2-__BUILD_TS__';
 
 // Same-origin asset paths that are safe to serve cache-first.
 // These are wiped and rebuilt whenever CACHE_VERSION changes (i.e. on deploy).
@@ -32,7 +32,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((names) =>
       Promise.all(
         names
-          .filter((name) => name !== CACHE_VERSION)
+          .filter((name) => name.startsWith('vortex-prime-') && name !== CACHE_VERSION)
           .map((name) => caches.delete(name))
       )
     ).then(() => self.clients.claim())
@@ -53,11 +53,11 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   // ── Navigation requests (HTML pages) ─────────────────────────────────────
-  // Network first: always try to fetch the latest HTML from the server.
+  // Revalidate HTML, JavaScript and CSS on ordinary reloads.
   // Fall back to the cache only when offline.
-  if (request.mode === 'navigate') {
+  if (request.mode === 'navigate' || request.destination === 'script' || request.destination === 'style' || /\.(?:js|css)$/.test(url.pathname)) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-cache' })
         .then((response) => {
           if (response.ok) {
             const copy = response.clone();
@@ -66,14 +66,14 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match('/'))
+          caches.match(request).then((cached) => cached || Response.error())
         )
     );
     return;
   }
 
   // ── Static assets (JS, CSS, images, icons, manifest) ─────────────────────
-  // Cache first: serve instantly from cache; update cache in background.
+  // Cache images and other non-executable assets.
   // Because CACHE_VERSION changes on every deploy, the old cache is deleted
   // on activate and assets are fetched fresh from the network on next use.
   const isCacheFirst = CACHE_FIRST_PATTERNS.some((pattern) =>

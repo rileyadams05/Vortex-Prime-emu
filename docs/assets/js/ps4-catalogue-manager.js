@@ -38,7 +38,9 @@
   let pendingCatalogueFile = null;
 
   function readStore() {
-    const data = catalogueState.read(localStorage, STORE_KEY);
+    let storage;
+    try { storage = window.localStorage; } catch (_) { /* Private browsing may deny storage access. */ }
+    const data = catalogueState.read(storage, STORE_KEY);
     sources = data.sources; pending = data.pending; remoteRevision = data.revision;
   }
 

@@ -18,7 +18,6 @@
     [hidden] { display:none!important; }
     .topbar { min-height:76px; display:flex; align-items:center; gap:30px; padding:12px clamp(16px,5vw,64px); border-bottom:1px solid #ffffff17; background:#030b19cc; }
     .brand { color:#f1f6ff; text-decoration:none; font-weight:800; letter-spacing:.03em; }
-    .brand span { display:inline-grid; place-items:center; width:30px; height:30px; margin-right:9px; border:1px solid #357ac9; border-radius:9px; background:linear-gradient(145deg,#2787f4,#6656e8); font-size:11px; }
     nav { display:flex; gap:8px; flex-wrap:wrap; }
     nav a { padding:9px 12px; border-radius:9px; color:#a9bbd5; text-decoration:none; font-weight:650; }
     nav a:hover,nav a[aria-current="page"] { color:#fff; background:#102544; }
@@ -73,7 +72,7 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/"><span>VP</span>VORTEX PRIME</a>
+    <a class="brand" href="/">VORTEX PRIME</a>
     <nav aria-label="PS4 tools">
       <a href="/ps4/install/">Install on PS4</a>
       <a href="/ps4/send/" aria-current="page">Send package</a>
@@ -90,7 +89,7 @@
       <div class="card-head"><h2 id="sendHeading">PS4 connection</h2><p>The address saved by the installer is checked automatically.</p></div>
       <div class="card-body">
         <div class="connection"><span class="dot" id="connectionDot"></span><div><strong id="connectionLabel">No PS4 address saved</strong><small id="connectionDetail">The saved console address is reused automatically.</small></div></div>
-        <div class="ip-row" id="manualIpPanel" hidden>
+        <div class="ip-row" id="manualIpPanel">
           <div class="field"><label for="ps4Ip">PS4 IP address</label><input id="ps4Ip" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50"></div>
         </div>
         <p class="status" id="connectionStatus" role="status" aria-live="polite" hidden></p>
@@ -113,7 +112,14 @@
       </div>
     </section>
   </main>
-  <script src="../../assets/js/ps4-catalogue-api.js" defer></script>
-  <script src="../../assets/js/ps4-package-sender.js" defer></script>
+  <script src="../../assets/js/ps4-catalogue-api.js?v=a5be290702a6a2d8" defer></script>
+  <script src="../../assets/js/ps4-package-sender.js?v=b71937639552144c" defer></script>
+  <script>
+    // Check for site updates even when entering directly on a PS4 tool page.
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      navigator.serviceWorker.register('/app-sw.js', { updateViaCache: 'none' })
+        .then(registration => registration.update()).catch(() => {});
+    }
+  </script>
 </body>
 </html>

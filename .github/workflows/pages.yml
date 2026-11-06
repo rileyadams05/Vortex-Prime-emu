@@ -36,6 +36,9 @@ jobs:
           TS=$(date +%s)
           sed -i "s/__BUILD_TS__/${TS}/g" docs/app-sw.js
 
+      - name: Version PS4 page scripts
+        run: python3 tools/version-ps4-assets.py
+
       - name: Upload Site
         uses: actions/upload-pages-artifact@v5
         with:

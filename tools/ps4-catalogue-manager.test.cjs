@@ -15,10 +15,10 @@ assert.match(managerHtml, /class="catalogue-entry"/);
 assert.doesNotMatch(managerHtml, /id="catalogueCategory"|id="catalogueAdapter"|>Category</);
 assert.doesNotMatch(managerHtml, /Send a package to PS4|id="pkgDropTarget"|packageToggle/);
 assert.match(managerHtml, /href="\/ps4\/send\/"/);
-assert.match(senderHtml, /id="pkgDropTarget"/);
-assert.match(senderHtml, /id="sendButton"[^>]*>Send</);
+assert.doesNotMatch(senderHtml, /id="pkgDropTarget"/);
+assert.doesNotMatch(senderHtml, /id="sendButton"/);
 assert.match(senderHtml, /id="sendPackageForm"/);
-assert.match(projectsHtml, /href="\/ps4\/send\/\?receiver=bgft"[^>]*>Send FPKG</);
+assert.match(projectsHtml, /href="(?:https:\/\/vortex-prime-emu\.com)?\/ps4\/send\/\?receiver=bgft"[^>]*>Send FPKG</);
 assert.match(senderScript, /get\('receiver'\) === 'bgft'/);
 assert.match(senderScript, /if \(!bgftMode && rpiReady\)/);
 
