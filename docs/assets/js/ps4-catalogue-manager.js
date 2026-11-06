@@ -30,8 +30,6 @@
   let challengeId = '';
   let pairingToken = '';
   let connected = false;
-  let rpiAvailable = false;
-  let rpiIp = '';
   let syncing = false;
   let syncBlocked = false;
   let lastSyncError = '';
@@ -65,31 +63,6 @@
 
   const apiRequest = (ip, path, options) => apiClient.request(ip, path, options);
 
-  async function rpiRequest(ip, path, body, timeoutMs) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs || 8000);
-    try {
-      const response = await fetch(`http://${ip}:12800/api/${path}`, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-        body: JSON.stringify(body), mode: 'cors', credentials: 'omit', cache: 'no-store', signal: controller.signal
-      });
-      const text = (await response.text()).replace(/("bits"\s*:\s*)0x([\da-f]+)/ig, '$1"0x$2"');
-      let result;
-      try { result = JSON.parse(text); } catch (_) { throw new Error(`Remote Package Installer returned an unreadable response (HTTP ${response.status}).`); }
-      if (!response.ok || result.status === 'fail' || result.ok === false) throw new Error(result.error || result.message || `Remote Package Installer returned HTTP ${response.status}.`);
-      return result;
-    } catch (error) {
-      if (error.name === 'AbortError') throw new Error('The Remote Package Installer did not respond in time.');
-      throw error;
-    } finally { clearTimeout(timer); }
-  }
-
-  async function checkRemoteInstaller(ip) {
-    const result = await rpiRequest(ip, 'is_exists', { title_id: 'CUSA00000' }, 6000);
-    if (result.status !== 'success' || typeof result.exists === 'undefined') throw new Error('The service does not match Remote Package Installer.');
-    rpiAvailable = true; rpiIp = ip;
-  }
-
   function setConnection(label, detail, online) {
     el('connectionLabel').textContent = label;
     el('connectionDetail').textContent = detail;
@@ -97,7 +70,6 @@
     el('connectionDot').classList.toggle('pending', !online && Boolean(pairingToken));
     el('syncButton').disabled = !connected || !pending.length || syncing;
     el('refreshAllButton').disabled = !connected || syncing;
-    updatePackageButton();
   }
 
   function refreshLocalStatus() {
@@ -225,9 +197,7 @@
     setConnection('Connecting…', `Checking ${ip}:${API_PORT}`, false);
     setStatus(connectionStatus, 'Checking for the Vortex Prime catalogue service…');
     el('connectButton').disabled = true;
-    rpiAvailable = false; rpiIp = '';
     try {
-      try { await checkRemoteInstaller(ip); } catch (_) { /* The catalogue service is a separate receiver. */ }
       const status = await apiRequest(ip, '/status');
       if (status.service !== API_ID || status.api_version !== API_VERSION) throw new Error('A service answered, but it does not match the Vortex Prime PS4 Catalogue API v1.');
       const savedPairing = (() => { try { return JSON.parse(sessionStorage.getItem(TOKEN_KEY) || 'null'); } catch (_) { return null; } })();
@@ -254,8 +224,8 @@
       setStatus(pairStatus, challenge.expires_at ? `Pairing code expires ${challenge.expires_at}.` : 'Pairing code requested from the PS4.', 'pending');
     } catch (error) {
       connected = false;
-      setConnection(rpiAvailable ? 'Remote Package Installer ready' : 'Disconnected', rpiAvailable ? `${ip}:12800 · direct URL installs available` : `${ip}:${API_PORT} is unavailable or incompatible.`, rpiAvailable);
-      setStatus(connectionStatus, rpiAvailable ? `Direct URL installs are available. Catalogue sync is unavailable: ${error.message}` : error.message, rpiAvailable ? 'pending' : 'error');
+      setConnection('Disconnected', `${ip}:${API_PORT} is unavailable or incompatible.`, false);
+      setStatus(connectionStatus, error.message, 'error');
       el('pairingPanel').hidden = true;
       renderSources();
     } finally { el('connectButton').disabled = false; }
@@ -371,144 +341,6 @@
     } catch (error) { setStatus(syncStatus, error.message, 'error'); }
   }
 
-  const bgftTasks = [];
-  const packageUrl = raw => {
-    let url;
-    try { url = new URL(raw.trim()); } catch (_) { throw new Error('Enter a complete direct PKG URL.'); }
-    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Package links must use HTTP or HTTPS.');
-    if (url.username || url.password) throw new Error('Package URLs must not contain embedded credentials.');
-    if (!url.pathname.toLowerCase().endsWith('.pkg')) throw new Error('The direct URL must point to a .pkg file.');
-    url.hash = '';
-    return url.href;
-  };
-
-  function renderBgftTasks() {
-    const list = el('bgftTaskList'); list.replaceChildren();
-    if (!bgftTasks.length) {
-      const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No BGFT tasks submitted in this browser session.'; list.append(empty); return;
-    }
-    for (const task of bgftTasks) {
-      const row = document.createElement('article'); row.className = 'source';
-      const top = document.createElement('div'); top.className = 'source-top';
-      const title = document.createElement('div'); title.className = 'source-title';
-      const heading = document.createElement('h3'); heading.textContent = task.name;
-      const detail = document.createElement('span'); detail.className = 'source-url'; detail.textContent = task.detail;
-      title.append(heading, detail);
-      const badge = document.createElement('span'); badge.className = `source-status${task.status === 'complete' ? ' synced' : ''}`; badge.textContent = task.statusLabel || task.status;
-      top.append(title, badge); row.append(top);
-      if (task.progress !== null && task.progress !== undefined) {
-        const progress = document.createElement('progress'); progress.max = 100; progress.value = task.progress; progress.setAttribute('aria-label', `${task.name} progress`); row.append(progress);
-      }
-      if (task.message) { const message = document.createElement('p'); message.className = 'status'; message.textContent = task.message; row.append(message); }
-      list.append(row);
-    }
-  }
-
-  async function watchBgftTask(task) {
-    const terminal = new Set(['complete', 'failed', 'cancelled']);
-    for (let attempt = 0; attempt < 600; attempt += 1) {
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      try {
-        let state;
-        if (task.receiver === 'rpi') {
-          if (rpiIp !== task.ip) throw new Error('Reconnect to the saved console address to check this task.');
-          state = await rpiRequest(task.ip, 'get_task_progress', { task_id: Number(task.taskId) }, 10000);
-          if (state.status === 'fail') throw new Error(state.error || 'The PS4 could not return task progress.');
-          const total = Number(state.length_total || state.length || 0);
-          const received = Number(state.transferred_total || state.transferred || 0);
-          if (state.error != null && Number(state.error) !== 0) {
-            task.status = 'failed'; task.statusLabel = 'PS4 task failed';
-            task.message = `Remote Package Installer reported task error ${state.error}. Check PS4 notifications.`;
-            renderBgftTasks(); return;
-          }
-          task.status = total > 0 && received >= total ? 'complete' : 'downloading';
-          task.statusLabel = task.status === 'complete' ? 'Transfer finished' : 'Downloading on PS4';
-          task.progress = total > 0 ? Math.max(0, Math.min(100, received / total * 100)) : null;
-          task.message = task.status === 'complete' ? 'The PS4 reports transfer completion. Check console notifications for installation result.' : '';
-        } else {
-          if (!connected || !pairingToken) throw new Error('Reconnect and pair with the PS4 to check this BGFT task.');
-          state = await apiRequest(activeIp, `/bgft/tasks/${encodeURIComponent(task.taskId)}`, { token: pairingToken, timeout: 10000 });
-          if (state.task_id !== task.taskId || typeof state.status !== 'string') throw new Error('The PS4 returned an invalid BGFT task status.');
-          task.status = state.status;
-          task.statusLabel = ({ registered: 'Registered with BGFT', queued: 'Queued', downloading: 'Downloading on PS4', installing: 'Installing on PS4', complete: 'Complete' })[state.status] || state.status;
-          task.progress = Number.isFinite(state.progress_percent) ? Math.max(0, Math.min(100, state.progress_percent)) : null;
-          task.message = state.message || '';
-        }
-        renderBgftTasks();
-        if (terminal.has(task.status) || task.receiver === 'rpi' && task.status === 'complete') return;
-      } catch (error) {
-        task.statusLabel = 'Status check failed'; task.message = `${error.message} The BGFT task may still be running on the PS4.`; renderBgftTasks(); return;
-      }
-    }
-    task.statusLabel = 'Still running'; task.message = 'The PS4 has not reported a final status yet.'; renderBgftTasks();
-  }
-
-  function validateBgftReady() {
-    if (!connected || !pairingToken) throw new Error('Connect and pair with a compatible PS4 catalogue/BGFT service first.');
-  }
-
-  function confirmInstall() {
-    return window.confirm('Important: Completely close the application on your PS4 before continuing. Make sure no downloads are active. Continue with this installation?');
-  }
-
-  function updatePackageButton() {
-    const hasFile = el('bgftPkgFile').files.length > 0;
-    el('bgftUrlButton').disabled = hasFile ? !connected : !(connected || rpiAvailable);
-  }
-
-  function selectPkg(file) {
-    if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.pkg')) {
-      el('bgftPkgFile').value = ''; el('selectedPkgName').textContent = '';
-      setStatus(el('bgftUrlStatus'), 'Drop or select a file ending in .pkg.', 'error'); updatePackageButton(); return;
-    }
-    el('bgftPackageUrl').value = '';
-    el('selectedPkgName').textContent = `Direct PKG selected · ${file.name} · ${(file.size / (1024 * 1024)).toFixed(1)} MB`;
-    setStatus(el('bgftUrlStatus'), 'Direct PKG selected. Press Send to transfer it to the paired PS4 service.', 'pending');
-    updatePackageButton();
-  }
-
-  async function submitPackage(event) {
-    event.preventDefault();
-    const button = el('bgftUrlButton');
-    const file = el('bgftPkgFile').files[0];
-    try {
-      if (file) validateBgftReady();
-      else if (!rpiAvailable && !connected) throw new Error('Use the saved PS4 address or enter its IP address first.');
-      const url = file ? '' : packageUrl(el('bgftPackageUrl').value);
-      if (!confirmInstall()) return;
-      button.disabled = true; el('bgftUploadProgress').hidden = !file; el('bgftUploadProgress').value = 0;
-      if (file) {
-        if (!file.name.toLowerCase().endsWith('.pkg')) throw new Error('Choose a file with the .pkg extension.');
-        setStatus(el('bgftUrlStatus'), `Sending ${file.name} directly to the PS4…`, 'pending');
-        const result = await apiClient.upload(activeIp, `/bgft/uploads?filename=${encodeURIComponent(file.name)}`, file, pairingToken, percent => {
-          el('bgftUploadProgress').value = percent;
-          setStatus(el('bgftUrlStatus'), `Sending PKG to PS4: ${percent}%`, 'pending');
-        });
-        if (typeof result.task_id !== 'string' || !result.task_id || result.source !== 'upload' || !['registered', 'queued'].includes(result.status)) throw new Error('The PS4 did not confirm the PKG and BGFT task registration.');
-        const task = { taskId: result.task_id, receiver: 'bgft', name: file.name, detail: `${(file.size / (1024 * 1024)).toFixed(1)} MB · sent to PS4`, status: result.status, statusLabel: result.status === 'registered' ? 'Registered with BGFT' : 'Queued', progress: null };
-        bgftTasks.unshift(task); el('bgftPkgFile').value = ''; el('selectedPkgName').textContent = ''; renderBgftTasks();
-        setStatus(el('bgftUrlStatus'), `The PS4 confirmed BGFT task ${result.task_id}.`, 'success'); watchBgftTask(task);
-      } else if (rpiAvailable && rpiIp === activeIp) {
-        setStatus(el('bgftUrlStatus'), 'Sending the direct URL to Remote Package Installer…', 'pending');
-        const result = await rpiRequest(rpiIp, 'install', { type: 'direct', packages: [url] }, 20000);
-        const taskId = Number(result.task_id);
-        if (result.status !== 'success' || !Number.isInteger(taskId) || taskId < 0) throw new Error('The PS4 did not confirm a valid installation task.');
-        const task = { taskId: String(taskId), receiver: 'rpi', ip: rpiIp, name: 'Direct PKG URL', detail: url, status: 'downloading', statusLabel: 'Downloading on PS4', progress: null };
-        bgftTasks.unshift(task); el('bgftPackageUrl').value = ''; renderBgftTasks();
-        setStatus(el('bgftUrlStatus'), `Remote Package Installer accepted task ${taskId}.`, 'success'); watchBgftTask(task);
-      } else {
-        setStatus(el('bgftUrlStatus'), 'Sending the direct URL to the paired PS4 BGFT service…', 'pending');
-        const result = await apiRequest(activeIp, '/bgft/tasks', { method: 'POST', token: pairingToken, timeout: 20000, body: { source: 'url', package_url: url } });
-        if (typeof result.task_id !== 'string' || !result.task_id || typeof result.status !== 'string' || !['registered', 'queued'].includes(result.status)) throw new Error('The PS4 did not confirm BGFT task registration.');
-        const task = { taskId: result.task_id, receiver: 'bgft', name: 'Direct URL install', detail: url, status: result.status, statusLabel: result.status === 'registered' ? 'Registered with BGFT' : 'Queued', progress: null };
-        bgftTasks.unshift(task); el('bgftPackageUrl').value = ''; renderBgftTasks();
-        setStatus(el('bgftUrlStatus'), `The PS4 confirmed BGFT task ${result.task_id}.`, 'success'); watchBgftTask(task);
-      }
-    } catch (error) { setStatus(el('bgftUrlStatus'), error.message, 'error'); }
-    finally { button.disabled = !(connected || rpiAvailable); }
-  }
-
   function initialize() {
     readStore();
     let savedIp = '';
@@ -517,43 +349,16 @@
     renderSources();
     el('connectButton').addEventListener('click', () => connectToPs4());
     el('pairButton').addEventListener('click', pairBrowser);
-    el('bgftUrlForm').addEventListener('submit', submitPackage);
-    el('bgftPackageUrl').addEventListener('input', () => {
-      if (el('bgftPackageUrl').value.trim() && el('bgftPkgFile').files.length) {
-        el('bgftPkgFile').value = ''; el('selectedPkgName').textContent = '';
-      }
-      updatePackageButton();
-    });
-    el('bgftPkgFile').addEventListener('change', () => selectPkg(el('bgftPkgFile').files[0]));
-    const drop = el('pkgDropTarget');
-    drop.addEventListener('dragover', event => { event.preventDefault(); drop.classList.add('dragover'); });
-    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
-    drop.addEventListener('drop', event => {
-      event.preventDefault(); drop.classList.remove('dragover');
-      const file = event.dataTransfer.files[0];
-      if (!file) return;
-      try {
-        const transfer = new DataTransfer(); transfer.items.add(file); el('bgftPkgFile').files = transfer.files;
-        selectPkg(file);
-      } catch (_) { setStatus(el('bgftUrlStatus'), 'This browser could not accept the dropped file. Use the file picker instead.', 'error'); }
-    });
     el('pairingCode').addEventListener('keydown', event => { if (event.key === 'Enter') pairBrowser(); });
     el('addCatalogueForm').addEventListener('submit', validateAndAdd);
     el('syncButton').addEventListener('click', () => { syncBlocked = false; lastSyncError = ''; syncPending(); });
     el('refreshAllButton').addEventListener('click', () => refreshCatalogues());
     ipInput.addEventListener('keydown', event => { if (event.key === 'Enter') connectToPs4(); });
-    updatePackageButton();
     if (savedIp && validPrivateIp(savedIp)) connectToPs4(savedIp);
     else {
       setConnection('No PS4 address saved', 'Enter the console IP here if you downloaded the PKG to USB.', false);
     }
-    el('packageToggle').addEventListener('click', () => {
-      const panel = el('bgftUrlForm');
-      const expanded = panel.hidden;
-      panel.hidden = !expanded;
-      el('packageToggle').setAttribute('aria-expanded', String(expanded));
-      el('packageToggle').querySelector('.package-toggle-icon').textContent = expanded ? '−' : '+';
-    });
+
   }
 
   initialize();

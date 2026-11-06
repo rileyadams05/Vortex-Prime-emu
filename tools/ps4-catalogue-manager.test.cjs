@@ -8,13 +8,14 @@ const state = require('../docs/assets/js/ps4-catalogue-state.js');
 const { createClient } = require('../docs/assets/js/ps4-catalogue-api.js');
 
 const managerHtml = fs.readFileSync(path.join(__dirname, '../docs/ps4/catalogues/index.html'), 'utf8');
+const senderHtml = fs.readFileSync(path.join(__dirname, '../docs/ps4/send/index.html'), 'utf8');
 assert.match(managerHtml, /class="catalogue-entry"/);
 assert.doesNotMatch(managerHtml, /id="catalogueCategory"|id="catalogueAdapter"|>Category</);
-assert.doesNotMatch(managerHtml, /Connect your PS4|Search for PS4|bgftUploadForm|Send URL to PS4/);
-assert.match(managerHtml, /id="pkgDropTarget"/);
-assert.match(managerHtml, />Send</);
-assert.match(managerHtml, /id="packageToggle"[^>]*aria-expanded="false"/);
-assert.match(managerHtml, /id="bgftUrlForm"[^>]*hidden/);
+assert.doesNotMatch(managerHtml, /Send a package to PS4|id="pkgDropTarget"|packageToggle/);
+assert.match(managerHtml, /href="\/ps4\/send\/"/);
+assert.match(senderHtml, /id="pkgDropTarget"/);
+assert.match(senderHtml, /id="sendButton"[^>]*>Send</);
+assert.match(senderHtml, /id="sendPackageForm"/);
 
 function expectError(callback, pattern) {
   assert.throws(callback, pattern);
