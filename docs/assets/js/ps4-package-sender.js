@@ -17,6 +17,7 @@
   let bridgeReady = false;
   let pairingToken = '';
   let challengeId = '';
+  let sending = false;
 
   function setStatus(node, message, kind) {
     node.textContent = message || '';
@@ -29,7 +30,6 @@
     el('connectionDetail').textContent = detail;
     el('connectionDot').classList.toggle('online', Boolean(online));
     el('connectionDot').classList.toggle('pending', Boolean(pending));
-    updateSendButton();
   }
 
   function validPrivateIp(value) {
@@ -112,7 +112,6 @@
       setConnection('PS4 receiver unavailable', `${ip} · check the IP and receiver`, false, false);
       setStatus(el('connectionStatus'), 'Could not find Remote Package Installer or the paired BGFT bridge at this address.', 'error');
     }
-    updateSendButton();
   }
 
   async function startPairing() {
@@ -138,14 +137,7 @@
       setStatus(el('connectionStatus'), 'This browser is paired with the PS4 BGFT bridge.', 'success');
       setStatus(el('pairStatus'), '', '');
     } catch (error) { setStatus(el('pairStatus'), error.message, 'error'); }
-    finally { el('pairButton').disabled = false; updateSendButton(); }
-  }
-
-  function updateSendButton() {
-    const fileSelected = el('pkgFile').files.length > 0;
-    el('sendButton').disabled = bgftMode
-      ? !(bridgeReady && pairingToken)
-      : fileSelected ? !(rpiReady || bridgeReady) : !(rpiReady || bridgeReady && pairingToken);
+    finally { el('pairButton').disabled = false; }
   }
 
   function renderTask(name, id, status, detail) {
@@ -181,17 +173,18 @@
     if (!file) return;
     if (!file.name.toLowerCase().endsWith('.pkg')) {
       el('pkgFile').value = ''; el('packageUrl').value = '';
-      setStatus(el('sendStatus'), 'Choose a file ending in .pkg.', 'error'); updateSendButton(); return;
+      setStatus(el('sendStatus'), 'Choose a file ending in .pkg.', 'error'); return;
     }
     el('packageUrl').value = file.name;
     setStatus(el('sendStatus'), '', '');
-    updateSendButton();
+    el('packageUrl').focus();
   }
 
   async function sendPackage(event) {
     event.preventDefault();
+    if (sending) return;
+    sending = true;
     const file = el('pkgFile').files[0];
-    const button = el('sendButton');
     try {
       if (!activeIp) throw new Error('Use the saved console address or enter the PS4 IP first.');
       const url = file ? '' : validatePackageUrl(el('packageUrl').value);
@@ -207,7 +200,6 @@
         throw new Error('No compatible PS4 installation receiver is connected.');
       }
       if (!window.confirm('Important: Completely close the application on your PS4 before continuing. Make sure no downloads are active. Continue with this installation?')) return;
-      button.disabled = true;
       if (file) {
         el('uploadProgress').hidden = false; el('uploadProgress').value = 0;
         setStatus(el('sendStatus'), `Sending ${file.name} directly to the PS4…`, 'pending');
@@ -238,7 +230,7 @@
         watchTask({ receiver: 'bgft', id: result.task_id, name: 'Direct PKG URL' });
       }
     } catch (error) { setStatus(el('sendStatus'), error.message, 'error'); }
-    finally { updateSendButton(); }
+    finally { sending = false; }
   }
 
   function initialize() {
@@ -250,7 +242,6 @@
     if (bgftMode) {
       el('pageTitle').textContent = 'Send FPKG via BGFT';
       el('pageLead').textContent = 'Connect to the paired PS4 BGFT service and send a direct package URL or local FPKG.';
-      el('sendButton').textContent = 'Send FPKG';
       el('sendHeading').textContent = 'BGFT service connection';
       el('pageNote').textContent = 'BGFT mode sends only through the paired PS4 BGFT service. If that service is unavailable, the request stops; it never falls back to Remote Package Installer or a Vortex server.';
     }
@@ -260,7 +251,12 @@
     el('sendPackageForm').addEventListener('submit', sendPackage);
     el('packageUrl').addEventListener('input', () => {
       if (el('pkgFile').files.length) el('pkgFile').value = '';
-      updateSendButton();
+    });
+    el('packageUrl').addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        el('sendPackageForm').requestSubmit();
+      }
     });
     el('pkgFile').addEventListener('change', () => selectFile(el('pkgFile').files[0]));
     el('choosePkgButton').addEventListener('click', () => el('pkgFile').click());
@@ -280,9 +276,8 @@
       const file = event.dataTransfer.files[0];
       if (!file) return;
       try { const transfer = new DataTransfer(); transfer.items.add(file); el('pkgFile').files = transfer.files; selectFile(file); }
-      catch (_) { setStatus(el('sendStatus'), 'This browser could not accept the dropped file. Choose it with Browse instead.', 'error'); }
+      catch (_) { setStatus(el('sendStatus'), 'This browser could not accept the dropped file. Try selecting the PKG again.', 'error'); }
     });
-    updateSendButton();
     if (hasSavedIp) {
       setConnection('Connecting to saved PS4…', `Checking ${savedIp}`, false, true);
       connect(savedIp);

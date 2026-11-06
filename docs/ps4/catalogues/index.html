@@ -77,6 +77,11 @@
     .schema-help code { color:#bbd9ff; }
     .catalogue-entry { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; align-items:end; }
     .catalogue-entry .field { min-width:0; margin:0; }
+    .input-wrap { position:relative; }
+    .input-wrap > input { padding-right:54px; }
+    .mobile-upload { display:none; position:absolute; top:50%; right:7px; transform:translateY(-50%); width:36px; height:36px; place-items:center; padding:0; border:1px solid #31577f; border-radius:9px; background:#0a203c; color:#fff; font-family:inherit; font-size:23px; font-weight:700; line-height:1; cursor:pointer; }
+    @media (hover:none) and (pointer:coarse) { .mobile-upload { display:grid; } }
+    body.catalogue-drag-active { outline:2px dashed #4389ce; outline-offset:-12px; }
     .console-bar { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr); gap:12px; align-items:end; padding:0 24px 18px; }
     .console-bar .field { margin:0; }
     .console-state { display:flex; align-items:center; gap:10px; min-height:46px; }
@@ -85,7 +90,7 @@
     progress { width:100%; height:10px; accent-color:#438cf1; }
     .footer-note { margin:18px 0 0; color:#7187a4; font-size:11px; }
     :focus-visible { outline:3px solid #83c5ff; outline-offset:3px; }
-    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .grid,.send-fields,.catalogue-entry { grid-template-columns:1fr; } .console-bar { grid-template-columns:1fr; padding:0 18px 18px; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
+    @media(max-width:760px) { .topbar { align-items:flex-start; flex-direction:column; gap:8px; } main { margin-top:34px; } .grid,.catalogue-entry { grid-template-columns:1fr; } .console-bar { grid-template-columns:1fr; padding:0 18px 18px; } .card-head { padding:19px 18px 0; } .card-body { padding:18px; } }
     @media(max-width:420px) { nav a { padding:8px 9px; font-size:12px; } .source-top { flex-direction:column; } .source-status { align-self:flex-start; } .source-meta { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -123,7 +128,7 @@
           <p class="footer-note" style="margin-top:0">The console address saved by Install on PS4 is reused automatically. <a href="/project-notes/PS4_CATALOGUE_API.md">Catalogue and BGFT service details</a>.</p>
           <form id="addCatalogueForm" novalidate>
             <div class="catalogue-entry">
-              <div class="field"><label for="catalogueUrl">Catalogue URL</label><input id="catalogueUrl" type="url" autocomplete="url" placeholder="https://example.org/catalogue.json" required></div>
+              <div class="field"><label for="catalogueUrl">Catalogue URL or JSON file</label><div class="input-wrap"><input id="catalogueUrl" type="text" autocomplete="url" enterkeyhint="go" placeholder="https://example.org/catalogue.json" required><button class="mobile-upload" id="uploadCatalogueButton" type="button" aria-label="Upload catalogue JSON" title="Upload catalogue JSON">+</button><input id="catalogueFile" type="file" accept=".json,application/json" hidden></div></div>
             </div>
             <p class="status" id="validationStatus" role="status" aria-live="polite"></p>
             <p class="schema-help">Vortex JSON catalogues require <code>schema</code>, <code>name</code> and <code>items</code>. Each item needs a stable <code>id</code>, <code>name</code> and direct <code>pkg_url</code>.</p>

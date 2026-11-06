@@ -70,7 +70,8 @@ Returns the opaque revision and the existing source objects. Preserve server-own
 {
   "revision": "opaque-revision",
   "sources": [
-    { "id": "stable-source-id", "url": "https://example.org/catalogue.json", "name": "Homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" }
+    { "id": "stable-source-id", "source_type": "url", "url": "https://example.org/catalogue.json", "name": "Homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" },
+    { "id": "uploaded-source-id", "source_type": "uploaded_json", "file_name": "homebrew.json", "name": "Homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" }
   ]
 }
 ```
@@ -84,7 +85,8 @@ Headers: `Authorization: Bearer ...`, `If-Match: <revision>`, `Idempotency-Key: 
   "batch_id": "opaque-batch-id",
   "base_revision": "opaque-revision",
   "operations": [
-    { "operation_id": "op-1", "op": "add", "source_id": "stable-source-id", "source": { "id": "stable-source-id", "url": "https://example.org/catalogue.json", "name": "Homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" } },
+    { "operation_id": "op-1", "op": "add", "source_id": "stable-source-id", "source": { "id": "stable-source-id", "source_type": "url", "url": "https://example.org/catalogue.json", "name": "Homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" } },
+    { "operation_id": "op-upload", "op": "add", "source_id": "uploaded-source-id", "source": { "id": "uploaded-source-id", "source_type": "uploaded_json", "file_name": "homebrew.json", "document": { "schema": "vortex-prime.ps4-catalogue/v1", "name": "Homebrew", "items": [] }, "name": "Homebrew", "enabled": true, "schema": "vortex-prime.ps4-catalogue/v1", "adapter_id": "vortex-v1" } },
     { "operation_id": "op-2", "op": "set-enabled", "source_id": "existing-source-id", "enabled": false },
     { "operation_id": "op-4", "op": "remove", "source_id": "another-source-id" }
   ]
@@ -97,7 +99,7 @@ Successful response **must confirm persistence**, not merely queue receipt:
 { "revision": "new-opaque-revision", "applied_operation_ids": ["op-1", "op-2", "op-3", "op-4"], "sources": [] }
 ```
 
-The service must apply add, enable/disable, and remove operations against individual source IDs and preserve unrelated sources/preferences and any legacy category metadata. It must treat `batch_id` and each `operation_id` idempotently and reject duplicate normalized source URLs. If `base_revision` does not match current storage, return HTTP `409` with `{ "code": "revision_conflict", "revision": "current-revision" }` and make no changes. Do not silently replace the whole configuration. Reject unknown source IDs, invalid source URLs, unsupported schemas, or malformed operations with a 4xx response.
+The service must apply add, enable/disable, and remove operations against individual source IDs and preserve unrelated sources/preferences and any legacy category metadata. URL sources use `source_type: "url"` and a valid `url`. Uploaded JSON sources use `source_type: "uploaded_json"`, include the validated `document` in the operation, and must be persisted on the PS4 before the operation is acknowledged; retain safe metadata such as `file_name` in the returned source snapshot if the console stores the document separately. The PS4 must validate uploaded documents again and must not advertise them as synced before durable storage succeeds. It must treat `batch_id` and each `operation_id` idempotently and reject duplicate normalized source URLs or duplicate uploaded documents. If `base_revision` does not match current storage, return HTTP `409` with `{ "code": "revision_conflict", "revision": "current-revision" }` and make no changes. Do not silently replace the whole configuration. Reject unknown source IDs, invalid source URLs, unsupported schemas, or malformed operations with a 4xx response.
 
 ### `POST /catalogues/refresh` — paired bearer required
 

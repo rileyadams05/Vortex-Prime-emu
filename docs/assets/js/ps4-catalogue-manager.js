@@ -35,6 +35,7 @@
   let lastSyncError = '';
   let syncTimer = 0;
   let validatingCatalogue = false;
+  let pendingCatalogueFile = null;
 
   function readStore() {
     const data = catalogueState.read(localStorage, STORE_KEY);
@@ -97,8 +98,13 @@
       const top = document.createElement('div'); top.className = 'source-top';
       const title = document.createElement('div'); title.className = 'source-title';
       const heading = document.createElement('h3'); heading.textContent = source.name || 'Untitled catalogue';
-      const url = document.createElement('a'); url.className = 'source-url'; url.textContent = source.url; url.href = source.url; url.target = '_blank'; url.rel = 'noopener noreferrer';
-      title.append(heading, url);
+      if (source.source_type === 'uploaded_json') {
+        const fileLabel = document.createElement('span'); fileLabel.className = 'source-url'; fileLabel.textContent = `Uploaded JSON · ${source.file_name || 'catalogue.json'}`;
+        title.append(heading, fileLabel);
+      } else {
+        const url = document.createElement('a'); url.className = 'source-url'; url.textContent = source.url; url.href = source.url; url.target = '_blank'; url.rel = 'noopener noreferrer';
+        title.append(heading, url);
+      }
       const badge = document.createElement('span'); badge.className = `source-status${pendingFor(source.id) ? '' : ' synced'}${source.enabled === false ? ' off' : ''}`;
       badge.textContent = source.enabled === false ? 'Disabled' : pendingFor(source.id) ? 'Pending sync' : remoteIds.has(source.id) ? 'Synced' : 'Browser only';
       top.append(title, badge);
@@ -257,12 +263,28 @@
     if (validatingCatalogue) return;
     const adapterId = 'vortex-v1';
     if (!validation.adapters[adapterId]) { setStatus(validateStatus, 'The Vortex JSON catalogue format is not supported by this page.', 'error'); return; }
-    let url;
-    try { url = parseCatalogueUrl(el('catalogueUrl').value); }
-    catch (error) { setStatus(validateStatus, error.message, 'error'); return; }
-    if (validation.isDuplicateUrl(sources, url)) { setStatus(validateStatus, 'That catalogue URL is already configured.', 'error'); return; }
-    validatingCatalogue = true; setStatus(validateStatus, 'Fetching and validating the catalogue JSON…');
+    validatingCatalogue = true; setStatus(validateStatus, pendingCatalogueFile ? 'Validating uploaded catalogue JSON…' : 'Fetching and validating the catalogue JSON…');
     try {
+      if (pendingCatalogueFile) {
+        const file = pendingCatalogueFile;
+        if (file.size > 1024 * 1024) throw new Error('Catalogue JSON files must be no larger than 1 MB.');
+        const data = JSON.parse(await file.text());
+        const details = validation.validateCatalogueDocument(data, adapterId);
+        const serialized = JSON.stringify(data);
+        if (sources.some(source => source.source_type === 'uploaded_json' && JSON.stringify(source.document) === serialized)) {
+          throw new Error('That catalogue JSON is already configured.');
+        }
+        const source = { id: newId(), source_type: 'uploaded_json', file_name: file.name, document: data, name: details.name, enabled: true, schema: details.schema, adapter_id: details.adapter_id, item_count: details.count, added_at: new Date().toISOString() };
+        sources.push(source); enqueue({ op: 'add', source });
+        pendingCatalogueFile = null; el('catalogueFile').value = ''; el('catalogueUrl').value = '';
+        persistAndRender(`Validated ${details.count} item${details.count === 1 ? '' : 's'} from “${details.name}”. The JSON is saved in this browser and queued for PS4 sync.`);
+        setStatus(validateStatus, 'Catalogue JSON validated and queued.', 'success');
+        return;
+      }
+      let url;
+      try { url = parseCatalogueUrl(el('catalogueUrl').value); }
+      catch (error) { setStatus(validateStatus, error.message, 'error'); return; }
+        if (validation.isDuplicateUrl(sources, url)) { setStatus(validateStatus, 'That catalogue URL is already configured.', 'error'); return; }
       const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 12000);
       let response;
       try { response = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'no-store', signal: controller.signal, headers: { Accept: 'application/json' } }); }
@@ -270,14 +292,14 @@
       if (!response.ok) throw new Error(`Catalogue server returned HTTP ${response.status}.`);
       const data = await response.json();
       const details = validation.validateCatalogueDocument(data, adapterId);
-      const source = { id: newId(), url, name: details.name, enabled: true, schema: details.schema, adapter_id: details.adapter_id, item_count: details.count, added_at: new Date().toISOString() };
+      const source = { id: newId(), source_type: 'url', url, name: details.name, enabled: true, schema: details.schema, adapter_id: details.adapter_id, item_count: details.count, added_at: new Date().toISOString() };
       sources.push(source); enqueue({ op: 'add', source });
       el('catalogueUrl').value = '';
       persistAndRender(`Validated ${details.count} item${details.count === 1 ? '' : 's'} from “${details.name}”. The source is saved in this browser and queued for PS4 sync.`);
       setStatus(validateStatus, 'Catalogue validated and added.', 'success');
     } catch (error) {
-      const message = error.name === 'AbortError' ? 'The catalogue request timed out.' : error instanceof SyntaxError ? 'The URL did not return valid JSON.' : error.message;
-      setStatus(validateStatus, `${message}${error instanceof TypeError ? ' The catalogue host must allow browser CORS requests.' : ''}`, 'error');
+      const message = error.name === 'AbortError' ? 'The catalogue request timed out.' : error instanceof SyntaxError ? (pendingCatalogueFile ? 'The selected file is not valid JSON.' : 'The URL did not return valid JSON.') : error.message;
+      setStatus(validateStatus, `${message}${error instanceof TypeError && !pendingCatalogueFile ? ' The catalogue host must allow browser CORS requests.' : ''}`, 'error');
     } finally { validatingCatalogue = false; }
   }
 
@@ -358,6 +380,43 @@
         event.preventDefault();
         el('addCatalogueForm').requestSubmit();
       }
+    });
+    el('catalogueUrl').addEventListener('input', () => {
+      if (pendingCatalogueFile) {
+        pendingCatalogueFile = null;
+        el('catalogueFile').value = '';
+      }
+    });
+    el('uploadCatalogueButton').addEventListener('click', () => el('catalogueFile').click());
+    el('catalogueFile').addEventListener('change', () => {
+      const file = el('catalogueFile').files[0];
+      if (!file) return;
+      pendingCatalogueFile = file;
+      el('catalogueUrl').value = file.name;
+      el('catalogueFile').value = '';
+      el('catalogueUrl').focus();
+      setStatus(validateStatus, 'Catalogue JSON selected.', 'pending');
+    });
+    const hasFiles = event => event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files');
+    window.addEventListener('dragenter', event => {
+      if (hasFiles(event)) { event.preventDefault(); document.body.classList.add('catalogue-drag-active'); }
+    });
+    window.addEventListener('dragover', event => {
+      if (hasFiles(event)) { event.preventDefault(); document.body.classList.add('catalogue-drag-active'); }
+    });
+    window.addEventListener('dragleave', event => {
+      if (event.relatedTarget === null) document.body.classList.remove('catalogue-drag-active');
+    });
+    window.addEventListener('drop', event => {
+      if (!hasFiles(event)) return;
+      event.preventDefault(); document.body.classList.remove('catalogue-drag-active');
+      const file = event.dataTransfer.files[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.json')) { setStatus(validateStatus, 'Choose a catalogue file ending in .json.', 'error'); return; }
+      pendingCatalogueFile = file;
+      el('catalogueUrl').value = file.name;
+      el('catalogueUrl').focus();
+      setStatus(validateStatus, 'Catalogue JSON selected.', 'pending');
     });
     el('syncButton').addEventListener('click', () => { syncBlocked = false; lastSyncError = ''; syncPending(); });
     el('refreshAllButton').addEventListener('click', () => refreshCatalogues());
