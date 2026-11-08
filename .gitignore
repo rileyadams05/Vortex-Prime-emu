@@ -49,6 +49,7 @@ desktop/src-tauri/target/
 release-builds/
 .npm-cache/
 For Vortex-Prime-emu/
+docs/bgft/
 store test/
 companion-server/.env
 companion-server/data/

@@ -8,6 +8,8 @@ on:
       - "tools/**"
       - "package.json"
       - ".github/workflows/pages.yml"
+  schedule:
+    - cron: "17 */6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +30,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Checkout BGFT web app
+        uses: actions/checkout@v6
+        with:
+          repository: rileyadams05/BGFT
+          ref: main
+          path: .bgft-source
+          persist-credentials: false
+
+      - name: Prepare BGFT site files
+        run: |
+          rm -rf docs/bgft
+          mkdir -p docs/bgft
+          cp -R .bgft-source/web/. docs/bgft/
 
       - name: Run regression tests
         run: npm test
