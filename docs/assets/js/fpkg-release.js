@@ -157,9 +157,10 @@ function initializeDialog() {
         document.getElementById('fpkgReleaseContent').hidden = false;
 
         if (cardVersion) {
-            cardVersion.textContent = freshness.cached ? `${version} (cached)` : version;
+            cardVersion.textContent = version;
         }
-        setStatus(freshness.message, freshness.cached ? 'cached' : 'success', freshness.retry);
+        if (freshness.retry) setStatus(freshness.message, 'error', true);
+        else setStatus('', '', false);
     }
 
     async function fetchLatest(force = false) {
@@ -170,7 +171,7 @@ function initializeDialog() {
             renderRelease(cached.release, {
                 cached: true,
                 retry: false,
-                message: `Cached release information · checked ${formatReleaseDate(cached.checkedAt)}. Open again later to refresh.`
+                message: ''
             });
             return;
         }
@@ -179,7 +180,7 @@ function initializeDialog() {
             renderRelease(cached.release, {
                 cached: true,
                 retry: false,
-                message: `Cached release information from ${formatReleaseDate(cached.checkedAt)} · checking GitHub for an update…`
+                message: ''
             });
         } else {
             content.hidden = true;
@@ -204,7 +205,7 @@ function initializeDialog() {
                     renderRelease(updated.release, {
                         cached: false,
                         retry: false,
-                        message: 'Latest release verified with GitHub just now.'
+                        message: ''
                     });
                     return;
                 }
@@ -223,7 +224,7 @@ function initializeDialog() {
                 renderRelease(release, {
                     cached: false,
                     retry: false,
-                    message: 'Latest release loaded from GitHub.'
+                    message: ''
                 });
             } catch (error) {
                 const message = error?.name === 'AbortError'
@@ -235,7 +236,7 @@ function initializeDialog() {
                     renderRelease(cached.release, {
                         cached: true,
                         retry: true,
-                        message: `${message} Showing cached release information from ${formatReleaseDate(cached.checkedAt)}; it may not be current.`
+                        message: `${message} Showing saved release information, which may be out of date.`
                     });
                 } else {
                     content.hidden = true;
