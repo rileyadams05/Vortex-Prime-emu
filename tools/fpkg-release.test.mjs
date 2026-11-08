@@ -6,6 +6,10 @@ const source = await readFile(new URL('../docs/assets/js/fpkg-release.js', impor
 const releaseModule = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 const { formatAssetSize, getReleaseVersion, selectInstallerAssets } = releaseModule;
 
+assert.doesNotMatch(source, /Cached release information · checked/);
+assert.doesNotMatch(source, /\$\{version\} \(cached\)/);
+assert.match(source, /else setStatus\('', '', false\)/);
+
 
 test('GitHub assets bypass the generic outbound interstitial', () => {
     assert.match(source, /link\.dataset\.noGate = 'true'/);
