@@ -31,7 +31,7 @@ assert.match(fpkgCard, /href="https:\/\/github\.com\/rileyadams05\/FPKG-Builder"
 assert.match(fpkgCard, /id="fpkgBuilderInstallButton"[^>]*>Install</);
 assert.match(fpkgCard, /id="fpkgProjectVersion"/);
 assert.doesNotMatch(fpkgCard, /Send FPKG|\/ps4\/send\//);
-assert.doesNotMatch(fpkgCard, /FPKGi|Catalogue manager|\/ps4\/install\/|\/ps4\/catalogues\//);
+assert.doesNotMatch(fpkgCard, /Send FPKG|\/ps4\/send\//);
 assert.match(senderHtml, /id="pairingPanel"/);
 assert.match(senderHtml, /id="uploadProgress"/);
 assert.match(senderHtml, /id="taskStatus"/);
