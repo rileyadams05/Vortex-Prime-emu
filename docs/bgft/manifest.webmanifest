@@ -1,0 +1,19 @@
+{
+  "name": "BGFT · PS4 Package Installation",
+  "short_name": "BGFT",
+  "description": "Send your own PS4 PKG and fPKG packages to a paired BGFT service.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#030d20",
+  "background_color": "#030d20",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
