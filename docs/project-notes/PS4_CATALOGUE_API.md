@@ -6,7 +6,7 @@ This is the frontend/API contract for the account-free catalogue manager at `/ps
 
 - Listen on the console's private LAN interface at TCP port `12801`. Do not bind or forward this configuration API to a public interface or router WAN port.
 - The only mutating origin allowed by CORS is `https://vortex-prime-emu.com`. Do not use `Access-Control-Allow-Origin: *`.
-- Handle CORS `OPTIONS` preflight for `GET`, `POST`, and the `Authorization`, `Content-Type`, `If-Match`, and `Idempotency-Key` headers. Support the browser's Private Network Access preflight (`Access-Control-Request-Private-Network`) where the browser requires it; reply with `Access-Control-Allow-Private-Network: true` only for the configured website origin.
+- Handle standard CORS `OPTIONS` preflight for `GET`, `POST`, and the `Authorization`, `Content-Type`, `If-Match`, and `Idempotency-Key` headers. Allow only the configured website origin. Chromium's newer Local Network Access permission is granted by the browser to the user-initiated request; it is not a server-side CORS header or a reason to add deprecated Private Network Access preflight handling. Keep any legacy PNA response only if a specifically supported older browser requires it.
 - Require a paired bearer token for every catalogue read or write, including refresh requests. The unauthenticated `/status` endpoint is read-only and returns no pairing secret or catalogue contents.
 - Pairing code: one-time, console-displayed, single-use, expires within two minutes, rate-limited, and accepted only after a user confirms pairing on the PS4. Return a short-lived token scoped to `catalogues:read` and `catalogues:write`; revoke it from the console's local settings. Do not log pairing codes or tokens.
 - Validate every URL and operation again on the PS4. Never fetch arbitrary URLs from the API server unless that is the console application's supported catalogue refresh behavior.
@@ -115,7 +115,7 @@ The manager reuses the PS4 IP stored by the Install on PS4 page (`vortexPrime.co
 
 When no address is saved from the installer (for example, the user chose a USB download), the Catalogue sources card has a manual private-IP fallback. The page does not attempt broad LAN subnet scans.
 
-The bridge must use the same versioned base URL and pairing token, require the `packages:install` scope for every route below, validate package URLs and metadata on-console, and bind to the console's private LAN only. Honor the website-origin CORS/PNA rules above. Never accept WAN/public exposure or unauthenticated installation requests. The bridge must route tasks through the console's supported BGFT/AppInstUtil flow and report its real state. The flatz Remote Package Installer on port 12800 remains a different service/protocol.
+The bridge must use the same versioned base URL and pairing token, require the `packages:install` scope for every route below, validate package URLs and metadata on-console, and bind to the console's private LAN only. Honor the exact website-origin CORS rules above and require the browser's applicable local-network permission. Never accept WAN/public exposure or unauthenticated installation requests. The bridge must route tasks through the console's supported BGFT/AppInstUtil flow and report its real state. The flatz Remote Package Installer on port 12800 remains a different service/protocol.
 
 ### `POST /bgft/tasks` — direct URL, paired `packages:install` scope
 
