@@ -88,61 +88,22 @@ assert.equal('downloadUrl' in normalized, false);
 const publishHtml = await readFile(join(root, 'docs', 'modx', 'index.html'), 'utf8');
 const uploadsHtml = await readFile(join(root, 'docs', 'modx', 'my-uploads.html'), 'utf8');
 const homepageHtml = await readFile(join(root, 'docs', 'index.html'), 'utf8');
-for (const removed of [
-  'Where is this table supported?',
-  'Do you plan to support more services later?',
-  'WIN/Service name',
-  'futureServiceSupport',
-  'serviceScope',
-  "form.set('file'",
-  'Upload the cheat table',
-]) {
-  assert.equal(publishHtml.includes(removed), false, `publish page still contains: ${removed}`);
-}
-assert.equal(publishHtml.includes('type="file" accept=".exe'), true);
-assert.equal(publishHtml.includes('name="githubUrl"'), true);
-assert.equal(publishHtml.includes('GitHub release URL'), true);
-assert.equal(publishHtml.includes('https://github.com/username/repository/releases/tag/v1.0.0'), true);
-assert.equal(publishHtml.includes('Repository-only URLs are not accepted.'), true);
-assert.equal(publishHtml.includes('finished .modxtrainer build'), true, 'finished trainer workflow is not explained');
-assert.equal(publishHtml.includes('data.trainerAssets'), true, 'release resolver does not consume finished trainer assets');
-assert.equal(publishHtml.includes('data.ctAssets'), false, 'raw CT assets remain in the publishing workflow');
-assert.equal(publishHtml.includes('Vortex Prime and Mod X store the link and metadata only.'), true, 'non-hosting responsibility is unclear');
-assert.equal(publishHtml.includes('name="version"'), false, 'manual version field must not exist');
-assert.equal(publishHtml.includes("body:JSON.stringify"), true);
-assert.equal(publishHtml.includes('id="sourceStep" aria-labelledby="sourceStepTitle" aria-disabled="true"'), true, 'Step 2 must start locked');
-assert.equal(publishHtml.includes('id="sourceFields" disabled'), true, 'Step 2 controls must start disabled');
-assert.equal(publishHtml.includes('id="maintenanceFields" disabled'), true, 'Step 3 controls must start disabled');
-assert.equal(publishHtml.includes('id="offlineOnlyConfirmed" type="checkbox" required disabled'), true, 'offline confirmation must start disabled');
-assert.equal(publishHtml.includes("step1Status:'pending',step2Status:'locked',step3Status:'locked'"), true, 'explicit sequential workflow state is missing');
-assert.equal(publishHtml.includes("workflow.step2Status==='complete'"), true, 'Step 2 completion must gate later steps');
-assert.equal(publishHtml.includes("workflow.step3Status==='complete'"), true, 'Step 3 completion must gate confirmation');
-assert.equal(publishHtml.includes("clearReleaseVerification();workflow.step2Status='pending'"), true, 'changing the Release URL must invalidate downstream state');
-assert.equal(publishHtml.includes('Each step unlocks only after the previous step is complete.'), true, 'publishing explanation must describe sequential unlocking');
-assert.equal(publishHtml.includes('Submission Verification'), true, 'submission verification step is missing');
-assert.equal(publishHtml.includes('id="verificationStep"'), true, 'Step 4 is missing');
-assert.equal(publishHtml.includes('id="offlineOnlyConfirmed" type="checkbox" required disabled'), true, 'Step 5 must start locked');
-assert.equal(publishHtml.includes("step4Status:'locked'"), true, 'Step 4 explicit state is missing');
-assert.equal(publishHtml.includes("api('/api/modx/reviews'"), true, 'review job creation is missing');
-assert.equal(publishHtml.includes("workflow.step4Status!=='pass'"), true, 'publish must require a PASS review');
-assert.equal(publishHtml.includes('reviewId:verifiedReview.id'), true, 'publish request must carry its review id');
-await assert.rejects(readFile(join(root, 'docs', 'modx', 'community.html'), 'utf8'), { code: 'ENOENT' });
+assert.match(publishHtml, /<h1>ModX Cheat Tables<\/h1>/);
+assert.match(publishHtml, /The submission form is not open yet/);
+assert.match(publishHtml, /submission flow is being rebuilt/i);
+assert.match(publishHtml, /href="https:\/\/github\.com\/rileyadams05\/ModX"/);
+assert.doesNotMatch(publishHtml, /<form\b|type="file"|name="githubUrl"|id="sourceStep"/i, 'the unfinished publish workflow must not expose inactive form controls');
+assert.match(uploadsHtml, /<h1>ModX submissions are being prepared<\/h1>/);
+assert.match(uploadsHtml, /old account uploads view is retired/i);
+assert.match(uploadsHtml, /href="\/modx\/"/);
+assert.doesNotMatch(uploadsHtml, /<form\b|\/api\/modx\/my-tables/i, 'retired uploads view must not expose inactive controls');
 for (const html of [publishHtml, homepageHtml, uploadsHtml]) {
   assert.equal(html.includes('community.html'), false, 'public community catalogue link remains');
   assert.equal(html.includes('View Community Tables'), false, 'public community catalogue label remains');
   assert.equal(html.includes('Manage my listings'), false, 'website listing-management label remains');
 }
-assert.equal(homepageHtml.includes('/modx/my-uploads.html'), true, 'account menu ModX update link is missing');
-assert.equal(homepageHtml.includes('Update my tables'), true, 'account menu update label is missing');
-assert.equal(homepageHtml.includes('id="accountModxToggle"'), true, 'account menu Mod X submenu toggle is missing');
-assert.equal(homepageHtml.includes('id="accountModxMenu" role="menu" hidden'), true, 'account menu Mod X submenu must start collapsed');
-assert.equal(homepageHtml.includes('outline: none !important;'), true, 'account menu focus-ring override is missing');
-assert.equal(uploadsHtml.includes('/api/modx/my-tables'), true, 'creator listing endpoint is missing');
-assert.equal(uploadsHtml.includes("+'/refresh'"), true, 'manual release refresh action is missing');
-assert.equal(uploadsHtml.includes('Updates are automatic.'), true, 'automatic update explanation is missing');
-assert.equal(publishHtml.includes('href="https://github.com/rileyadams05/ModX"'), true);
-assert.equal(publishHtml.includes('View the ModX Repository →'), true);
-assert.equal(homepageHtml.includes('<span class="account-menu-label">ModX</span>'), false, 'static ModX account-menu label remains');
+assert.match(homepageHtml, /href="\/modx\/"[^>]*>ModX Cheat Tables<\/a>/);
+assert.doesNotMatch(homepageHtml, /\/modx\/my-uploads\.html|accountModxToggle|accountModxMenu/, 'retired uploads controls remain on the homepage');
 assert.equal(worker.includes("request.formData()\n  const file = form.get('file')"), false);
 assert.equal(worker.includes('ModX catalogue requests must use JSON; file uploads are not accepted.'), true);
 assert.equal(worker.includes('maintenance-submissions'), false, 'ModX maintenance proposal routes remain');

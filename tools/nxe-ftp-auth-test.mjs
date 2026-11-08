@@ -6,7 +6,7 @@ const worker = await readFile(new URL('../cloudflare/worker.js', import.meta.url
 const alias = await readFile(new URL('../docs/projects/nxe/ftp/index.html', import.meta.url), 'utf8');
 
 assert.match(site, /<div class="project-card" aria-label="NXE project">/);
-assert.match(site, /An Aurora-inspired Xbox dashboard for Xbox One/);
+assert.match(site, /An Aurora-inspired Xbox dashboard for Developer Mode/);
 assert.match(site, /https:\/\/github\.com\/rileyadams05\/NXE/);
 assert.match(site, /data-nxe-lightbox/);
 assert.doesNotMatch(site, /nxeFtp|nxe-ftp-manager|data-page="nxe-ftp"|\/api\/nxe\//);

@@ -1,0 +1,236 @@
+.fpkg-release-dialog {
+    width: min(640px, calc(100% - 2rem));
+    max-width: 640px;
+    max-height: min(88vh, 820px);
+    padding: 0;
+    overflow: auto;
+    color: var(--color-text);
+    background: transparent;
+    border: 0;
+    border-radius: 18px;
+}
+
+.fpkg-release-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(8px);
+}
+
+.fpkg-release-dialog__surface {
+    position: relative;
+    padding: clamp(1.25rem, 4vw, 2rem);
+    background: var(--color-bg-card, #18181b);
+    border: 1px solid var(--color-border, #3f3f46);
+    border-radius: 18px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+.fpkg-release-dialog__header {
+    padding-right: 2.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.fpkg-release-dialog__eyebrow {
+    color: var(--color-primary-light, #34d399);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.fpkg-release-dialog__header h2 {
+    margin: 0.25rem 0;
+    color: var(--color-text, #fafafa);
+    font-size: clamp(1.45rem, 4vw, 1.9rem);
+}
+
+.fpkg-release-dialog__header p,
+.fpkg-release-date,
+.fpkg-release-note,
+.fpkg-release-extra-details {
+    color: var(--color-text-secondary, #a1a1aa);
+    font-size: 0.9rem;
+}
+
+.fpkg-release-dialog__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 42px;
+    min-height: 42px;
+    border: 1px solid var(--color-border, #3f3f46);
+    border-radius: 10px;
+    color: var(--color-text-secondary, #a1a1aa);
+    background: var(--color-bg-elevated, #27272a);
+    font-size: 1.4rem;
+}
+
+.fpkg-release-status {
+    margin: 0.75rem 0 1rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 10px;
+    color: #c7d2fe;
+    background: rgba(99, 102, 241, 0.1);
+    font-size: 0.88rem;
+}
+
+.fpkg-release-status[data-kind="success"] {
+    color: #a7f3d0;
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.fpkg-release-status[data-kind="cached"] {
+    color: #fde68a;
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.fpkg-release-status[data-kind="error"] {
+    color: #fecaca;
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.fpkg-release-retry[hidden] {
+    display: none;
+}
+
+.fpkg-release-retry {
+    display: block;
+    margin: 0.5rem 0 0;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    font-weight: 600;
+}
+
+.fpkg-release-version-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin: 0.5rem 0 1rem;
+}
+
+.fpkg-release-version {
+    color: var(--color-text, #fafafa);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.fpkg-release-downloads {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.fpkg-download-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border, #3f3f46);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.fpkg-download-row__details {
+    display: grid;
+    min-width: 0;
+    gap: 0.25rem;
+}
+
+.fpkg-download-row__details strong {
+    color: var(--color-text, #fafafa);
+    font-size: 0.95rem;
+}
+
+.fpkg-download-row__details span {
+    overflow-wrap: anywhere;
+    color: var(--color-text-muted, #71717a);
+    font-size: 0.8rem;
+}
+
+.fpkg-download-button {
+    flex: 0 0 auto;
+    align-self: center;
+    text-decoration: none;
+}
+
+.fpkg-release-asset-warning {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    color: #fde68a;
+    background: rgba(245, 158, 11, 0.1);
+    font-size: 0.88rem;
+}
+
+.fpkg-release-notes,
+.fpkg-release-extra-details {
+    margin-top: 1rem;
+    border-top: 1px solid var(--color-border, #3f3f46);
+    padding-top: 0.75rem;
+}
+
+.fpkg-release-notes summary,
+.fpkg-release-extra-details summary {
+    min-height: 40px;
+    color: var(--color-text-secondary, #a1a1aa);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.fpkg-release-notes pre {
+    max-height: 240px;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--color-text-secondary, #a1a1aa);
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+.fpkg-release-extra-links {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.25rem 0 0.5rem;
+}
+
+.fpkg-release-extra-links a {
+    color: var(--color-primary-light, #34d399);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 520px) {
+    .fpkg-release-dialog {
+        width: calc(100% - 1rem);
+        max-height: 92vh;
+    }
+
+    .fpkg-release-dialog__surface {
+        padding: 1.1rem;
+    }
+
+    .fpkg-download-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .fpkg-download-button {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fpkg-release-dialog,
+    .fpkg-release-dialog * {
+        scroll-behavior: auto;
+    }
+}

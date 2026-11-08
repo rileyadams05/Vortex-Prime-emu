@@ -11,7 +11,7 @@ const commands = await readFile(new URL('../tools/register-streamz-discord-comma
 assert.doesNotMatch(site, /id="nav-streamz-plugin"|id="mobile-nav-streamz-plugin"|id="page-streamz-plugin"/);
 assert.doesNotMatch(site, /\/streamz-pro-plugin\//);
 assert.doesNotMatch(site, /Upgrade to Pro/);
-assert.match(site, /if \(document\.getElementById\('page-streamz-plugin'\)\) loadStreamzDashboardData\(\)/);
+assert.doesNotMatch(site, /loadStreamzDashboardData/, 'retired Streamz dashboard loader must not be referenced by the live site');
 assert.match(worker, /path === 'api\/streamz\/pro' \|\| \(path\.startsWith\('api\/streamz\/pro\/'\) && path !== 'api\/streamz\/pro\/webhook'\)/);
 assert.match(worker, /Streamz Pro has been retired/);
 assert.match(worker, /path === 'api\/streamz\/pro\/webhook'/, 'Stripe webhook is retained to process existing payment events');

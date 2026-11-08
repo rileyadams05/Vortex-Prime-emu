@@ -33,6 +33,7 @@
     <meta name="version" content="2026-06-14">
     
     <title>Vortex Prime EMU</title>
+    <link rel="stylesheet" href="/assets/css/fpkg-release.css">
     
     <style>
         :root {
@@ -3979,28 +3980,22 @@
                         </div>
                     </div>
 
-                    <div class="project-card" aria-label="FPKGi 2.0 beta project">
+                    <div class="project-card" aria-label="FPKG Builder project">
                         <div class="project-card-header">
-                            <button class="btn btn-secondary nxe-cover-button" type="button" data-nxe-lightbox="/assets/fpkgi-icon.png" data-lightbox-alt="FPKGi 2.0 beta icon">View cover photo</button>
                             <div class="project-title">
-                                <h2>FPKGi 2.0 beta</h2>
-                                <span class="project-status project-status-warning">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                        <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 14h-2v-2h2zm0-4h-2V7h2z" />
-                                    </svg>
-                                    Beta
-                                </span>
+                                <h2>FPKG Builder</h2>
+                                <span class="project-status">Linux Application</span>
                             </div>
                         </div>
-                        <p class="project-description">FPKGi 2.0 beta is a PlayStation 4 package installer project. Repository and release links will be added when they are available.</p>
-                        <div class="project-meta" aria-label="FPKGi 2.0 beta project details">
-                            <div class="project-meta-row"><span>Platforms</span><strong>PlayStation 4</strong></div>
+                        <p class="project-description">Build PS4 fPKGs directly on Linux using Itemzflow game dumps. Automatically handles base games and matching updates without needing a separate PC for packaging.</p>
+                        <div class="project-meta" aria-label="FPKG Builder project details">
+                            <div class="project-meta-row"><span>Platform</span><strong>PlayStation 4 Linux</strong></div>
+                            <div class="project-meta-row"><span>Current version</span><strong id="fpkgProjectVersion">Open Install to check</strong></div>
+                            <div class="project-meta-row"><span>Installers</span><strong>DEB · RPM</strong></div>
                         </div>
-                        <div class="project-links" aria-label="FPKGi 2.0 beta project actions">
-                            <button class="btn btn-secondary" type="button" disabled aria-disabled="true">Repository coming soon</button>
-                            <a class="btn btn-secondary" href="/ps4/install/" onclick="if (location.protocol === 'file:') this.href = new URL('ps4/install/index.html', location.href).href;">Install</a>
-                            <a class="btn btn-secondary" href="https://vortex-prime-emu.com/ps4/send/?receiver=bgft">Send FPKG</a>
-                            <a class="btn btn-secondary" href="https://vortex-prime-emu.com/ps4/catalogues/">Catalogue manager tool</a>
+                        <div class="project-links" aria-label="FPKG Builder project actions">
+                            <a class="btn btn-secondary" href="https://github.com/rileyadams05/FPKG-Builder" target="_blank" rel="noopener noreferrer">Repository</a>
+                            <button class="btn btn-secondary" id="fpkgBuilderInstallButton" type="button" aria-haspopup="dialog" aria-controls="fpkgReleaseDialog">Install</button>
                         </div>
                     </div>
                 </div>
@@ -5202,6 +5197,35 @@
         }());
         </script>
 
+        <dialog class="fpkg-release-dialog" id="fpkgReleaseDialog" aria-labelledby="fpkgReleaseHeading" aria-describedby="fpkgReleaseStatus">
+            <div class="fpkg-release-dialog__surface">
+                <button class="fpkg-release-dialog__close" type="button" data-fpkg-release-close aria-label="Close downloads">&times;</button>
+                <header class="fpkg-release-dialog__header">
+                    <span class="fpkg-release-dialog__eyebrow">Vortex Prime downloads</span>
+                    <h2 id="fpkgReleaseHeading">FPKG Builder</h2>
+                    <p>Latest published Linux installers from the official project release.</p>
+                </header>
+                <p class="fpkg-release-status" id="fpkgReleaseStatus" role="status" aria-live="polite">Release information will load when you open this panel.</p>
+                <button class="fpkg-release-retry" id="fpkgReleaseRetry" type="button" hidden>Retry</button>
+                <section id="fpkgReleaseContent" hidden>
+                    <div class="fpkg-release-version-row">
+                        <strong class="fpkg-release-version" id="fpkgReleaseVersion">Version</strong>
+                        <time class="fpkg-release-date" id="fpkgReleaseDate"></time>
+                    </div>
+                    <div class="fpkg-release-downloads" id="fpkgReleaseDownloads" aria-label="Available Linux installers"></div>
+                    <p class="fpkg-release-asset-warning" id="fpkgReleaseAssetWarning" role="status" hidden></p>
+                    <details class="fpkg-release-notes" id="fpkgReleaseNotes" hidden>
+                        <summary>Release notes</summary>
+                        <pre id="fpkgReleaseNotesBody"></pre>
+                    </details>
+                    <details class="fpkg-release-extra-details" id="fpkgReleaseExtraDetails" hidden>
+                        <summary>Source and checksums</summary>
+                        <div class="fpkg-release-extra-links" id="fpkgReleaseExtras"></div>
+                    </details>
+                </section>
+            </div>
+        </dialog>
+        <script type="module" src="/assets/js/fpkg-release.js"></script>
         <script type="module" src="/assets/js/security-gate.js"></script>
         </body>
         </html>
