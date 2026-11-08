@@ -237,7 +237,7 @@
     try { savedIp = localStorage.getItem(IP_KEY) || ''; } catch (_) { /* Storage is optional. */ }
     const hasSavedIp = validPrivateIp(savedIp);
     ipInput.value = hasSavedIp ? savedIp : '';
-    el('manualIpPanel').hidden = hasSavedIp;
+    el('manualIpPanel').hidden = false;
     if (bgftMode) {
       el('pageTitle').textContent = 'Send FPKG via BGFT';
       el('pageLead').textContent = 'Connect to the paired PS4 BGFT service and send a direct package URL or local FPKG.';
