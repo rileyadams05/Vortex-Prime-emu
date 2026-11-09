@@ -61,7 +61,7 @@ assert.match(bgftHtml, /@media \(hover:none\) and \(pointer:coarse\)/);
 assert.match(bgftHtml, /title="Choose a PKG file">\+/);
 assert.match(bgftHtml, /manifest\.webmanifest/);
 assert.doesNotMatch(bgftHtml, /class="topbar"|href="\/ps4\/(?:install|catalogues)\/"/);
-assert.match(bgftHtml, /navigator\.serviceWorker\.register\('\.\/sw\.js\?v=4'/);
+assert.match(bgftHtml, /navigator\.serviceWorker\.register\('\.\/sw\.js(?:\?v=\d+)?'\s*,/);
 const bgftManifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../docs/bgft/manifest.webmanifest'), 'utf8'));
 assert.equal(bgftManifest.id, '/bgft/');
 assert.equal(bgftManifest.start_url, '/bgft/');
