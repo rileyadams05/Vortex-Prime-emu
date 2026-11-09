@@ -25,16 +25,3 @@ updates:
       npm-dependencies:
         patterns:
           - "*"
-
-  - package-ecosystem: "npm"
-    directory: "/companion-server"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:30"
-      timezone: "Australia/Sydney"
-    open-pull-requests-limit: 5
-    groups:
-      companion-dependencies:
-        patterns:
-          - "*"

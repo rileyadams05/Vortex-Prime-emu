@@ -10,9 +10,6 @@ routes = [
   { pattern = "vortex-prime-emu.com/privacy-policy", zone_name = "vortex-prime-emu.com" }
 ]
 
-[triggers]
-crons = ["*/1 * * * *"]
-
 [[durable_objects.bindings]]
 name = "NXE_PAIR_SESSIONS"
 class_name = "NxePairSession"
@@ -22,9 +19,6 @@ tag = "nxe-pair-v1"
 new_sqlite_classes = ["NxePairSession"]
 
 [vars]
-STREAMZ_BUGS_CHANNEL_ID = "1526100653586255974"
-GEMINI_PRIMARY_MODEL = "gemini-3-flash-preview"
-GEMINI_FALLBACK_MODEL = "gemini-2.5-flash"
 FIREBASE_PROJECT_ID = "vortex-prime-store"
 FIREBASE_API_KEY = "AIzaSyDsx-r-fduROQMnXjnLV5ev8aABKNohSqY"
 FIREBASE_APP_ID = "1:715041958950:web:593a5281a83f9883898ae7"

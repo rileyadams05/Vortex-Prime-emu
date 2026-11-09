@@ -6,9 +6,9 @@ It supports:
 
 - Mods catalogue and uploads
 - Authentication and user sessions
-- Streamz accounts, entitlements, payments, and support
-- Jobless privacy-policy routing
-- Public video submissions for Mods entries
+- NXE pairing/session APIs
+- ModX publishing, authentication, catalogue, and submission APIs
+- Compatibility redirects for established public routes
 
 ## Configuration
 

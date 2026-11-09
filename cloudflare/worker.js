@@ -195,10 +195,6 @@ export default {
         return json({ ok: false, message: 'Website sign-in and account APIs have been retired.' }, 410, allowedOrigin);
       }
 
-      if (path.startsWith('api/streamz/auth/')) {
-        return json({ ok: false, message: 'Website sign-in and provider linking have been retired.' }, 410, allowedOrigin);
-      }
-
       if (path.startsWith('api/modx/')) {
         return json({ ok: false, message: 'ModX catalogue changes are submitted as GitHub pull requests.' }, 410, allowedOrigin);
       }
@@ -208,7 +204,7 @@ export default {
       }
 
       if (path === 'privacy-policy') {
-        return await servePublicJoblessPrivacyPolicy(request);
+        return Response.redirect(new URL('/privacy/', request.url), 308);
       }
 
       if (path === '' || path === 'api') {
@@ -249,38 +245,6 @@ export default {
       }
 
       // NXE pairing remains legacy code and is not exposed by the primary website API.
-
-      if (path.startsWith('api/streamz/auth/')) {
-        return await handleStreamzAuthRequest(request, env, path, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/channels') {
-        return await handleStreamzChannels(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/credentials') {
-        return await handleStreamzCredentials(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/pro' || (path.startsWith('api/streamz/pro/') && path !== 'api/streamz/pro/webhook')) {
-        return json({ ok: false, message: 'Streamz Pro has been retired.' }, 410, allowedOrigin);
-      }
-
-      if (path.startsWith('api/streamz/support/')) {
-        return await handleStreamzSupportRequest(request, env, path, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/app/update') {
-        return await handleStreamzAppUpdate(request, env, allowedOrigin);
-      }
-
-      if (path === 'api/streamz/discord/interactions') {
-        return await handleStreamzDiscordInteractions(request, env);
-      }
-
-      if (path === 'api/streamz/pro/webhook') {
-        return await handleStreamzProWebhook(request, env, allowedOrigin);
-      }
 
       if (path === 'api/risc/events') {
         return handleRiscEvents(request, env, allowedOrigin);
@@ -341,9 +305,6 @@ export default {
       const message = error.message || 'Internal server error';
       return json({ ok: false, message }, status, allowedOrigin);
     }
-  },
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(pollStreamzBugsChannel(env));
   },
 };
 
@@ -406,29 +367,6 @@ export class NxePairSession {
       try { socket.send(message); } catch (_) {}
     }
   }
-}
-
-async function servePublicJoblessPrivacyPolicy(request) {
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    return new Response('Method not allowed', {
-      status: 405,
-      headers: { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' },
-    });
-  }
-
-  const sourceUrl = new URL(request.url);
-  sourceUrl.pathname = '/privacy-policy/';
-  sourceUrl.search = '';
-  const upstream = await fetch(new Request(sourceUrl.toString(), {
-    method: request.method,
-    headers: { Accept: 'text/html,application/xhtml+xml' },
-  }));
-  const headers = new Headers(upstream.headers);
-  headers.set('Content-Type', 'text/html; charset=utf-8');
-  headers.set('Cache-Control', 'public, max-age=300');
-  headers.set('X-Content-Type-Options', 'nosniff');
-  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  return new Response(upstream.body, { status: upstream.status, headers });
 }
 
 function resolveAllowedOrigin(origin) {

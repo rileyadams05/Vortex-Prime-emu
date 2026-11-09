@@ -1,37 +1,21 @@
 # Vortex Prime
 
-The BGFT project card uses the pinned `@khmyznikov/pwa-install` 0.7.0 component for BGFT's device-aware PWA install flow. The GitHub Pages workflow vendors the package bundle and MIT licence into the generated site at deploy time. See [third-party notices](THIRD_PARTY_NOTICES.md).
+Vortex Prime currently maintains four projects:
 
-Vortex Prime is a collection of console tools, PlayStation HEN hosts, mods, games, and related projects.
+- **NXE** — an Aurora-inspired Xbox dashboard for Developer Mode.
+- **ModX** — cheat tables and their publishing integrations.
+- **FPKG Builder** — Linux tooling for building PS4 fPKGs.
+- **BGFT Service** — a browser/PWA interface for installing user-supplied PS4 packages through BGFT.
 
-## Website
-
-The production website is published from `docs/` through GitHub Pages.
-
-Main areas include:
-
-- PlayStation 3 HEN and PlayStation 4 GoldHEN hosts
-- ModX Cheat Tables
-- Xbox exploit resources
-- Games and Vortex Prime projects
-- Streamz project overview and support
-- Help, privacy, and legal pages
-
-## PlayStation shortcut links
-
-The PlayStation HEN pages remain available for console testing through the existing Bitly shortcuts:
-
-- PS4 GoldHEN: `bit.ly/PS4-hen`
-- PS3 HEN: `bit.ly/PS3-hen`
+The static website is published from `docs/` by GitHub Pages. The Pages workflow vendors the pinned PWA install component and fetches the BGFT web app from its official repository at deploy time. Cloudflare Workers provide the retained API and ModX integrations.
 
 ## Development
 
-Install dependencies and run the project tests with:
+Install dependencies and run the active-project regression suite:
 
 ```powershell
-npm install
+npm ci
 npm test
 ```
 
-The website is deployed automatically when changes reach the `main` branch.
-
+GitHub Pages deploys when relevant website files change on `main`. Cloudflare Workers deploy from the existing Cloudflare workflow when `cloudflare/` changes.

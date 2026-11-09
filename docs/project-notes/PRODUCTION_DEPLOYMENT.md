@@ -4,11 +4,10 @@
 
 - GitHub Pages serves the public website from `docs/`.
 - Cloudflare Worker `vortex-prime-store-api` handles the retained API endpoints.
-- The production Worker has routes for `vortex-prime-emu.com/api`, `/api/*`, `/api*`, and `/privacy-policy`. The `/api*` route is needed because Cloudflare route matching includes the query string; the former exact `/api` route did not catch requests such as `/api?check=1`.
-- The separate Community Mods catalogue page and its static JSON feed have been removed.
-- Website account sign-in, Google identity, Drive-backed website storage, legacy catalogue/upload routes, and the old ModX API submission routes are retired. The Worker returns HTTP 410 for those endpoints.
-- The ModX website submission experience is being rebuilt to use GitHub sign-in and a form that prepares a change for owner review. The form is not live until the required fields and submission behavior are finalized.
-- Existing Cloudflare secrets, Workers, Durable Object namespaces, and stored records were left in place. This cleanup does not delete data or infrastructure.
+- The production Worker retains the configured API routes and NXE pairing Durable Object. The `/api*` route catches API requests with query strings as well as path segments.
+- GitHub Pages builds the current project site from `docs/` and stages the BGFT web app from `rileyadams05/BGFT` during deployment.
+- The public site is focused on NXE, ModX, FPKG Builder, and BGFT Service. Retired project pages are not part of the deployment.
+- Cloudflare DNS, Worker secrets, Durable Object namespaces, and stored records are managed in Cloudflare and are not recreated by the site cleanup.
 
 ## Cloudflare Worker deployment
 
@@ -18,10 +17,10 @@ Both Wrangler configurations identify the same Worker, entry point, compatibilit
 
 Route changes are infrastructure changes: review the current Cloudflare attachment first. A normal Worker code update should not need to modify routes.
 
-## Preserved legacy configuration
+## Preserved Cloudflare configuration
 
-Historical account, Streamz, and ModX records and Cloudflare secrets remain untouched. The website no longer exposes sign-in or uses Google Drive for requests. Some older backend source remains in the repository for historical reference, but retired public routes return HTTP 410. No Cloudflare Worker, DNS record, database, or storage resource was deleted.
+The cleanup does not change the domain, DNS, SSL/TLS settings, Worker bindings, required secrets, or stored records. Both Wrangler files preserve the production Worker name, entry point, API routes, and NXE Durable Object migration. The historical `/privacy-policy` route redirects to `/privacy/`.
 
 ## Verification
 
-After each production deployment, confirm the Actions run completes both version upload and promotion, then inspect the Worker Deployments page to confirm the current version serves 100% of traffic. Verify `/api` and `/api?check=1` reach the Worker, retired account/catalogue/ModX endpoints return HTTP 410, and the public site has no Community Mods page.
+After each production deployment, confirm the Actions run completes Pages deployment and Cloudflare cache purge. For Worker changes, confirm version upload and promotion, then inspect Cloudflare to verify the current version serves traffic. Verify the project cards, the FPKG latest release dialog, BGFT install flow, and the ModX route on desktop and mobile.
