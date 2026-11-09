@@ -56,6 +56,7 @@ assert.match(pagesWorkflow, /npm install .*@khmyznikov\/pwa-install@0\.7\.0 esbu
 assert.match(pagesWorkflow, /\.bin\/esbuild.*--bundle --format=esm/);
 assert.match(pagesWorkflow, /! grep -Fq 'from"lit'/);
 assert.match(bgftHtml, /<title>BGFT · PS4 Package Installation<\/title>/);
+assert.match(bgftHtml, /<pwa-install[^>]+id="bgftPwaInstall"[^>]+manual-apple[^>]+manual-chrome[^>]+manifest-url="\\.\\/manifest\\.webmanifest"/);
 assert.match(bgftHtml, /href="\/projects\/"[^>]*aria-label="Back to Projects page"/);
 assert.match(bgftHtml, /id="connectPs4Button"/);
 assert.match(bgftHtml, /id="choosePkgButton"/);
