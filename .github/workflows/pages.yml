@@ -45,6 +45,16 @@ jobs:
           mkdir -p docs/bgft
           cp -R .bgft-source/web/. docs/bgft/
 
+      - name: Vendor pinned PWA install component
+        run: |
+          mkdir -p docs/assets/vendor docs/bgft/assets/vendor "$RUNNER_TEMP/pwa-install-package"
+          npm pack @khmyznikov/pwa-install@0.7.0 --pack-destination "$RUNNER_TEMP"
+          tar -xzf "$RUNNER_TEMP/khmyznikov-pwa-install-0.7.0.tgz" -C "$RUNNER_TEMP/pwa-install-package" package/dist/pwa-install.es.js package/LICENSE
+          cp "$RUNNER_TEMP/pwa-install-package/package/dist/pwa-install.es.js" docs/assets/vendor/pwa-install-0.7.0.es.js
+          cp "$RUNNER_TEMP/pwa-install-package/package/LICENSE" docs/assets/vendor/pwa-install-LICENSE.txt
+          cp docs/assets/vendor/pwa-install-0.7.0.es.js docs/bgft/assets/vendor/pwa-install-0.7.0.es.js
+          test -s docs/assets/vendor/pwa-install-LICENSE.txt
+
       - name: Run regression tests
         run: npm test
 
@@ -84,3 +94,4 @@ jobs:
             echo "Warning: Could not fetch Zone ID. Token might lack Zone Read permissions or is missing."
           fi
         continue-on-error: true
+
