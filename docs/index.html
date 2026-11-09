@@ -4008,7 +4008,7 @@
                         </div>
                         <div class="project-links" aria-label="BGFT project actions">
                             <a class="btn btn-secondary" href="https://github.com/rileyadams05/BGFT" target="_blank" rel="noopener noreferrer">Repository</a>
-                            <a class="btn btn-secondary" href="/bgft/">Install</a>
+                            <button class="btn btn-secondary" id="bgftInstallButton" type="button" aria-label="Install BGFT as a web app">Install</button>
                         </div>
                     </div>
                 </div>
@@ -5238,6 +5238,23 @@
                 </section>
             </div>
         </dialog>
+        <pwa-install id="bgftPwaInstall" manifest-url="/bgft/manifest.webmanifest"></pwa-install>
+        <dialog class="fpkg-release-dialog" id="bgftInstallChoice" aria-labelledby="bgftInstallChoiceHeading">
+            <div class="fpkg-release-dialog__surface">
+                <button class="fpkg-release-dialog__close" type="button" data-bgft-choice-close aria-label="Close">&times;</button>
+                <header class="fpkg-release-dialog__header">
+                    <span class="fpkg-release-dialog__eyebrow">BGFT</span>
+                    <h2 id="bgftInstallChoiceHeading">BGFT is installed</h2>
+                    <p>Choose how you want to continue.</p>
+                </header>
+                <div class="fpkg-release-downloads" aria-label="Choose how to open BGFT">
+                    <a class="btn btn-secondary fpkg-download-button" id="bgftOpenInstalledApp" href="/bgft/">Use Web App</a>
+                    <a class="btn btn-secondary fpkg-download-button" id="bgftOpenInBrowser" href="/bgft/?open=browser" target="_blank" rel="noopener noreferrer">Continue in Browser</a>
+                </div>
+            </div>
+        </dialog>
+        <script type="module" src="/assets/vendor/pwa-install-0.7.0.es.js"></script>
+        <script type="module" src="/assets/js/bgft-pwa-install.js"></script>
         <script type="module" src="/assets/js/fpkg-release.js"></script>
         <script type="module" src="/assets/js/security-gate.js"></script>
         </body>
