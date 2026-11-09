@@ -241,7 +241,8 @@ function initializeDialog() {
                 } else {
                     content.hidden = true;
                     setStatus(message, 'error', true);
-                    if (cardVersion) cardVersion.textContent = 'Unavailable';
+                    // Keep the last published version displayed on the project card.
+                    // The dialog itself still reports API failures and offers Retry.
                 }
             } finally {
                 clearTimeout(timeout);
