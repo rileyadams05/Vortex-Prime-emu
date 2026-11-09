@@ -21,7 +21,10 @@ function createHarness({ webInstall = true, relatedInstalled = false, customDefi
     removeAttribute(name) { this.attributes.delete(name); },
     setAttribute(name, value) { this.attributes.set(name, value); },
     dispatch(type, detail = {}) {
-      for (const callback of listeners.get(this)?.get(type) ?? []) callback({ type, target: this, detail });
+      let defaultPrevented = false;
+      const event = { type, target: this, detail, preventDefault() { defaultPrevented = true; } };
+      for (const callback of listeners.get(this)?.get(type) ?? []) callback(event);
+      return { defaultPrevented };
     }
   });
 
@@ -44,7 +47,6 @@ function createHarness({ webInstall = true, relatedInstalled = false, customDefi
   const appChoice = { hidden: false };
   const browserChoice = { hidden: false, textContent: '' };
   const componentScript = element();
-  const locationCalls = [];
   let nextTimerId = 1;
   const timers = new Map();
   const document = {
@@ -62,18 +64,18 @@ function createHarness({ webInstall = true, relatedInstalled = false, customDefi
     customElements: { whenDefined: () => Promise.resolve(), get: () => customDefined ? {} : undefined },
     setTimeout(callback) { const id = nextTimerId++; timers.set(id, callback); return id; },
     clearTimeout(id) { timers.delete(id); },
-    window: { location: { assign: url => locationCalls.push(url) } }
+    window: { location: { assign() {} } }
   });
 
-  return { button, installer, choiceDialog, heading, appChoice, browserChoice, componentScript, locationCalls };
+  return { button, installer, choiceDialog, heading, appChoice, browserChoice, componentScript };
 }
 
 test('one Install click calls the native BGFT install API from the user gesture', async () => {
   const h = createHarness();
   await Promise.resolve();
-  h.button.dispatch('click');
+  const click = h.button.dispatch('click');
   assert.equal(h.installer.installCalls, 1);
-  assert.deepEqual(h.locationCalls, []);
+  assert.equal(click.defaultPrevented, true);
   h.installer.dispatch('pwa-install-success-event');
   assert.equal(h.choiceDialog.open, true);
   assert.equal(h.heading.textContent, 'BGFT is installed');
@@ -81,28 +83,28 @@ test('one Install click calls the native BGFT install API from the user gesture'
   assert.equal(h.browserChoice.hidden, false);
 });
 
-test('browsers without cross-manifest install support enter BGFT scope for its own prompt', async () => {
+test('browsers without cross-manifest install support follow the BGFT install link', async () => {
   const h = createHarness({ webInstall: false });
   await Promise.resolve();
-  h.button.dispatch('click');
+  const click = h.button.dispatch('click');
   assert.equal(h.installer.installCalls, 0);
-  assert.deepEqual(h.locationCalls, ['/bgft/?install=1']);
+  assert.equal(click.defaultPrevented, false);
 });
 
-test('a missing local install component leaves Install usable and routes to BGFT fallback', async () => {
+test('a missing local install component leaves the BGFT link usable', async () => {
   const h = createHarness({ customDefined: false });
   h.componentScript.dispatch('error');
-  assert.equal(h.button.disabled, false);
   assert.equal(h.button.dataset.installFallback, 'true');
-  h.button.dispatch('click');
-  assert.deepEqual(h.locationCalls, ['/bgft/?install=1']);
+  const click = h.button.dispatch('click');
+  assert.equal(click.defaultPrevented, false);
 });
 
 test('already-installed state skips the install prompt', async () => {
   const h = createHarness({ relatedInstalled: true });
   await Promise.resolve();
-  h.button.dispatch('click');
+  const click = h.button.dispatch('click');
   assert.equal(h.installer.installCalls, 0);
+  assert.equal(click.defaultPrevented, true);
   assert.equal(h.heading.textContent, 'BGFT is installed');
   assert.equal(h.choiceDialog.open, true);
 });

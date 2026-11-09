@@ -1,5 +1,4 @@
 const INSTALLER_VERSION = '0.7.0';
-const BGFT_URL = '/bgft/';
 
 const installButton = document.getElementById('bgftInstallButton');
 const installer = document.getElementById('bgftPwaInstall');
@@ -10,9 +9,6 @@ const appChoice = document.getElementById('bgftOpenInstalledApp');
 const browserChoice = document.getElementById('bgftOpenInBrowser');
 
 if (installButton && installer && choiceDialog) {
-  installButton.disabled = true;
-  installButton.setAttribute('aria-busy', 'true');
-
   const showChoice = ({ installed, failed = false } = {}) => {
     if (installed) {
       choiceHeading.textContent = 'BGFT is installed';
@@ -38,16 +34,12 @@ if (installButton && installer && choiceDialog) {
 
   const onInstallReady = () => {
     clearTimeout(componentReadinessTimer);
-    installButton.disabled = false;
-    installButton.removeAttribute('aria-busy');
     delete installButton.dataset.installFallback;
     installer.styles = { '--tint-color': '#20d9a0' };
   };
 
   const enableBrowserFallback = () => {
     if (customElements.get('pwa-install')) return;
-    installButton.disabled = false;
-    installButton.removeAttribute('aria-busy');
     installButton.dataset.installFallback = 'true';
   };
 
@@ -57,13 +49,13 @@ if (installButton && installer && choiceDialog) {
   const componentScript = document.querySelector('script[src="/assets/vendor/pwa-install-0.7.0.es.js"]');
   componentScript?.addEventListener('error', enableBrowserFallback, { once: true });
 
-  installButton.addEventListener('click', () => {
+  installButton.addEventListener('click', event => {
     if (installButton.dataset.installFallback === 'true' || typeof installer.install !== 'function') {
-      window.location.assign(`${BGFT_URL}?install=1`);
       return;
     }
 
     if (installer.isRelatedAppsInstalled === true) {
+      event.preventDefault();
       showChoice({ installed: true });
       return;
     }
@@ -72,12 +64,12 @@ if (installButton && installer && choiceDialog) {
     // Only the newer Web Install API can install BGFT's separate manifest from
     // this page. Other browsers must continue at BGFT's own in-scope URL.
     if (installer.isWebInstallSupported !== true) {
-      window.location.assign(`${BGFT_URL}?install=1`);
       return;
     }
 
     // Call synchronously from the click so browser user activation is retained.
     try {
+      event.preventDefault();
       const installAttempt = installer.install();
       if (installAttempt && typeof installAttempt.catch === 'function') {
         installAttempt.catch(() => showChoice({ failed: true }));
