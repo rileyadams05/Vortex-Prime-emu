@@ -50,7 +50,7 @@ assert.match(bgftHtml, /@media \(hover:none\) and \(pointer:coarse\)/);
 assert.match(bgftHtml, /title="Choose a PKG file">\+/);
 assert.match(bgftHtml, /manifest\.webmanifest/);
 assert.doesNotMatch(bgftHtml, /class="topbar"|href="\/ps4\/(?:install|catalogues)\/"/);
-assert.match(bgftHtml, /navigator\.serviceWorker\.register\('\.\/sw\.js\?v=3'/);
+assert.match(bgftHtml, /navigator\.serviceWorker\.register\('\.\/sw\.js'(?:\s*,|\s*\))/);
 assert.match(bgftScript, /const bgftMode = true/);
 assert.match(bgftScript, /\/pairing\/challenge/);
 assert.match(bgftScript, /\/bgft\/tasks/);
