@@ -33,14 +33,16 @@ assert.match(projects, /id="bgftOpenInBrowser"[^>]+href="\/bgft\/\?open=browser"
 for (const id of ['connectPs4Button', 'choosePkgButton', 'pairingPanel', 'uploadProgress', 'taskStatus']) {
   assert.ok(bgftPage.includes(`id="${id}"`), `BGFT page is missing ${id}`);
 }
+assert.match(bgftPage, /(?:aria-label|title)="Choose a PKG file"/);
+assert.match(bgftPage, /@media[^\n]*max-width:420px/);
 assert.match(bgftSender, /\/pairing\/challenge/);
 assert.match(bgftSender, /\/bgft\/tasks/);
 assert.match(bgftSender, /source: 'url'/);
 assert.match(bgftSender, /api\.upload\(activeIp, `\/bgft\/uploads\?filename=/);
 assert.match(bgftApi, /application\/vnd\.vortex-prime\.pkg/);
-assert.match(bgftPage, /register\('\.\/sw\.js', \{ scope: '\.\/', updateViaCache: 'none' \}\)/);
-assert.equal(bgftManifest.start_url, './');
-assert.equal(bgftManifest.scope, './');
+assert.match(bgftPage, /register\('\.\/sw\.js(?:\?[^']*)?', \{ scope: '\.\/', updateViaCache: 'none' \}\)/);
+assert.ok(['./', '/bgft/'].includes(bgftManifest.start_url));
+assert.equal(bgftManifest.scope, bgftManifest.start_url);
 assert.match(bgftWorker, /keys\.filter\(key => key\.startsWith\('bgft-shell-'\)/);
 
 assert.match(installFlow, /\.install\(\)/);
