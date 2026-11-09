@@ -264,6 +264,9 @@ function initializeDialog() {
     });
     dialog.addEventListener('close', () => lastFocus?.focus());
     retryButton.addEventListener('click', () => fetchLatest(true));
+
+    // Show the latest release version on the project card without requiring Install.
+    fetchLatest();
 }
 
 if (typeof document !== 'undefined') {
