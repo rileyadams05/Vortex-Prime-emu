@@ -41,7 +41,7 @@ assert.match(senderScript, /\/bgft\/tasks/);
 assert.match(senderScript, /watchTask\(\{ receiver: 'bgft'/);
 assert.match(projectsHtml, /<div class="project-card" aria-label="BGFT project">/);
 assert.match(projectsHtml, /href="https:\/\/github\.com\/rileyadams05\/BGFT"[^>]*>Repository<\/a>/);
-assert.match(projectsHtml, /<a[^>]+id="bgftInstallButton"[^>]+href="\/bgft\/\?install=1"[^>]*>Install<\/a>/);
+assert.match(projectsHtml, /<a[^>]+id="bgftInstallButton"[^>]+href="\/bgft\/(?:install-[a-f0-9]{12}\.html)?\?install=1"[^>]*>Install<\/a>/);
 assert.match(projectsHtml, /<pwa-install[^>]+manifest-url="\/bgft\/manifest\.webmanifest"/);
 assert.match(projectsHtml, /assets\/vendor\/pwa-install-0\.7\.0\.es\.js/);
 assert.match(projectsHtml, /id="bgftOpenInstalledApp"[^>]+href="\/bgft\/"/);
