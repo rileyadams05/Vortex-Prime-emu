@@ -44,6 +44,12 @@ jobs:
           rm -rf docs/bgft
           mkdir -p docs/bgft
           cp -R .bgft-source/web/. docs/bgft/
+          BGFT_VERSION="$(git -C .bgft-source rev-parse --short=12 HEAD)"
+          INSTALL_PAGE="install-${BGFT_VERSION}.html"
+          cp docs/bgft/index.html "docs/bgft/${INSTALL_PAGE}"
+          sed -i "s|href=\"/bgft/?install=1\"|href=\"/bgft/${INSTALL_PAGE}?install=1\"|" docs/index.html
+          sed -i "s|src=\"./assets/vendor/pwa-install-0.7.0.es.js\"|src=\"./assets/vendor/pwa-install-0.7.0.es.js?rev=${BGFT_VERSION}\"|" "docs/bgft/${INSTALL_PAGE}"
+          sed -i "s|src=\"./assets/js/pwa-install.js\"|src=\"./assets/js/pwa-install.js?rev=${BGFT_VERSION}\"|" "docs/bgft/${INSTALL_PAGE}"
 
       - name: Vendor pinned PWA install component
         run: |
