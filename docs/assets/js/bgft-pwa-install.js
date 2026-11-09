@@ -37,19 +37,25 @@ if (installButton && installer && choiceDialog) {
   };
 
   const onInstallReady = () => {
+    clearTimeout(componentReadinessTimer);
     installButton.disabled = false;
     installButton.removeAttribute('aria-busy');
+    delete installButton.dataset.installFallback;
     installer.styles = { '--tint-color': '#20d9a0' };
   };
 
-  customElements.whenDefined('pwa-install').then(onInstallReady);
-
-  const componentScript = document.querySelector('script[src="/assets/vendor/pwa-install-0.7.0.es.js"]');
-  componentScript?.addEventListener('error', () => {
+  const enableBrowserFallback = () => {
+    if (customElements.get('pwa-install')) return;
     installButton.disabled = false;
     installButton.removeAttribute('aria-busy');
     installButton.dataset.installFallback = 'true';
-  }, { once: true });
+  };
+
+  const componentReadinessTimer = setTimeout(enableBrowserFallback, 4000);
+  customElements.whenDefined('pwa-install').then(onInstallReady);
+
+  const componentScript = document.querySelector('script[src="/assets/vendor/pwa-install-0.7.0.es.js"]');
+  componentScript?.addEventListener('error', enableBrowserFallback, { once: true });
 
   installButton.addEventListener('click', () => {
     if (installButton.dataset.installFallback === 'true' || typeof installer.install !== 'function') {
