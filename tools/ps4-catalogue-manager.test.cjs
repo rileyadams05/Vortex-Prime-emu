@@ -42,11 +42,15 @@ assert.match(projectsHtml, /<div class="project-card" aria-label="BGFT project">
 assert.match(projectsHtml, /href="https:\/\/github\.com\/rileyadams05\/BGFT"[^>]*>Repository<\/a>/);
 assert.match(projectsHtml, /href="\/bgft\/">Install<\/a>/);
 assert.match(bgftHtml, /<title>BGFT · PS4 Package Installation<\/title>/);
+assert.match(bgftHtml, /href="\/projects\/"[^>]*aria-label="Back to Projects page"/);
 assert.match(bgftHtml, /id="connectPs4Button"/);
 assert.match(bgftHtml, /id="choosePkgButton"/);
+assert.match(bgftHtml, /\.mobile-upload \{ display:none/);
+assert.match(bgftHtml, /@media \(hover:none\) and \(pointer:coarse\)/);
+assert.match(bgftHtml, /title="Choose a PKG file">\+/);
 assert.match(bgftHtml, /manifest\.webmanifest/);
 assert.doesNotMatch(bgftHtml, /class="topbar"|href="\/ps4\/(?:install|catalogues)\/"/);
-assert.match(bgftHtml, /navigator\.serviceWorker\.register\('\.\/sw\.js\?v=2'/);
+assert.match(bgftHtml, /navigator\.serviceWorker\.register\('\.\/sw\.js\?v=3'/);
 assert.match(bgftScript, /const bgftMode = true/);
 assert.match(bgftScript, /\/pairing\/challenge/);
 assert.match(bgftScript, /\/bgft\/tasks/);
