@@ -66,7 +66,7 @@ assert.match(bgftHtml, /title="Choose a PKG file">\+/);
 assert.match(bgftHtml, /manifest\.webmanifest/);
 assert.match(fs.readFileSync(path.join(__dirname, '../docs/bgft/assets/js/pwa-install.js'), 'utf8'), /installer\.showDialog\(true\)/);
 assert.doesNotMatch(bgftHtml, /class="topbar"|href="\/ps4\/(?:install|catalogues)\/"/);
-assert.match(bgftHtml, /navigator\.serviceWorker\.register\('\.\/sw\.js\?v=4'/);
+assert.ok(bgftHtml.includes("sw.js?v=5"));
 const bgftManifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../docs/bgft/manifest.webmanifest'), 'utf8'));
 assert.equal(bgftManifest.id, '/bgft/');
 assert.equal(bgftManifest.start_url, '/bgft/');
