@@ -47,13 +47,16 @@ jobs:
 
       - name: Vendor pinned PWA install component
         run: |
-          mkdir -p docs/assets/vendor docs/bgft/assets/vendor "$RUNNER_TEMP/pwa-install-package"
-          npm pack @khmyznikov/pwa-install@0.7.0 --pack-destination "$RUNNER_TEMP"
-          tar -xzf "$RUNNER_TEMP/khmyznikov-pwa-install-0.7.0.tgz" -C "$RUNNER_TEMP/pwa-install-package" package/dist/pwa-install.es.js package/LICENSE
-          cp "$RUNNER_TEMP/pwa-install-package/package/dist/pwa-install.es.js" docs/assets/vendor/pwa-install-0.7.0.es.js
-          cp "$RUNNER_TEMP/pwa-install-package/package/LICENSE" docs/assets/vendor/pwa-install-LICENSE.txt
+          BUILD_DIR="$RUNNER_TEMP/pwa-install-build"
+          mkdir -p docs/assets/vendor docs/bgft/assets/vendor "$BUILD_DIR"
+          npm install --prefix "$BUILD_DIR" --no-audit --no-fund @khmyznikov/pwa-install@0.7.0 esbuild@0.25.5
+          printf "import '@khmyznikov/pwa-install';\n" > "$BUILD_DIR/entry.js"
+          "$BUILD_DIR/node_modules/.bin/esbuild" "$BUILD_DIR/entry.js" --bundle --format=esm --target=es2022 --outfile=docs/assets/vendor/pwa-install-0.7.0.es.js
+          cp "$BUILD_DIR/node_modules/@khmyznikov/pwa-install/LICENSE" docs/assets/vendor/pwa-install-LICENSE.txt
           cp docs/assets/vendor/pwa-install-0.7.0.es.js docs/bgft/assets/vendor/pwa-install-0.7.0.es.js
           test -s docs/assets/vendor/pwa-install-LICENSE.txt
+          ! grep -Fq 'from"lit' docs/assets/vendor/pwa-install-0.7.0.es.js
+          ! grep -Fq "from'lit" docs/assets/vendor/pwa-install-0.7.0.es.js
 
       - name: Run regression tests
         run: npm test
