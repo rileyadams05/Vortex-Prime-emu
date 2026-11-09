@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const source = await readFile(new URL('../docs/assets/js/bgft-pwa-install.js', import.meta.url), 'utf8');
 
-function createHarness({ webInstall = true, relatedInstalled = false } = {}) {
+function createHarness({ webInstall = true, relatedInstalled = false, customDefined = true } = {}) {
   const listeners = new Map();
   const element = () => ({
     disabled: false,
@@ -45,6 +45,8 @@ function createHarness({ webInstall = true, relatedInstalled = false } = {}) {
   const browserChoice = { hidden: false, textContent: '' };
   const componentScript = element();
   const locationCalls = [];
+  let nextTimerId = 1;
+  const timers = new Map();
   const document = {
     getElementById(id) {
       return ({ bgftInstallButton: button, bgftPwaInstall: installer, bgftInstallChoice: choiceDialog,
@@ -57,7 +59,9 @@ function createHarness({ webInstall = true, relatedInstalled = false } = {}) {
 
   vm.runInNewContext(source, {
     document,
-    customElements: { whenDefined: () => Promise.resolve() },
+    customElements: { whenDefined: () => Promise.resolve(), get: () => customDefined ? {} : undefined },
+    setTimeout(callback) { const id = nextTimerId++; timers.set(id, callback); return id; },
+    clearTimeout(id) { timers.delete(id); },
     window: { location: { assign: url => locationCalls.push(url) } }
   });
 
@@ -82,6 +86,15 @@ test('browsers without cross-manifest install support enter BGFT scope for its o
   await Promise.resolve();
   h.button.dispatch('click');
   assert.equal(h.installer.installCalls, 0);
+  assert.deepEqual(h.locationCalls, ['/bgft/?install=1']);
+});
+
+test('a missing local install component leaves Install usable and routes to BGFT fallback', async () => {
+  const h = createHarness({ customDefined: false });
+  h.componentScript.dispatch('error');
+  assert.equal(h.button.disabled, false);
+  assert.equal(h.button.dataset.installFallback, 'true');
+  h.button.dispatch('click');
   assert.deepEqual(h.locationCalls, ['/bgft/?install=1']);
 });
 
