@@ -1,5 +1,7 @@
 # Vortex Prime
 
+The BGFT project card uses the pinned `@khmyznikov/pwa-install` 0.7.0 component for BGFT's device-aware PWA install flow. The GitHub Pages workflow vendors the package bundle and MIT licence into the generated site at deploy time. See [third-party notices](THIRD_PARTY_NOTICES.md).
+
 Vortex Prime is a collection of console tools, PlayStation HEN hosts, mods, games, and related projects.
 
 ## Website
@@ -32,3 +34,4 @@ npm test
 ```
 
 The website is deployed automatically when changes reach the `main` branch.
+
