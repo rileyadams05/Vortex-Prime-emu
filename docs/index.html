@@ -18,7 +18,7 @@
   <meta property="og:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://vortex-prime-emu.com/favicon-512x512.png">
-  <meta name="description" content="Vortex Prime EMU — a developer, homebrew, compatibility, and console research project hub.">
+  <meta name="description" content="Vortex Prime EMU — NXE, ModX and FPKG Builder software projects.">
     <meta name="theme-color" content="#107C10">
     <meta property="og:title" content="Vortex Prime EMU">
     <meta property="og:description" content="Developer projects, homebrew resources, compatibility information, and console research references.">
@@ -2738,22 +2738,21 @@
                             <button class="btn btn-secondary" id="fpkgBuilderInstallButton" type="button" aria-haspopup="dialog" aria-controls="fpkgReleaseDialog">Install</button>
                         </div>
                     </div>
-                    <div class="project-card" aria-label="BGFT Service project">
+                    <div class="project-card" aria-label="ModX project">
                         <div class="project-card-header">
-                            <button class="btn btn-secondary nxe-cover-button" type="button" data-nxe-lightbox="/assets/BGFT.png" data-lightbox-alt="BGFT Service cover photo">View cover photo</button>
                             <div class="project-title">
-                                <h2>BGFT Service</h2>
+                                <h2>ModX</h2>
                             </div>
                         </div>
-                        <p class="project-description">Install your own compatible PS4 PKG/fPKG files directly to your PlayStation using a browser-based BGFT installation service. No hosted game catalogue or package downloads.</p>
-                        <div class="project-meta" aria-label="BGFT project details">
-                            <div class="project-meta-row"><span>Platform</span><strong>PS4</strong></div>
-                            <div class="project-meta-row"><span>Current version</span><strong>1.0</strong></div>
-                            <div class="project-meta-row"><span>Installers</span><strong>Web App</strong></div>
+                        <p class="project-description">A Windows desktop trainer library that discovers games in user-configured libraries and lets users add running processes to saved game entries. Community table execution is not connected yet.</p>
+                        <div class="project-meta" aria-label="ModX project details">
+                            <div class="project-meta-row"><span>Platform</span><strong>Windows</strong></div>
+                            <div class="project-meta-row"><span>Current version</span><strong id="modxProjectVersion">Not released yet</strong></div>
+                            <div class="project-meta-row"><span>Installers</span><strong id="modxProjectInstallers">Not released yet</strong></div>
                         </div>
-                        <div class="project-links" aria-label="BGFT project actions">
-                            <a class="btn btn-secondary" href="https://github.com/rileyadams05/BGFT" target="_blank" rel="noopener noreferrer">Repository</a>
-                            <a class="btn btn-secondary" id="bgftInstallButton" href="/bgft/?install=1" aria-label="Install BGFT as a web app">Install</a>
+                        <div class="project-links" aria-label="ModX project actions">
+                            <a class="btn btn-secondary" href="https://github.com/rileyadams05/ModX" target="_blank" rel="noopener noreferrer">Repository</a>
+                            <button class="btn btn-secondary" id="modxInstallButton" type="button" aria-haspopup="dialog" aria-controls="modxReleaseDialog">Install</button>
                         </div>
                     </div>
                 </div>
@@ -2819,7 +2818,7 @@
                         <a href="https://github.com/rileyadams05/Vortex-Prime-emu/issues" target="_blank">Report Issue</a>
                         <a href="https://github.com/rileyadams05/Vortex-Prime-emu/discussions" target="_blank">Community</a>
                     </div>
-                    <div class="footer-copy">© 2026 Vortex Prime EMU. NXE, ModX, FPKG Builder, and BGFT Service are the active projects maintained here.</div>
+                    <div class="footer-copy">© 2026 Vortex Prime EMU. NXE, ModX, and FPKG Builder are the active projects maintained here.</div>
                 </div>
             </footer>
 
@@ -2986,23 +2985,31 @@
                 </section>
             </div>
         </dialog>
-        <pwa-install id="bgftPwaInstall" manifest-url="/bgft/manifest.webmanifest"></pwa-install>
-        <dialog class="fpkg-release-dialog" id="bgftInstallChoice" aria-labelledby="bgftInstallChoiceHeading">
+        <dialog class="fpkg-release-dialog" id="modxReleaseDialog" aria-labelledby="modxReleaseHeading" aria-describedby="modxReleaseStatus">
             <div class="fpkg-release-dialog__surface">
-                <button class="fpkg-release-dialog__close" type="button" data-bgft-choice-close aria-label="Close">&times;</button>
+                <button class="fpkg-release-dialog__close" type="button" data-release-close aria-label="Close downloads">&times;</button>
                 <header class="fpkg-release-dialog__header">
-                    <span class="fpkg-release-dialog__eyebrow">BGFT</span>
-                    <h2 id="bgftInstallChoiceHeading">BGFT is installed</h2>
-                    <p>Choose how you want to continue.</p>
+                    <span class="fpkg-release-dialog__eyebrow">Vortex Prime downloads</span>
+                    <h2 id="modxReleaseHeading">ModX</h2>
+                    <p>Latest published Windows installer files from the official ModX release.</p>
                 </header>
-                <div class="fpkg-release-downloads" aria-label="Choose how to open BGFT">
-                    <a class="btn btn-secondary fpkg-download-button" id="bgftOpenInstalledApp" href="/bgft/">Use Web App</a>
-                    <a class="btn btn-secondary fpkg-download-button" id="bgftOpenInBrowser" href="/bgft/?open=browser" target="_blank" rel="noopener noreferrer">Continue in Browser</a>
-                </div>
+                <p class="fpkg-release-status" id="modxReleaseStatus" role="status" aria-live="polite">Release information will load when you open this panel.</p>
+                <button class="fpkg-release-retry" id="modxReleaseRetry" type="button" hidden>Retry</button>
+                <section id="modxReleaseContent" hidden>
+                    <div class="fpkg-release-version-row">
+                        <strong class="fpkg-release-version" id="modxReleaseVersion">Version</strong>
+                        <time class="fpkg-release-date" id="modxReleaseDate"></time>
+                    </div>
+                    <div class="fpkg-release-downloads" id="modxReleaseDownloads" aria-label="Available Windows installers"></div>
+                    <p class="fpkg-release-asset-warning" id="modxReleaseAssetWarning" role="status" hidden></p>
+                    <details class="fpkg-release-notes" id="modxReleaseNotes" hidden>
+                        <summary>Release notes</summary>
+                        <pre id="modxReleaseNotesBody"></pre>
+                    </details>
+                </section>
+                <p class="fpkg-release-extra-details"><a id="modxReleasePageLink" href="https://github.com/rileyadams05/ModX/releases" target="_blank" rel="noopener noreferrer" data-no-gate="true">View ModX releases on GitHub</a></p>
             </div>
         </dialog>
-        <script type="module" src="/assets/vendor/pwa-install-0.7.0.es.js"></script>
-        <script type="module" src="/assets/js/bgft-pwa-install.js"></script>
         <script type="module" src="/assets/js/fpkg-release.js"></script>
         <script type="module" src="/assets/js/security-gate.js"></script>
         </body>

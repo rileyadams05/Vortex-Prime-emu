@@ -1,12 +1,7 @@
 # Third-party notices
 
-## `@khmyznikov/pwa-install` 0.7.0
+## ModX release metadata
 
-The Vortex Prime Projects page uses the `@khmyznikov/pwa-install` web component by khmyznikov to present browser- and platform-aware PWA installation flows for BGFT. The GitHub Pages workflow retrieves the pinned npm package, places its browser bundle and MIT licence in the generated site assets, and publishes them with the site. The package's licence is deployed as `docs/assets/vendor/pwa-install-LICENSE.txt`.
+The Vortex Prime homepage retrieves the latest published release metadata and installer download URLs from the public GitHub API for [rileyadams05/ModX](https://github.com/rileyadams05/ModX). Downloads are served by GitHub; Vortex Prime does not mirror or host ModX installers.
 
-- Source: <https://github.com/khmyznikov/pwa-install>
-- Package: <https://www.npmjs.com/package/@khmyznikov/pwa-install>
-- Licence: MIT
-
-All other projects and dependencies retain their respective copyright notices and licences.
-
+All project code and dependencies retain their respective copyright notices and licences.

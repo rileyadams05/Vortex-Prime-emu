@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "test": "node tools/nxe-ftp-auth-test.mjs && node tools/modx-system-test.mjs && node tools/bgft-service.test.cjs && node tools/service-worker-cache.test.cjs && node --test tools/fpkg-release.test.mjs tools/bgft-pwa-install.test.mjs"
+    "test": "node tools/nxe-ftp-auth-test.mjs && node tools/modx-system-test.mjs && node tools/service-worker-cache.test.cjs && node --test tools/fpkg-release.test.mjs tools/modx-release.test.mjs"
   }
 }

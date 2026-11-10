@@ -1,13 +1,12 @@
 # Vortex Prime
 
-Vortex Prime currently maintains four projects:
+Vortex Prime currently maintains three projects:
 
 - **NXE** — an Aurora-inspired Xbox dashboard for Developer Mode.
-- **ModX** — cheat tables and their publishing integrations.
+- **ModX** — a Windows desktop trainer library for discovering games and saving running-process selections. Community table execution is not connected yet.
 - **FPKG Builder** — Linux tooling for building PS4 fPKGs.
-- **BGFT Service** — a browser/PWA interface for installing user-supplied PS4 packages through BGFT.
 
-The static website is published from `docs/` by GitHub Pages. The Pages workflow vendors the pinned PWA install component and fetches the BGFT web app from its official repository at deploy time. Cloudflare Workers provide the retained API and ModX integrations.
+The static website is published from `docs/` by GitHub Pages. Cloudflare Workers provide the retained API and ModX integrations. The ModX homepage card retrieves its latest public release and installer assets from the GitHub Releases API.
 
 ## Development
 
