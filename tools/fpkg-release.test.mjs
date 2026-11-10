@@ -8,12 +8,10 @@ const { formatAssetSize, getReleaseVersion, selectInstallerAssets } = releaseMod
 
 assert.doesNotMatch(source, /Cached release information · checked/);
 assert.doesNotMatch(source, /\$\{version\} \(cached\)/);
-assert.match(source, /else setStatus\('', '', false\)/);
-
-
-test('GitHub assets bypass the generic outbound interstitial', () => {
-    assert.match(source, /link\.dataset\.noGate = 'true'/);
-});
+assert.match(source, /setStatus\(freshness\.retry \? freshness\.message/);
+assert.match(source, /repository: 'rileyadams05\/FPKG-Builder'/);
+assert.match(source, /api\.github\.com\/repos\/\$\{config\.repository\}\/releases\/latest/);
+assert.match(source, /link\.dataset\.noGate = 'true'/);
 
 test('the retry action remains hidden after a successful load', async () => {
     const css = await readFile(new URL('../docs/assets/css/fpkg-release.css', import.meta.url), 'utf8');

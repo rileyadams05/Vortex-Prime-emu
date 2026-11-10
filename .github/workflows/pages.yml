@@ -31,39 +31,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Checkout BGFT web app
-        uses: actions/checkout@v6
-        with:
-          repository: rileyadams05/BGFT
-          ref: main
-          path: .bgft-source
-          persist-credentials: false
-
-      - name: Prepare BGFT site files
-        run: |
-          rm -rf docs/bgft
-          mkdir -p docs/bgft
-          cp -R .bgft-source/web/. docs/bgft/
-          BGFT_VERSION="$(git -C .bgft-source rev-parse --short=12 HEAD)"
-          INSTALL_PAGE="install-${BGFT_VERSION}.html"
-          cp docs/bgft/index.html "docs/bgft/${INSTALL_PAGE}"
-          sed -i "s|href=\"/bgft/?install=1\"|href=\"/bgft/${INSTALL_PAGE}?install=1\"|" docs/index.html
-          sed -i "s|src=\"./assets/vendor/pwa-install-0.7.0.es.js\"|src=\"./assets/vendor/pwa-install-0.7.0.es.js?rev=${BGFT_VERSION}\"|" "docs/bgft/${INSTALL_PAGE}"
-          sed -i "s|src=\"./assets/js/pwa-install.js\"|src=\"./assets/js/pwa-install.js?rev=${BGFT_VERSION}\"|" "docs/bgft/${INSTALL_PAGE}"
-
-      - name: Vendor pinned PWA install component
-        run: |
-          BUILD_DIR="$RUNNER_TEMP/pwa-install-build"
-          mkdir -p docs/assets/vendor docs/bgft/assets/vendor "$BUILD_DIR"
-          npm install --prefix "$BUILD_DIR" --no-audit --no-fund @khmyznikov/pwa-install@0.7.0 esbuild@0.25.5
-          printf "import '@khmyznikov/pwa-install';\n" > "$BUILD_DIR/entry.js"
-          "$BUILD_DIR/node_modules/.bin/esbuild" "$BUILD_DIR/entry.js" --bundle --format=esm --target=es2022 --outfile=docs/assets/vendor/pwa-install-0.7.0.es.js
-          cp "$BUILD_DIR/node_modules/@khmyznikov/pwa-install/LICENSE" docs/assets/vendor/pwa-install-LICENSE.txt
-          cp docs/assets/vendor/pwa-install-0.7.0.es.js docs/bgft/assets/vendor/pwa-install-0.7.0.es.js
-          test -s docs/assets/vendor/pwa-install-LICENSE.txt
-          ! grep -Fq 'from"lit' docs/assets/vendor/pwa-install-0.7.0.es.js
-          ! grep -Fq "from'lit" docs/assets/vendor/pwa-install-0.7.0.es.js
-
       - name: Run regression tests
         run: npm test
 
@@ -94,7 +61,7 @@ jobs:
           echo "Attempting to purge Cloudflare cache for vortex-prime-emu.com..."
           ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=vortex-prime-emu.com" -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" -H "Content-Type: application/json" | jq -r '.result[0].id // empty')
           if [ -n "$ZONE_ID" ]; then
-            RESPONSE=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" -H "Content-Type: application/json" --data '{"files":["https://vortex-prime-emu.com/","https://vortex-prime-emu.com/projects/","https://vortex-prime-emu.com/assets/js/fpkg-release.js","https://vortex-prime-emu.com/assets/css/fpkg-release.css","https://vortex-prime-emu.com/bgft/","https://vortex-prime-emu.com/bgft/sw.js","https://vortex-prime-emu.com/app-sw.js?v=refresh2"]}')
+            RESPONSE=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" -H "Content-Type: application/json" --data '{"files":["https://vortex-prime-emu.com/","https://vortex-prime-emu.com/projects/","https://vortex-prime-emu.com/assets/js/fpkg-release.js","https://vortex-prime-emu.com/assets/css/fpkg-release.css","https://vortex-prime-emu.com/bgft/","https://vortex-prime-emu.com/bgft/sw.js","https://vortex-prime-emu.com/bgft/manifest.webmanifest","https://vortex-prime-emu.com/bgft/install-ec4925880740.html","https://vortex-prime-emu.com/app-sw.js?v=refresh2"]}')
             echo "Purge response: $RESPONSE"
           else
             echo "Warning: Could not fetch Zone ID. Token might lack Zone Read permissions or is missing."
