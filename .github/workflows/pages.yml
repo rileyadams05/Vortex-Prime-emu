@@ -57,14 +57,33 @@ jobs:
         uses: actions/deploy-pages@v5
 
       - name: Purge Cloudflare Cache
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
-          echo "Attempting to purge Cloudflare cache for vortex-prime-emu.com..."
-          ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=vortex-prime-emu.com" -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" -H "Content-Type: application/json" | jq -r '.result[0].id // empty')
-          if [ -n "$ZONE_ID" ]; then
-            RESPONSE=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" -H "Content-Type: application/json" --data '{"files":["https://vortex-prime-emu.com/","https://vortex-prime-emu.com/projects/","https://vortex-prime-emu.com/assets/js/fpkg-release.js","https://vortex-prime-emu.com/assets/css/fpkg-release.css","https://vortex-prime-emu.com/bgft/","https://vortex-prime-emu.com/bgft/sw.js","https://vortex-prime-emu.com/bgft/manifest.webmanifest","https://vortex-prime-emu.com/bgft/install-ec4925880740.html","https://vortex-prime-emu.com/app-sw.js?v=refresh2"]}')
-            echo "Purge response: $RESPONSE"
-          else
-            echo "Warning: Could not fetch Zone ID. Token might lack Zone Read permissions or is missing."
+          set -euo pipefail
+          if [[ -z "${CF_API_TOKEN:-}" ]]; then
+            echo "::error::The CF_API_TOKEN repository secret is missing."
+            exit 1
           fi
-        continue-on-error: true
 
+          if ! ZONE_RESPONSE=$(curl --silent --show-error --retry 2 --retry-all-errors --connect-timeout 10 --max-time 30 "https://api.cloudflare.com/client/v4/zones?name=vortex-prime-emu.com" -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json"); then
+            echo "::error::Cloudflare zone lookup request failed. Check the token and network access."
+            exit 1
+          fi
+          if ! jq -e '.success == true and (.result | length > 0)' <<< "$ZONE_RESPONSE" >/dev/null; then
+            jq -r '(.errors // [])[] | "Cloudflare error \(.code): \(.message)"' <<< "$ZONE_RESPONSE" || true
+            echo "::error::Cloudflare rejected the zone lookup. The token must allow Zone Read for vortex-prime-emu.com."
+            exit 1
+          fi
+          ZONE_ID=$(jq -er '.result[0].id' <<< "$ZONE_RESPONSE")
+
+          if ! PURGE_RESPONSE=$(curl --silent --show-error --retry 2 --retry-all-errors --connect-timeout 10 --max-time 30 "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/purge_cache" -X POST -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" --data '{"files":["https://vortex-prime-emu.com/","https://vortex-prime-emu.com/projects/","https://vortex-prime-emu.com/assets/js/fpkg-release.js","https://vortex-prime-emu.com/assets/css/fpkg-release.css","https://vortex-prime-emu.com/bgft/","https://vortex-prime-emu.com/bgft/sw.js","https://vortex-prime-emu.com/bgft/manifest.webmanifest","https://vortex-prime-emu.com/bgft/install-ec4925880740.html","https://vortex-prime-emu.com/app-sw.js?v=refresh2"]}'); then
+            echo "::error::Cloudflare cache purge request failed. Check that the token allows Cache Purge for vortex-prime-emu.com."
+            exit 1
+          fi
+          if ! jq -e '.success == true' <<< "$PURGE_RESPONSE" >/dev/null; then
+            jq -r '(.errors // [])[] | "Cloudflare error \(.code): \(.message)"' <<< "$PURGE_RESPONSE" || true
+            echo "::error::Cloudflare rejected the cache purge. The token must allow Cache Purge for vortex-prime-emu.com."
+            exit 1
+          fi
+          echo "Cloudflare cache purge succeeded."
