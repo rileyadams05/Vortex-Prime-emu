@@ -88,8 +88,8 @@ test('homepage places ModX Cheat Tables between Repository and Install in the Mo
   assert.doesNotMatch(home, /BGFT|bgft/i);
   assert.doesNotMatch(home, /bgft-pwa-install|pwa-install-0.7.0/);
   assert.ok(modxPage.includes('<h1>ModX Cheat Tables</h1>'));
-  assert.ok(modxPage.includes('href="/">Home'));
-  assert.ok(modxPage.includes('href="/help/">Help'));
+  assert.match(modxPage, /<a href="\/"[^>]*>Home<\/a>/);
+  assert.match(modxPage, /<a href="\/help\/"[^>]*>Help<\/a>/);
 });
 
 test('ModX installer selection exposes only actual Windows MSI/EXE release assets', () => {
