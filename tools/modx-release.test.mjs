@@ -75,10 +75,12 @@ function restoreGlobals() {
 }
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-test('homepage replaces BGFT with the three active project cards and keeps ModX Cheat Tables', () => {
+test('homepage places ModX Cheat Tables between Repository and Install in the ModX card', () => {
   const cards = [...home.matchAll(/<div class="project-card" aria-label="([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(cards, ['NXE project', 'FPKG Builder project', 'ModX project']);
   assert.ok(home.includes('href="https://github.com/rileyadams05/ModX" target="_blank" rel="noopener noreferrer">Repository</a>'));
+  assert.match(home, /<div class="project-links" aria-label="ModX project actions">\s*<a[^>]*>Repository<\/a>\s*<a[^>]*href="\/modx\/"[^>]*>ModX Cheat Tables<\/a>\s*<button[^>]*id="modxInstallButton"/);
+  assert.doesNotMatch(home, /class="(?:mobile-)?nav-link"[^>]*>ModX Cheat Tables/);
   assert.match(home, /id="modxInstallButton"[^>]+aria-controls="modxReleaseDialog"/);
   assert.match(home, /id="modxReleaseDialog"/);
   assert.match(home, /id="modxProjectVersion">Not released yet/);
