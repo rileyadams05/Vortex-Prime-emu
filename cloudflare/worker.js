@@ -301,17 +301,17 @@ function validateModxContribution(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw httpError(400, 'Provide a valid contribution.');
   const category = body.category;
   const gameName = cleanModxText(body.gameName, 160);
-  const gameId = String(body.gameId || '').trim().toLowerCase();
+  const requestedGameId = String(body.gameId || '').trim().toLowerCase();
   const notes = cleanModxText(body.notes, 2000);
   if (!['pc', 'emulators', 'nxe'].includes(category)) throw httpError(400, 'Choose PC, Emulators, or NXE.');
   if (!gameName) throw httpError(400, 'Enter the game name.');
-  if (!/^[a-z0-9][a-z0-9._-]{0,79}$/.test(gameId)) throw httpError(400, 'Use a valid game ID with lowercase letters, numbers, dots, underscores, or hyphens.');
+  const gameId = category === 'emulators' ? requestedGameId : slugModxGameId(gameName);
+  if (category === 'emulators' && !/^[a-z0-9][a-z0-9._-]{0,79}$/.test(gameId)) throw httpError(400, 'Enter a valid emulator game ID with lowercase letters, numbers, dots, underscores, or hyphens.');
   const payload = { category, gameName, gameId, notes };
   if (category === 'pc') {
-    const services = cleanModxChoices(body.services, new Set(['steam', 'epic', 'xbox', 'gog', 'ubisoft', 'ea', 'other']), 7);
-    const platforms = cleanModxChoices(body.platforms, new Set(['windows', 'linux', 'steamos', 'macos']), 4);
-    if (!services.length || !platforms.length) throw httpError(400, 'Select at least one PC service and computer platform.');
-    Object.assign(payload, { services, platforms });
+    const services = cleanModxTextList(body.services, 100, 12);
+    if (!services.length) throw httpError(400, 'Enter at least one supported PC gaming service.');
+    Object.assign(payload, { services });
   } else if (category === 'emulators') {
     const consolePlatform = cleanModxText(body.consolePlatform, 80);
     const emulators = Array.isArray(body.emulators) ? body.emulators.map((item) => cleanModxText(item, 80)).filter(Boolean).slice(0, 8) : [];
@@ -323,6 +323,17 @@ function validateModxContribution(body) {
     Object.assign(payload, { nxeTargets });
   }
   return payload;
+}
+
+function slugModxGameId(value) {
+  const slug = value.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '').slice(0, 80).replace(/[^a-z0-9]+$/g, '');
+  return slug || 'game';
+}
+
+function cleanModxTextList(value, maxLength, limit) {
+  if (!Array.isArray(value)) return [];
+  const items = value.map((item) => cleanModxText(item, maxLength)).filter(Boolean);
+  return [...new Map(items.map((item) => [item.toLocaleLowerCase(), item])).values()].slice(0, limit);
 }
 
 function cleanModxChoices(value, allowed, limit) {
