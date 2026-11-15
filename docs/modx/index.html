@@ -14,7 +14,7 @@
     .button{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid #52525b;border-radius:8px;background:#27272a;color:#fafafa;font:inherit;font-weight:650;text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s}.button:hover{border-color:#71717a;background:#303036}.button-primary{background:#166534;border-color:#15803d}.button-primary:hover{background:#15803d;border-color:#22c55e}.button:disabled{opacity:.58;cursor:wait}
     .user-chip{display:flex;align-items:center;gap:10px;color:#e4e4e7}.avatar{width:34px;height:34px;border-radius:50%;background:#27272a}.status{min-height:24px;margin:12px 0 0;color:var(--muted);font-size:.94rem}.status[data-kind="error"]{color:#fca5a5}.status[data-kind="success"]{color:#86efac}.status a{color:var(--blue)}
     .form-grid,.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.field{display:grid;gap:8px}.field-full{grid-column:1/-1}.field label,.field legend{font-size:.94rem;font-weight:650;color:#f4f4f5}.field input[type="text"],.field textarea,.field select{width:100%;min-height:46px;border:1px solid #52525b;border-radius:8px;background:#09090b;color:#fafafa;padding:11px 12px;font:inherit}.field textarea{min-height:100px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{outline:2px solid #34d399;outline-offset:1px}.help{margin:0;color:var(--muted);font-size:.86rem;line-height:1.5}
-    fieldset{margin:0;padding:0;border:0;min-width:0}.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px}.choice{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;border:1px solid #3f3f46;border-radius:8px;background:var(--surface-2);color:#e4e4e7;font-size:.93rem}.choice input{width:17px;height:17px;accent-color:var(--green)}.category-panel{margin-top:2px;padding:18px;border:1px solid #3f3f46;border-radius:10px;background:#111114}.category-panel[hidden]{display:none}.form-actions{margin-top:24px;justify-content:flex-end}.review-note{border-left:3px solid #34d399;padding:2px 0 2px 14px;color:var(--muted);font-size:.9rem}
+    fieldset{margin:0;padding:0;border:0;min-width:0}.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px}.choice{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;border:1px solid #3f3f46;border-radius:8px;background:var(--surface-2);color:#e4e4e7;font-size:.93rem}.choice input{width:17px;height:17px;accent-color:var(--green)}.service-list{display:grid;gap:10px;margin-top:14px}.service-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px}.service-row input[type="text"]{width:100%;min-height:46px;border:1px solid #52525b;border-radius:8px;background:#09090b;color:#fafafa;padding:11px 12px;font:inherit}.service-row button{min-width:44px;padding:0;font-size:1.35rem}.service-add{margin-top:10px;width:46px;font-size:1.35rem}.field[hidden]{display:none}.category-panel{margin-top:2px;padding:18px;border:1px solid #3f3f46;border-radius:10px;background:#111114}.category-panel[hidden]{display:none}.form-actions{margin-top:24px;justify-content:flex-end}.review-note{border-left:3px solid #34d399;padding:2px 0 2px 14px;color:var(--muted);font-size:.9rem}
     footer{padding:24px;border-top:1px solid var(--border);color:var(--muted);text-align:center}a{color:var(--blue)}
     @media(max-width:650px){main{padding:36px 16px 54px}.panel{padding:20px 16px}.form-grid,.field-grid{grid-template-columns:1fr}.field-full{grid-column:auto}.auth-row{align-items:flex-start}.form-actions .button{width:100%}}
   </style>
@@ -43,40 +43,27 @@
         <div class="field">
           <label for="catalogCategory">Catalog</label>
           <select id="catalogCategory" name="category" required>
-            <option value="pc">PC — game services</option>
+            <option value="pc">PC gaming services</option>
             <option value="emulators">Emulators</option>
             <option value="nxe">NXE</option>
           </select>
-          <p class="help">PC covers services such as Steam, Epic and Xbox. Emulators covers console games played through emulators. NXE is for the NXE project.</p>
+          <p class="help">PC gaming services are the storefronts or services that support the game. Emulators covers console games played through emulators. NXE is for the NXE project.</p>
         </div>
         <div class="field">
           <label for="gameName">Game name</label>
           <input id="gameName" name="gameName" type="text" maxlength="160" autocomplete="off" required placeholder="e.g. Example Game">
         </div>
-        <div class="field field-full">
+        <div class="field field-full" id="gameIdField" hidden>
           <label for="gameId">Game ID</label>
-          <input id="gameId" name="gameId" type="text" maxlength="80" pattern="[a-z0-9][a-z0-9._-]*" required placeholder="e.g. example-game or the ID shown by ModX">
-          <p class="help">Use a stable ID with lowercase letters, numbers, dots, underscores or hyphens. ModX uses it to match entries to games.</p>
+          <input id="gameId" name="gameId" type="text" maxlength="80" pattern="[a-z0-9][a-z0-9._-]*" placeholder="e.g. example-game or the ID shown by ModX">
+          <p class="help">Enter the game ID used by the emulator cheat catalogue.</p>
         </div>
 
         <fieldset id="pcOptions" class="category-panel field field-full">
-          <legend>PC support</legend>
-          <p class="help">Select the game services and computer platforms this entry supports.</p>
-          <fieldset class="field" style="margin-top:14px"><legend>Game services</legend><div class="choice-grid">
-            <label class="choice"><input type="checkbox" name="services" value="steam"> Steam</label>
-            <label class="choice"><input type="checkbox" name="services" value="epic"> Epic Games</label>
-            <label class="choice"><input type="checkbox" name="services" value="xbox"> Xbox app / Game Pass</label>
-            <label class="choice"><input type="checkbox" name="services" value="gog"> GOG</label>
-            <label class="choice"><input type="checkbox" name="services" value="ubisoft"> Ubisoft Connect</label>
-            <label class="choice"><input type="checkbox" name="services" value="ea"> EA app</label>
-            <label class="choice"><input type="checkbox" name="services" value="other"> Other service</label>
-          </div></fieldset>
-          <fieldset class="field" style="margin-top:14px"><legend>Computer platforms</legend><div class="choice-grid">
-            <label class="choice"><input type="checkbox" name="platforms" value="windows"> Windows</label>
-            <label class="choice"><input type="checkbox" name="platforms" value="linux"> Linux</label>
-            <label class="choice"><input type="checkbox" name="platforms" value="steamos"> SteamOS</label>
-            <label class="choice"><input type="checkbox" name="platforms" value="macos"> macOS</label>
-          </div></fieldset>
+          <legend>Supported services</legend>
+          <p class="help">Type each service this game is supported on. Add another service if more than one is supported.</p>
+          <div id="serviceList" class="service-list" aria-label="Supported services"></div>
+          <button id="addServiceButton" class="button service-add" type="button" aria-label="Add another supported service">+</button>
         </fieldset>
 
         <fieldset id="emulatorOptions" class="category-panel field field-full" hidden>
@@ -117,6 +104,10 @@
       const form = document.getElementById('contributionForm');
       const category = document.getElementById('catalogCategory');
       const pcOptions = document.getElementById('pcOptions');
+      const gameIdField = document.getElementById('gameIdField');
+      const gameIdInput = document.getElementById('gameId');
+      const serviceList = document.getElementById('serviceList');
+      const addServiceButton = document.getElementById('addServiceButton');
       const emulatorOptions = document.getElementById('emulatorOptions');
       const nxeOptions = document.getElementById('nxeOptions');
       const authStatus = document.getElementById('authStatus');
@@ -126,15 +117,31 @@
       const signOut = document.getElementById('signOutButton');
       const setStatus = (node, message, kind = '') => { node.textContent = message; node.dataset.kind = kind; };
       const selected = (name) => [...form.querySelectorAll(`input[name="${name}"]:checked`)].map((input) => input.value);
+      const updateServiceRows = () => {
+        const rows = [...serviceList.querySelectorAll('.service-row')];
+        rows.forEach((row) => { row.querySelector('button').hidden = rows.length === 1; });
+      };
+      const addServiceRow = (value = '') => {
+        const row = document.createElement('div'); row.className = 'service-row';
+        const input = document.createElement('input'); input.type = 'text'; input.name = 'services'; input.maxLength = 100; input.required = true; input.autocomplete = 'off'; input.placeholder = 'e.g. Steam'; input.setAttribute('aria-label', 'Supported service'); input.value = value;
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'button'; remove.textContent = '−'; remove.setAttribute('aria-label', 'Remove supported service'); remove.addEventListener('click', () => { row.remove(); updateServiceRows(); });
+        row.append(input, remove); serviceList.append(row); updateServiceRows();
+      };
+      const resetServiceRows = () => { serviceList.replaceChildren(); addServiceRow(); };
+      const supportedServices = () => [...serviceList.querySelectorAll('input[name="services"]')].map((input) => input.value.trim()).filter(Boolean);
       const switchCategory = () => {
         const value = category.value;
         pcOptions.hidden = value !== 'pc';
         emulatorOptions.hidden = value !== 'emulators';
         nxeOptions.hidden = value !== 'nxe';
+        gameIdField.hidden = value !== 'emulators';
+        gameIdInput.required = value === 'emulators';
         document.getElementById('consolePlatform').required = value === 'emulators';
         document.getElementById('emulatorNames').required = value === 'emulators';
       };
       category.addEventListener('change', switchCategory);
+      addServiceButton.addEventListener('click', () => addServiceRow());
+      resetServiceRows();
       switchCategory();
 
       const loadSession = async () => {
@@ -172,10 +179,9 @@
         const payload = {
           category: category.value,
           gameName: document.getElementById('gameName').value.trim(),
-          gameId: document.getElementById('gameId').value.trim().toLowerCase(),
+          ...(category.value === 'emulators' ? { gameId: gameIdInput.value.trim().toLowerCase() } : {}),
           notes: document.getElementById('entryNotes').value.trim(),
-          services: category.value === 'pc' ? selected('services') : [],
-          platforms: category.value === 'pc' ? selected('platforms') : [],
+          services: category.value === 'pc' ? supportedServices() : [],
           consolePlatform: category.value === 'emulators' ? document.getElementById('consolePlatform').value : '',
           emulators: category.value === 'emulators' ? document.getElementById('emulatorNames').value.split(',').map((item) => item.trim()).filter(Boolean) : [],
           nxeTargets: category.value === 'nxe' ? selected('nxeTargets') : [],
@@ -196,6 +202,7 @@
           submitStatus.append(link);
           submitStatus.dataset.kind = 'success';
           form.reset();
+          resetServiceRows();
           switchCategory();
         } catch (error) {
           setStatus(submitStatus, error instanceof Error ? error.message : 'The submission could not be sent.', 'error');
