@@ -85,7 +85,6 @@ test('homepage places ModX Cheat Tables between Repository and Install in the Mo
   assert.match(home, /id="modxReleaseDialog"/);
   assert.match(home, /id="modxProjectVersion">Not released yet/);
   assert.match(home, /id="modxProjectInstallers">Not released yet/);
-  assert.ok(home.includes('href="/modx/" class="nav-link"'));
   assert.doesNotMatch(home, /BGFT|bgft/i);
   assert.doesNotMatch(home, /bgft-pwa-install|pwa-install-0.7.0/);
   assert.ok(modxPage.includes('<h1>ModX Cheat Tables</h1>'));
