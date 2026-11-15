@@ -69,9 +69,7 @@
         <fieldset id="emulatorOptions" class="category-panel field field-full" hidden>
           <legend>Emulator support</legend>
           <div class="field-grid">
-            <div class="field"><label for="consolePlatform">Console platform</label><select id="consolePlatform" name="consolePlatform">
-              <option value="">Choose a console platform</option><option>PlayStation</option><option>PlayStation 2</option><option>PlayStation 3</option><option>PlayStation 4</option><option>PlayStation 5</option><option>Xbox</option><option>Xbox 360</option><option>GameCube</option><option>Wii</option><option>Wii U</option><option>Nintendo Switch</option><option>Other</option>
-            </select></div>
+            <div class="field"><label for="consolePlatforms">Console platform(s)</label><p class="help">Type each supported console platform. Add or remove entries as needed.</p><div id="consolePlatformList" class="service-list" aria-label="Console platforms"></div><button id="addConsolePlatformButton" class="button service-add" type="button" aria-label="Add another console platform">+</button></div>
             <div class="field"><label for="emulatorNames">Emulator(s)</label><input id="emulatorNames" name="emulators" type="text" maxlength="240" placeholder="e.g. RPCS3, Xenia, Dolphin"></div>
           </div>
         </fieldset>
@@ -108,6 +106,8 @@
       const gameIdInput = document.getElementById('gameId');
       const serviceList = document.getElementById('serviceList');
       const addServiceButton = document.getElementById('addServiceButton');
+      const consolePlatformList = document.getElementById('consolePlatformList');
+      const addConsolePlatformButton = document.getElementById('addConsolePlatformButton');
       const emulatorOptions = document.getElementById('emulatorOptions');
       const nxeOptions = document.getElementById('nxeOptions');
       const authStatus = document.getElementById('authStatus');
@@ -129,6 +129,18 @@
       };
       const resetServiceRows = () => { serviceList.replaceChildren(); addServiceRow(); };
       const supportedServices = () => [...serviceList.querySelectorAll('input[name="services"]')].map((input) => input.value.trim()).filter(Boolean);
+      const updateConsolePlatformRows = () => {
+        const rows = [...consolePlatformList.querySelectorAll('.service-row')];
+        rows.forEach((row) => { row.querySelector('button').hidden = rows.length === 1; });
+      };
+      const addConsolePlatformRow = (value = '') => {
+        const row = document.createElement('div'); row.className = 'service-row';
+        const input = document.createElement('input'); input.type = 'text'; input.name = 'consolePlatforms'; input.maxLength = 80; input.required = true; input.autocomplete = 'off'; input.placeholder = 'e.g. PlayStation 2'; input.setAttribute('aria-label', 'Console platform'); input.value = value;
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'button'; remove.textContent = '−'; remove.setAttribute('aria-label', 'Remove console platform'); remove.addEventListener('click', () => { row.remove(); updateConsolePlatformRows(); });
+        row.append(input, remove); consolePlatformList.append(row); updateConsolePlatformRows();
+      };
+      const resetConsolePlatformRows = () => { consolePlatformList.replaceChildren(); addConsolePlatformRow(); };
+      const consolePlatforms = () => [...consolePlatformList.querySelectorAll('input[name="consolePlatforms"]')].map((input) => input.value.trim()).filter(Boolean);
       const switchCategory = () => {
         const value = category.value;
         pcOptions.hidden = value !== 'pc';
@@ -136,12 +148,14 @@
         nxeOptions.hidden = value !== 'nxe';
         gameIdField.hidden = value !== 'emulators';
         gameIdInput.required = value === 'emulators';
-        document.getElementById('consolePlatform').required = value === 'emulators';
+        consolePlatformList.querySelectorAll('input[name="consolePlatforms"]').forEach((input) => { input.required = value === 'emulators'; });
         document.getElementById('emulatorNames').required = value === 'emulators';
       };
       category.addEventListener('change', switchCategory);
       addServiceButton.addEventListener('click', () => addServiceRow());
+      addConsolePlatformButton.addEventListener('click', () => addConsolePlatformRow());
       resetServiceRows();
+      resetConsolePlatformRows();
       switchCategory();
 
       const loadSession = async () => {
@@ -182,7 +196,7 @@
           ...(category.value === 'emulators' ? { gameId: gameIdInput.value.trim().toLowerCase() } : {}),
           notes: document.getElementById('entryNotes').value.trim(),
           services: category.value === 'pc' ? supportedServices() : [],
-          consolePlatform: category.value === 'emulators' ? document.getElementById('consolePlatform').value : '',
+          consolePlatforms: category.value === 'emulators' ? consolePlatforms() : [],
           emulators: category.value === 'emulators' ? document.getElementById('emulatorNames').value.split(',').map((item) => item.trim()).filter(Boolean) : [],
           nxeTargets: category.value === 'nxe' ? selected('nxeTargets') : [],
         };
@@ -203,6 +217,7 @@
           submitStatus.dataset.kind = 'success';
           form.reset();
           resetServiceRows();
+          resetConsolePlatformRows();
           switchCategory();
         } catch (error) {
           setStatus(submitStatus, error instanceof Error ? error.message : 'The submission could not be sent.', 'error');

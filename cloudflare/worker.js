@@ -313,10 +313,11 @@ function validateModxContribution(body) {
     if (!services.length) throw httpError(400, 'Enter at least one supported PC gaming service.');
     Object.assign(payload, { services });
   } else if (category === 'emulators') {
-    const consolePlatform = cleanModxText(body.consolePlatform, 80);
+    const consolePlatformValues = Array.isArray(body.consolePlatforms) ? body.consolePlatforms : [body.consolePlatform];
+    const consolePlatforms = cleanModxTextList(consolePlatformValues, 80, 12);
     const emulators = Array.isArray(body.emulators) ? body.emulators.map((item) => cleanModxText(item, 80)).filter(Boolean).slice(0, 8) : [];
-    if (!consolePlatform || !emulators.length) throw httpError(400, 'Choose a console platform and enter at least one emulator.');
-    Object.assign(payload, { consolePlatform, emulators });
+    if (!consolePlatforms.length || !emulators.length) throw httpError(400, 'Enter at least one console platform and emulator.');
+    Object.assign(payload, { consolePlatforms, consolePlatform: consolePlatforms[0], emulators });
   } else {
     const nxeTargets = cleanModxChoices(body.nxeTargets, new Set(['xbox-series-x', 'xbox-series-s', 'xbox-one-dev-mode']), 3);
     if (!nxeTargets.length) throw httpError(400, 'Select at least one NXE target.');
