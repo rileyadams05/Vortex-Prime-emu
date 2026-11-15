@@ -105,6 +105,8 @@ assert.match(publishHtml, /name="emulators"/);
 assert.doesNotMatch(publishHtml, /<select[^>]+id="consolePlatform"/);
 assert.match(publishHtml, /id="nxeTargetList"[\s\S]*id="addNxeTargetButton"/);
 assert.match(publishHtml, /input\.name = 'nxeTargets'/);
+assert.match(publishHtml, /name="nxeEmulators"/);
+assert.match(publishHtml, /Enter the emulator built for Xbox Developer Mode/);
 assert.doesNotMatch(publishHtml, /type="checkbox" name="nxeTargets"/);
 assert.doesNotMatch(publishHtml, /type="file"|name="githubUrl"|id="sourceStep"/i, 'the contribution workflow must not expose legacy upload controls');
 assert.match(uploadsHtml, /<h1>ModX submissions are being prepared<\/h1>/);

@@ -76,9 +76,10 @@
 
         <fieldset id="nxeOptions" class="category-panel field field-full" hidden>
           <legend>NXE support</legend>
-          <p class="help">Type each Xbox platform or NXE target this game supports. Add or remove entries as needed.</p>
-          <div id="nxeTargetList" class="service-list" aria-label="NXE target platforms"></div>
-          <button id="addNxeTargetButton" class="button service-add" type="button" aria-label="Add another NXE target platform">+</button>
+          <div class="field-grid">
+            <div class="field"><label for="nxeTargets">Xbox platform(s)</label><p class="help">Type each Xbox Developer Mode target. Add or remove entries as needed.</p><div id="nxeTargetList" class="service-list" aria-label="NXE target platforms"></div><button id="addNxeTargetButton" class="button service-add" type="button" aria-label="Add another NXE target platform">+</button></div>
+            <div class="field"><label for="nxeEmulatorNames">Emulator(s)</label><input id="nxeEmulatorNames" name="nxeEmulators" type="text" maxlength="240" placeholder="Enter the emulator built for Xbox Developer Mode"></div>
+          </div>
         </fieldset>
 
         <div class="field field-full">
@@ -161,6 +162,7 @@
         consolePlatformList.querySelectorAll('input[name="consolePlatforms"]').forEach((input) => { input.required = value === 'emulators'; });
         document.getElementById('emulatorNames').required = value === 'emulators';
         nxeTargetList.querySelectorAll('input[name="nxeTargets"]').forEach((input) => { input.required = value === 'nxe'; });
+        document.getElementById('nxeEmulatorNames').required = value === 'nxe';
       };
       category.addEventListener('change', switchCategory);
       addServiceButton.addEventListener('click', () => addServiceRow());
@@ -212,6 +214,7 @@
           consolePlatforms: category.value === 'emulators' ? consolePlatforms() : [],
           emulators: category.value === 'emulators' ? document.getElementById('emulatorNames').value.split(',').map((item) => item.trim()).filter(Boolean) : [],
           nxeTargets: category.value === 'nxe' ? nxeTargets() : [],
+          nxeEmulators: category.value === 'nxe' ? document.getElementById('nxeEmulatorNames').value.split(',').map((item) => item.trim()).filter(Boolean) : [],
         };
         try {
           const response = await fetch('/api/modx/contributions', {

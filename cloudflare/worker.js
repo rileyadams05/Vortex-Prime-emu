@@ -320,8 +320,9 @@ function validateModxContribution(body) {
     Object.assign(payload, { consolePlatforms, consolePlatform: consolePlatforms[0], emulators });
   } else {
     const nxeTargets = cleanModxTextList(body.nxeTargets, 80, 12);
-    if (!nxeTargets.length) throw httpError(400, 'Enter at least one supported NXE target platform.');
-    Object.assign(payload, { nxeTargets });
+    const nxeEmulators = cleanModxTextList(body.nxeEmulators, 100, 12);
+    if (!nxeTargets.length || !nxeEmulators.length) throw httpError(400, 'Enter at least one Xbox platform and emulator for NXE.');
+    Object.assign(payload, { nxeTargets, nxeEmulators });
   }
   return payload;
 }
