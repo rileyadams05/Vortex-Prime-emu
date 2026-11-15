@@ -319,8 +319,8 @@ function validateModxContribution(body) {
     if (!consolePlatforms.length || !emulators.length) throw httpError(400, 'Enter at least one console platform and emulator.');
     Object.assign(payload, { consolePlatforms, consolePlatform: consolePlatforms[0], emulators });
   } else {
-    const nxeTargets = cleanModxChoices(body.nxeTargets, new Set(['xbox-series-x', 'xbox-series-s', 'xbox-one-dev-mode']), 3);
-    if (!nxeTargets.length) throw httpError(400, 'Select at least one NXE target.');
+    const nxeTargets = cleanModxTextList(body.nxeTargets, 80, 12);
+    if (!nxeTargets.length) throw httpError(400, 'Enter at least one supported NXE target platform.');
     Object.assign(payload, { nxeTargets });
   }
   return payload;

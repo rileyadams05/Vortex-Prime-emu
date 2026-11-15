@@ -92,6 +92,7 @@ assert.match(publishHtml, /<h1>ModX Cheat Tables<\/h1>/);
 assert.match(publishHtml, /<h2>Game and support details<\/h2>/);
 assert.match(publishHtml, /Continue with GitHub/);
 assert.match(publishHtml, /value="pc"[\s\S]*value="emulators"[\s\S]*value="nxe"/);
+assert.match(publishHtml, /<option value="emulators">PC emulators<\/option>/);
 assert.match(publishHtml, /id="gameName"[\s\S]*id="gameId"/);
 assert.match(publishHtml, /api\/modx\/contributions/);
 assert.match(publishHtml, /pull request/i);
@@ -102,7 +103,9 @@ assert.match(publishHtml, /id="consolePlatformList"[\s\S]*id="addConsolePlatform
 assert.match(publishHtml, /input\.name = 'consolePlatforms'/);
 assert.match(publishHtml, /name="emulators"/);
 assert.doesNotMatch(publishHtml, /<select[^>]+id="consolePlatform"/);
-assert.match(publishHtml, /name="nxeTargets"/);
+assert.match(publishHtml, /id="nxeTargetList"[\s\S]*id="addNxeTargetButton"/);
+assert.match(publishHtml, /input\.name = 'nxeTargets'/);
+assert.doesNotMatch(publishHtml, /type="checkbox" name="nxeTargets"/);
 assert.doesNotMatch(publishHtml, /type="file"|name="githubUrl"|id="sourceStep"/i, 'the contribution workflow must not expose legacy upload controls');
 assert.match(uploadsHtml, /<h1>ModX submissions are being prepared<\/h1>/);
 assert.match(uploadsHtml, /old account uploads view is retired/i);

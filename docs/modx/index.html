@@ -44,10 +44,10 @@
           <label for="catalogCategory">Catalog</label>
           <select id="catalogCategory" name="category" required>
             <option value="pc">PC gaming services</option>
-            <option value="emulators">Emulators</option>
+            <option value="emulators">PC emulators</option>
             <option value="nxe">NXE</option>
           </select>
-          <p class="help">PC gaming services are the storefronts or services that support the game. Emulators covers console games played through emulators. NXE is for the NXE project.</p>
+          <p class="help">PC gaming services are the storefronts or services that support the game. PC emulators covers console games played through PC emulators. NXE is for the NXE project.</p>
         </div>
         <div class="field">
           <label for="gameName">Game name</label>
@@ -56,7 +56,7 @@
         <div class="field field-full" id="gameIdField" hidden>
           <label for="gameId">Game ID</label>
           <input id="gameId" name="gameId" type="text" maxlength="80" pattern="[a-z0-9][a-z0-9._-]*" placeholder="e.g. example-game or the ID shown by ModX">
-          <p class="help">Enter the game ID used by the emulator cheat catalogue.</p>
+          <p class="help">Enter the game ID used by the PC emulator cheat catalogue.</p>
         </div>
 
         <fieldset id="pcOptions" class="category-panel field field-full">
@@ -67,7 +67,7 @@
         </fieldset>
 
         <fieldset id="emulatorOptions" class="category-panel field field-full" hidden>
-          <legend>Emulator support</legend>
+          <legend>PC emulator support</legend>
           <div class="field-grid">
             <div class="field"><label for="consolePlatforms">Console platform(s)</label><p class="help">Type each supported console platform. Add or remove entries as needed.</p><div id="consolePlatformList" class="service-list" aria-label="Console platforms"></div><button id="addConsolePlatformButton" class="button service-add" type="button" aria-label="Add another console platform">+</button></div>
             <div class="field"><label for="emulatorNames">Emulator(s)</label><input id="emulatorNames" name="emulators" type="text" maxlength="240" placeholder="e.g. RPCS3, Xenia, Dolphin"></div>
@@ -76,12 +76,9 @@
 
         <fieldset id="nxeOptions" class="category-panel field field-full" hidden>
           <legend>NXE support</legend>
-          <p class="help">Choose the Xbox Developer Mode target(s) for the NXE project.</p>
-          <div class="choice-grid" style="margin-top:14px">
-            <label class="choice"><input type="checkbox" name="nxeTargets" value="xbox-series-x"> Xbox Series X</label>
-            <label class="choice"><input type="checkbox" name="nxeTargets" value="xbox-series-s"> Xbox Series S</label>
-            <label class="choice"><input type="checkbox" name="nxeTargets" value="xbox-one-dev-mode"> Xbox One Developer Mode</label>
-          </div>
+          <p class="help">Type each Xbox platform or NXE target this game supports. Add or remove entries as needed.</p>
+          <div id="nxeTargetList" class="service-list" aria-label="NXE target platforms"></div>
+          <button id="addNxeTargetButton" class="button service-add" type="button" aria-label="Add another NXE target platform">+</button>
         </fieldset>
 
         <div class="field field-full">
@@ -108,6 +105,8 @@
       const addServiceButton = document.getElementById('addServiceButton');
       const consolePlatformList = document.getElementById('consolePlatformList');
       const addConsolePlatformButton = document.getElementById('addConsolePlatformButton');
+      const nxeTargetList = document.getElementById('nxeTargetList');
+      const addNxeTargetButton = document.getElementById('addNxeTargetButton');
       const emulatorOptions = document.getElementById('emulatorOptions');
       const nxeOptions = document.getElementById('nxeOptions');
       const authStatus = document.getElementById('authStatus');
@@ -116,7 +115,6 @@
       const signedInUser = document.getElementById('signedInUser');
       const signOut = document.getElementById('signOutButton');
       const setStatus = (node, message, kind = '') => { node.textContent = message; node.dataset.kind = kind; };
-      const selected = (name) => [...form.querySelectorAll(`input[name="${name}"]:checked`)].map((input) => input.value);
       const updateServiceRows = () => {
         const rows = [...serviceList.querySelectorAll('.service-row')];
         rows.forEach((row) => { row.querySelector('button').hidden = rows.length === 1; });
@@ -141,6 +139,18 @@
       };
       const resetConsolePlatformRows = () => { consolePlatformList.replaceChildren(); addConsolePlatformRow(); };
       const consolePlatforms = () => [...consolePlatformList.querySelectorAll('input[name="consolePlatforms"]')].map((input) => input.value.trim()).filter(Boolean);
+      const updateNxeTargetRows = () => {
+        const rows = [...nxeTargetList.querySelectorAll('.service-row')];
+        rows.forEach((row) => { row.querySelector('button').hidden = rows.length === 1; });
+      };
+      const addNxeTargetRow = (value = '') => {
+        const row = document.createElement('div'); row.className = 'service-row';
+        const input = document.createElement('input'); input.type = 'text'; input.name = 'nxeTargets'; input.maxLength = 80; input.required = true; input.autocomplete = 'off'; input.placeholder = 'e.g. Xbox Series X'; input.setAttribute('aria-label', 'NXE target platform'); input.value = value;
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'button'; remove.textContent = '−'; remove.setAttribute('aria-label', 'Remove NXE target platform'); remove.addEventListener('click', () => { row.remove(); updateNxeTargetRows(); });
+        row.append(input, remove); nxeTargetList.append(row); updateNxeTargetRows();
+      };
+      const resetNxeTargetRows = () => { nxeTargetList.replaceChildren(); addNxeTargetRow(); };
+      const nxeTargets = () => [...nxeTargetList.querySelectorAll('input[name="nxeTargets"]')].map((input) => input.value.trim()).filter(Boolean);
       const switchCategory = () => {
         const value = category.value;
         pcOptions.hidden = value !== 'pc';
@@ -150,12 +160,15 @@
         gameIdInput.required = value === 'emulators';
         consolePlatformList.querySelectorAll('input[name="consolePlatforms"]').forEach((input) => { input.required = value === 'emulators'; });
         document.getElementById('emulatorNames').required = value === 'emulators';
+        nxeTargetList.querySelectorAll('input[name="nxeTargets"]').forEach((input) => { input.required = value === 'nxe'; });
       };
       category.addEventListener('change', switchCategory);
       addServiceButton.addEventListener('click', () => addServiceRow());
       addConsolePlatformButton.addEventListener('click', () => addConsolePlatformRow());
+      addNxeTargetButton.addEventListener('click', () => addNxeTargetRow());
       resetServiceRows();
       resetConsolePlatformRows();
+      resetNxeTargetRows();
       switchCategory();
 
       const loadSession = async () => {
@@ -198,7 +211,7 @@
           services: category.value === 'pc' ? supportedServices() : [],
           consolePlatforms: category.value === 'emulators' ? consolePlatforms() : [],
           emulators: category.value === 'emulators' ? document.getElementById('emulatorNames').value.split(',').map((item) => item.trim()).filter(Boolean) : [],
-          nxeTargets: category.value === 'nxe' ? selected('nxeTargets') : [],
+          nxeTargets: category.value === 'nxe' ? nxeTargets() : [],
         };
         try {
           const response = await fetch('/api/modx/contributions', {
@@ -218,6 +231,7 @@
           form.reset();
           resetServiceRows();
           resetConsolePlatformRows();
+          resetNxeTargetRows();
           switchCategory();
         } catch (error) {
           setStatus(submitStatus, error instanceof Error ? error.message : 'The submission could not be sent.', 'error');
