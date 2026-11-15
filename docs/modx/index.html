@@ -77,8 +77,8 @@
         <fieldset id="nxeOptions" class="category-panel field field-full" hidden>
           <legend>NXE support</legend>
           <div class="field-grid">
-            <div class="field"><label for="nxeTargets">Xbox platform(s)</label><p class="help">Type each Xbox Developer Mode target. Add or remove entries as needed.</p><div id="nxeTargetList" class="service-list" aria-label="NXE target platforms"></div><button id="addNxeTargetButton" class="button service-add" type="button" aria-label="Add another NXE target platform">+</button></div>
-            <div class="field"><label for="nxeEmulatorNames">Emulator(s)</label><input id="nxeEmulatorNames" name="nxeEmulators" type="text" maxlength="240" placeholder="Enter the emulator built for Xbox Developer Mode"></div>
+            <fieldset class="field"><legend>Xbox platform(s)</legend><p class="help">Enter one target per row, such as Series X/S, Original Xbox One, Xbox One S, or Xbox One X.</p><div id="nxeTargetList" class="service-list" aria-label="NXE target platforms"></div><button id="addNxeTargetButton" class="button service-add" type="button" aria-label="Add another NXE target platform">+</button></fieldset>
+            <fieldset class="field"><legend>Emulator(s)</legend><p class="help">Enter each console emulator built for Xbox Developer Mode. Add or remove entries as needed.</p><div id="nxeEmulatorList" class="service-list" aria-label="NXE emulators"></div><button id="addNxeEmulatorButton" class="button service-add" type="button" aria-label="Add another emulator">+</button></fieldset>
           </div>
         </fieldset>
 
@@ -108,6 +108,8 @@
       const addConsolePlatformButton = document.getElementById('addConsolePlatformButton');
       const nxeTargetList = document.getElementById('nxeTargetList');
       const addNxeTargetButton = document.getElementById('addNxeTargetButton');
+      const nxeEmulatorList = document.getElementById('nxeEmulatorList');
+      const addNxeEmulatorButton = document.getElementById('addNxeEmulatorButton');
       const emulatorOptions = document.getElementById('emulatorOptions');
       const nxeOptions = document.getElementById('nxeOptions');
       const authStatus = document.getElementById('authStatus');
@@ -146,12 +148,24 @@
       };
       const addNxeTargetRow = (value = '') => {
         const row = document.createElement('div'); row.className = 'service-row';
-        const input = document.createElement('input'); input.type = 'text'; input.name = 'nxeTargets'; input.maxLength = 80; input.required = true; input.autocomplete = 'off'; input.placeholder = 'e.g. Xbox Series X'; input.setAttribute('aria-label', 'NXE target platform'); input.value = value;
+        const input = document.createElement('input'); input.type = 'text'; input.name = 'nxeTargets'; input.maxLength = 80; input.required = true; input.autocomplete = 'off'; input.placeholder = 'e.g. Series X/S'; input.setAttribute('aria-label', 'NXE target platform'); input.value = value;
         const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'button'; remove.textContent = '−'; remove.setAttribute('aria-label', 'Remove NXE target platform'); remove.addEventListener('click', () => { row.remove(); updateNxeTargetRows(); });
         row.append(input, remove); nxeTargetList.append(row); updateNxeTargetRows();
       };
       const resetNxeTargetRows = () => { nxeTargetList.replaceChildren(); addNxeTargetRow(); };
       const nxeTargets = () => [...nxeTargetList.querySelectorAll('input[name="nxeTargets"]')].map((input) => input.value.trim()).filter(Boolean);
+      const updateNxeEmulatorRows = () => {
+        const rows = [...nxeEmulatorList.querySelectorAll('.service-row')];
+        rows.forEach((row) => { row.querySelector('button').hidden = rows.length === 1; });
+      };
+      const addNxeEmulatorRow = (value = '') => {
+        const row = document.createElement('div'); row.className = 'service-row';
+        const input = document.createElement('input'); input.type = 'text'; input.name = 'nxeEmulators'; input.maxLength = 100; input.required = true; input.autocomplete = 'off'; input.placeholder = 'e.g. emulator name'; input.setAttribute('aria-label', 'Xbox Developer Mode emulator'); input.value = value;
+        const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'button'; remove.textContent = '−'; remove.setAttribute('aria-label', 'Remove emulator'); remove.addEventListener('click', () => { row.remove(); updateNxeEmulatorRows(); });
+        row.append(input, remove); nxeEmulatorList.append(row); updateNxeEmulatorRows();
+      };
+      const resetNxeEmulatorRows = () => { nxeEmulatorList.replaceChildren(); addNxeEmulatorRow(); };
+      const nxeEmulators = () => [...nxeEmulatorList.querySelectorAll('input[name="nxeEmulators"]')].map((input) => input.value.trim()).filter(Boolean);
       const switchCategory = () => {
         const value = category.value;
         pcOptions.hidden = value !== 'pc';
@@ -162,15 +176,17 @@
         consolePlatformList.querySelectorAll('input[name="consolePlatforms"]').forEach((input) => { input.required = value === 'emulators'; });
         document.getElementById('emulatorNames').required = value === 'emulators';
         nxeTargetList.querySelectorAll('input[name="nxeTargets"]').forEach((input) => { input.required = value === 'nxe'; });
-        document.getElementById('nxeEmulatorNames').required = value === 'nxe';
+        nxeEmulatorList.querySelectorAll('input[name="nxeEmulators"]').forEach((input) => { input.required = value === 'nxe'; });
       };
       category.addEventListener('change', switchCategory);
       addServiceButton.addEventListener('click', () => addServiceRow());
       addConsolePlatformButton.addEventListener('click', () => addConsolePlatformRow());
       addNxeTargetButton.addEventListener('click', () => addNxeTargetRow());
+      addNxeEmulatorButton.addEventListener('click', () => addNxeEmulatorRow());
       resetServiceRows();
       resetConsolePlatformRows();
       resetNxeTargetRows();
+      resetNxeEmulatorRows();
       switchCategory();
 
       const loadSession = async () => {
@@ -214,7 +230,7 @@
           consolePlatforms: category.value === 'emulators' ? consolePlatforms() : [],
           emulators: category.value === 'emulators' ? document.getElementById('emulatorNames').value.split(',').map((item) => item.trim()).filter(Boolean) : [],
           nxeTargets: category.value === 'nxe' ? nxeTargets() : [],
-          nxeEmulators: category.value === 'nxe' ? document.getElementById('nxeEmulatorNames').value.split(',').map((item) => item.trim()).filter(Boolean) : [],
+          nxeEmulators: category.value === 'nxe' ? nxeEmulators() : [],
         };
         try {
           const response = await fetch('/api/modx/contributions', {
@@ -235,6 +251,7 @@
           resetServiceRows();
           resetConsolePlatformRows();
           resetNxeTargetRows();
+          resetNxeEmulatorRows();
           switchCategory();
         } catch (error) {
           setStatus(submitStatus, error instanceof Error ? error.message : 'The submission could not be sent.', 'error');
