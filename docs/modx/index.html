@@ -3,30 +3,207 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ModX Cheat Tables for the ModX desktop project.">
+  <meta name="description" content="Submit a community game and cheat catalogue entry to ModX.">
   <title>ModX Cheat Tables | Vortex Prime EMU</title>
   <style>
-    :root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#09090b;color:#fafafa}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh}nav{min-height:76px;display:flex;justify-content:center;align-items:center;padding:12px;border-bottom:1px solid #3f3f46}
-    .nav{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.nav a{min-height:44px;display:inline-flex;align-items:center;padding:10px 14px;border-radius:8px;color:#a1a1aa;text-decoration:none}.nav a:hover,.nav a.active{background:#27272a;color:#34d399}
-    main{max-width:900px;margin:auto;padding:52px 24px 72px}h1{font-size:clamp(2rem,5vw,3rem);margin:0 0 14px}p{color:#cbd5e1;line-height:1.7}
-    .notice{margin-top:28px;padding:22px;border:1px solid #3f3f46;border-radius:12px;background:#18181b}.notice h2{margin:0 0 8px;font-size:1.2rem}footer{padding:24px;border-top:1px solid #3f3f46;color:#a1a1aa;text-align:center}a{color:#93c5fd}
+    :root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#09090b;color:#fafafa;--surface:#18181b;--surface-2:#111114;--border:#3f3f46;--muted:#a1a1aa;--green:#34d399;--blue:#93c5fd}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh}nav{min-height:76px;display:flex;justify-content:center;align-items:center;padding:12px;border-bottom:1px solid var(--border)}
+    .nav{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.nav a{min-height:44px;display:inline-flex;align-items:center;padding:10px 14px;border-radius:8px;color:var(--muted);text-decoration:none}.nav a:hover,.nav a.active{background:#27272a;color:var(--green)}
+    main{width:min(980px,100%);margin:auto;padding:52px 24px 72px}h1{font-size:clamp(2rem,5vw,3rem);margin:0 0 14px;letter-spacing:-.035em}h2{margin:0 0 8px;font-size:1.2rem}p{color:#cbd5e1;line-height:1.7}.intro{max-width:750px;margin:0 0 30px;color:#cbd5e1}
+    .panel{border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:26px;margin:22px 0}.auth-row,.panel-heading,.form-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.auth-row p{margin:4px 0 0;color:var(--muted)}
+    .button{appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid #52525b;border-radius:8px;background:#27272a;color:#fafafa;font:inherit;font-weight:650;text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s}.button:hover{border-color:#71717a;background:#303036}.button-primary{background:#166534;border-color:#15803d}.button-primary:hover{background:#15803d;border-color:#22c55e}.button:disabled{opacity:.58;cursor:wait}
+    .user-chip{display:flex;align-items:center;gap:10px;color:#e4e4e7}.avatar{width:34px;height:34px;border-radius:50%;background:#27272a}.status{min-height:24px;margin:12px 0 0;color:var(--muted);font-size:.94rem}.status[data-kind="error"]{color:#fca5a5}.status[data-kind="success"]{color:#86efac}.status a{color:var(--blue)}
+    .form-grid,.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.field{display:grid;gap:8px}.field-full{grid-column:1/-1}.field label,.field legend{font-size:.94rem;font-weight:650;color:#f4f4f5}.field input[type="text"],.field textarea,.field select{width:100%;min-height:46px;border:1px solid #52525b;border-radius:8px;background:#09090b;color:#fafafa;padding:11px 12px;font:inherit}.field textarea{min-height:100px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{outline:2px solid #34d399;outline-offset:1px}.help{margin:0;color:var(--muted);font-size:.86rem;line-height:1.5}
+    fieldset{margin:0;padding:0;border:0;min-width:0}.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px}.choice{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;border:1px solid #3f3f46;border-radius:8px;background:var(--surface-2);color:#e4e4e7;font-size:.93rem}.choice input{width:17px;height:17px;accent-color:var(--green)}.category-panel{margin-top:2px;padding:18px;border:1px solid #3f3f46;border-radius:10px;background:#111114}.category-panel[hidden]{display:none}.form-actions{margin-top:24px;justify-content:flex-end}.review-note{border-left:3px solid #34d399;padding:2px 0 2px 14px;color:var(--muted);font-size:.9rem}
+    footer{padding:24px;border-top:1px solid var(--border);color:var(--muted);text-align:center}a{color:var(--blue)}
+    @media(max-width:650px){main{padding:36px 16px 54px}.panel{padding:20px 16px}.form-grid,.field-grid{grid-template-columns:1fr}.field-full{grid-column:auto}.auth-row{align-items:flex-start}.form-actions .button{width:100%}}
   </style>
 </head>
 <body>
   <nav aria-label="Main navigation"><div class="nav">
-    <a href="/">Home</a><a href="/modx/" class="active" aria-current="page">ModX Cheat Tables</a>
-    <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" target="_blank" rel="noopener noreferrer">Docs</a><a href="/help/">Help</a>
+    <a href="/" data-no-gate="true">Home</a><a href="/modx/" class="active" aria-current="page" data-no-gate="true">ModX Cheat Tables</a>
+    <a href="https://github.com/rileyadams05/Vortex-Prime-emu/wiki" target="_blank" rel="noopener noreferrer" data-no-gate="true">Docs</a><a href="/help/" data-no-gate="true">Help</a>
   </div></nav>
   <main>
-    <h1>ModX Cheat Tables</h1>
-    <p>ModX is a separate Vortex Prime project for discovering and using community cheat tables. The website submission flow is being rebuilt to let contributors sign in to GitHub here, provide the table details, and prepare a change for Riley to review and accept.</p>
-    <section class="notice" aria-labelledby="status-title">
-      <h2 id="status-title">Website submissions are being prepared</h2>
-      <p>The submission form is not open yet. The website will collect the required information and prepare the GitHub change after the form and authorization details are finalized.</p>
+    <h1>Submit to ModX</h1>
+    <p class="intro">Sign in with GitHub, describe the game and where its cheats apply, then send the entry for review. Choose PC for game services, Emulators for emulator-supported games, or NXE for Riley’s NXE project.</p>
+
+    <section class="panel" aria-labelledby="account-title">
+      <div class="auth-row">
+        <div><h2 id="account-title">GitHub account</h2><p id="authDescription">Sign in to prepare a reviewable ModX repository change.</p></div>
+        <div id="signedInUser" class="user-chip" hidden><img id="userAvatar" class="avatar" alt=""><span id="githubLogin"></span><button id="signOutButton" class="button" type="button">Sign out</button></div>
+        <a id="signInButton" class="button button-primary" href="/api/modx/github/login" data-no-gate="true">Continue with GitHub</a>
+      </div>
+      <p id="authStatus" class="status" role="status" aria-live="polite"></p>
     </section>
-    <p>Learn about the <a href="https://github.com/rileyadams05/ModX" target="_blank" rel="noopener noreferrer">ModX project on GitHub</a>.</p>
+
+    <form id="contributionForm" class="panel" hidden>
+      <div class="panel-heading"><div><h2>Game and support details</h2><p class="help">These details will be included in a ModX pull request for review.</p></div></div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="catalogCategory">Catalog</label>
+          <select id="catalogCategory" name="category" required>
+            <option value="pc">PC — game services</option>
+            <option value="emulators">Emulators</option>
+            <option value="nxe">NXE</option>
+          </select>
+          <p class="help">PC covers services such as Steam, Epic and Xbox. Emulators covers console games played through emulators. NXE is for the NXE project.</p>
+        </div>
+        <div class="field">
+          <label for="gameName">Game name</label>
+          <input id="gameName" name="gameName" type="text" maxlength="160" autocomplete="off" required placeholder="e.g. Example Game">
+        </div>
+        <div class="field field-full">
+          <label for="gameId">Game ID</label>
+          <input id="gameId" name="gameId" type="text" maxlength="80" pattern="[a-z0-9][a-z0-9._-]*" required placeholder="e.g. example-game or the ID shown by ModX">
+          <p class="help">Use a stable ID with lowercase letters, numbers, dots, underscores or hyphens. ModX uses it to match entries to games.</p>
+        </div>
+
+        <fieldset id="pcOptions" class="category-panel field field-full">
+          <legend>PC support</legend>
+          <p class="help">Select the game services and computer platforms this entry supports.</p>
+          <fieldset class="field" style="margin-top:14px"><legend>Game services</legend><div class="choice-grid">
+            <label class="choice"><input type="checkbox" name="services" value="steam"> Steam</label>
+            <label class="choice"><input type="checkbox" name="services" value="epic"> Epic Games</label>
+            <label class="choice"><input type="checkbox" name="services" value="xbox"> Xbox app / Game Pass</label>
+            <label class="choice"><input type="checkbox" name="services" value="gog"> GOG</label>
+            <label class="choice"><input type="checkbox" name="services" value="ubisoft"> Ubisoft Connect</label>
+            <label class="choice"><input type="checkbox" name="services" value="ea"> EA app</label>
+            <label class="choice"><input type="checkbox" name="services" value="other"> Other service</label>
+          </div></fieldset>
+          <fieldset class="field" style="margin-top:14px"><legend>Computer platforms</legend><div class="choice-grid">
+            <label class="choice"><input type="checkbox" name="platforms" value="windows"> Windows</label>
+            <label class="choice"><input type="checkbox" name="platforms" value="linux"> Linux</label>
+            <label class="choice"><input type="checkbox" name="platforms" value="steamos"> SteamOS</label>
+            <label class="choice"><input type="checkbox" name="platforms" value="macos"> macOS</label>
+          </div></fieldset>
+        </fieldset>
+
+        <fieldset id="emulatorOptions" class="category-panel field field-full" hidden>
+          <legend>Emulator support</legend>
+          <div class="field-grid">
+            <div class="field"><label for="consolePlatform">Console platform</label><select id="consolePlatform" name="consolePlatform">
+              <option value="">Choose a console platform</option><option>PlayStation</option><option>PlayStation 2</option><option>PlayStation 3</option><option>PlayStation 4</option><option>PlayStation 5</option><option>Xbox</option><option>Xbox 360</option><option>GameCube</option><option>Wii</option><option>Wii U</option><option>Nintendo Switch</option><option>Other</option>
+            </select></div>
+            <div class="field"><label for="emulatorNames">Emulator(s)</label><input id="emulatorNames" name="emulators" type="text" maxlength="240" placeholder="e.g. RPCS3, Xenia, Dolphin"></div>
+          </div>
+        </fieldset>
+
+        <fieldset id="nxeOptions" class="category-panel field field-full" hidden>
+          <legend>NXE support</legend>
+          <p class="help">Choose the Xbox Developer Mode target(s) for the NXE project.</p>
+          <div class="choice-grid" style="margin-top:14px">
+            <label class="choice"><input type="checkbox" name="nxeTargets" value="xbox-series-x"> Xbox Series X</label>
+            <label class="choice"><input type="checkbox" name="nxeTargets" value="xbox-series-s"> Xbox Series S</label>
+            <label class="choice"><input type="checkbox" name="nxeTargets" value="xbox-one-dev-mode"> Xbox One Developer Mode</label>
+          </div>
+        </fieldset>
+
+        <div class="field field-full">
+          <label for="entryNotes">Additional information <span class="help">(optional)</span></label>
+          <textarea id="entryNotes" name="notes" maxlength="2000" placeholder="Game version, build, compatibility notes, or anything else reviewers should know"></textarea>
+        </div>
+      </div>
+      <p class="review-note">Submitting prepares a pull request in the ModX repository. It does not publish cheats or activate them in a game.</p>
+      <div class="form-actions"><button id="submitButton" class="button button-primary" type="submit">Submit for review</button></div>
+      <p id="submitStatus" class="status" role="status" aria-live="polite"></p>
+    </form>
+
+    <p>Read the <a href="https://github.com/rileyadams05/ModX" target="_blank" rel="noopener noreferrer">ModX repository</a>.</p>
   </main>
   <footer>ModX Cheat Tables · Vortex Prime EMU</footer>
+  <script>
+    (() => {
+      const form = document.getElementById('contributionForm');
+      const category = document.getElementById('catalogCategory');
+      const pcOptions = document.getElementById('pcOptions');
+      const emulatorOptions = document.getElementById('emulatorOptions');
+      const nxeOptions = document.getElementById('nxeOptions');
+      const authStatus = document.getElementById('authStatus');
+      const submitStatus = document.getElementById('submitStatus');
+      const signIn = document.getElementById('signInButton');
+      const signedInUser = document.getElementById('signedInUser');
+      const signOut = document.getElementById('signOutButton');
+      const setStatus = (node, message, kind = '') => { node.textContent = message; node.dataset.kind = kind; };
+      const selected = (name) => [...form.querySelectorAll(`input[name="${name}"]:checked`)].map((input) => input.value);
+      const switchCategory = () => {
+        const value = category.value;
+        pcOptions.hidden = value !== 'pc';
+        emulatorOptions.hidden = value !== 'emulators';
+        nxeOptions.hidden = value !== 'nxe';
+        document.getElementById('consolePlatform').required = value === 'emulators';
+        document.getElementById('emulatorNames').required = value === 'emulators';
+      };
+      category.addEventListener('change', switchCategory);
+      switchCategory();
+
+      const loadSession = async () => {
+        const response = await fetch('/api/modx/github/session', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.authenticated) return;
+        signIn.hidden = true;
+        signedInUser.hidden = false;
+        document.getElementById('authDescription').textContent = 'You are signed in and can prepare a catalog entry.';
+        document.getElementById('githubLogin').textContent = `@${data.user.login}`;
+        if (data.user.avatarUrl) document.getElementById('userAvatar').src = data.user.avatarUrl;
+        form.hidden = false;
+      };
+      loadSession().catch(() => setStatus(authStatus, 'GitHub sign-in is temporarily unavailable.', 'error'));
+
+      const query = new URLSearchParams(location.search);
+      if (query.get('github') === 'error') setStatus(authStatus, 'GitHub sign-in could not be completed. Please try again.', 'error');
+      if (query.get('github') === 'connected') setStatus(authStatus, 'GitHub sign-in complete. You can now prepare a submission.', 'success');
+      if (query.has('github')) history.replaceState(null, '', location.pathname);
+
+      signOut.addEventListener('click', async () => {
+        await fetch('/api/modx/github/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+        form.hidden = true;
+        signedInUser.hidden = true;
+        signIn.hidden = false;
+        document.getElementById('authDescription').textContent = 'Sign in to prepare a reviewable ModX repository change.';
+        setStatus(authStatus, 'You have signed out.');
+      });
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        setStatus(submitStatus, 'Preparing your pull request…');
+        const submitButton = document.getElementById('submitButton');
+        submitButton.disabled = true;
+        const payload = {
+          category: category.value,
+          gameName: document.getElementById('gameName').value.trim(),
+          gameId: document.getElementById('gameId').value.trim().toLowerCase(),
+          notes: document.getElementById('entryNotes').value.trim(),
+          services: category.value === 'pc' ? selected('services') : [],
+          platforms: category.value === 'pc' ? selected('platforms') : [],
+          consolePlatform: category.value === 'emulators' ? document.getElementById('consolePlatform').value : '',
+          emulators: category.value === 'emulators' ? document.getElementById('emulatorNames').value.split(',').map((item) => item.trim()).filter(Boolean) : [],
+          nxeTargets: category.value === 'nxe' ? selected('nxeTargets') : [],
+        };
+        try {
+          const response = await fetch('/api/modx/contributions', {
+            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.message || 'The submission could not be sent.');
+          submitStatus.replaceChildren(document.createTextNode('Pull request created: '));
+          const link = document.createElement('a');
+          link.href = result.pullRequestUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.textContent = result.pullRequestNumber ? `#${result.pullRequestNumber}` : 'Review on GitHub';
+          submitStatus.append(link);
+          submitStatus.dataset.kind = 'success';
+          form.reset();
+          switchCategory();
+        } catch (error) {
+          setStatus(submitStatus, error instanceof Error ? error.message : 'The submission could not be sent.', 'error');
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

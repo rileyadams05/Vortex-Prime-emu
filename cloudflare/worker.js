@@ -80,6 +80,12 @@ export default {
         return json({ ok: false, message: 'Website sign-in and account APIs have been retired.' }, 410, allowedOrigin);
       }
 
+      if (path === 'api/modx/github/login') return handleModxGithubLogin(request, env);
+      if (path === 'api/modx/github/callback') return handleModxGithubCallback(request, env);
+      if (path === 'api/modx/github/session') return handleModxGithubSession(request, env, allowedOrigin);
+      if (path === 'api/modx/github/logout') return handleModxGithubLogout(request, env, allowedOrigin);
+      if (path === 'api/modx/contributions') return handleModxContributionRequest(request, env, allowedOrigin);
+
       if (path.startsWith('api/modx/')) {
         return json({ ok: false, message: 'ModX catalogue changes are submitted as GitHub pull requests.' }, 410, allowedOrigin);
       }
@@ -193,6 +199,163 @@ export default {
   },
 };
 
+const MODX_GITHUB_SESSION_COOKIE = 'modx_github_session';
+const MODX_GITHUB_STATE_COOKIE = 'modx_github_state';
+const MODX_GITHUB_SESSION_TTL = 60 * 60 * 8;
+
+async function handleModxGithubLogin(request, env) {
+  if (request.method !== 'GET') throw httpError(405, 'Use GET to start GitHub sign-in.');
+  const clientId = requireEnv(env, 'GITHUB_OAUTH_CLIENT_ID');
+  const state = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
+  const authorize = new URL('https://github.com/login/oauth/authorize');
+  authorize.searchParams.set('client_id', clientId);
+  authorize.searchParams.set('redirect_uri', modxGithubCallbackUrl(request.url));
+  authorize.searchParams.set('scope', 'read:user');
+  authorize.searchParams.set('state', state);
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: authorize.toString(),
+      'Set-Cookie': modxGithubCookie(MODX_GITHUB_STATE_COOKIE, state, 600, '/api/modx/github'),
+      'Cache-Control': 'no-store',
+    },
+  });
+}
+
+async function handleModxGithubCallback(request, env) {
+  if (request.method !== 'GET') throw httpError(405, 'Use GET for the GitHub callback.');
+  const url = new URL(request.url);
+  const cookies = parseCookies(request.headers.get('Cookie'));
+  const clearState = modxGithubCookie(MODX_GITHUB_STATE_COOKIE, '', 0, '/api/modx/github');
+  const state = url.searchParams.get('state') || '';
+  if (!state || !cookies[MODX_GITHUB_STATE_COOKIE] || !constantTimeEquals(textEncoder.encode(state), textEncoder.encode(cookies[MODX_GITHUB_STATE_COOKIE]))) {
+    return modxGithubRedirect(request, 'error', clearState);
+  }
+  const code = url.searchParams.get('code') || '';
+  if (!code || url.searchParams.has('error')) return modxGithubRedirect(request, 'error', clearState);
+  try {
+    const clientId = requireEnv(env, 'GITHUB_OAUTH_CLIENT_ID');
+    const clientSecret = requireEnv(env, 'GITHUB_OAUTH_CLIENT_SECRET');
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code, redirect_uri: modxGithubCallbackUrl(request.url) }),
+    });
+    const tokenPayload = await tokenResponse.json().catch(() => ({}));
+    if (!tokenResponse.ok || !tokenPayload.access_token) throw httpError(401, 'GitHub sign-in failed.');
+    const profileResponse = await fetch('https://api.github.com/user', {
+      headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${tokenPayload.access_token}`, 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'Vortex-Prime-ModX' },
+    });
+    const profile = await profileResponse.json().catch(() => ({}));
+    if (!profileResponse.ok || !Number.isSafeInteger(profile.id) || !/^[A-Za-z0-9-]{1,39}$/.test(profile.login || '')) throw httpError(401, 'GitHub profile could not be read.');
+    const token = await createSessionToken({
+      sub: `github:${profile.id}`, provider: 'github', githubId: profile.id,
+      login: profile.login, avatarUrl: typeof profile.avatar_url === 'string' ? profile.avatar_url : null,
+      exp: Math.floor(Date.now() / 1000) + MODX_GITHUB_SESSION_TTL,
+    }, env);
+    return modxGithubRedirect(request, 'connected', [clearState, modxGithubCookie(MODX_GITHUB_SESSION_COOKIE, token, MODX_GITHUB_SESSION_TTL, '/')]);
+  } catch (error) {
+    console.error('ModX GitHub sign-in failed:', error);
+    return modxGithubRedirect(request, 'error', clearState);
+  }
+}
+
+async function handleModxGithubSession(request, env, origin) {
+  if (request.method !== 'GET') throw httpError(405, 'Use GET to read the GitHub session.');
+  const session = await readModxGithubSession(request, env).catch(() => null);
+  return json({ authenticated: Boolean(session), user: session ? { login: session.login, avatarUrl: session.avatarUrl || null } : null }, 200, origin, { 'Cache-Control': 'no-store' });
+}
+
+async function handleModxGithubLogout(request, env, origin) {
+  requireModxSameOrigin(request);
+  if (request.method !== 'POST') throw httpError(405, 'Use POST to sign out.');
+  return json({ ok: true }, 200, origin, { 'Set-Cookie': modxGithubCookie(MODX_GITHUB_SESSION_COOKIE, '', 0, '/') });
+}
+
+async function handleModxContributionRequest(request, env, origin) {
+  requireModxSameOrigin(request);
+  if (request.method !== 'POST') throw httpError(405, 'Use POST to submit a contribution.');
+  const session = await readModxGithubSession(request, env);
+  const body = await request.json().catch(() => null);
+  const payload = validateModxContribution(body);
+  const bridgeToken = requireEnv(env, 'MODX_BRIDGE_TOKEN');
+  const response = await fetch('https://modx.vortex-prime-emu.com/community/catalogue/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-ModX-Bridge': bridgeToken },
+    body: JSON.stringify({ ...payload, contributor: { id: session.githubId, login: session.login } }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw httpError(response.status >= 500 ? 502 : response.status, result.message || result.error || 'ModX could not prepare the pull request.');
+  return json(result, 201, origin, { 'Cache-Control': 'no-store' });
+}
+
+async function readModxGithubSession(request, env) {
+  const token = parseCookies(request.headers.get('Cookie'))[MODX_GITHUB_SESSION_COOKIE];
+  if (!token) throw httpError(401, 'Sign in with GitHub before submitting.');
+  const session = await verifySessionToken(token, env);
+  if (session.provider !== 'github' || !session.githubId || !session.login) throw httpError(401, 'Sign in with GitHub before submitting.');
+  return session;
+}
+
+function validateModxContribution(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw httpError(400, 'Provide a valid contribution.');
+  const category = body.category;
+  const gameName = cleanModxText(body.gameName, 160);
+  const gameId = String(body.gameId || '').trim().toLowerCase();
+  const notes = cleanModxText(body.notes, 2000);
+  if (!['pc', 'emulators', 'nxe'].includes(category)) throw httpError(400, 'Choose PC, Emulators, or NXE.');
+  if (!gameName) throw httpError(400, 'Enter the game name.');
+  if (!/^[a-z0-9][a-z0-9._-]{0,79}$/.test(gameId)) throw httpError(400, 'Use a valid game ID with lowercase letters, numbers, dots, underscores, or hyphens.');
+  const payload = { category, gameName, gameId, notes };
+  if (category === 'pc') {
+    const services = cleanModxChoices(body.services, new Set(['steam', 'epic', 'xbox', 'gog', 'ubisoft', 'ea', 'other']), 7);
+    const platforms = cleanModxChoices(body.platforms, new Set(['windows', 'linux', 'steamos', 'macos']), 4);
+    if (!services.length || !platforms.length) throw httpError(400, 'Select at least one PC service and computer platform.');
+    Object.assign(payload, { services, platforms });
+  } else if (category === 'emulators') {
+    const consolePlatform = cleanModxText(body.consolePlatform, 80);
+    const emulators = Array.isArray(body.emulators) ? body.emulators.map((item) => cleanModxText(item, 80)).filter(Boolean).slice(0, 8) : [];
+    if (!consolePlatform || !emulators.length) throw httpError(400, 'Choose a console platform and enter at least one emulator.');
+    Object.assign(payload, { consolePlatform, emulators });
+  } else {
+    const nxeTargets = cleanModxChoices(body.nxeTargets, new Set(['xbox-series-x', 'xbox-series-s', 'xbox-one-dev-mode']), 3);
+    if (!nxeTargets.length) throw httpError(400, 'Select at least one NXE target.');
+    Object.assign(payload, { nxeTargets });
+  }
+  return payload;
+}
+
+function cleanModxChoices(value, allowed, limit) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((item) => typeof item === 'string' && allowed.has(item)))].slice(0, limit);
+}
+
+function cleanModxText(value, maxLength) {
+  return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
+}
+
+function requireModxSameOrigin(request) {
+  const origin = request.headers.get('Origin');
+  if (!origin || origin !== new URL(request.url).origin) throw httpError(403, 'This request must come from the Vortex Prime website.');
+}
+
+function modxGithubCallbackUrl(requestUrl) {
+  return new URL('/api/modx/github/callback', requestUrl).toString();
+}
+
+function modxGithubRedirect(request, state, cookies) {
+  const target = new URL('/modx/', request.url);
+  target.searchParams.set('github', state);
+  const headers = new Headers({ Location: target.toString(), 'Cache-Control': 'no-store' });
+  for (const cookie of Array.isArray(cookies) ? cookies : [cookies]) headers.append('Set-Cookie', cookie);
+  return new Response(null, { status: 302, headers });
+}
+
+function modxGithubCookie(name, value, maxAge, path) {
+  const expires = maxAge > 0 ? new Date(Date.now() + maxAge * 1000) : new Date(0);
+  return `${name}=${value}; Path=${path}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}; Expires=${expires.toUTCString()}`;
+}
+
 export class NxePairSession {
   constructor(state, env) {
     this.state = state;
@@ -276,11 +439,12 @@ function optionsResponse(origin) {
   return new Response(null, { status: 204, headers });
 }
 
-function json(data, status = 200, origin) {
+function json(data, status = 200, origin, extraHeaders = {}) {
   const headers = new Headers({
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
   });
+  for (const [name, value] of Object.entries(extraHeaders)) headers.set(name, value);
   if (origin) {
     headers.set('access-control-allow-origin', origin);
     headers.set('access-control-allow-credentials', 'true');
